@@ -23,6 +23,7 @@ import { localize } from '../utils/i18n';
 import { localizedDataSource } from '../utils/gameContentI18n';
 import { DATA_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
+import { isDataSourceProgressionUnlocked } from '../utils/progression';
 
 export const DataPipelineManager: React.FC = () => {
   const { state, unlockDataSource, upgradeDataSource } = useGame();
@@ -73,6 +74,8 @@ export const DataPipelineManager: React.FC = () => {
           const content = localizedDataSource(state.language, ds);
           const isConnected = state.currentModel.activeDataSources.includes(ds.id);
           const upgradeCost = Math.round(ds.cost * 1.5 * (ds.level || 1));
+          const technologyAvailable = isDataSourceProgressionUnlocked(ds, state);
+          const requiredResearch = state.researchTree.find(node => node.id === ds.requiredResearchId);
 
           return (
             <div 
@@ -100,7 +103,9 @@ export const DataPipelineManager: React.FC = () => {
                       <span className="text-[10px] text-cyan-400 font-mono">
                         {ds.unlocked
                           ? localize(state.language, `ESTADO: ONLINE (NIVEL ${ds.level})`, `STATUS: ONLINE (LEVEL ${ds.level})`)
-                          : localize(state.language, 'ESTADO: SIN DESPLEGAR', 'STATUS: NOT DEPLOYED')}
+                          : technologyAvailable
+                            ? localize(state.language, 'ESTADO: DISPONIBLE', 'STATUS: AVAILABLE')
+                            : localize(state.language, `BLOQUEADO · ${requiredResearch?.title ?? 'I+D'} / DÍA ${ds.availableAfterDays ?? '—'}`, `LOCKED · ${requiredResearch?.title ?? 'R&D'} / DAY ${ds.availableAfterDays ?? '—'}`)}
                       </span>
                     </div>
                   </div>
@@ -152,7 +157,7 @@ export const DataPipelineManager: React.FC = () => {
                 {!ds.unlocked ? (
                   <button
                     onClick={() => unlockDataSource(ds.id)}
-                    disabled={state.credits < ds.cost}
+                    disabled={state.credits < ds.cost || !technologyAvailable}
                     className={`w-full py-1.5 px-3 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                       state.credits >= ds.cost
                         ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(0,255,200,0.3)]'

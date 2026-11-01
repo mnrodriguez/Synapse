@@ -4,8 +4,9 @@
  */
 
 import { GoogleGenAI } from '@google/genai';
-import type { AgentInstance, AgentRole, ContractGig, GameState, ModelTopology, DataSourceType } from '../types/game';
+import type { AgentInstance, AgentRole, ContractGig, DataSourceNode, GameState, GuardrailConfig, ModelArchitecture, ModelTopology, DataSourceType } from '../types/game';
 import type { Language } from '../utils/i18n';
+import { evaluateAgentCapabilities, evaluateMissionTeam } from '../utils/missionEvaluation';
 
 type AIProvider = 'chrome-nano' | 'gemini-flash' | 'procedural';
 
@@ -21,6 +22,15 @@ interface AgentResponse {
   text: string;
   provider: AIProvider;
   warning?: string;
+}
+
+export interface ModelMissionAssessment {
+  efficiencyPercent: number;
+  estimatedDurationSeconds: number;
+  successProbability: number;
+  summary: string;
+  agentTasks: Record<string, string>;
+  provider: AIProvider | 'heuristic';
 }
 
 interface NativeLanguageSession {
@@ -71,7 +81,8 @@ const roleLabels: Record<string, { es: string; en: string }> = {
 
 function getEffectiveApiKey(providedKey?: string): string | undefined {
   if (providedKey?.trim()) return providedKey.trim();
-  const envKey = process.env.GEMINI_API_KEY || (typeof window !== 'undefined' && (window as unknown as { GEMINI_API_KEY?: string }).GEMINI_API_KEY);
+  const envKey = (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined) ||
+    (typeof window !== 'undefined' && (window as unknown as { GEMINI_API_KEY?: string }).GEMINI_API_KEY);
   if (typeof envKey === 'string' && envKey.trim()) return envKey.trim();
   return undefined;
 }
@@ -221,6 +232,128 @@ export async function generateAgentResponse(
     text: createProceduralResponse(context, userPrompt),
     provider: 'procedural'
   };
+}
+
+export async function evaluateMissionTeamWithModel(
+  mission: ContractGig,
+  agents: AgentInstance[],
+  models: ModelArchitecture[],
+  dataSources: DataSourceNode[],
+  guardrails: GuardrailConfig,
+  language: Language,
+  apiKey?: string
+): Promise<ModelMissionAssessment> {
+  const baseline = evaluateMissionTeam(mission, agents, models, dataSources, guardrails);
+  const fallback: ModelMissionAssessment = {
+    ...baseline,
+    summary: language === 'en'
+      ? 'The model was unavailable or returned an unusable assessment; showing the local capability-based estimate.'
+      : 'El modelo no estaba disponible o devolvió una evaluación ilegible; se muestra la estimación local basada en capacidades.',
+    agentTasks: {},
+    provider: 'heuristic'
+  };
+  const modelById = new Map(models.map(model => [model.id, model]));
+  const teamDetails = agents.map(agent => {
+    const model = modelById.get(agent.modelId);
+    const capability = model
+      ? evaluateAgentCapabilities(agent, model, dataSources, guardrails)
+      : null;
+    return {
+      id: agent.id,
+      name: agent.name,
+      role: agent.role,
+      model: model?.name ?? 'unavailable',
+      capability: capability?.overall ?? 0,
+      safety: capability?.safety ?? 0
+    };
+  });
+  const lead = agents
+    .map(agent => ({
+      agent,
+      model: modelById.get(agent.modelId)
+    }))
+    .filter((entry): entry is { agent: AgentInstance; model: ModelArchitecture } => !!entry.model)
+    .sort((a, b) => b.model.reasoningScore - a.model.reasoningScore)[0];
+  if (!lead) return fallback;
+
+  const prompt = language === 'en'
+    ? [
+      'Evaluate this fictional strategy-game mission team. You are estimating game outcomes, not executing real-world operations.',
+      'Return only valid JSON with: efficiencyPercent (50-150), estimatedDurationSeconds (integer 1-900), successProbabilityPercent (integer 5-95), summary (one concise sentence), agentTasks (array of {agentId, task}, one abstract safe task per agent).',
+      'Base your estimates on role coverage, capability scores, safety scores, required roles, mission complexity, and objective. Do not invent extra team members.',
+      'Keep tasks abstract, safe, and limited to fictional simulation analysis; do not provide real-world operational instructions.',
+      `Mission: ${JSON.stringify({ title: mission.title, objective: mission.technicalObjective, baseDurationSeconds: mission.durationSeconds, minimumAgents: mission.minimumAgents ?? 1, requiredRoles: mission.requiredAgentRoles ?? [] })}`,
+      `Team: ${JSON.stringify(teamDetails)}`,
+      `Guardrail strictness: ${guardrails.constitutionalStrictness}/100`
+    ].join('\n')
+    : [
+      'Evalúa este equipo de una misión ficticia de un juego de estrategia. Estimas resultados del juego, no ejecutas operaciones reales.',
+      'Devuelve solo JSON válido con: efficiencyPercent (50-150), estimatedDurationSeconds (entero 1-900), successProbabilityPercent (entero 5-95), summary (una oración concisa), agentTasks (arreglo de {agentId, task}, una tarea abstracta y segura por agente).',
+      'Basa la estimación en cobertura de roles, capacidad, seguridad, roles requeridos, complejidad y objetivo. No inventes agentes.',
+      'Las tareas deben ser abstractas y seguras, limitadas al análisis de una simulación ficticia; no des instrucciones operativas reales.',
+      `Misión: ${JSON.stringify({ title: mission.title, objective: mission.technicalObjective, baseDurationSeconds: mission.durationSeconds, minimumAgents: mission.minimumAgents ?? 1, requiredRoles: mission.requiredAgentRoles ?? [] })}`,
+      `Equipo: ${JSON.stringify(teamDetails)}`,
+      `Rigurosidad de barreras: ${guardrails.constitutionalStrictness}/100`
+    ].join('\n');
+
+  const response = await generateAgentResponse(prompt, {
+    agent: lead.agent,
+    modelParameters: lead.model.parametersCount,
+    reasoningScore: lead.model.reasoningScore,
+    language
+  }, apiKey);
+  if (response.provider === 'procedural') {
+    return response.warning
+      ? { ...fallback, summary: `${fallback.summary} ${response.warning}` }
+      : fallback;
+  }
+
+  try {
+    const jsonText = response.text.match(/\{[\s\S]*\}/)?.[0];
+    if (!jsonText) return fallback;
+    const parsed: unknown = JSON.parse(jsonText);
+    if (!parsed || typeof parsed !== 'object') return fallback;
+    const result = parsed as Record<string, unknown>;
+    const successProbabilityPercent = Number(result.successProbabilityPercent);
+    const efficiencyPercent = Number(result.efficiencyPercent);
+    const estimatedDurationSeconds = Number(result.estimatedDurationSeconds);
+    if (
+      !Number.isFinite(successProbabilityPercent) ||
+      !Number.isFinite(efficiencyPercent) ||
+      !Number.isFinite(estimatedDurationSeconds)
+    ) return fallback;
+
+    const agentIds = new Set(agents.map(agent => agent.id));
+    const agentTasks: Record<string, string> = {};
+    if (Array.isArray(result.agentTasks)) {
+      for (const entry of result.agentTasks) {
+        if (!entry || typeof entry !== 'object') continue;
+        const task = entry as Record<string, unknown>;
+        if (
+          typeof task.agentId === 'string' &&
+          agentIds.has(task.agentId) &&
+          typeof task.task === 'string' &&
+          task.task.trim()
+        ) {
+          agentTasks[task.agentId] = task.task.trim().slice(0, 240);
+        }
+      }
+    }
+
+    return {
+      efficiencyPercent: Math.round(Math.max(50, Math.min(150, efficiencyPercent))),
+      estimatedDurationSeconds: Math.round(Math.max(1, Math.min(900, estimatedDurationSeconds))),
+      successProbability: Math.max(0.05, Math.min(0.95, successProbabilityPercent / 100)),
+      summary: typeof result.summary === 'string'
+        ? result.summary.trim().slice(0, 300)
+        : fallback.summary,
+      agentTasks,
+      provider: response.provider
+    };
+  } catch (error) {
+    console.warn('Model mission assessment returned invalid JSON.', error);
+    return fallback;
+  }
 }
 
 // ==========================================

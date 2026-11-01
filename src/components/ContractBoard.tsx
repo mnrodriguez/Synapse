@@ -95,7 +95,7 @@ const ENGLISH_CONTRACT_COPY: Record<string, { title: string; lore: string; objec
 };
 
 export const ContractBoard: React.FC = () => {
-  const { state, acceptContract, deliberateMission, addLog, addContracts } = useGame();
+  const { state, acceptContract, addLog, addContracts } = useGame();
   const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
   const [activeTierFilter, setActiveTierFilter] = useState<'all' | ContractGig['tier'] | 'completed'>('all');
   const [isGeneratingMissions, setIsGeneratingMissions] = useState(false);
@@ -174,14 +174,7 @@ export const ContractBoard: React.FC = () => {
   };
 
   const handleAcceptMission = (contractId: string) => {
-    if (!acceptContract(contractId, selectedAgentIds)) return;
-    if (selectedAgentIds.length > 1) {
-      void deliberateMission(contractId, selectedAgentIds).catch(error => {
-        addLog(error instanceof Error
-          ? error.message
-          : localize(state.language, 'La deliberación del equipo no pudo completarse.', 'The team discussion could not be completed.'), 'danger');
-      });
-    }
+    acceptContract(contractId, selectedAgentIds);
   };
 
   return (

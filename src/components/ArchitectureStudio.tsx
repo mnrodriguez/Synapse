@@ -26,7 +26,8 @@ import {
   Sparkles,
   Pencil,
   Check,
-  X
+  X,
+  Lock
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { t } from '../utils/i18n';
@@ -41,6 +42,7 @@ import {
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
+import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
 import { DocLinkBadge } from './DocLinkBadge';
 
 export const ArchitectureStudio: React.FC = () => {
@@ -76,6 +78,17 @@ export const ArchitectureStudio: React.FC = () => {
   const estimatedTrainingSeconds = estimateTrainingSeconds(100, trainingProgressPerTick);
   const estimateSpeed = Math.max(1, state.gameSpeed);
   const modelEvaluation = evaluateModelCapabilities(current, state.dataSources);
+  const isOptionUnlocked = (
+    field: 'parametersCount' | 'topology' | 'contextWindow' | 'quantization' | 'attention' | 'lossFunction',
+    value: number | string
+  ) => isProgressionUnlocked(
+    getModelOptionRequirement(field, value as ModelArchitecture[typeof field]),
+    state
+  );
+  const advancedSamplingUnlocked = isProgressionUnlocked(
+    { requiredResearchId: 'res_lora_peft', availableAfterDays: 30 },
+    state
+  );
 
   const handleTopologyChange = (top: ModelTopology) => {
     sound.playKeyClick();
@@ -397,10 +410,14 @@ export const ArchitectureStudio: React.FC = () => {
               desc: localize(state.language, 'Generación conjunta texto-visión-código con trayectorias óptimas de difusión.', 'Joint text, vision, and code generation using optimized diffusion paths.')
             }
           ].map(top => (
+            (() => {
+              const unlocked = isOptionUnlocked('topology', top.id);
+              return (
             <button
               key={top.id}
+              disabled={!unlocked}
               onClick={() => handleTopologyChange(top.id as ModelTopology)}
-              className={`p-2 rounded text-left border transition-all ${
+              className={`p-2 rounded text-left border transition-all disabled:cursor-not-allowed disabled:opacity-45 ${
                 current.topology === top.id
                   ? 'bg-cyan-950/70 border-cyan-400 text-cyan-200 shadow-[0_0_10px_rgba(0,255,200,0.15)]'
                   : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
@@ -412,11 +429,14 @@ export const ArchitectureStudio: React.FC = () => {
                   {TOPOLOGY_DOCS[top.id] && (
                     <DocLinkBadge doc={TOPOLOGY_DOCS[top.id]} language={state.language} />
                   )}
+                  {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
                   {current.topology === top.id && <CheckCircle2 className="w-3 h-3 text-cyan-400" />}
                 </div>
               </div>
               <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{top.desc}</p>
             </button>
+              );
+            })()
           ))}
         </div>
       </div>
@@ -431,17 +451,27 @@ export const ArchitectureStudio: React.FC = () => {
           </label>
           <div className="flex flex-wrap gap-1.5">
             {paramPresets.map(preset => (
+              (() => {
+                const unlocked = isOptionUnlocked('parametersCount', preset.value);
+                const requirement = getModelOptionRequirement('parametersCount', preset.value);
+                return (
               <button
                 key={preset.label}
+                disabled={!unlocked}
+                title={!unlocked
+                  ? localize(state.language, `Investiga ${requirement.requiredResearchId} o avanza al día ${requirement.availableAfterDays}`, `Research ${requirement.requiredResearchId} or advance to day ${requirement.availableAfterDays}`)
+                  : undefined}
                 onClick={() => handleParamsPreset(preset.value, preset.label)}
-                className={`px-2.5 py-1 rounded text-xs font-mono font-bold border transition-colors ${
+                className={`px-2.5 py-1 rounded text-xs font-mono font-bold border transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
                   current.parametersCount === preset.value
                     ? 'bg-yellow-950/60 border-yellow-400 text-yellow-300'
                     : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                 }`}
               >
-                {preset.label}
+                {preset.label} {!unlocked && <Lock className="ml-1 inline h-3 w-3" />}
               </button>
+                );
+              })()
             ))}
           </div>
           <p className="text-[10px] text-zinc-500">
@@ -457,17 +487,24 @@ export const ArchitectureStudio: React.FC = () => {
           </label>
           <div className="flex flex-wrap gap-1.5">
             {contextPresets.map(ctx => (
+              (() => {
+                const unlocked = isOptionUnlocked('contextWindow', ctx);
+                return (
               <button
                 key={ctx}
+                disabled={!unlocked}
                 onClick={() => handleContextChange(ctx)}
-                className={`px-2 py-1 rounded text-xs font-mono border transition-colors ${
+                className={`px-2 py-1 rounded text-xs font-mono border transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
                   current.contextWindow === ctx
                     ? 'bg-purple-950/60 border-purple-400 text-purple-300 font-bold'
                     : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                 }`}
               >
                 {ctx >= 1_000_000 ? '1M' : ctx >= 1000 ? `${ctx / 1000}k` : ctx}
+                {!unlocked && <Lock className="ml-1 inline h-3 w-3" />}
               </button>
+                );
+              })()
             ))}
           </div>
           <p className="text-[10px] text-zinc-500">
@@ -489,10 +526,14 @@ export const ArchitectureStudio: React.FC = () => {
               { id: 'fp4', label: 'FP4 Blackwell (0.5 byte/param)', hint: localize(state.language, 'Ultra-comprimido para 70B+', 'Ultra-compressed for 70B+') },
               { id: 'ternary_1bit', label: 'BitNet 1.58-bit Ternary', hint: localize(state.language, 'Solo {-1, 0, +1}, mínimo consumo', 'Only {-1, 0, +1}; minimal memory use') }
             ].map(q => (
+              (() => {
+                const unlocked = isOptionUnlocked('quantization', q.id);
+                return (
               <button
                 key={q.id}
+                disabled={!unlocked}
                 onClick={() => handleQuantizationChange(q.id as QuantizationType)}
-                className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
+                className={`w-full text-left p-1.5 rounded border text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                   current.quantization === q.id
                     ? 'bg-cyan-950/70 border-cyan-400 text-cyan-200'
                     : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
@@ -503,9 +544,12 @@ export const ArchitectureStudio: React.FC = () => {
                   {QUANTIZATION_DOCS[q.id] && (
                     <DocLinkBadge doc={QUANTIZATION_DOCS[q.id]} language={state.language} />
                   )}
+                  {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
                 </div>
                 <div className="text-[9px] text-zinc-500">{q.hint}</div>
               </button>
+                );
+              })()
             ))}
           </div>
         </div>
@@ -520,10 +564,14 @@ export const ArchitectureStudio: React.FC = () => {
               { id: 'flash_attention_3', label: 'FlashAttention-3', hint: localize(state.language, 'Tiling en SRAM, velocidad x2', 'SRAM tiling; up to 2x speed') },
               { id: 'linear_attention', label: 'Linear Attention', hint: localize(state.language, 'Kernelización de baja complejidad', 'Low-complexity kernelization') }
             ].map(att => (
+              (() => {
+                const unlocked = isOptionUnlocked('attention', att.id);
+                return (
               <button
                 key={att.id}
+                disabled={!unlocked}
                 onClick={() => handleAttentionChange(att.id as AttentionType)}
-                className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
+                className={`w-full text-left p-1.5 rounded border text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                   current.attention === att.id
                     ? 'bg-purple-950/70 border-purple-400 text-purple-200'
                     : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
@@ -534,9 +582,12 @@ export const ArchitectureStudio: React.FC = () => {
                   {ATTENTION_DOCS[att.id] && (
                     <DocLinkBadge doc={ATTENTION_DOCS[att.id]} language={state.language} />
                   )}
+                  {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
                 </div>
                 <div className="text-[9px] text-zinc-500">{att.hint}</div>
               </button>
+                );
+              })()
             ))}
           </div>
         </div>
@@ -552,10 +603,14 @@ export const ArchitectureStudio: React.FC = () => {
               { id: 'contrastive_infonce', label: 'Contrastive InfoNCE', hint: localize(state.language, 'Representaciones latentes conjuntas', 'Joint latent representations') },
               { id: 'energy_based', label: 'Energy-Based Objective', hint: localize(state.language, 'Minimización de energía libre del sistema', 'System free-energy minimization') }
             ].map(loss => (
+              (() => {
+                const unlocked = isOptionUnlocked('lossFunction', loss.id);
+                return (
               <button
                 key={loss.id}
+                disabled={!unlocked}
                 onClick={() => handleLossChange(loss.id as LossFunction)}
-                className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
+                className={`w-full text-left p-1.5 rounded border text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                   current.lossFunction === loss.id
                     ? 'bg-emerald-950/70 border-emerald-400 text-emerald-200'
                     : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
@@ -566,9 +621,12 @@ export const ArchitectureStudio: React.FC = () => {
                   {LOSS_DOCS[loss.id] && (
                     <DocLinkBadge doc={LOSS_DOCS[loss.id]} language={state.language} />
                   )}
+                  {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
                 </div>
                 <div className="text-[9px] text-zinc-500">{loss.hint}</div>
               </button>
+                );
+              })()
             ))}
           </div>
         </div>
@@ -666,12 +724,13 @@ export const ArchitectureStudio: React.FC = () => {
             </div>
             <input
               type="range"
+              disabled={!advancedSamplingUnlocked}
               min="0.10"
               max="1.00"
               step="0.05"
               value={currentParams.topP}
               onChange={(e) => handleInferenceParamChange('topP', parseFloat(e.target.value))}
-              className="w-full accent-purple-400 cursor-pointer"
+              className="w-full accent-purple-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
             />
             <div className="text-[9px] text-zinc-500 mt-1">{localize(state.language, 'Filtro de masa probabilística', 'Probability-mass filter')}</div>
           </div>
@@ -684,12 +743,13 @@ export const ArchitectureStudio: React.FC = () => {
             </div>
             <input
               type="range"
+              disabled={!advancedSamplingUnlocked}
               min="1"
               max="100"
               step="1"
               value={currentParams.topK}
               onChange={(e) => handleInferenceParamChange('topK', parseInt(e.target.value))}
-              className="w-full accent-yellow-400 cursor-pointer"
+              className="w-full accent-yellow-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
             />
             <div className="text-[9px] text-zinc-500 mt-1">{localize(state.language, 'Pool de vocabulario K', 'Top-K vocabulary pool')}</div>
           </div>
@@ -702,16 +762,23 @@ export const ArchitectureStudio: React.FC = () => {
             </div>
             <input
               type="range"
+              disabled={!advancedSamplingUnlocked}
               min="1.00"
               max="2.00"
               step="0.05"
               value={currentParams.repetitionPenalty}
               onChange={(e) => handleInferenceParamChange('repetitionPenalty', parseFloat(e.target.value))}
-              className="w-full accent-emerald-400 cursor-pointer"
+              className="w-full accent-emerald-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
             />
             <div className="text-[9px] text-zinc-500 mt-1">{localize(state.language, 'Previene bucles repetitivos', 'Prevents repetitive loops')}</div>
           </div>
         </div>
+        {!advancedSamplingUnlocked && (
+          <p className="mt-2 flex items-center gap-1 text-[10px] text-amber-300">
+            <Lock className="h-3 w-3" />
+            {localize(state.language, 'Top-P, Top-K y penalización se desbloquean con LoRA o en el día 12.', 'Top-P, Top-K, and repetition penalty unlock with LoRA research or on campaign day 12.')}
+          </p>
+        )}
       </div>
     </div>
   );

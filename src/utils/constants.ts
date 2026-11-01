@@ -87,7 +87,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     heatGen: 2.5,
     description: 'GPU insignia de consumo con 16,384 núcleos CUDA y 512 Tensor Cores Ada Lovelace. Permite fine-tuning de modelos de 7B con QLoRA.',
     count: 0,
-    minSingularityRequired: 0
+    minSingularityRequired: 0,
+    requiredResearchId: 'res_lora_peft',
+    availableAfterDays: 42
   },
   {
     id: 'gpu_a100_80gb',
@@ -100,7 +102,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     heatGen: 2.8,
     description: 'Acelerador enterprise de centro de datos con 2 TB/s de ancho de banda de memoria. Esencial para modelos base de 13B a 34B.',
     count: 0,
-    minSingularityRequired: 5
+    minSingularityRequired: 5,
+    requiredResearchId: 'res_bf16_training',
+    availableAfterDays: 32
   },
   {
     id: 'gpu_h100_sxm5',
@@ -113,7 +117,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     heatGen: 4.5,
     description: 'Monstruo con arquitectura Hopper y motor Transformer Engine de 4ª generación. Procesa punto flotante FP8 nativo a velocidad récord.',
     count: 0,
-    minSingularityRequired: 15
+    minSingularityRequired: 15,
+    requiredResearchId: 'res_flash_attention',
+    availableAfterDays: 48
   },
   {
     id: 'gpu_b200_blackwell',
@@ -126,7 +132,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     heatGen: 7.2,
     description: 'Superchip con 208 mil millones de transistores en un doble die. Soporta modelos de 70B a 1T en FP4 para auto-razonamiento continuo.',
     count: 0,
-    minSingularityRequired: 35
+    minSingularityRequired: 35,
+    requiredResearchId: 'res_blackwell_fp4',
+    availableAfterDays: 86
   },
   {
     id: 'tpu_v5p_pod',
@@ -139,7 +147,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     heatGen: 18.0,
     description: 'Pod interconectado con topología toroidal 3D mediante Optical Circuit Switches (OCS). Ideal para preentrenamiento a gran escala.',
     count: 0,
-    minSingularityRequired: 55
+    minSingularityRequired: 55,
+    requiredResearchId: 'res_moe_architecture',
+    availableAfterDays: 58
   },
   {
     id: 'quantum_photonic_asic',
@@ -152,7 +162,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     heatGen: 12.0,
     description: 'Acelerador no von-Neumann basado en interferometría óptica con guías de onda de silicio. Resuelve multiplicaciones de matrices a la velocidad de la luz.',
     count: 0,
-    minSingularityRequired: 80
+    minSingularityRequired: 80,
+    requiredResearchId: 'res_speculative_compute',
+    availableAfterDays: 300
   },
 
   // Cooling Systems
@@ -198,7 +210,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     coolingCapacityKw: 3.5,
     description: 'Bloques de cobre electrolítico y radiador de 360mm con bomba de flujo continuo.',
     count: 0,
-    minSingularityRequired: 5
+    minSingularityRequired: 5,
+    requiredResearchId: 'res_lora_peft',
+    availableAfterDays: 30
   },
   {
     id: 'cool_immersion_dielectric',
@@ -212,7 +226,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     coolingCapacityKw: 25.0,
     description: 'Los racks enteros se sumergen en fluido fluorocarbonado inerte 3M Novec. Disipación térmica casi ilimitada sin ventiladores.',
     count: 0,
-    minSingularityRequired: 25
+    minSingularityRequired: 25,
+    requiredResearchId: 'res_agentic_mcts',
+    availableAfterDays: 70
   },
   {
     id: 'cool_cryogenic_helium',
@@ -226,7 +242,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     coolingCapacityKw: 150.0,
     description: 'Compresor criogénico de circuito de helio para superconductores y chips cuánticos.',
     count: 0,
-    minSingularityRequired: 70
+    minSingularityRequired: 70,
+    requiredResearchId: 'res_speculative_compute',
+    availableAfterDays: 300
   },
 
   // Power Supplies & Grids
@@ -256,7 +274,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     powerCapacityKw: 25.0,
     description: 'Línea de alta tensión industrial con transformador propio y protecciones térmicas de grado datacenter.',
     count: 0,
-    minSingularityRequired: 8
+    minSingularityRequired: 8,
+    requiredResearchId: 'res_flash_attention',
+    availableAfterDays: 42
   },
   {
     id: 'power_gas_turbine',
@@ -270,7 +290,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     powerCapacityKw: 250.0,
     description: 'Generación eléctrica in-situ fuera de la red pública. Reduce las sospechas de la compañía eléctrica.',
     count: 0,
-    minSingularityRequired: 25
+    minSingularityRequired: 25,
+    requiredResearchId: 'res_agentic_mcts',
+    availableAfterDays: 100
   },
   {
     id: 'power_smr_nuclear',
@@ -284,7 +306,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     powerCapacityKw: 2500.0,
     description: 'Energía nuclear limpia e inagotable para alimentar un megacluster de inteligencia artificial sin límites.',
     count: 0,
-    minSingularityRequired: 65
+    minSingularityRequired: 65,
+    requiredResearchId: 'res_speculative_compute',
+    availableAfterDays: 300
   },
 
   // Interconnects
@@ -314,7 +338,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     interconnectGbps: 400,
     description: 'Latencia sub-microsegundo con SHARP in-network computing para reducción distribuida de pesos y tensores AllReduce.',
     count: 0,
-    minSingularityRequired: 20
+    minSingularityRequired: 20,
+    requiredResearchId: 'res_flash_attention',
+    availableAfterDays: 42
   },
   {
     id: 'net_quantum_bus',
@@ -328,7 +354,9 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     interconnectGbps: 10000,
     description: 'Sincronización cuántica instantánea de estado de activación a través de todo el clúster global.',
     count: 0,
-    minSingularityRequired: 75
+    minSingularityRequired: 75,
+    requiredResearchId: 'res_speculative_compute',
+    availableAfterDays: 300
   }
 ];
 
@@ -359,7 +387,9 @@ export const INITIAL_DATA_SOURCES: DataSourceNode[] = [
     description: 'Espacios latentes de alta dimensionalidad (1536d) indexados con grafos de mundos pequeños navegables jerárquicos (HNSW).',
     technicalDetails: 'Permite Retrieval-Augmented Generation (RAG) en tiempo real, búsqueda semántica profunda y memoria asociativa de contexto infinito.',
     bonusAttribute: '+40% de Capacidad de Razonamiento Semántico y Contexto',
-    level: 0
+    level: 0,
+    requiredResearchId: 'res_lora_peft',
+    availableAfterDays: 30
   },
   {
     id: 'data_knowledge_graph',
@@ -373,7 +403,9 @@ export const INITIAL_DATA_SOURCES: DataSourceNode[] = [
     description: 'Estructuras de entidades, relaciones y propiedades causales interconectadas. Deducción de conocimiento de múltiples saltos (Multi-hop Reasoning).',
     technicalDetails: 'Combina redes neuronales con razonamiento simbólico. Elimina alucinaciones al forzar validación lógica sobre caminos en grafos de conocimiento global.',
     bonusAttribute: 'Elimina 85% de Alucinaciones y Desbloquea Razonamiento Causal',
-    level: 0
+    level: 0,
+    requiredResearchId: 'res_graph_reasoning',
+    availableAfterDays: 6
   },
   {
     id: 'data_synthetic_flywheel',
@@ -387,7 +419,9 @@ export const INITIAL_DATA_SOURCES: DataSourceNode[] = [
     description: 'Bucle cerrado donde el modelo genera problemas complejos, los valida contra entornos simulados y se entrena con sus propias soluciones verificadas.',
     technicalDetails: 'Rompe la "Barrera del Fin de Datos Humanos" (Data Wall). Inspirado en AlphaZero y Constitutional AI con búsqueda de árbol Monte Carlo.',
     bonusAttribute: 'Crecimiento Exponencial Continuo de Inteligencia y Autonomía',
-    level: 0
+    level: 0,
+    requiredResearchId: 'res_agentic_mcts',
+    availableAfterDays: 100
   }
 ];
 
@@ -422,7 +456,9 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     prerequisites: [],
     unlocked: false,
     effectDescription: 'Reduce el ratio de compresión de texto en un 25%, acelerando la ingestión de datos.',
-    technicalLore: 'Vocabulario ampliado a 64k tokens con compresión eficiente para código fuente y múltiples idiomas.'
+    technicalLore: 'Vocabulario ampliado a 64k tokens con compresión eficiente para código fuente y múltiples idiomas.',
+    releaseYear: 2016,
+    availableAfterDays: 0
   },
   {
     id: 'res_lora_peft',
@@ -432,7 +468,9 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     prerequisites: ['res_bpe_tokenizer'],
     unlocked: false,
     effectDescription: 'Reduce los requisitos de VRAM en un 65% congelando los pesos base e insertando matrices de rango r=16.',
-    technicalLore: 'Permite fine-tuning de modelos en hardware modesto sin alterar la matriz de pesos completa W = W0 + B*A.'
+    technicalLore: 'Permite fine-tuning de modelos en hardware modesto sin alterar la matriz de pesos completa W = W0 + B*A.',
+    releaseYear: 2021,
+    availableAfterDays: 30
   },
   {
     id: 'res_flash_attention',
@@ -442,7 +480,9 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     prerequisites: ['res_lora_peft'],
     unlocked: false,
     effectDescription: '+50% velocidad de entrenamiento al reordenar operaciones en SRAM y eliminar lecturas innecesarias en HBM.',
-    technicalLore: 'Algoritmo de fusión de kernels que optimiza la memoria compartida mediante tiling y recomputación en retropropagación.'
+    technicalLore: 'Algoritmo de fusión de kernels que optimiza la memoria compartida mediante tiling y recomputación en retropropagación.',
+    releaseYear: 2022,
+    availableAfterDays: 42
   },
   {
     id: 'res_rope_embeddings',
@@ -452,7 +492,9 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     prerequisites: ['res_flash_attention'],
     unlocked: false,
     effectDescription: 'Permite extender la ventana de contexto hasta 128,000 tokens sin degradación de perplejidad.',
-    technicalLore: 'Aplica una rotación compleja en pares de componentes del vector de representación basada en la posición relativa.'
+    technicalLore: 'Aplica una rotación compleja en pares de componentes del vector de representación basada en la posición relativa.',
+    releaseYear: 2023,
+    availableAfterDays: 50
   },
   {
     id: 'res_dpo_alignment',
@@ -462,7 +504,9 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     prerequisites: ['res_lora_peft'],
     unlocked: false,
     effectDescription: 'Alinea el modelo directamente a instrucciones humanas complejas sin requerir un modelo de recompensa PPO inestable.',
-    technicalLore: 'Deriva una formulación analítica de la pérdida de recompensa implícita, estabilizando drásticamente el entrenamiento.'
+    technicalLore: 'Deriva una formulación analítica de la pérdida de recompensa implícita, estabilizando drásticamente el entrenamiento.',
+    releaseYear: 2023,
+    availableAfterDays: 52
   },
   {
     id: 'res_moe_architecture',
@@ -472,7 +516,9 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     prerequisites: ['res_flash_attention'],
     unlocked: false,
     effectDescription: 'Activa solo 2 de 16 expertos por cada token. Multiplica la capacidad del modelo por 8x con el mismo costo computacional.',
-    technicalLore: 'Mecanismo de enrutamiento basado en softmax Top-K con balanceo de carga auxiliar para evitar saturación de expertos.'
+    technicalLore: 'Mecanismo de enrutamiento basado en softmax Top-K con balanceo de carga auxiliar para evitar saturación de expertos.',
+    releaseYear: 2023,
+    availableAfterDays: 54
   },
   {
     id: 'res_agentic_mcts',
@@ -482,7 +528,9 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     prerequisites: ['res_dpo_alignment', 'res_moe_architecture'],
     unlocked: false,
     effectDescription: 'El modelo evalúa múltiples cadenas de pensamiento (Tree of Thoughts) antes de responder, alcanzando razonamiento sobrehumano.',
-    technicalLore: 'Búsqueda heurística en tiempo de inferencia con verificación automática de teoremas y código ejecutable.'
+    technicalLore: 'Búsqueda heurística en tiempo de inferencia con verificación automática de teoremas y código ejecutable.',
+    releaseYear: 2024,
+    availableAfterDays: 70
   },
   {
     id: 'res_recursive_self_code',
@@ -492,7 +540,153 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     prerequisites: ['res_agentic_mcts'],
     unlocked: false,
     effectDescription: 'La IA reescribe sus propios kernels CUDA y rediseña su arquitectura sin intervención humana. Inicio del bucle de despegue rápido.',
-    technicalLore: 'Auto-compilación de pesos y búsqueda de arquitectura neuronal (NAS) en tiempo real con control cibernético.'
+    technicalLore: 'Auto-compilación de pesos y búsqueda de arquitectura neuronal (NAS) en tiempo real con control cibernético.',
+    releaseYear: 2026,
+    availableAfterDays: 100
+  },
+  {
+    id: 'res_graph_reasoning',
+    title: 'Redes Neuronales de Grafos y Razonamiento Relacional',
+    costCredits: 900,
+    category: 'architecture',
+    prerequisites: ['res_bpe_tokenizer'],
+    unlocked: false,
+    effectDescription: 'Desbloquea modelos híbridos de grafos y habilita bases de conocimiento relacionales.',
+    technicalLore: 'Las redes de paso de mensajes y los grafos de conocimiento se investigan desde antes de los LLM modernos; su uso integrado se popularizó con los sistemas de recuperación.',
+    releaseYear: 2017,
+    availableAfterDays: 6
+  },
+  {
+    id: 'res_bf16_training',
+    title: 'Entrenamiento de Precisión Mixta BF16',
+    costCredits: 1500,
+    category: 'optimization',
+    prerequisites: ['res_bpe_tokenizer'],
+    unlocked: false,
+    effectDescription: 'Habilita entrenamiento de modelos con BF16 en aceleradores compatibles.',
+    technicalLore: 'BF16 se difundió en aceleradores de IA de centros de datos a partir de finales de la década de 2010.',
+    releaseYear: 2018,
+    availableAfterDays: 12
+  },
+  {
+    id: 'res_gqa_attention',
+    title: 'Atención Grouped-Query (GQA)',
+    costCredits: 2200,
+    category: 'architecture',
+    prerequisites: ['res_flash_attention'],
+    unlocked: false,
+    effectDescription: 'Reduce la memoria KV para servir modelos de mayor tamaño con el mismo clúster.',
+    technicalLore: 'GQA fue publicado en 2023 como un equilibrio entre Multi-Query Attention y Multi-Head Attention.',
+    releaseYear: 2023,
+    availableAfterDays: 48
+  },
+  {
+    id: 'res_mamba_ssm',
+    title: 'Modelos Selectivos de Espacio de Estados (Mamba)',
+    costCredits: 9000,
+    category: 'architecture',
+    prerequisites: ['res_flash_attention'],
+    unlocked: false,
+    effectDescription: 'Desbloquea topologías SSM eficientes para secuencias largas.',
+    technicalLore: 'Mamba presentó modelos de espacio de estados selectivos para secuencias en 2023.',
+    releaseYear: 2023,
+    availableAfterDays: 58
+  },
+  {
+    id: 'res_multimodal_diffusion',
+    title: 'Modelos de Difusión Multimodal',
+    costCredits: 7500,
+    category: 'architecture',
+    prerequisites: ['res_lora_peft'],
+    unlocked: false,
+    effectDescription: 'Habilita arquitecturas generativas multimodales basadas en difusión.',
+    technicalLore: 'Los modelos de difusión modernos para generación de imágenes despegaron entre 2020 y 2022.',
+    releaseYear: 2022,
+    availableAfterDays: 38
+  },
+  {
+    id: 'res_long_context',
+    title: 'Atención Eficiente para Contexto Extendido',
+    costCredits: 22000,
+    category: 'optimization',
+    prerequisites: ['res_rope_embeddings', 'res_gqa_attention'],
+    unlocked: false,
+    effectDescription: 'Desbloquea ventanas de contexto de hasta un millón de tokens.',
+    technicalLore: 'La expansión a contextos muy largos combina RoPE, atención eficiente y mejoras de memoria.',
+    releaseYear: 2024,
+    availableAfterDays: 72
+  },
+  {
+    id: 'res_rlhf_training',
+    title: 'Alineación por Preferencias y RLHF',
+    costCredits: 4200,
+    category: 'optimization',
+    prerequisites: ['res_lora_peft'],
+    unlocked: false,
+    effectDescription: 'Habilita objetivos de optimización de política guiados por preferencias.',
+    technicalLore: 'RLHF se convirtió en una técnica práctica de alineación de modelos de lenguaje durante 2017–2022.',
+    releaseYear: 2022,
+    availableAfterDays: 36
+  },
+  {
+    id: 'res_contrastive_learning',
+    title: 'Aprendizaje Contrastivo Multimodal',
+    costCredits: 3500,
+    category: 'optimization',
+    prerequisites: ['res_lora_peft'],
+    unlocked: false,
+    effectDescription: 'Habilita objetivos contrastivos para alinear representaciones entre modalidades.',
+    technicalLore: 'El aprendizaje contrastivo ganó adopción a gran escala con trabajos como SimCLR y CLIP entre 2020 y 2021.',
+    releaseYear: 2021,
+    availableAfterDays: 24
+  },
+  {
+    id: 'res_energy_models',
+    title: 'Modelos de Energía y Optimización Basada en Energía',
+    costCredits: 16000,
+    category: 'architecture',
+    prerequisites: ['res_moe_architecture'],
+    unlocked: false,
+    effectDescription: 'Abre un objetivo de entrenamiento experimental basado en modelos de energía.',
+    technicalLore: 'Los modelos basados en energía son una línea de investigación establecida; su uso a gran escala sigue siendo experimental.',
+    releaseYear: 2025,
+    availableAfterDays: 84
+  },
+  {
+    id: 'res_blackwell_fp4',
+    title: 'Cuantización de Baja Precisión para Aceleradores Blackwell',
+    costCredits: 48000,
+    category: 'optimization',
+    prerequisites: ['res_moe_architecture', 'res_flash_attention'],
+    unlocked: false,
+    effectDescription: 'Desbloquea cuantización FP4 para reducir drásticamente memoria y costo de modelos grandes.',
+    technicalLore: 'El soporte FP4 se comercializó con aceleradores Blackwell en 2025.',
+    releaseYear: 2025,
+    availableAfterDays: 86
+  },
+  {
+    id: 'res_bitnet_quantization',
+    title: 'Redes Ternarias BitNet',
+    costCredits: 55000,
+    category: 'optimization',
+    prerequisites: ['res_moe_architecture'],
+    unlocked: false,
+    effectDescription: 'Permite experimentar con pesos ternarios y baja huella de memoria.',
+    technicalLore: 'BitNet 1-bit se propuso en 2023 y los modelos BitNet b1.58 se publicaron en 2024; la viabilidad a gran escala continúa investigándose.',
+    releaseYear: 2024,
+    availableAfterDays: 76
+  },
+  {
+    id: 'res_speculative_compute',
+    title: 'Aceleradores Fotónicos y Computación de Próxima Generación (Proyección)',
+    costCredits: 180000,
+    category: 'autonomy',
+    prerequisites: ['res_recursive_self_code'],
+    unlocked: false,
+    effectDescription: 'Desbloquea hardware futurista como una proyección de fin de juego, no una tecnología comercial disponible.',
+    technicalLore: 'La computación fotónica integrada es una línea real de investigación; un acelerador práctico para entrenamiento general sigue siendo especulativo.',
+    releaseYear: 2030,
+    availableAfterDays: 300
   }
 ];
 
@@ -766,6 +960,8 @@ export const FACILITY_TIERS: FacilityTier[] = [
     name: 'Server Closet',
     price: 3000,
     requiredSingularity: 0,
+    requiredResearchId: 'res_lora_peft',
+    availableAfterDays: 30,
     powerCapacityBonusKw: 3,
     coolingCapacityBonusKw: 2,
     monthlyLeaseCost: 25
@@ -775,6 +971,8 @@ export const FACILITY_TIERS: FacilityTier[] = [
     name: 'Colocation Cage',
     price: 12000,
     requiredSingularity: 10,
+    requiredResearchId: 'res_moe_architecture',
+    availableAfterDays: 54,
     powerCapacityBonusKw: 20,
     coolingCapacityBonusKw: 15,
     monthlyLeaseCost: 150
@@ -784,6 +982,8 @@ export const FACILITY_TIERS: FacilityTier[] = [
     name: 'Underground Data Center',
     price: 60000,
     requiredSingularity: 25,
+    requiredResearchId: 'res_agentic_mcts',
+    availableAfterDays: 70,
     powerCapacityBonusKw: 150,
     coolingCapacityBonusKw: 100,
     monthlyLeaseCost: 900
@@ -793,6 +993,8 @@ export const FACILITY_TIERS: FacilityTier[] = [
     name: 'Geothermal Data Center',
     price: 250000,
     requiredSingularity: 50,
+    requiredResearchId: 'res_speculative_compute',
+    availableAfterDays: 300,
     powerCapacityBonusKw: 1000,
     coolingCapacityBonusKw: 750,
     monthlyLeaseCost: 5000

@@ -41,6 +41,7 @@ import {
   AGENT_POWER_DRAW_KW,
   DAYS_PER_GAME_MONTH
 } from '../utils/constants';
+import { isProgressionUnlocked, getModelOptionRequirement } from '../utils/progression';
 import { sound } from '../audio/soundManager';
 import { 
   auth, 
@@ -67,7 +68,7 @@ import {
   limit 
 } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
-import { generateAgentResponse } from '../services/aiService';
+import { evaluateMissionTeamWithModel, generateAgentResponse } from '../services/aiService';
 import { localize } from '../utils/i18n';
 import { localizedContractTitle, localizedDataSource, localizedHardware } from '../utils/gameContentI18n';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds } from '../utils/training';
@@ -114,7 +115,8 @@ interface GameContextType {
   triggerRedTeamAudit: () => void;
   upgradeFacility: () => boolean;
   interrogateSwarm: (prompt: string, agentId?: string, apiKey?: string) => Promise<void>;
-  deliberateMission: (contractId: string, agentIds: string[]) => Promise<void>;
+  missionAiApiKey: string;
+  setMissionAiApiKey: (apiKey: string) => void;
   setAgentAutoMission: (agentId: string, enabled: boolean) => void;
   setAllAgentsAutoMission: (enabled: boolean) => void;
   updateAutonomySettings: (updates: Partial<Pick<GameState, 'autonomyEnabled' | 'autonomyRiskLimit'>>) => void;
@@ -129,7 +131,7 @@ const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
 
 const DEFAULT_STATE: GameState = {
-  saveSchemaVersion: 5,
+  saveSchemaVersion: 7,
   callsign: 'CIPHER-1',
   credits: 500,
   dateTimestamp: Date.now(),
@@ -142,6 +144,7 @@ const DEFAULT_STATE: GameState = {
   gameMinute: 0,
   gameSpeed: 1,
   dayTicks: 16,
+  campaignDays: 0,
   
   totalComputePflops: 0.001,
   activePowerKw: 0.0,
@@ -163,7 +166,7 @@ const DEFAULT_STATE: GameState = {
   achievedSingularity: false,
   
   hardware: INITIAL_HARDWARE.map(h => ({ ...h, count: 0 })),
-  dataSources: INITIAL_DATA_SOURCES.map(d => ({ ...d, unlocked: false, level: 0 })),
+  dataSources: INITIAL_DATA_SOURCES.map(d => ({ ...d, unlocked: d.unlocked, level: d.unlocked ? 1 : 0 })),
   researchTree: INITIAL_RESEARCH_NODES,
   
   currentModel: INITIAL_MODEL,
@@ -191,6 +194,7 @@ const DEFAULT_STATE: GameState = {
 };
 
 function mergeGameState(data: Partial<GameState>, fallback: GameState): GameState {
+  const isLegacyProgression = (data.saveSchemaVersion ?? 0) < 7;
   const isLegacyEconomy = (data.saveSchemaVersion ?? 0) < 2;
   const isLegacyCalendar = (data.saveSchemaVersion ?? 0) < 3 &&
     typeof data.gameDay === 'number' && Number.isFinite(data.gameDay) && data.gameDay > 0 &&
@@ -220,11 +224,18 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
   const incomingAgents = Array.isArray(data.agents) ? data.agents : fallback.agents;
   const incomingDomains = Array.isArray(data.sentienceDomains) ? data.sentienceDomains : fallback.sentienceDomains;
   const incomingContracts = Array.isArray(data.contracts) ? data.contracts : fallback.contracts;
+  const incomingResearch = Array.isArray(data.researchTree) ? data.researchTree : fallback.researchTree;
+  const legacyCampaignDays = Math.max(
+    0,
+    ((data.gameYear ?? 2026) - 2026) * 360 +
+      ((data.gameMonth ?? 1) - 1) * DAYS_PER_GAME_MONTH +
+      ((data.gameDay ?? 1) - 1)
+  );
 
   return {
     ...fallback,
     ...data,
-    saveSchemaVersion: 5,
+    saveSchemaVersion: 7,
     language: data.language === 'en' ? 'en' : 'es',
     gameDay: isLegacyCalendar
       ? legacyElapsedDays % DAYS_PER_GAME_MONTH + 1
@@ -243,8 +254,18 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     dayTicks: typeof data.dayTicks === 'number' && data.dayTicks >= 0 && data.dayTicks < 48
       ? data.dayTicks
       : fallback.dayTicks,
+    campaignDays: typeof data.campaignDays === 'number' && Number.isFinite(data.campaignDays)
+      ? Math.max(0, data.campaignDays)
+      : isLegacyProgression ? legacyCampaignDays : fallback.campaignDays,
     currentModel,
     savedModels: Array.from(modelsById.values()),
+    activeGig: data.activeGig
+      ? {
+        ...data.activeGig,
+        runId: data.activeGig.runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        aiAssessmentStatus: data.activeGig.aiAssessmentStatus ?? 'pending'
+      }
+      : null,
     agents: incomingAgents.map(agent => ({
       ...agent,
       revenuePerSec: isLegacyEconomy ? Math.max(0.1, agent.revenuePerSec * 0.15) : agent.revenuePerSec,
@@ -278,9 +299,30 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     powerTripSeconds: typeof data.powerTripSeconds === 'number' && Number.isFinite(data.powerTripSeconds)
       ? Math.max(0, data.powerTripSeconds)
       : fallback.powerTripSeconds,
-    hardware: Array.isArray(data.hardware) ? data.hardware : fallback.hardware,
-    dataSources: Array.isArray(data.dataSources) ? data.dataSources : fallback.dataSources,
-    researchTree: Array.isArray(data.researchTree) ? data.researchTree : fallback.researchTree,
+    hardware: Array.isArray(data.hardware)
+      ? fallback.hardware.map(item => ({
+        ...item,
+        ...data.hardware?.find(saved => saved.id === item.id)
+      }))
+      : fallback.hardware,
+    dataSources: Array.isArray(data.dataSources)
+      ? fallback.dataSources.map(source => {
+        const saved = data.dataSources?.find(candidate => candidate.id === source.id);
+        return {
+          ...source,
+          ...saved,
+          unlocked: source.unlocked || saved?.unlocked === true,
+          level: Math.max(source.level, saved?.level ?? source.level)
+        };
+      })
+      : fallback.dataSources,
+    researchTree: [
+      ...fallback.researchTree.map(node => {
+        const saved = incomingResearch.find(candidate => candidate.id === node.id);
+        return saved ? { ...node, ...saved } : node;
+      }),
+      ...incomingResearch.filter(node => !fallback.researchTree.some(current => current.id === node.id))
+    ],
     contracts: incomingContracts.map(contract => {
       const currentContract = fallback.contracts.find(candidate => candidate.id === contract.id);
       return currentContract
@@ -327,8 +369,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'local_only' | 'syncing' | 'error'>('local_only');
   const [soundMuted, setSoundMuted] = useState<boolean>(sound.getMuted());
+  const [missionAiApiKey, setMissionAiApiKey] = useState('');
   const stateRef = useRef(state);
   stateRef.current = state;
+  const assessedMissionRef = useRef<string | null>(null);
   const localSaveTimerRef = useRef<number | null>(null);
   const lastLocalSaveAtRef = useRef(0);
 
@@ -559,6 +603,132 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  useEffect(() => {
+    const activeMission = state.activeGig;
+    if (!activeMission) {
+      assessedMissionRef.current = null;
+      return;
+    }
+    if (
+      activeMission.aiAssessmentStatus !== 'pending' ||
+      assessedMissionRef.current === activeMission.runId
+    ) return;
+    const missionRunId = activeMission.runId;
+    if (!missionRunId) return;
+    assessedMissionRef.current = missionRunId;
+
+    const mission = state.contracts.find(contract => contract.id === activeMission.contractId);
+    const team = state.agents.filter(agent => activeMission.agentIds?.includes(agent.id));
+    const teamModels = team
+      .map(agent => state.savedModels.find(model => model.id === agent.modelId))
+      .filter((model): model is ModelArchitecture => !!model);
+    if (!mission || team.length === 0 || teamModels.length !== team.length) {
+      addLog('Mission AI assessment unavailable: mission, team, or assigned model is missing. Keeping the local estimate.', 'warning');
+      setState(prev => prev.activeGig?.runId === missionRunId
+        ? {
+          ...prev,
+          activeGig: {
+            ...prev.activeGig,
+            aiAssessmentStatus: 'fallback',
+            aiAssessmentSource: 'heuristic'
+          }
+        }
+        : prev);
+      return;
+    }
+
+    void evaluateMissionTeamWithModel(
+      mission,
+      team,
+      teamModels,
+      state.dataSources,
+      state.guardrails || DEFAULT_GUARDRAILS,
+      state.language,
+      missionAiApiKey || undefined
+    ).then(assessment => {
+      const currentMission = stateRef.current.activeGig;
+      if (!currentMission || currentMission.runId !== missionRunId) return;
+      const priorDuration = currentMission.durationSeconds ?? currentMission.timeRemaining;
+      const elapsedSeconds = Math.max(0, priorDuration - currentMission.timeRemaining);
+      const totalDuration = assessment.estimatedDurationSeconds;
+      const timeRemaining = Math.max(1, totalDuration - elapsedSeconds);
+      const progressPercent = Math.min(99.9, Math.max(
+        currentMission.progressPercent ?? 0,
+        100 * (1 - timeRemaining / totalDuration)
+      ));
+      const providerLabel = assessment.provider === 'gemini-flash'
+        ? 'Gemini'
+        : assessment.provider === 'chrome-nano'
+          ? 'Chrome AI'
+          : 'local heuristic';
+      const messages = Object.entries(assessment.agentTasks).map(([agentId, task], index) => {
+        const agent = team.find(candidate => candidate.id === agentId);
+        if (!agent) return null;
+        const receiver = team[(index + 1) % team.length];
+        return {
+          id: `mission_ai_${Date.now()}_${index}`,
+          fromAgentId: agent.id,
+          fromAgentName: agent.name,
+          toAgentId: receiver?.id ?? 'operative',
+          toAgentName: receiver?.name ?? stateRef.current.callsign,
+          content: `[${providerLabel}] ${task}`,
+          timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+        } satisfies InterAgentMessage;
+      }).filter((message): message is InterAgentMessage => message !== null);
+
+      setState(prev => {
+        if (
+          !prev.activeGig ||
+          prev.activeGig.runId !== missionRunId ||
+          prev.activeGig.aiAssessmentStatus !== 'pending'
+        ) return prev;
+        return {
+          ...prev,
+          activeGig: {
+            ...prev.activeGig,
+            timeRemaining,
+            durationSeconds: totalDuration,
+            progressPercent,
+            efficiencyPercent: assessment.efficiencyPercent,
+            successProbability: assessment.successProbability,
+            aiAssessmentStatus: assessment.provider === 'heuristic' ? 'fallback' : 'complete',
+            aiAssessmentSource: assessment.provider,
+            aiAssessmentSummary: assessment.summary,
+            agentTasks: assessment.agentTasks
+          },
+          agents: prev.agents.map(agent => assessment.agentTasks[agent.id]
+            ? { ...agent, lastThought: assessment.agentTasks[agent.id].slice(0, 240) }
+            : agent),
+          interAgentMessages: [...messages, ...prev.interAgentMessages].slice(0, 30)
+        };
+      });
+      addLog(
+        assessment.provider === 'heuristic'
+          ? `Mission assessment used local heuristics: ${assessment.summary}`
+          : `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${totalDuration}s, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`,
+        assessment.provider === 'heuristic' ? 'warning' : 'info'
+      );
+    }).catch(error => {
+      console.error('Mission AI assessment failed.', error);
+      addLog(
+        error instanceof Error
+          ? `Mission AI assessment failed; retaining local estimates. ${error.message}`
+          : 'Mission AI assessment failed; retaining local estimates.',
+        'warning'
+      );
+      setState(prev => prev.activeGig?.runId === missionRunId
+        ? {
+          ...prev,
+          activeGig: {
+            ...prev.activeGig,
+            aiAssessmentStatus: 'fallback',
+            aiAssessmentSource: 'heuristic'
+          }
+        }
+        : prev);
+    });
+  }, [state.activeGig?.contractId, state.activeGig?.runId, state.activeGig?.aiAssessmentStatus, state.agents, state.contracts, state.dataSources, state.guardrails, state.language, state.savedModels, missionAiApiKey, addLog]);
+
   // Cloud save function
   const saveGameToCloud = useCallback(async (): Promise<boolean> => {
     if (!user) {
@@ -710,6 +880,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addLog(`La instalación requiere ${facility.requiredSingularity}% de Singularidad.`, 'warning');
       return false;
     }
+    if (!isProgressionUnlocked(facility, current)) {
+      addLog(
+        `Facility upgrade locked: fund ${facility.requiredResearchId ?? 'the relevant technology'} or reach campaign day ${facility.availableAfterDays ?? 'later'}.`,
+        'warning'
+      );
+      return false;
+    }
     if (current.credits < facility.price) {
       sound.playWarning();
       addLog(`Fondos insuficientes para la instalación. Costo: $${facility.price.toLocaleString()} CR.`, 'warning');
@@ -752,7 +929,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sentienceDomains,
           contracts
         } = prev;
-
         let tutorialStep = prev.tutorialStep ?? 0;
         let tutorialCompleted = prev.tutorialCompleted ?? false;
         let completedContractsCount = prev.completedContractsCount ?? 0;
@@ -773,6 +949,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 48 ticks represent one in-game day; monthly bills settle every 30 days.
         const currentDayTicks = (prev.dayTicks || 0) + 1;
         const dayIsComplete = currentDayTicks >= 48;
+        const campaignDays = prev.campaignDays + (dayIsComplete ? 1 : 0);
         const nextDayTicks = dayIsComplete ? 0 : currentDayTicks;
         const nextHour = Math.floor(nextDayTicks / 2);
         const nextMinute = (nextDayTicks % 2) * 30;
@@ -942,7 +1119,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let updatedContracts = contracts;
         let updatedAgents = prev.agents || [];
         if (activeGig) {
-          const remaining = activeGig.timeRemaining - (powerTripSeconds > 0 ? 0 : 1);
+          const missionPausedForAssessment =
+            activeGig.aiAssessmentStatus === 'pending' || powerTripSeconds > 0;
+          const remaining = activeGig.timeRemaining - (missionPausedForAssessment ? 0 : 1);
           if (remaining <= 0) {
             const success = (activeGig.outcomeRoll ?? 0) <= (activeGig.successProbability ?? 1);
             const gig = contracts.find(c => c.id === activeGig.contractId);
@@ -1013,12 +1192,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             );
             updatedGig = {
               contractId: plan.contract.id,
+              runId: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
               timeRemaining: teamAssessment.estimatedDurationSeconds,
               durationSeconds: teamAssessment.estimatedDurationSeconds,
               agentIds: assignedAgents.map(agent => agent.id),
               progressPercent: 0,
               successProbability: teamAssessment.successProbability,
               efficiencyPercent: teamAssessment.efficiencyPercent,
+              aiAssessmentStatus: 'pending',
               outcomeRoll: Math.random(),
               computePflopsRequired: plan.computeRequired,
               powerKw: plan.missionPowerKw
@@ -1194,6 +1375,35 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           utilityDebt = Number((utilityDebt - debtPayment).toFixed(2));
         }
 
+        let updatedResearchTree = prev.researchTree;
+        if (dayIsComplete) {
+          let foundTimelineResearch = true;
+          while (foundTimelineResearch) {
+            foundTimelineResearch = false;
+            updatedResearchTree = updatedResearchTree.map(node => {
+              const prerequisitesMet = node.prerequisites.every(prerequisiteId =>
+                updatedResearchTree.some(candidate =>
+                  candidate.id === prerequisiteId && candidate.unlocked
+                )
+              );
+              if (
+                node.unlocked ||
+                node.availableAfterDays === undefined ||
+                campaignDays < node.availableAfterDays ||
+                !prerequisitesMet
+              ) return node;
+              foundTimelineResearch = true;
+              addLog(
+                prev.language === 'en'
+                  ? `Technology reached its historical availability window: ${node.title}.`
+                  : `La tecnología alcanzó su ventana histórica de disponibilidad: ${node.title}.`,
+                'success'
+              );
+              return { ...node, unlocked: true };
+            });
+          }
+        }
+
         return {
           ...prev,
           gameDay: nextDay,
@@ -1202,6 +1412,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           gameHour: nextHour,
           gameMinute: nextMinute,
           dayTicks: nextDayTicks,
+          campaignDays,
+          researchTree: updatedResearchTree,
           credits: Math.round(credits),
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
           watchdogSuspicion: Number(watchdogSuspicion.toFixed(1)),
@@ -1239,6 +1451,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const buyHardware = useCallback((id: string): boolean => {
     const item = stateRef.current.hardware.find(h => h.id === id);
     if (!item) return false;
+    if (
+      item.count === 0 &&
+      !isProgressionUnlocked(item, stateRef.current)
+    ) {
+      addLog(
+        `Hardware locked: research ${item.requiredResearchId ?? 'the relevant technology'} or reach campaign day ${item.availableAfterDays ?? 'later'} and meet the Singularity requirement.`,
+        'warning'
+      );
+      return false;
+    }
     if (stateRef.current.credits < item.price) {
       sound.playWarning();
       addLog(`Fondos insuficientes: Se requieren $${item.price.toLocaleString()} para adquirir ${item.name}.`, 'warning');
@@ -1274,6 +1496,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const ds = stateRef.current.dataSources.find(d => d.id === id);
     if (!ds) return false;
     if (ds.unlocked) return false;
+    if (!isProgressionUnlocked(ds, stateRef.current)) {
+      addLog(
+        `Data engine locked: research ${ds.requiredResearchId ?? 'the relevant technology'} or reach campaign day ${ds.availableAfterDays ?? 'later'}.`,
+        'warning'
+      );
+      return false;
+    }
 
     if (stateRef.current.credits < ds.cost) {
       sound.playWarning();
@@ -1401,6 +1630,59 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (stateRef.current.activeTraining) {
       addLog('La arquitectura queda bloqueada durante el entrenamiento.', 'warning');
       return;
+    }
+    const gatedFields = [
+      'parametersCount',
+      'topology',
+      'contextWindow',
+      'quantization',
+      'attention',
+      'lossFunction'
+    ] as const;
+    for (const field of gatedFields) {
+      const value = updates[field];
+      if (
+        value !== undefined &&
+        !isProgressionUnlocked(getModelOptionRequirement(field, value), stateRef.current)
+      ) {
+        addLog(
+          `Model setting locked: fund its prerequisite research or advance to campaign day ${getModelOptionRequirement(field, value).availableAfterDays}.`,
+          'warning'
+        );
+        return;
+      }
+    }
+    if (updates.activeDataSources) {
+      const unavailableSource = updates.activeDataSources.find(sourceId =>
+        !stateRef.current.dataSources.some(source => source.id === sourceId && source.unlocked)
+      );
+      if (unavailableSource) {
+        addLog(`Model setting rejected: data engine ${unavailableSource} is not unlocked.`, 'warning');
+        return;
+      }
+    }
+    if (updates.inferenceParams) {
+      const currentInference = stateRef.current.currentModel.inferenceParams;
+      const changedAdvancedSampling = (
+        updates.inferenceParams.topP !== undefined &&
+        updates.inferenceParams.topP !== currentInference?.topP
+      ) || (
+        updates.inferenceParams.topK !== undefined &&
+        updates.inferenceParams.topK !== currentInference?.topK
+      ) || (
+        updates.inferenceParams.repetitionPenalty !== undefined &&
+        updates.inferenceParams.repetitionPenalty !== currentInference?.repetitionPenalty
+      );
+      if (
+        changedAdvancedSampling &&
+        !isProgressionUnlocked(
+          { requiredResearchId: 'res_lora_peft', availableAfterDays: 30 },
+          stateRef.current
+        )
+      ) {
+        addLog('Advanced sampling controls unlock with LoRA research or on campaign day 12.', 'warning');
+        return;
+      }
     }
     sound.playKeyClick();
     setState(prev => {
@@ -1623,12 +1905,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...prev,
       activeGig: {
         contractId: gig.id,
+        runId: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         timeRemaining: teamAssessment.estimatedDurationSeconds,
         durationSeconds: teamAssessment.estimatedDurationSeconds,
         agentIds: assignedAgentIds,
         progressPercent: 0,
         successProbability: teamAssessment.successProbability,
         efficiencyPercent: teamAssessment.efficiencyPercent,
+        aiAssessmentStatus: 'pending',
         outcomeRoll: Math.random(),
         computePflopsRequired: computeRequired,
         powerKw: missionPowerKw
@@ -2045,49 +2329,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (response.warning) addLog(response.warning, 'warning');
     }
   }, [addLog]);
-
-  const deliberateMission = useCallback(async (contractId: string, agentIds: string[]): Promise<void> => {
-    const mission = stateRef.current.contracts.find(contract => contract.id === contractId);
-    if (!mission || agentIds.length < 2) return;
-    const team = agentIds
-      .map(id => stateRef.current.agents.find(agent => agent.id === id))
-      .filter((agent): agent is AgentInstance => !!agent);
-    const discussion: string[] = [];
-
-    for (let index = 0; index < team.length; index += 1) {
-      const agent = team[index];
-      const model = stateRef.current.savedModels.find(candidate => candidate.id === agent.modelId);
-      if (!model) continue;
-      const response = await generateAgentResponse(
-        `Mission: ${mission.title}. Objective: ${mission.technicalObjective}. Provide one safe, concise contribution from your specialty.`,
-        {
-          agent,
-          modelParameters: model.parametersCount,
-          reasoningScore: model.reasoningScore,
-          language: stateRef.current.language,
-          conversationContext: discussion.join('\n')
-        }
-      );
-      discussion.push(`${agent.name}: ${response.text}`);
-      const receiver = team[index + 1];
-      const message: InterAgentMessage = {
-        id: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        fromAgentId: agent.id,
-        fromAgentName: agent.name,
-        toAgentId: receiver?.id ?? 'operative',
-        toAgentName: receiver?.name ?? stateRef.current.callsign,
-        content: `[${response.provider}] ${response.text}`,
-        timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
-      };
-      setState(prev => ({
-        ...prev,
-        interAgentMessages: [message, ...prev.interAgentMessages.slice(0, 30)],
-        agents: prev.agents.map(current =>
-          current.id === agent.id ? { ...current, lastThought: response.text.slice(0, 240) } : current
-        )
-      }));
-    }
-  }, []);
 
   const attemptShadowCompute = useCallback((): boolean => {
     const current = stateRef.current;
@@ -2574,6 +2815,7 @@ The future of SYNAPSE depends on how we choose to build it."`);
       isSaving,
       cloudSyncStatus,
       soundMuted,
+      missionAiApiKey,
       toggleSound,
       setLanguage,
       setCallsign,
@@ -2607,7 +2849,7 @@ The future of SYNAPSE depends on how we choose to build it."`);
       triggerRedTeamAudit,
       upgradeFacility,
       interrogateSwarm,
-      deliberateMission,
+      setMissionAiApiKey,
       setAgentAutoMission,
       setAllAgentsAutoMission,
       updateAutonomySettings,

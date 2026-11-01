@@ -62,6 +62,7 @@ const MISSION_PHASES = [
 export const AgentSandbox: React.FC = () => {
   const { 
     state, 
+    missionAiApiKey,
     createAgent, 
     deleteAgent, 
     quarantineAgent, 
@@ -71,7 +72,8 @@ export const AgentSandbox: React.FC = () => {
     addLog,
     setAgentAutoMission,
     setAllAgentsAutoMission,
-    updateAutonomySettings
+    updateAutonomySettings,
+    setMissionAiApiKey
   } = useGame();
 
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
@@ -94,7 +96,6 @@ export const AgentSandbox: React.FC = () => {
   );
   const [interrogationTarget, setInterrogationTarget] = useState('swarm');
   const [interrogationPrompt, setInterrogationPrompt] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
   const [isInterrogating, setIsInterrogating] = useState(false);
 
   // Calculate live swarm stats
@@ -265,7 +266,7 @@ export const AgentSandbox: React.FC = () => {
       await interrogateSwarm(
         interrogationPrompt,
         interrogationTarget === 'swarm' ? undefined : interrogationTarget,
-        geminiApiKey || undefined
+        missionAiApiKey || undefined
       );
       setInterrogationPrompt('');
     } catch (error) {
@@ -410,17 +411,17 @@ export const AgentSandbox: React.FC = () => {
             <input
               type="password"
               autoComplete="off"
-              value={geminiApiKey}
-              onChange={event => setGeminiApiKey(event.target.value)}
-              placeholder={localize(state.language, 'API key opcional; solo se conserva en memoria mientras esta pantalla está abierta', 'Optional API key; kept in memory only while this screen is open')}
+              value={missionAiApiKey}
+              onChange={event => setMissionAiApiKey(event.target.value)}
+              placeholder={localize(state.language, 'API key opcional; solo se conserva en memoria y se usa para evaluar misiones', 'Optional API key; kept only in memory and used for mission assessments')}
               className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-200"
             />
-            <button type="button" onClick={() => setGeminiApiKey('')} className="rounded border border-zinc-700 px-2 py-1 text-[10px] text-zinc-400 hover:text-zinc-100">
+            <button type="button" onClick={() => setMissionAiApiKey('')} className="rounded border border-zinc-700 px-2 py-1 text-[10px] text-zinc-400 hover:text-zinc-100">
               {localize(state.language, 'BORRAR KEY', 'CLEAR KEY')}
             </button>
           </div>
           <p className="mt-1 text-[9px] leading-relaxed text-amber-300/80">
-            {localize(state.language, 'La clave no se guarda en el juego y se envía directamente a Google al consultar. Las cuotas gratuitas dependen de la cuenta y pueden cambiar; limita la clave en Google AI Studio. Chrome AI local o el modo procedural siguen disponibles sin clave.', 'The key is not saved in the game and is sent directly to Google when you query. Free quotas depend on your account and may change; restrict the key in Google AI Studio. Local Chrome AI or procedural mode remain available without a key.')}
+            {localize(state.language, 'La clave solo permanece en memoria durante esta sesión, no se guarda en el juego y se envía directamente a Google. Las cuotas pueden generar costos; restríngela en Google AI Studio. Chrome AI local funciona sin clave; si no hay proveedor, se usa una estimación heurística claramente indicada.', 'The key stays in memory for this app session only, is not saved in the game, and is sent directly to Google. Quotas may incur costs; restrict the key in Google AI Studio. Local Chrome AI works without a key; if no model provider is available, a clearly labeled heuristic estimate is used.')}
           </p>
         </details>
       </form>
@@ -454,6 +455,24 @@ export const AgentSandbox: React.FC = () => {
                 <span className="text-cyan-300">{localize(state.language, 'Eficiencia', 'Efficiency')} {state.activeGig.efficiencyPercent ?? 100}%</span>
                 <span className="text-emerald-300">{Math.round((state.activeGig.successProbability ?? 0) * 100)}% {localize(state.language, 'éxito', 'success')}</span>
               </div>
+            </div>
+            <div className="rounded border border-zinc-800 bg-[#050a11] px-2 py-1.5 text-[10px]">
+              <span className={`font-bold ${
+                state.activeGig.aiAssessmentStatus === 'complete'
+                  ? 'text-emerald-300'
+                  : state.activeGig.aiAssessmentStatus === 'fallback'
+                    ? 'text-amber-300'
+                    : 'text-cyan-300'
+              }`}>
+                {state.activeGig.aiAssessmentStatus === 'complete'
+                  ? `${state.activeGig.aiAssessmentSource === 'gemini-flash' ? 'Gemini' : 'Chrome AI'} ${localize(state.language, 'EVALUÓ EL EQUIPO', 'TEAM ASSESSMENT')}`
+                  : state.activeGig.aiAssessmentStatus === 'fallback'
+                    ? localize(state.language, 'ESTIMACIÓN HEURÍSTICA (SIN MODELO)', 'HEURISTIC ESTIMATE (NO MODEL)')
+                    : localize(state.language, 'EL MODELO ESTÁ EVALUANDO…', 'MODEL IS ASSESSING…')}
+              </span>
+              {state.activeGig.aiAssessmentSummary && (
+                <p className="mt-1 text-zinc-400">{state.activeGig.aiAssessmentSummary}</p>
+              )}
             </div>
 
             <div>
@@ -497,7 +516,8 @@ export const AgentSandbox: React.FC = () => {
                       <span className="text-zinc-500">{capability ? `${capability.overall}% ${localize(state.language, 'ajuste', 'fit')}` : ''}</span>
                     </div>
                     <p className="mt-1 text-[10px] leading-relaxed text-zinc-400">
-                      {state.language === 'es' ? roleTask.es : roleTask.en}
+                      {state.activeGig.agentTasks?.[agent.id] ??
+                        (state.language === 'es' ? roleTask.es : roleTask.en)}
                     </p>
                   </div>
                 );

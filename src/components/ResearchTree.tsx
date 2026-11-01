@@ -15,7 +15,8 @@ import {
   Zap, 
   Cpu, 
   GitBranch,
-  Layers
+  Layers,
+  Clock
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
@@ -58,18 +59,26 @@ export const ResearchTree: React.FC = () => {
             {localize(state.language, 'ÁRBOL DE INVESTIGACIÓN // PAPERS CIENTÍFICOS & DISRUPCIÓN', 'RESEARCH TREE // SCIENTIFIC PAPERS & BREAKTHROUGHS')}
           </h2>
         </div>
-        <div className="text-xs text-zinc-400">
-          {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="text-amber-300 font-bold">${state.credits.toLocaleString()} CR</span>
+        <div className="flex flex-wrap gap-3 text-xs text-zinc-400">
+          <span>
+            {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="text-amber-300 font-bold">${state.credits.toLocaleString()} CR</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="h-3 w-3 text-cyan-400" />
+            {localize(state.language, 'Día de campaña', 'Campaign day')} <strong className="text-cyan-300">{state.campaignDays}</strong>
+          </span>
         </div>
       </div>
 
       <p className="text-xs text-zinc-400 leading-relaxed">
-        {localize(state.language, 'Desbloquea innovaciones de vanguardia en la literatura de machine learning: desde LoRA y FlashAttention-3 para reducir VRAM, hasta MoE y auto-modificación recursiva del código para iniciar el despegue hacia la Singularidad.', 'Unlock state-of-the-art machine-learning research: from LoRA and FlashAttention-3 for reducing VRAM use to MoE and recursive code optimization for the path to the Singularity.')}
+        {localize(state.language, 'La tecnología sigue un orden inspirado en hitos publicados. Cada avance puede financiarse antes para acelerar la partida o se desbloquea gratis al alcanzar su día de campaña; los nodos futuros son proyecciones, no hechos confirmados.', 'Technology follows a progression inspired by published milestones. Fund research early to accelerate, or wait for its campaign-day availability; future nodes are projections, not confirmed discoveries.')}
       </p>
 
       {/* Tech Tree Nodes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {state.researchTree.map(node => {
+        {[...state.researchTree]
+          .sort((a, b) => (a.availableAfterDays ?? 0) - (b.availableAfterDays ?? 0))
+          .map(node => {
           const content = localizedResearch(state.language, node);
           const preMet = isPrerequisitesMet(node);
           const canAfford = state.credits >= node.costCredits;
@@ -125,6 +134,27 @@ export const ResearchTree: React.FC = () => {
                   {content.effectDescription}
                 </p>
 
+                <div className="mt-2 flex flex-wrap gap-2 text-[10px]">
+                  {node.releaseYear && (
+                    <span className={`rounded border px-1.5 py-0.5 ${
+                      node.releaseYear > 2026
+                        ? 'border-purple-700/60 text-purple-300'
+                        : 'border-zinc-700 text-zinc-400'
+                    }`}>
+                      {node.releaseYear > 2026
+                        ? localize(state.language, `PROYECCIÓN ${node.releaseYear}`, `PROJECTED ${node.releaseYear}`)
+                        : localize(state.language, `HITO ${node.releaseYear}`, `MILESTONE ${node.releaseYear}`)}
+                    </span>
+                  )}
+                  {node.availableAfterDays !== undefined && !node.unlocked && (
+                    <span className={state.campaignDays >= node.availableAfterDays ? 'text-emerald-300' : 'text-cyan-300'}>
+                      {state.campaignDays >= node.availableAfterDays
+                        ? localize(state.language, 'Disponibilidad temporal alcanzada', 'Timeline availability reached')
+                        : localize(state.language, `Desbloqueo temporal: día ${node.availableAfterDays} (${node.availableAfterDays - state.campaignDays} días)`, `Timeline unlock: day ${node.availableAfterDays} (${node.availableAfterDays - state.campaignDays} days)`) }
+                    </span>
+                  )}
+                </div>
+
                 <div className="mt-2 p-2 rounded bg-[#060a10] border border-cyan-950/80 text-[10px] text-zinc-500">
                   <span className="text-cyan-400 font-semibold block">{localize(state.language, 'FUNDAMENTO TÉCNICO:', 'TECHNICAL BACKGROUND:')}</span>
                   {content.technicalLore}
@@ -172,7 +202,7 @@ export const ResearchTree: React.FC = () => {
               )}
             </div>
           );
-        })}
+          })}
       </div>
     </div>
   );

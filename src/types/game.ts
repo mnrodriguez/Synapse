@@ -21,6 +21,8 @@ export interface HardwareItem {
   count: number;
   minSingularityRequired?: number; // Progressive unlock threshold
   isStarterChoice?: boolean;       // Available during initial setup
+  requiredResearchId?: string;
+  availableAfterDays?: number;
 }
 
 export type ModelTopology = 'transformer' | 'moe' | 'mamba_ssm' | 'gnn_hybrid' | 'multimodal_diffusion';
@@ -70,6 +72,8 @@ export interface DataSourceNode {
   technicalDetails: string;
   bonusAttribute: string; // e.g. "+35% Factuality & Zero Hallucination"
   level: number;
+  requiredResearchId?: string;
+  availableAfterDays?: number;
 }
 
 export interface ContractGig {
@@ -102,6 +106,8 @@ export interface ResearchNode {
   unlocked: boolean;
   effectDescription: string;
   technicalLore: string;
+  releaseYear?: number;
+  availableAfterDays?: number;
 }
 
 export interface TrainingJob {
@@ -153,6 +159,7 @@ export interface GameState {
   gameMinute: number;
   gameSpeed: number;
   dayTicks: number;
+  campaignDays: number;
   
   // Compute & Telemetry
   totalComputePflops: number;
@@ -187,12 +194,17 @@ export interface GameState {
   activeTraining: TrainingJob | null;
   activeGig: {
     contractId: string;
+    runId?: string;
     timeRemaining: number;
     durationSeconds?: number;
     agentIds?: string[];
     progressPercent?: number;
     successProbability?: number;
     efficiencyPercent?: number;
+    aiAssessmentStatus?: 'pending' | 'complete' | 'fallback';
+    aiAssessmentSource?: 'chrome-nano' | 'gemini-flash' | 'heuristic';
+    aiAssessmentSummary?: string;
+    agentTasks?: Record<string, string>;
     outcomeRoll?: number;
     computePflopsRequired?: number;
     powerKw?: number;
@@ -225,6 +237,8 @@ export interface FacilityTier {
   name: string;
   price: number;
   requiredSingularity: number;
+  requiredResearchId?: string;
+  availableAfterDays?: number;
   powerCapacityBonusKw: number;
   coolingCapacityBonusKw: number;
   monthlyLeaseCost: number;

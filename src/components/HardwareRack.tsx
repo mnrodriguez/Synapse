@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
-import { localizedHardware } from '../utils/gameContentI18n';
+import { localizedHardware, localizedResearch } from '../utils/gameContentI18n';
 import {
   AGENT_COMPUTE_DEMAND_PFLOPS,
   AGENT_POWER_DRAW_KW,
@@ -30,6 +30,7 @@ import {
 } from '../utils/constants';
 import { HARDWARE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
+import { isProgressionUnlocked } from '../utils/progression';
 
 export const HardwareRack: React.FC = () => {
   const { state, buyHardware, upgradeFacility, attemptShadowCompute } = useGame();
@@ -38,6 +39,8 @@ export const HardwareRack: React.FC = () => {
   const filteredItems = state.hardware.filter(h => h.category === activeTab);
   const facility = FACILITY_TIERS[state.facilityTier] || FACILITY_TIERS[0];
   const nextFacility = FACILITY_TIERS[state.facilityTier + 1];
+  const nextFacilityUnlocked = nextFacility ? isProgressionUnlocked(nextFacility, state) : false;
+  const nextFacilityResearch = state.researchTree.find(node => node.id === nextFacility?.requiredResearchId);
   const estimatedMonthlyCost = state.activePowerKw * ELECTRICITY_RATE_PER_KWH * 720 + facility.monthlyLeaseCost;
   const shadowDetectionChance = Math.min(85, 15 + state.watchdogSuspicion * 0.6);
   const activeComputeReservations =
@@ -121,12 +124,14 @@ export const HardwareRack: React.FC = () => {
               onClick={upgradeFacility}
               disabled={
                 state.credits < nextFacility.price ||
-                state.singularityProgress < nextFacility.requiredSingularity
+                state.singularityProgress < nextFacility.requiredSingularity ||
+                !nextFacilityUnlocked
               }
               className="rounded border border-purple-600/70 bg-purple-950/70 px-2.5 py-1 text-[10px] font-bold text-purple-200 hover:bg-purple-900 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t(state.language, 'upgrade')} · ${nextFacility.price.toLocaleString()} CR
               {nextFacility.requiredSingularity > 0 && ` · ${nextFacility.requiredSingularity}% SING.`}
+              {!nextFacilityUnlocked && ` · ${nextFacilityResearch ? localizedResearch(state.language, nextFacilityResearch).title : localize(state.language, 'Tecnología futura', 'Future technology')} / ${localize(state.language, 'DÍA', 'DAY')} ${nextFacility.availableAfterDays ?? '—'}`}
             </button>
           </div>
         ) : (
@@ -194,7 +199,9 @@ export const HardwareRack: React.FC = () => {
         {filteredItems.map(item => {
           const displayItem = localizedHardware(state.language, item);
           const canAfford = state.credits >= item.price;
-          const isLocked = item.minSingularityRequired !== undefined && item.minSingularityRequired > 0 && state.singularityProgress < item.minSingularityRequired;
+          const isLocked = item.count === 0 && !isProgressionUnlocked(item, state);
+          const researchNode = state.researchTree.find(node => node.id === item.requiredResearchId);
+          const researchTitle = researchNode ? localizedResearch(state.language, researchNode).title : undefined;
 
           return (
             <div
@@ -225,7 +232,9 @@ export const HardwareRack: React.FC = () => {
                       {isLocked && (
                         <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold flex items-center gap-1">
                           <Lock className="w-2.5 h-2.5" />
-                          {t(state.language, 'blocked')} · {item.minSingularityRequired}% {t(state.language, 'singularity')}
+                          {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
+                            ? `${item.minSingularityRequired}% ${t(state.language, 'singularity')}`
+                            : `${researchTitle ?? localize(state.language, 'Tecnología futura', 'Future technology')} · ${item.availableAfterDays ?? '—'} ${localize(state.language, 'días', 'days')}`}
                         </span>
                       )}
                     </div>
@@ -282,7 +291,11 @@ export const HardwareRack: React.FC = () => {
                 {isLocked ? (
                   <span className="py-1 px-2.5 rounded text-[11px] bg-zinc-900 text-zinc-500 border border-zinc-800 flex items-center gap-1">
                     <Lock className="w-3 h-3 text-purple-400" />
-                    <span>{t(state.language, 'blocked')} ({item.minSingularityRequired}% {t(state.language, 'singularity')})</span>
+                    <span>
+                      {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
+                        ? `${t(state.language, 'blocked')} (${item.minSingularityRequired}% ${t(state.language, 'singularity')})`
+                        : localize(state.language, `Investiga ${researchTitle ?? 'la tecnología'} o espera al día ${item.availableAfterDays ?? '—'}`, `Research ${researchTitle ?? 'the technology'} or wait until day ${item.availableAfterDays ?? '—'}`)}
+                    </span>
                   </span>
                 ) : (
                   <button
