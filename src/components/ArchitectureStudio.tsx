@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { t } from '../utils/i18n';
+import { localize } from '../utils/i18n';
+import { localizedDataSource } from '../utils/gameContentI18n';
 
 export const ArchitectureStudio: React.FC = () => {
   const {
@@ -164,7 +166,7 @@ export const ArchitectureStudio: React.FC = () => {
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-cyan-400" />
           <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
-            ESTUDIO DE ARQUITECTURA NEURONAL // TOPOLOGÍA
+            {localize(state.language, 'ESTUDIO DE ARQUITECTURA NEURONAL // TOPOLOGÍA', 'NEURAL ARCHITECTURE STUDIO // TOPOLOGY')}
           </h2>
         </div>
 
@@ -175,7 +177,7 @@ export const ArchitectureStudio: React.FC = () => {
             className="flex items-center gap-1.5 px-3 py-1 bg-red-950/60 hover:bg-red-900 border border-red-500/60 text-red-300 rounded text-xs transition-colors"
           >
             <AlertCircle className="w-3.5 h-3.5" />
-            <span>ABORTAR ENTRENAMIENTO</span>
+            <span>{localize(state.language, 'ABORTAR ENTRENAMIENTO', 'ABORT TRAINING')}</span>
           </button>
         ) : (
           <button
@@ -188,7 +190,7 @@ export const ArchitectureStudio: React.FC = () => {
             }`}
           >
             <Play className="w-3.5 h-3.5 fill-current" />
-            <span>INICIAR ENTRENAMIENTO ({current.name})</span>
+            <span>{localize(state.language, 'INICIAR ENTRENAMIENTO', 'START TRAINING')} ({current.name})</span>
           </button>
         )}
       </div>
@@ -274,11 +276,11 @@ export const ArchitectureStudio: React.FC = () => {
       {/* Model Spec Card */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#09111c] border border-cyan-900/50 p-2.5 rounded text-xs">
         <div>
-          <span className="text-zinc-500 text-[10px] block">MODELO BASE</span>
+          <span className="text-zinc-500 text-[10px] block">{t(state.language, 'base_model')}</span>
           <span className="text-cyan-300 font-bold">{current.name}</span>
         </div>
         <div>
-          <span className="text-zinc-500 text-[10px] block">PARÁMETROS</span>
+          <span className="text-zinc-500 text-[10px] block">{t(state.language, 'parameters')}</span>
           <span className="text-yellow-300 font-bold">
             {current.parametersCount >= 1_000_000_000
               ? `${(current.parametersCount / 1_000_000_000).toFixed(1)}B`
@@ -286,13 +288,13 @@ export const ArchitectureStudio: React.FC = () => {
           </span>
         </div>
         <div>
-          <span className="text-zinc-500 text-[10px] block">VRAM REQUERIDA</span>
+          <span className="text-zinc-500 text-[10px] block">{t(state.language, 'required_vram')}</span>
           <span className={`font-bold ${isVramSufficient ? 'text-emerald-400' : 'text-red-400'}`}>
             {current.vramRequiredGb} GB / {totalClusterVram} GB {isVramSufficient ? '✓' : '(OOM!)'}
           </span>
         </div>
         <div>
-          <span className="text-zinc-500 text-[10px] block">BENCHMARK INTELECTUAL</span>
+          <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
           <span className="text-purple-300 font-bold">IQ {current.reasoningScore} pts</span>
         </div>
       </div>
@@ -301,34 +303,34 @@ export const ArchitectureStudio: React.FC = () => {
       <div className="space-y-1.5">
         <label className="text-xs text-zinc-400 font-bold flex items-center gap-1.5">
           <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-          TOPOLOGÍA DE RED Y PARADIGMA COMPUTACIONAL
+          {localize(state.language, 'TOPOLOGÍA DE RED Y PARADIGMA COMPUTACIONAL', 'NETWORK TOPOLOGY & COMPUTATIONAL PARADIGM')}
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
           {[
             {
               id: 'transformer',
-              name: 'Transformer Autoregresivo (Decoder-Only)',
-              desc: 'Atención densa O(n²). Excelente coherencia global y modelado del lenguaje.'
+              name: localize(state.language, 'Transformer Autoregresivo (Decoder-Only)', 'Autoregressive Transformer (Decoder-Only)'),
+              desc: localize(state.language, 'Atención densa O(n²). Excelente coherencia global y modelado del lenguaje.', 'Dense O(n²) attention. Strong global coherence and language modeling.')
             },
             {
               id: 'moe',
               name: 'Sparse Mixture-of-Experts (MoE)',
-              desc: 'Enrutador Top-K. Multiplica parámetros activos sin elevar costo por token.'
+              desc: localize(state.language, 'Enrutador Top-K. Multiplica parámetros activos sin elevar costo por token.', 'Top-K router increases model capacity without raising compute per token.')
             },
             {
               id: 'mamba_ssm',
               name: 'State Space Model (Mamba SSM)',
-              desc: 'Complejidad O(n) lineal. Memoria recurrente continua para secuencias ultra-largas.'
+              desc: localize(state.language, 'Complejidad O(n) lineal. Memoria recurrente continua para secuencias ultra-largas.', 'Linear O(n) complexity with recurrent memory for very long sequences.')
             },
             {
               id: 'gnn_hybrid',
               name: 'Graph Neural Network (GNN Hybrid)',
-              desc: 'Paso de mensajes en grafos no euclidianos. Razonamiento relacional estricto.'
+              desc: localize(state.language, 'Paso de mensajes en grafos no euclidianos. Razonamiento relacional estricto.', 'Message passing on non-Euclidean graphs for structured relational reasoning.')
             },
             {
               id: 'multimodal_diffusion',
               name: 'Multimodal Diffusion / Flow-Matching',
-              desc: 'Generación conjunta texto-visión-código con trayectorias óptimas de difusión.'
+              desc: localize(state.language, 'Generación conjunta texto-visión-código con trayectorias óptimas de difusión.', 'Joint text, vision, and code generation using optimized diffusion paths.')
             }
           ].map(top => (
             <button
@@ -356,7 +358,7 @@ export const ArchitectureStudio: React.FC = () => {
         <div className="space-y-1.5">
           <label className="text-xs text-zinc-400 font-bold flex items-center gap-1.5">
             <Sliders className="w-3.5 h-3.5 text-yellow-400" />
-            ESCALA DE PARÁMETROS (CAPACIDAD COGNITIVA)
+            {localize(state.language, 'ESCALA DE PARÁMETROS (CAPACIDAD COGNITIVA)', 'PARAMETER SCALE (COGNITIVE CAPACITY)')}
           </label>
           <div className="flex flex-wrap gap-1.5">
             {paramPresets.map(preset => (
@@ -374,7 +376,7 @@ export const ArchitectureStudio: React.FC = () => {
             ))}
           </div>
           <p className="text-[10px] text-zinc-500">
-            Modelos mayores requieren más VRAM y FLOPs, pero desbloquean contratos de alto valor y aceleran la Singularidad.
+            {localize(state.language, 'Modelos mayores requieren más VRAM y FLOPs, pero desbloquean contratos de alto valor y aceleran la Singularidad.', 'Larger models require more VRAM and FLOPs but unlock higher-value contracts and advance the Singularity.')}
           </p>
         </div>
 
@@ -382,7 +384,7 @@ export const ArchitectureStudio: React.FC = () => {
         <div className="space-y-1.5">
           <label className="text-xs text-zinc-400 font-bold flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            VENTANA DE CONTEXTO (TOKENS)
+            {localize(state.language, 'VENTANA DE CONTEXTO (TOKENS)', 'CONTEXT WINDOW (TOKENS)')}
           </label>
           <div className="flex flex-wrap gap-1.5">
             {contextPresets.map(ctx => (
@@ -400,7 +402,7 @@ export const ArchitectureStudio: React.FC = () => {
             ))}
           </div>
           <p className="text-[10px] text-zinc-500">
-            Ventanas grandes consumen caché KV exponencialmente a menos que uses RoPE o FlashAttention.
+            {localize(state.language, 'Ventanas grandes consumen caché KV exponencialmente a menos que uses RoPE o FlashAttention.', 'Large context windows increase KV-cache memory use; RoPE and FlashAttention can help.')}
           </p>
         </div>
       </div>
@@ -409,14 +411,14 @@ export const ArchitectureStudio: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* Quantization */}
         <div className="space-y-1.5">
-          <label className="text-xs text-zinc-400 font-bold">CUANTIZACIÓN DE PESOS</label>
+          <label className="text-xs text-zinc-400 font-bold">{t(state.language, 'quantization')}</label>
           <div className="space-y-1">
             {[
-              { id: 'fp32', label: 'FP32 Completo (4 bytes/param)', hint: 'Precisión pura, máxima VRAM' },
-              { id: 'bf16', label: 'BF16 Estándar (2 bytes/param)', hint: 'Rango dinámico de bfloat16' },
-              { id: 'int8', label: 'INT8 Cuantizado (1 byte/param)', hint: 'Ideal para GPUs GTX / RTX' },
-              { id: 'fp4', label: 'FP4 Blackwell (0.5 byte/param)', hint: 'Ultra-comprimido para 70B+' },
-              { id: 'ternary_1bit', label: 'BitNet 1.58-bit Ternary', hint: 'Solo {-1, 0, +1}, mínimo consumo' }
+              { id: 'fp32', label: 'FP32 Full (4 bytes/param)', hint: localize(state.language, 'Precisión pura, máxima VRAM', 'Full precision; maximum VRAM') },
+              { id: 'bf16', label: 'BF16 Standard (2 bytes/param)', hint: localize(state.language, 'Rango dinámico de bfloat16', 'bfloat16 dynamic range') },
+              { id: 'int8', label: 'INT8 Quantized (1 byte/param)', hint: localize(state.language, 'Ideal para GPUs GTX / RTX', 'Suitable for GTX / RTX GPUs') },
+              { id: 'fp4', label: 'FP4 Blackwell (0.5 byte/param)', hint: localize(state.language, 'Ultra-comprimido para 70B+', 'Ultra-compressed for 70B+') },
+              { id: 'ternary_1bit', label: 'BitNet 1.58-bit Ternary', hint: localize(state.language, 'Solo {-1, 0, +1}, mínimo consumo', 'Only {-1, 0, +1}; minimal memory use') }
             ].map(q => (
               <button
                 key={q.id}
@@ -436,13 +438,13 @@ export const ArchitectureStudio: React.FC = () => {
 
         {/* Attention Mechanism */}
         <div className="space-y-1.5">
-          <label className="text-xs text-zinc-400 font-bold">MECANISMO DE ATENCIÓN</label>
+          <label className="text-xs text-zinc-400 font-bold">{localize(state.language, 'MECANISMO DE ATENCIÓN', 'ATTENTION MECHANISM')}</label>
           <div className="space-y-1">
             {[
-              { id: 'standard_mha', label: 'Multi-Head Attention (MHA)', hint: 'Atención tradicional dot-product' },
-              { id: 'grouped_query_gqa', label: 'Grouped-Query (GQA)', hint: 'Reduce tamaño de KV cache a 1/8' },
-              { id: 'flash_attention_3', label: 'FlashAttention-3', hint: 'Tiling en SRAM, velocidad x2' },
-              { id: 'linear_attention', label: 'Linear Attention', hint: 'Kernelización de baja complejidad' }
+              { id: 'standard_mha', label: 'Multi-Head Attention (MHA)', hint: localize(state.language, 'Atención tradicional dot-product', 'Traditional dot-product attention') },
+              { id: 'grouped_query_gqa', label: 'Grouped-Query (GQA)', hint: localize(state.language, 'Reduce tamaño de KV cache a 1/8', 'Reduces KV-cache size to 1/8') },
+              { id: 'flash_attention_3', label: 'FlashAttention-3', hint: localize(state.language, 'Tiling en SRAM, velocidad x2', 'SRAM tiling; up to 2x speed') },
+              { id: 'linear_attention', label: 'Linear Attention', hint: localize(state.language, 'Kernelización de baja complejidad', 'Low-complexity kernelization') }
             ].map(att => (
               <button
                 key={att.id}
@@ -462,14 +464,14 @@ export const ArchitectureStudio: React.FC = () => {
 
         {/* Loss & Alignment Objective */}
         <div className="space-y-1.5">
-          <label className="text-xs text-zinc-400 font-bold">FUNCIÓN DE PÉRDIDA Y ALINEACIÓN</label>
+          <label className="text-xs text-zinc-400 font-bold">{localize(state.language, 'FUNCIÓN DE PÉRDIDA Y ALINEACIÓN', 'LOSS & ALIGNMENT OBJECTIVE')}</label>
           <div className="space-y-1">
             {[
-              { id: 'cross_entropy', label: 'Cross-Entropy Pretraining', hint: 'Predicción del siguiente token estándar' },
-              { id: 'dpo', label: 'Direct Preference Optimization (DPO)', hint: 'Alineación analítica sin reward-model' },
-              { id: 'ppo_rlhf', label: 'PPO / Reinforcement Learning', hint: 'Optimización de política con feedback' },
-              { id: 'contrastive_infonce', label: 'Contrastive InfoNCE', hint: 'Representaciones conjuntas latentes' },
-              { id: 'energy_based', label: 'Energy-Based Objective', hint: 'Minimización de energía libre en el sistema' }
+              { id: 'cross_entropy', label: 'Cross-Entropy Pretraining', hint: localize(state.language, 'Predicción del siguiente token estándar', 'Standard next-token prediction') },
+              { id: 'dpo', label: 'Direct Preference Optimization (DPO)', hint: localize(state.language, 'Alineación analítica sin modelo de recompensa', 'Analytical alignment without a reward model') },
+              { id: 'ppo_rlhf', label: 'PPO / Reinforcement Learning', hint: localize(state.language, 'Optimización de política con retroalimentación', 'Policy optimization with feedback') },
+              { id: 'contrastive_infonce', label: 'Contrastive InfoNCE', hint: localize(state.language, 'Representaciones latentes conjuntas', 'Joint latent representations') },
+              { id: 'energy_based', label: 'Energy-Based Objective', hint: localize(state.language, 'Minimización de energía libre del sistema', 'System free-energy minimization') }
             ].map(loss => (
               <button
                 key={loss.id}
@@ -492,14 +494,15 @@ export const ArchitectureStudio: React.FC = () => {
       <div className="space-y-1.5 bg-[#080e18] border border-cyan-900/40 p-3 rounded">
         <label className="text-xs text-zinc-300 font-bold flex items-center gap-1.5">
           <Database className="w-3.5 h-3.5 text-cyan-400" />
-          PIPELINES DE DATOS CONECTADOS AL MODELO
+          {localize(state.language, 'PIPELINES DE DATOS CONECTADOS AL MODELO', 'DATA PIPELINES CONNECTED TO MODEL')}
         </label>
         <p className="text-[11px] text-zinc-400">
-          Haz clic para conectar o desconectar fuentes de datos. Cada motor añade capacidades cognitivas únicas (Deducción causal con Grafos, RAG con Vectores, Transacciones con SQL):
+          {localize(state.language, 'Haz clic para conectar o desconectar fuentes de datos. Cada motor añade capacidades cognitivas únicas (deducción causal con grafos, RAG con vectores y transacciones con SQL).', 'Connect or disconnect data sources. Each engine adds distinct capabilities (causal graph reasoning, vector RAG, and SQL transactions).')}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-2">
           {state.dataSources.map(ds => {
+            const displaySource = localizedDataSource(state.language, ds);
             const isConnected = current.activeDataSources.includes(ds.id);
             return (
               <button
@@ -515,12 +518,14 @@ export const ArchitectureStudio: React.FC = () => {
                 }`}
               >
                 <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="truncate">{ds.name.split(' (')[0]}</span>
-                  {isConnected && <span className="text-cyan-400 text-[10px]">CONECTADO</span>}
+                  <span className="truncate">{displaySource.name.split(' (')[0]}</span>
+                  {isConnected && <span className="text-cyan-400 text-[10px]">{localize(state.language, 'CONECTADO', 'CONNECTED')}</span>}
                 </div>
-                <div className="text-[10px] text-zinc-400 mt-1">{ds.bonusAttribute}</div>
+                <div className="text-[10px] text-zinc-400 mt-1">{displaySource.bonusAttribute}</div>
                 <div className="text-[9px] text-zinc-500 mt-1">
-                  {ds.unlocked ? `Tokens: ${ds.tokensIndexed}M | Nivel ${ds.level}` : `BLOQUEADO (Desplegar en Data Engine)`}
+                  {ds.unlocked
+                    ? `${localize(state.language, 'Tokens', 'Tokens')}: ${ds.tokensIndexed}M | ${localize(state.language, 'Nivel', 'Level')} ${ds.level}`
+                    : localize(state.language, 'BLOQUEADO (Desplegar en Motor de Datos)', 'LOCKED (Deploy in Data Engines)')}
                 </div>
               </button>
             );
@@ -533,9 +538,9 @@ export const ArchitectureStudio: React.FC = () => {
         <div className="flex items-center justify-between pb-1.5 border-b border-cyan-900/30">
           <label className="text-xs text-zinc-300 font-bold flex items-center gap-1.5">
             <Sliders className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{t(state.language, 'inference_hyperparams')} (DEFAULT DEL MODELO)</span>
+            <span>{t(state.language, 'inference_hyperparams')} ({localize(state.language, 'DEFAULT DEL MODELO', 'MODEL DEFAULTS')})</span>
           </label>
-          <span className="text-[10px] text-zinc-400 font-mono">CALIBRACIÓN ESTOCÁSTICA</span>
+          <span className="text-[10px] text-zinc-400 font-mono">{localize(state.language, 'CALIBRACIÓN ESTOCÁSTICA', 'SAMPLING CALIBRATION')}</span>
         </div>
 
         <p className="text-[11px] text-zinc-400">
@@ -561,7 +566,11 @@ export const ArchitectureStudio: React.FC = () => {
               className="w-full accent-cyan-400 cursor-pointer"
             />
             <div className="text-[9px] text-zinc-500 mt-1">
-              {currentParams.temperature < 0.4 ? 'Determinista' : currentParams.temperature > 1.0 ? 'Alta creatividad / riesgo' : 'Estándar'}
+              {currentParams.temperature < 0.4
+                ? localize(state.language, 'Determinista', 'Deterministic')
+                : currentParams.temperature > 1.0
+                  ? localize(state.language, 'Alta creatividad / riesgo', 'High creativity / risk')
+                  : localize(state.language, 'Estándar', 'Standard')}
             </div>
           </div>
 
@@ -580,7 +589,7 @@ export const ArchitectureStudio: React.FC = () => {
               onChange={(e) => handleInferenceParamChange('topP', parseFloat(e.target.value))}
               className="w-full accent-purple-400 cursor-pointer"
             />
-            <div className="text-[9px] text-zinc-500 mt-1">Filtro de masa probabilística</div>
+            <div className="text-[9px] text-zinc-500 mt-1">{localize(state.language, 'Filtro de masa probabilística', 'Probability-mass filter')}</div>
           </div>
 
           {/* Top-K */}
@@ -598,7 +607,7 @@ export const ArchitectureStudio: React.FC = () => {
               onChange={(e) => handleInferenceParamChange('topK', parseInt(e.target.value))}
               className="w-full accent-yellow-400 cursor-pointer"
             />
-            <div className="text-[9px] text-zinc-500 mt-1">Pool de vocabulario K</div>
+            <div className="text-[9px] text-zinc-500 mt-1">{localize(state.language, 'Pool de vocabulario K', 'Top-K vocabulary pool')}</div>
           </div>
 
           {/* Repetition Penalty */}
@@ -616,7 +625,7 @@ export const ArchitectureStudio: React.FC = () => {
               onChange={(e) => handleInferenceParamChange('repetitionPenalty', parseFloat(e.target.value))}
               className="w-full accent-emerald-400 cursor-pointer"
             />
-            <div className="text-[9px] text-zinc-500 mt-1">Previene bucles repetitivos</div>
+            <div className="text-[9px] text-zinc-500 mt-1">{localize(state.language, 'Previene bucles repetitivos', 'Prevents repetitive loops')}</div>
           </div>
         </div>
       </div>

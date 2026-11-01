@@ -19,7 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { t } from '../utils/i18n';
+import { localize, t } from '../utils/i18n';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
 
 const ENGLISH_CONTRACT_COPY: Record<string, { title: string; lore: string; objective: string }> = {
@@ -129,7 +129,9 @@ export const ContractBoard: React.FC = () => {
     if (!acceptContract(contractId, selectedAgentIds)) return;
     if (selectedAgentIds.length > 1) {
       void deliberateMission(contractId, selectedAgentIds).catch(error => {
-        addLog(error instanceof Error ? error.message : 'La deliberación del equipo no pudo completarse.', 'danger');
+        addLog(error instanceof Error
+          ? error.message
+          : localize(state.language, 'La deliberación del equipo no pudo completarse.', 'The team discussion could not be completed.'), 'danger');
       });
     }
   };

@@ -20,6 +20,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
+import { localize } from '../utils/i18n';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -44,6 +45,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [callsignInput, setCallsignInput] = useState(state.callsign);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
+  const en = state.language === 'en';
 
   if (!isOpen) return null;
 
@@ -54,7 +56,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       const updatedCallsign = callsignInput.trim().toUpperCase().substring(0, 30);
       setCallsign(updatedCallsign);
       addLog(`Identificador de operativo actualizado a: [${updatedCallsign}]`, 'info');
-      setSaveSuccessMsg('Callsign actualizado.');
+      setSaveSuccessMsg(localize(state.language, 'Callsign actualizado.', 'Callsign updated.'));
       setTimeout(() => setSaveSuccessMsg(''), 2500);
     }
   };
@@ -63,7 +65,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     sound.playNavSwitch();
     const ok = await saveGameToCloud();
     if (ok) {
-      setSaveSuccessMsg('¡Progreso guardado en la nube con éxito!');
+      setSaveSuccessMsg(localize(state.language, '¡Progreso guardado en la nube con éxito!', 'Progress saved to the cloud.'));
       setTimeout(() => setSaveSuccessMsg(''), 3000);
     }
   };
@@ -72,7 +74,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     sound.playNavSwitch();
     const ok = await loadGameFromCloud();
     if (ok) {
-      setSaveSuccessMsg('¡Progreso descargado desde la nube!');
+      setSaveSuccessMsg(localize(state.language, '¡Progreso descargado desde la nube!', 'Progress loaded from the cloud.'));
       setTimeout(() => setSaveSuccessMsg(''), 3000);
     }
   };
@@ -85,7 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-cyan-400" />
             <h3 className="font-bold text-sm text-cyan-300 tracking-wider">
-              AUTENTICACIÓN // PROTOCOLO DE ALMACENAMIENTO NUBE
+              {localize(state.language, 'AUTENTICACIÓN // PROTOCOLO DE ALMACENAMIENTO NUBE', 'ACCOUNT // CLOUD SAVE')}
             </h3>
           </div>
           <button
@@ -102,10 +104,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <div className="p-2.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 space-y-1">
             <div className="flex items-center gap-1.5 font-bold text-xs">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>PLAN GRATUITO GARANTIZADO (0 COSTOS)</span>
+              <span>{localize(state.language, 'PLAN GRATUITO GARANTIZADO (0 COSTOS)', 'FREE PLAN (NO COST)')}</span>
             </div>
             <p className="text-[11px] text-zinc-400">
-              Esta aplicación utiliza el plan <strong>Firebase Spark Free Tier</strong>. Las operaciones de guardado y lectura se ejecutan dentro de las cuotas gratuitas diarias de Google Cloud sin posibilidad de generar cobros por uso.
+              {en
+                ? <>This app uses the <strong>Firebase Spark Free Tier</strong>. Saves and reads run within Google Cloud's free daily quotas; usage charges are not enabled by this app.</>
+                : <>Esta aplicación utiliza el plan <strong>Firebase Spark Free Tier</strong>. Las operaciones de guardado y lectura se ejecutan dentro de las cuotas gratuitas diarias de Google Cloud sin posibilidad de generar cobros por uso.</>}
             </p>
           </div>
 
@@ -121,7 +125,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 )}
                 <div className="flex-1 truncate">
-                  <span className="text-[10px] text-zinc-500 block font-mono">USUARIO AUTENTICADO</span>
+                  <span className="text-[10px] text-zinc-500 block font-mono">{localize(state.language, 'USUARIO AUTENTICADO', 'SIGNED-IN USER')}</span>
                   <div className="font-bold text-zinc-100 truncate">{user.displayName || user.email}</div>
                   <div className="text-[10px] text-zinc-400 truncate">{user.email}</div>
                 </div>
@@ -129,7 +133,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
               {/* Callsign Editor */}
               <form onSubmit={handleUpdateCallsign} className="pt-2 border-t border-zinc-800 space-y-1">
-                <label className="text-[10px] text-zinc-400 block">CALLSIGN DEL OPERATIVO (PÚBLICO EN RANKING):</label>
+                <label className="text-[10px] text-zinc-400 block">{localize(state.language, 'CALLSIGN DEL OPERATIVO (PÚBLICO EN RANKING):', 'OPERATIVE CALLSIGN (PUBLIC ON LEADERBOARD):')}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -142,7 +146,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     type="submit"
                     className="px-2.5 py-1 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded text-xs"
                   >
-                    CAMBIAR
+                    {localize(state.language, 'CAMBIAR', 'UPDATE')}
                   </button>
                 </div>
               </form>
@@ -155,7 +159,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   className="py-1.5 px-3 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Save className="w-3.5 h-3.5" />
-                  <span>GUARDAR EN NUBE</span>
+                  <span>{localize(state.language, 'GUARDAR EN NUBE', 'SAVE TO CLOUD')}</span>
                 </button>
                 <button
                   onClick={handleLoad}
@@ -163,20 +167,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   className="py-1.5 px-3 bg-zinc-800 hover:bg-zinc-700 text-cyan-300 font-bold rounded text-xs flex items-center justify-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>RESTAURAR NUBE</span>
+                  <span>{localize(state.language, 'RESTAURAR NUBE', 'LOAD FROM CLOUD')}</span>
                 </button>
               </div>
 
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[10px] text-zinc-500">
-                  Estado: <strong className="text-emerald-400">Enlace Criptográfico Activo</strong>
+                  {localize(state.language, 'Estado:', 'Status:')} <strong className="text-emerald-400">{localize(state.language, 'Enlace Criptográfico Activo', 'Secure connection active')}</strong>
                 </span>
                 <button
                   onClick={logoutUser}
                   className="text-red-400 hover:text-red-300 text-[10px] flex items-center gap-1"
                 >
                   <LogOut className="w-3 h-3" />
-                  <span>CERRAR SESIÓN</span>
+                  <span>{localize(state.language, 'CERRAR SESIÓN', 'SIGN OUT')}</span>
                 </button>
               </div>
             </div>
@@ -184,9 +188,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <div className="p-4 bg-[#09111c] border border-cyan-900/40 rounded-lg text-center space-y-3">
               <Key className="w-8 h-8 text-cyan-400 mx-auto" />
               <div>
-                <h4 className="font-bold text-zinc-100 text-xs">VINCULA TU CUENTA DE GOOGLE</h4>
+                <h4 className="font-bold text-zinc-100 text-xs">{localize(state.language, 'VINCULA TU CUENTA DE GOOGLE', 'CONNECT YOUR GOOGLE ACCOUNT')}</h4>
                 <p className="text-[11px] text-zinc-400 mt-1">
-                  Guarda tu progreso de entrenamiento, hardware adquirido y posición en el ranking de la Singularidad de forma persistente y segura.
+                  {localize(state.language, 'Guarda tu progreso de entrenamiento, hardware adquirido y posición en el ranking de la Singularidad de forma persistente y segura.', 'Securely save your training progress, purchased hardware, and Singularity leaderboard position.')}
                 </p>
               </div>
 
@@ -195,11 +199,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 className="w-full py-2 px-4 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,255,200,0.3)] transition-all cursor-pointer"
               >
                 <User className="w-4 h-4 fill-current" />
-                <span>INICIAR SESIÓN CON GOOGLE</span>
+                <span>{localize(state.language, 'INICIAR SESIÓN CON GOOGLE', 'SIGN IN WITH GOOGLE')}</span>
               </button>
 
               <span className="text-[10px] text-zinc-500 block">
-                Tus datos locales están seguros y se transferirán automáticamente a la nube.
+                {localize(state.language, 'Tus datos locales están seguros y se transferirán automáticamente a la nube.', 'Your local data is safe and will be transferred to the cloud after sign-in.')}
               </span>
             </div>
           )}
@@ -215,10 +219,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <div className="p-3 bg-red-950/20 border border-red-900/40 rounded-lg space-y-2">
             <div className="flex items-center gap-1.5 text-red-400 font-bold text-xs">
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>REINICIAR SIMULACIÓN A CERO</span>
+              <span>{localize(state.language, 'REINICIAR SIMULACIÓN A CERO', 'RESET SIMULATION')}</span>
             </div>
             <p className="text-[10px] text-zinc-400 leading-snug">
-              ¿Quieres empezar de nuevo eligiendo otra configuración de hardware inicial y primer modelo? Puedes reiniciar toda la simulación desde cero. Se reiniciará el protocolo de Génesis.
+              {localize(state.language, '¿Quieres empezar de nuevo eligiendo otra configuración de hardware inicial y primer modelo? Puedes reiniciar toda la simulación desde cero. Se reiniciará el protocolo de Génesis.', 'Want to start over with different initial hardware and a new first model? This resets the simulation and restarts the Genesis protocol.')}
             </p>
             {confirmReset ? (
               <div className="flex items-center gap-2 pt-1">
@@ -231,14 +235,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   }}
                   className="flex-1 py-1 px-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-[11px] transition-colors"
                 >
-                  CONFIRMAR REINICIO TOTAL
+                  {localize(state.language, 'CONFIRMAR REINICIO TOTAL', 'CONFIRM FULL RESET')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirmReset(false)}
                   className="py-1 px-2 bg-zinc-800 text-zinc-300 rounded text-[11px]"
                 >
-                  CANCELAR
+                  {localize(state.language, 'CANCELAR', 'CANCEL')}
                 </button>
               </div>
             ) : (
@@ -247,7 +251,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 onClick={() => setConfirmReset(true)}
                 className="w-full py-1 px-2 bg-red-950/60 hover:bg-red-900/70 border border-red-800/60 text-red-300 rounded text-[11px] transition-colors text-center"
               >
-                REINICIAR SIMULACIÓN A CERO (GÉNESIS)
+                {localize(state.language, 'REINICIAR SIMULACIÓN A CERO (GÉNESIS)', 'RESET SIMULATION (GENESIS)')}
               </button>
             )}
           </div>
@@ -259,7 +263,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             onClick={() => { sound.playNavSwitch(); onClose(); }}
             className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs"
           >
-            ENTENDIDO
+            {localize(state.language, 'ENTENDIDO', 'DONE')}
           </button>
         </div>
       </div>

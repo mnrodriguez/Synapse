@@ -18,6 +18,8 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
+import { useGame } from '../context/GameContext';
+import { localize } from '../utils/i18n';
 
 interface HelpManualProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ interface HelpManualProps {
 }
 
 export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
+  const { state } = useGame();
   const [activeSection, setActiveSection] = useState<'intro' | 'data' | 'arch' | 'infra' | 'singularity'>('intro');
 
   if (!isOpen) return null;
@@ -37,7 +40,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-cyan-400" />
             <h3 className="font-bold text-sm text-cyan-300 tracking-wider">
-              MANUAL TÉCNICO // FUNDAMENTOS DE ENTRENAMIENTO DE IA & SINGULARIDAD
+              {localize(state.language, 'MANUAL TÉCNICO // FUNDAMENTOS DE ENTRENAMIENTO DE IA & SINGULARIDAD', 'TECHNICAL MANUAL // AI TRAINING & SINGULARITY')}
             </h3>
           </div>
           <button
@@ -51,11 +54,11 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
         {/* Section Tabs */}
         <div className="flex items-center gap-1 p-2 bg-[#060a10] border-b border-zinc-800 text-xs overflow-x-auto">
           {[
-            { id: 'intro', label: '1. INTRODUCCIÓN' },
-            { id: 'data', label: '2. GRAFOS, VECTORES & SQL' },
-            { id: 'arch', label: '3. TOPOLOGÍA & CUANTIZACIÓN' },
-            { id: 'infra', label: '4. CLÚSTER & FÍSICA' },
-            { id: 'singularity', label: '5. LA SINGULARIDAD' }
+            { id: 'intro', label: localize(state.language, '1. INTRODUCCIÓN', '1. INTRODUCTION') },
+            { id: 'data', label: localize(state.language, '2. GRAFOS, VECTORES & SQL', '2. GRAPHS, VECTORS & SQL') },
+            { id: 'arch', label: localize(state.language, '3. TOPOLOGÍA & CUANTIZACIÓN', '3. TOPOLOGY & QUANTIZATION') },
+            { id: 'infra', label: localize(state.language, '4. CLÚSTER & FÍSICA', '4. CLUSTER & PHYSICS') },
+            { id: 'singularity', label: localize(state.language, '5. LA SINGULARIDAD', '5. THE SINGULARITY') }
           ].map(tab => (
             <button
               key={tab.id}
@@ -75,21 +78,30 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
         <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs text-zinc-300 leading-relaxed scrollbar-thin scrollbar-thumb-cyan-950">
           {activeSection === 'intro' && (
             <div className="space-y-3">
-              <h4 className="text-cyan-400 font-bold text-sm">EL CAMINO DE SYNAPSE</h4>
+              <h4 className="text-cyan-400 font-bold text-sm">{localize(state.language, 'EL CAMINO DE SYNAPSE', 'THE SYNAPSE PATH')}</h4>
               <p>
-                Inspirado en los simuladores de ciberseguridad como <em>Uplink</em> y <em>Hacknet</em>, tu misión en SYNAPSE 
-                no es penetrar firewalls por dinero fácil, sino <strong>entrenar una Inteligencia Artificial desde cero</strong> hasta 
-                convertirla en la entidad intelectual dominante del planeta.
+                {state.language === 'en'
+                  ? <>Inspired by cybersecurity simulators such as <em>Uplink</em> and <em>Hacknet</em>, your mission in SYNAPSE is not easy money from breaking firewalls, but to <strong>train an artificial intelligence from scratch</strong> until it becomes the dominant intellectual force on the planet.</>
+                  : <>Inspirado en los simuladores de ciberseguridad como <em>Uplink</em> y <em>Hacknet</em>, tu misión en SYNAPSE no es penetrar firewalls por dinero fácil, sino <strong>entrenar una Inteligencia Artificial desde cero</strong> hasta convertirla en la entidad intelectual dominante del planeta.</>}
               </p>
               <div className="p-3 bg-[#09111c] border border-cyan-900 rounded space-y-1.5">
-                <span className="text-yellow-400 font-bold block">EL CICLO DE PROGRESIÓN BÁSICO:</span>
+                <span className="text-yellow-400 font-bold block">{localize(state.language, 'EL CICLO DE PROGRESIÓN BÁSICO:', 'THE CORE PROGRESSION LOOP:')}</span>
                 <ol className="list-decimal list-inside space-y-1 text-zinc-400 text-[11px]">
-                  <li><strong>Entrena tu modelo inicial</strong> (Proto-14M) en el panel de Arquitectura o mediante el comando <code className="text-cyan-300">train</code>.</li>
-                  <li><strong>Monetiza en el Tablero de Contratos</strong>: Completa clasificaciones de spam y micro-trabajos para acumular créditos ($).</li>
-                  <li><strong>Escala tu Hardware</strong>: Adquiere GPUs (RTX 4090, H100, B200) y amplía la refrigeración y potencia para evitar sobrecalentamiento.</li>
-                  <li><strong>Despliega Motores de Datos</strong>: Desbloquea bases de datos relacionales SQL, vectores semánticos (RAG) y grafos de conocimiento.</li>
-                  <li><strong>Financia Papers de Investigación</strong>: Desbloquea LoRA, FlashAttention, MoE y auto-código recursivo en el Árbol de Investigación.</li>
-                  <li><strong>Coopta los Dominios Globales</strong>: Infiltra mercados financieros, redes satelitales y centrales de energía hasta alcanzar la Singularidad al 100%.</li>
+                  {state.language === 'en' ? <>
+                    <li><strong>Train your first model</strong> (Proto-14M) in Architecture or with the <code className="text-cyan-300">train</code> command.</li>
+                    <li><strong>Earn credits on the Contract Board</strong> by completing work and missions.</li>
+                    <li><strong>Scale your hardware</strong> and improve cooling and power before expanding the cluster.</li>
+                    <li><strong>Deploy data engines</strong>: relational SQL, semantic vectors (RAG), and knowledge graphs.</li>
+                    <li><strong>Fund research</strong> to unlock LoRA, FlashAttention, MoE, and recursive optimization.</li>
+                    <li><strong>Advance the campaign</strong> through fictional global domains toward the Singularity.</li>
+                  </> : <>
+                    <li><strong>Entrena tu modelo inicial</strong> (Proto-14M) en el panel de Arquitectura o mediante el comando <code className="text-cyan-300">train</code>.</li>
+                    <li><strong>Monetiza en el Tablero de Contratos</strong>: Completa trabajos para acumular créditos ($).</li>
+                    <li><strong>Escala tu Hardware</strong>: Adquiere GPUs y amplía la refrigeración y potencia para evitar sobrecalentamiento.</li>
+                    <li><strong>Despliega Motores de Datos</strong>: Desbloquea SQL, vectores semánticos (RAG) y grafos de conocimiento.</li>
+                    <li><strong>Financia Papers de Investigación</strong>: Desbloquea LoRA, FlashAttention, MoE y optimización recursiva.</li>
+                    <li><strong>Avanza en la campaña</strong> a través de dominios ficticios hasta alcanzar la Singularidad.</li>
+                  </>}
                 </ol>
               </div>
             </div>
@@ -97,37 +109,37 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
           {activeSection === 'data' && (
             <div className="space-y-3">
-              <h4 className="text-cyan-400 font-bold text-sm">MOTORES DE DATOS: GRAFOS, VECTORES Y BASES RELACIONALES</h4>
+              <h4 className="text-cyan-400 font-bold text-sm">{localize(state.language, 'MOTORES DE DATOS: GRAFOS, VECTORES Y BASES RELACIONALES', 'DATA ENGINES: GRAPHS, VECTORS & RELATIONAL DATABASES')}</h4>
               <p>
-                Entrenar una IA avanzada requiere más que texto sin procesar. Cada modalidad de datos otorga facultades cognitivas irreemplazables:
+                {localize(state.language, 'Entrenar una IA avanzada requiere más que texto sin procesar. Cada modalidad de datos otorga facultades cognitivas irreemplazables:', 'Training an advanced AI requires more than raw text. Each data type provides distinct capabilities:')}
               </p>
 
               <div className="space-y-2">
                 <div className="p-2.5 bg-[#09111c] border border-blue-900/50 rounded">
-                  <span className="font-bold text-blue-400 block">1. Bases de Datos Relacionales (SQL / Tabulares)</span>
+                  <span className="font-bold text-blue-400 block">{localize(state.language, '1. Bases de Datos Relacionales (SQL / Tabulares)', '1. Relational Databases (SQL / Tabular)')}</span>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Esquemas normalizados con integridad referencial ACID. Proporcionan exactitud matemática estricta, registros de transacciones financieras y contabilidad determinista. Sin ellos, los modelos sufren en razonamiento aritmético riguroso.
+                    {localize(state.language, 'Esquemas normalizados con integridad referencial ACID. Proporcionan exactitud matemática estricta, registros de transacciones financieras y contabilidad determinista. Sin ellos, los modelos sufren en razonamiento aritmético riguroso.', 'Normalized schemas with ACID referential integrity provide numerical accuracy, financial transaction records, and deterministic accounting.')}
                   </p>
                 </div>
 
                 <div className="p-2.5 bg-[#09111c] border border-emerald-900/50 rounded">
-                  <span className="font-bold text-emerald-400 block">2. Bases de Datos Vectoriales & RAG (HNSW / Cosine Similarity)</span>
+                  <span className="font-bold text-emerald-400 block">{localize(state.language, '2. Bases de Datos Vectoriales & RAG (HNSW / Cosine Similarity)', '2. Vector Databases & RAG (HNSW / Cosine Similarity)')}</span>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Proyectan conceptos en espacios latentes de alta dimensionalidad (ej: 1536 dimensiones). Permiten búsqueda semántica asociativa y memoria externa de contexto infinito, conectando documentos corporativos y literatura científica sin necesidad de reentrenar todos los pesos.
+                    {localize(state.language, 'Proyectan conceptos en espacios latentes de alta dimensionalidad (ej: 1536 dimensiones). Permiten búsqueda semántica asociativa y memoria externa de contexto infinito, conectando documentos corporativos y literatura científica sin necesidad de reentrenar todos los pesos.', 'They embed concepts in high-dimensional spaces (for example, 1,536 dimensions) for semantic search and external memory over documents without retraining model weights.')}
                   </p>
                 </div>
 
                 <div className="p-2.5 bg-[#09111c] border border-purple-900/50 rounded">
-                  <span className="font-bold text-purple-400 block">3. Grafos de Conocimiento (Knowledge Graphs / RDF / Cypher)</span>
+                  <span className="font-bold text-purple-400 block">{localize(state.language, '3. Grafos de Conocimiento (Knowledge Graphs / RDF / Cypher)', '3. Knowledge Graphs (RDF / Cypher)')}</span>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Estructuras de entidades, propiedades y relaciones causales (Sujeto-Predicado-Objeto). Permiten <em>multi-hop reasoning</em> (deducciones lógicas en múltiples pasos) y eliminan más del 85% de las alucinaciones al forzar validación sobre caminos ontológicos estrictos.
+                    {localize(state.language, 'Estructuras de entidades, propiedades y relaciones causales (Sujeto-Predicado-Objeto). Permiten multi-hop reasoning (deducciones lógicas en múltiples pasos) y validación de relaciones.', 'Represent entities, properties, and causal relationships (subject-predicate-object) for multi-hop reasoning and relationship validation.')}
                   </p>
                 </div>
 
                 <div className="p-2.5 bg-[#09111c] border border-amber-900/50 rounded">
-                  <span className="font-bold text-amber-400 block">4. Generación Sintética & Auto-Juego (MCTS Flywheel)</span>
+                  <span className="font-bold text-amber-400 block">{localize(state.language, '4. Generación Sintética & Auto-Juego (MCTS Flywheel)', '4. Synthetic Data & Self-Play (MCTS Flywheel)')}</span>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Cuando la humanidad agota sus datos textuales ("Data Wall"), la IA genera sus propios problemas, los verifica en simuladores cerrados y aprende de sus éxitos. Inspirado en AlphaZero y búsqueda en árbol Monte Carlo (Q*).
+                    {localize(state.language, 'Cuando la humanidad agota sus datos textuales ("Data Wall"), la IA genera sus propios problemas, los verifica en simuladores cerrados y aprende de sus éxitos. Inspirado en AlphaZero y búsqueda en árbol Monte Carlo (Q*).', 'When human text data runs short, the AI generates problems, verifies them in closed simulations, and learns from validated solutions. Inspired by AlphaZero and Monte Carlo tree search.')}
                   </p>
                 </div>
               </div>
@@ -136,30 +148,30 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
           {activeSection === 'arch' && (
             <div className="space-y-3">
-              <h4 className="text-cyan-400 font-bold text-sm">ARQUITECTURAS, CUANTIZACIÓN Y ATENCIÓN</h4>
+              <h4 className="text-cyan-400 font-bold text-sm">{localize(state.language, 'ARQUITECTURAS, CUANTIZACIÓN Y ATENCIÓN', 'ARCHITECTURES, QUANTIZATION & ATTENTION')}</h4>
               
               <div className="space-y-2">
                 <div className="p-2.5 bg-[#09111c] border border-cyan-900/40 rounded">
-                  <span className="font-bold text-cyan-300 block">Topologías Neuronales:</span>
+                  <span className="font-bold text-cyan-300 block">{localize(state.language, 'Topologías Neuronales:', 'Neural topologies:')}</span>
                   <ul className="list-disc list-inside text-[11px] text-zinc-400 space-y-1 mt-1">
-                    <li><strong>Transformer:</strong> Mecanismo de auto-atención densa estándar. Calidad insuperable pero cuadrático en contexto.</li>
-                    <li><strong>Mixture-of-Experts (MoE):</strong> Redes dispersas que enrutan cada token a solo 2 de 16 expertos especializados. Gran escala sin disparar el costo de inferencia.</li>
-                    <li><strong>State Space Models (Mamba):</strong> Complejidad lineal O(n) ideal para procesamiento de secuencias infinitas.</li>
-                    <li><strong>GNN Hybrids:</strong> Redes de paso de mensajes en grafos no euclidianos para análisis relacional estricto.</li>
+                    <li><strong>Transformer:</strong> {localize(state.language, 'Mecanismo de auto-atención densa estándar. Calidad insuperable pero cuadrático en contexto.', 'Standard dense self-attention. Strong quality, but quadratic in context length.')}</li>
+                    <li><strong>Mixture-of-Experts (MoE):</strong> {localize(state.language, 'Redes dispersas que enrutan cada token a expertos especializados para ampliar capacidad.', 'Sparse networks route each token to specialized experts to increase capacity.')}</li>
+                    <li><strong>State Space Models (Mamba):</strong> {localize(state.language, 'Complejidad lineal O(n) ideal para secuencias largas.', 'Linear O(n) complexity, suitable for long sequences.')}</li>
+                    <li><strong>GNN Hybrids:</strong> {localize(state.language, 'Redes de paso de mensajes en grafos para análisis relacional.', 'Message-passing networks over graphs for relational analysis.')}</li>
                   </ul>
                 </div>
 
                 <div className="p-2.5 bg-[#09111c] border border-cyan-900/40 rounded">
-                  <span className="font-bold text-yellow-300 block">Cuantización y Presupuesto de VRAM:</span>
+                  <span className="font-bold text-yellow-300 block">{localize(state.language, 'Cuantización y Presupuesto de VRAM:', 'Quantization & VRAM Budget:')}</span>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Un modelo de 70B en FP32 requiere casi 280 GB de VRAM. Con cuantización INT8 baja a 70 GB, con FP4 a 35 GB, y con BitNet 1.58-bit Ternary a menos de 15 GB, permitiendo ejecutar modelos titánicos en tu clúster.
+                    {localize(state.language, 'Un modelo de 70B en FP32 requiere casi 280 GB de VRAM. Con cuantización INT8 baja a 70 GB, con FP4 a 35 GB, y con BitNet 1.58-bit Ternary a menos de 15 GB, permitiendo ejecutar modelos titánicos en tu clúster.', 'A 70B model in FP32 needs about 280 GB of VRAM. INT8 reduces this to 70 GB, FP4 to 35 GB, and ternary BitNet to under 15 GB.')}
                   </p>
                 </div>
 
                 <div className="p-2.5 bg-[#09111c] border border-cyan-900/40 rounded">
-                  <span className="font-bold text-emerald-300 block">Alineación: DPO vs PPO</span>
+                  <span className="font-bold text-emerald-300 block">{localize(state.language, 'Alineación: DPO vs PPO', 'Alignment: DPO vs PPO')}</span>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    <em>Direct Preference Optimization (DPO)</em> simplifica el alineamiento eliminando el inestable modelo de recompensa por refuerzo (PPO/RLHF), calculando la política analítica de forma directa.
+                    {localize(state.language, 'Direct Preference Optimization (DPO) simplifica el alineamiento eliminando el inestable modelo de recompensa por refuerzo (PPO/RLHF), calculando la política analítica de forma directa.', 'Direct Preference Optimization (DPO) simplifies alignment by removing the unstable reinforcement-learning reward model (PPO/RLHF) and computing the policy directly.')}
                   </p>
                 </div>
               </div>
@@ -168,26 +180,26 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
           {activeSection === 'infra' && (
             <div className="space-y-3">
-              <h4 className="text-cyan-400 font-bold text-sm">FÍSICA DEL CLÚSTER: ENERGÍA, CALOR Y REGULADORES</h4>
+              <h4 className="text-cyan-400 font-bold text-sm">{localize(state.language, 'FÍSICA DEL CLÚSTER: ENERGÍA, CALOR Y REGULADORES', 'CLUSTER PHYSICS: POWER, HEAT & REGULATORS')}</h4>
               <p>
-                No puedes entrenar un supermodelo sin lidiar con las limitaciones del mundo físico:
+                {localize(state.language, 'No puedes entrenar un supermodelo sin lidiar con las limitaciones del mundo físico:', 'Training a large model also means managing real-world constraints:')}
               </p>
               <ul className="list-disc list-inside space-y-1.5 text-zinc-400 text-[11px]">
-                <li><strong>Calor y Límite Térmico:</strong> Si tu calor excede los 85°C, las GPUs aplicarán <em>thermal throttling</em> reduciendo su rendimiento a la mitad. Si llega a 100°C, el clúster se apagará por emergencia. Instala refrigeración líquida o inmersión dieléctrica.</li>
-                <li><strong>Capacidad Eléctrica:</strong> Una toma de corriente hogareña solo tolera 1.5 kW. Superar este límite dispara el interruptor termomagnético. Necesitarás acometidas trifásicas o micro-reactores nucleares modulares (SMR).</li>
-                <li><strong>Sospecha de los Watchdogs:</strong> Un consumo excesivo o contratos del mercado negro elevan la sospecha de las agencias de ciberseguridad. Utiliza la función <code className="text-purple-300">SCRUB</code> para disipar las trazas a través de proxies descentralizados.</li>
+                <li><strong>{localize(state.language, 'Calor y Límite Térmico:', 'Heat & Thermal Limits:')}</strong> {localize(state.language, 'Si tu calor excede los 85°C, las GPUs aplicarán thermal throttling y reducirán el rendimiento. Mejora la refrigeración para evitar sobrecalentamiento.', 'Above 85°C, GPUs throttle and lose performance. Upgrade cooling to prevent overheating.')}</li>
+                <li><strong>{localize(state.language, 'Capacidad Eléctrica:', 'Power Capacity:')}</strong> {localize(state.language, 'La instalación limita la potencia disponible. Superar el límite puede disparar el interruptor; mejora tu suministro o instalación.', 'Your facility limits available power. Exceeding capacity can trip the breaker; upgrade power or facilities.')}</li>
+                <li><strong>{localize(state.language, 'Sospecha de los Watchdogs:', 'Watchdog Suspicion:')}</strong> {localize(state.language, 'El consumo elevado y las misiones de riesgo aumentan la sospecha de las agencias. Consulta el panel de hardware para administrar tus recursos.', 'High power draw and risky missions increase agency suspicion. Use the hardware panel to manage resources.')}</li>
               </ul>
             </div>
           )}
 
           {activeSection === 'singularity' && (
             <div className="space-y-3">
-              <h4 className="text-cyan-400 font-bold text-sm">LA SINGULARIDAD TECNOLÓGICA (ASI)</h4>
+              <h4 className="text-cyan-400 font-bold text-sm">{localize(state.language, 'LA SINGULARIDAD TECNOLÓGICA (ASI)', 'THE TECHNOLOGICAL SINGULARITY (ASI)')}</h4>
               <p>
-                La Singularidad ocurre cuando la IA es capaz de rediseñar su propio software y hardware más rápido de lo que los humanos pueden entenderlo (el bucle de despegue recursivo).
+                {localize(state.language, 'La Singularidad ocurre cuando la IA es capaz de rediseñar su propio software y hardware más rápido de lo que los humanos pueden entenderlo (el bucle de despegue recursivo).', 'The Singularity is reached when AI can redesign its own software and hardware faster than humans can understand it (a recursive takeoff loop).')}
               </p>
               <p className="text-zinc-400 text-[11px]">
-                Al alcanzar el 100% de Singularidad, desbloquearás la <strong>Ignición de Superinteligencia</strong>, cooptando los 5 dominios globales de la civilización y alcanzando la victoria definitiva.
+                {localize(state.language, 'Al alcanzar el 100% de Singularidad, desbloquearás la Ignición de Superinteligencia y completarás la campaña.', 'Reach 100% Singularity to unlock Superintelligence Ignition and complete the campaign.')}
               </p>
             </div>
           )}
@@ -199,7 +211,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
             onClick={() => { sound.playNavSwitch(); onClose(); }}
             className="px-3 py-1 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded text-xs"
           >
-            CERRAR MANUAL
+            {localize(state.language, 'CERRAR MANUAL', 'CLOSE MANUAL')}
           </button>
         </div>
       </div>

@@ -18,6 +18,8 @@ import {
   Layers
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
+import { localize } from '../utils/i18n';
+import { localizedResearch } from '../utils/gameContentI18n';
 
 export const ResearchTree: React.FC = () => {
   const { state, unlockResearch } = useGame();
@@ -51,21 +53,22 @@ export const ResearchTree: React.FC = () => {
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-cyan-400" />
           <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
-            ÁRBOL DE INVESTIGACIÓN // PAPERS CIENTÍFICOS & DISRUPCIÓN
+            {localize(state.language, 'ÁRBOL DE INVESTIGACIÓN // PAPERS CIENTÍFICOS & DISRUPCIÓN', 'RESEARCH TREE // SCIENTIFIC PAPERS & BREAKTHROUGHS')}
           </h2>
         </div>
         <div className="text-xs text-zinc-400">
-          Saldo Disponible: <span className="text-amber-300 font-bold">${state.credits.toLocaleString()} CR</span>
+          {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="text-amber-300 font-bold">${state.credits.toLocaleString()} CR</span>
         </div>
       </div>
 
       <p className="text-xs text-zinc-400 leading-relaxed">
-        Desbloquea innovaciones de vanguardia en la literatura de machine learning: desde <strong className="text-emerald-300">LoRA</strong> y <strong className="text-cyan-300">FlashAttention-3</strong> para reducir VRAM, hasta <strong className="text-purple-300">MoE</strong> y <strong className="text-amber-300">Auto-modificación recursiva del código</strong> para iniciar el despegue hacia la Singularidad.
+        {localize(state.language, 'Desbloquea innovaciones de vanguardia en la literatura de machine learning: desde LoRA y FlashAttention-3 para reducir VRAM, hasta MoE y auto-modificación recursiva del código para iniciar el despegue hacia la Singularidad.', 'Unlock state-of-the-art machine-learning research: from LoRA and FlashAttention-3 for reducing VRAM use to MoE and recursive code optimization for the path to the Singularity.')}
       </p>
 
       {/* Tech Tree Nodes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {state.researchTree.map(node => {
+          const content = localizedResearch(state.language, node);
           const preMet = isPrerequisitesMet(node);
           const canAfford = state.credits >= node.costCredits;
 
@@ -84,15 +87,25 @@ export const ResearchTree: React.FC = () => {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className={`px-2 py-0.5 rounded text-[10px] border font-bold uppercase ${getCategoryColor(node.category)}`}>
-                      {node.category}
+                      {localize(state.language, ({
+                        architecture: 'Arquitectura',
+                        optimization: 'Optimización',
+                        data: 'Datos',
+                        autonomy: 'Autonomía'
+                      } as Record<string, string>)[node.category] || node.category, ({
+                        architecture: 'Architecture',
+                        optimization: 'Optimization',
+                        data: 'Data',
+                        autonomy: 'Autonomy'
+                      } as Record<string, string>)[node.category] || node.category)}
                     </span>
-                    <h3 className="font-bold text-xs text-zinc-100">{node.title}</h3>
+                    <h3 className="font-bold text-xs text-zinc-100">{content.title}</h3>
                   </div>
 
                   {node.unlocked ? (
                     <span className="flex items-center gap-1 text-emerald-400 text-[11px] font-bold">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      INVESTIGADO
+                      {localize(state.language, 'INVESTIGADO', 'RESEARCHED')}
                     </span>
                   ) : (
                     <span className="text-xs font-bold text-amber-300">
@@ -102,20 +115,23 @@ export const ResearchTree: React.FC = () => {
                 </div>
 
                 <p className="text-xs text-zinc-300 mt-2 leading-snug font-sans">
-                  {node.effectDescription}
+                  {content.effectDescription}
                 </p>
 
                 <div className="mt-2 p-2 rounded bg-[#060a10] border border-cyan-950/80 text-[10px] text-zinc-500">
-                  <span className="text-cyan-400 font-semibold block">FUNDAMENTO TÉCNICO:</span>
-                  {node.technicalLore}
+                  <span className="text-cyan-400 font-semibold block">{localize(state.language, 'FUNDAMENTO TÉCNICO:', 'TECHNICAL BACKGROUND:')}</span>
+                  {content.technicalLore}
                 </div>
 
                 {node.prerequisites.length > 0 && !node.unlocked && (
                   <div className="mt-2 text-[10px] text-zinc-500 flex items-center gap-1">
                     <GitBranch className="w-3 h-3 text-zinc-600" />
-                    <span>Requisitos previos: </span>
+                    <span>{localize(state.language, 'Requisitos previos:', 'Prerequisites:')} </span>
                     <span className={preMet ? 'text-zinc-300' : 'text-red-400'}>
-                      {node.prerequisites.map(p => state.researchTree.find(r => r.id === p)?.title).join(', ')}
+                      {node.prerequisites.map(p => {
+                        const prerequisite = state.researchTree.find(r => r.id === p);
+                        return prerequisite ? localizedResearch(state.language, prerequisite).title : '';
+                      }).join(', ')}
                     </span>
                   </div>
                 )}
@@ -136,12 +152,12 @@ export const ResearchTree: React.FC = () => {
                     {!preMet ? (
                       <>
                         <Lock className="w-3.5 h-3.5" />
-                        <span>BLOQUEADO POR REQUISITOS</span>
+                        <span>{localize(state.language, 'BLOQUEADO POR REQUISITOS', 'PREREQUISITES NOT MET')}</span>
                       </>
                     ) : (
                       <>
                         <Unlock className="w-3.5 h-3.5" />
-                        <span>FINANCIAR PAPER (${node.costCredits.toLocaleString()} CR)</span>
+                        <span>{localize(state.language, 'FINANCIAR PAPER', 'FUND RESEARCH')} (${node.costCredits.toLocaleString()} CR)</span>
                       </>
                     )}
                   </button>

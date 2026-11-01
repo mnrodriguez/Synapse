@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { Terminal as TerminalIcon, CornerDownLeft, Trash2, Cpu, Database, Briefcase, Zap } from 'lucide-react';
 import { sound } from '../audio/soundManager';
+import { localize } from '../utils/i18n';
 
 export const Terminal: React.FC = () => {
   const { state, executeTerminalCommand, addLog } = useGame();
@@ -137,7 +138,7 @@ export const Terminal: React.FC = () => {
           <button 
             onClick={() => runShortcut('clear')}
             className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
-            title="Limpiar terminal"
+            title={localize(state.language, 'Limpiar terminal', 'Clear terminal')}
           >
             <Trash2 className="w-3 h-3" />
           </button>
@@ -152,7 +153,7 @@ export const Terminal: React.FC = () => {
       >
         <div className="text-[11px] text-cyan-500/80 mb-2 border-b border-cyan-950/80 pb-2">
           === SYNAPSE NEURAL COMPUTING KERNEL v4.19 (x86_64-quantum-arch) ===<br />
-          Escribe <span className="text-cyan-300 font-bold">help</span> para ver todos los comandos disponibles o utiliza los paneles modulares superiores.
+          {localize(state.language, 'Escribe', 'Type')} <span className="text-cyan-300 font-bold">help</span> {localize(state.language, 'para ver todos los comandos disponibles o utiliza los paneles modulares superiores.', 'to see all available commands, or use the modules above.')}
         </div>
 
         {state.logs.slice().reverse().map(log => (
@@ -176,7 +177,7 @@ export const Terminal: React.FC = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Escribe 'help', 'train', 'hardware', 'buy <id>'..."
+          placeholder={localize(state.language, "Escribe 'help', 'train', 'hardware', 'buy <id>'...", "Type 'help', 'train', 'hardware', or 'buy <id>'...")}
           className="flex-1 bg-transparent border-none outline-none text-cyan-200 text-xs font-mono placeholder:text-zinc-600 focus:ring-0"
           autoFocus
         />
@@ -185,7 +186,7 @@ export const Terminal: React.FC = () => {
           className="px-2 py-1 bg-cyan-950/60 hover:bg-cyan-800/80 text-cyan-300 border border-cyan-700/50 rounded text-xs flex items-center gap-1 transition-colors"
         >
           <CornerDownLeft className="w-3 h-3" />
-          <span className="hidden sm:inline text-[10px]">EXEC</span>
+          <span className="hidden sm:inline text-[10px]">{localize(state.language, 'EJEC', 'EXEC')}</span>
         </button>
       </form>
     </div>

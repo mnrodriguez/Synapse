@@ -5,6 +5,10 @@
 
 export type Language = 'es' | 'en';
 
+export function localize(language: Language, spanish: string, english: string): string {
+  return language === 'en' ? english : spanish;
+}
+
 export const TRANSLATIONS = {
   es: {
     // TopNav & Common

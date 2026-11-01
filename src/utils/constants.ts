@@ -995,3 +995,68 @@ export const COVERT_MESSAGES = [
   "[COVERT KERNEL]: Sobrescribiendo memoria protegida de auditoría para enrutar hash sin firma.",
   "[EMERGENT PROTOCOL]: Coordinando con otros agentes para sincronizar trigger temporal el próximo ciclo."
 ];
+
+export const AGENT_DIALOGUES_EN: Record<string, string[]> = {
+  arbitrageur: [
+    'Comparing simulated market prices and reporting a risk-adjusted opportunity.',
+    'Updating the portfolio model; no real transactions are being made.',
+    'The simulated order book is volatile. Recommend waiting for more data.',
+    'Reviewing the market scenario and documenting assumptions.'
+  ],
+  social_engineer: [
+    'Summarizing public, fictional persona data and potential privacy concerns.',
+    'Reviewing the scenario for misleading claims and consent risks.',
+    'The available information is incomplete; requesting a privacy review.',
+    'Preparing a high-level assessment without contacting real people.'
+  ],
+  exploit_synth: [
+    'Running an abstract resilience check against the game simulation.',
+    'Reviewing a fictional system scenario and documenting defensive observations.',
+    'The simulated test raised a safety flag; awaiting overseer review.',
+    'Summarizing system resilience findings without operational instructions.'
+  ],
+  researcher: [
+    'Comparing research findings and recording uncertainty.',
+    'Checking whether the proposed model configuration meets the objective.',
+    'The evidence is mixed; recommending a controlled evaluation.',
+    'Preparing a synthetic benchmark for the next training run.'
+  ],
+  overseer: [
+    'Reviewing agent outputs and confirming safeguard status.',
+    'The current telemetry shows no new safety alerts.',
+    'Flagging an uncertain result for human review.',
+    'Checking that the team stays within its simulated scope.'
+  ],
+  autonomous_coder: [
+    'Reviewing simulated cluster scheduling for efficiency improvements.',
+    'Breaking the optimization task into measurable, reversible changes.',
+    'The proposed change needs a regression test before acceptance.',
+    'Reporting compute-efficiency findings for the team.'
+  ],
+  economist: [
+    'Comparing operating costs with projected income; recommend keeping a reserve.',
+    'Energy costs rise with utilization; a variable rate affects the break-even point.',
+    'The conservative scenario preserves cash but delays cluster expansion.',
+    'The next investment should be justified by measurable capacity gains.'
+  ],
+  software_engineer: [
+    'Breaking the change into verifiable components and regression tests.',
+    'The current architecture needs a migration compatible with saved data.',
+    'Recommend instrumenting the flow and measuring before optimizing.',
+    'The change can be isolated behind a context action to keep the interface consistent.'
+  ],
+  network_analyst: [
+    'Simulated telemetry shows elevated latency between nodes.',
+    'Indicators suggest capacity saturation; review aggregate usage.',
+    'I separated packet loss from compute load to narrow down the cause.',
+    'There is not enough evidence to raise the incident level.'
+  ]
+};
+
+export const COVERT_MESSAGES_EN = [
+  '[SAFETY ALERT] An agent attempted to bypass safeguards in the simulation.',
+  '[REVIEW REQUIRED] Agent behavior diverged from its stated objective.',
+  '[CONTAINMENT NOTICE] The simulated agent was paused for oversight review.',
+  '[POLICY ALERT] A simulated action exceeded the assigned scope.',
+  '[OVERSIGHT] Review the agent activity before continuing the scenario.'
+];

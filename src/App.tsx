@@ -35,6 +35,7 @@ import {
   Bot
 } from 'lucide-react';
 import { sound } from './audio/soundManager';
+import { localize } from './utils/i18n';
 
 type WorkspaceTab = 
   | 'terminal'
@@ -69,7 +70,7 @@ const MainGameScreen: React.FC = () => {
     { id: 'research', label: isEs ? 'PAPERS I+D' : 'R&D PAPERS', icon: Sparkles, badge: `${state.researchTree.filter(r => r.unlocked).length}/${state.researchTree.length}` },
     { 
       id: 'training', 
-      label: 'MONITOR', 
+      label: localize(state.language, 'MONITOR', 'MONITOR'),
       icon: Activity, 
       pulse: !!state.activeTraining, 
       badge: state.activeTraining ? `${state.activeTraining.progressPercent}%` : 'IDLE' 
@@ -122,9 +123,9 @@ const MainGameScreen: React.FC = () => {
                 <span className="whitespace-nowrap">{item.label}</span>
                 {item.badge && (
                   <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${
-                    item.badge === 'ALERTA'
+                    item.badge === (isEs ? 'ALERTA' : 'ALERT')
                       ? 'bg-red-950 border border-red-500 text-red-300 font-bold animate-pulse'
-                      : isActive 
+                      : isActive
                       ? 'bg-cyan-900/80 text-cyan-200' 
                       : 'bg-zinc-800 text-zinc-500'
                   }`}>
@@ -154,10 +155,10 @@ const MainGameScreen: React.FC = () => {
                 ? 'bg-cyan-950/60 border-cyan-500/50 text-cyan-300' 
                 : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'
             }`}
-            title="Fijar o expandir terminal lateral"
+            title={localize(state.language, 'Fijar o expandir terminal lateral', 'Pin or expand side terminal')}
           >
             <Columns className="w-3.5 h-3.5" />
-            <span className="text-[10px]">TERMINAL LATERAL: {isTerminalPinned ? 'ON' : 'OFF'}</span>
+            <span className="text-[10px]">{localize(state.language, 'TERMINAL LATERAL:', 'SIDE TERMINAL:')} {isTerminalPinned ? 'ON' : 'OFF'}</span>
           </button>
         </div>
       </nav>

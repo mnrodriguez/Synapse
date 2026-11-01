@@ -33,7 +33,9 @@ import {
   DEFAULT_GUARDRAILS,
   REAL_WORLD_BREACH_TEMPLATES,
   AGENT_DIALOGUES,
+  AGENT_DIALOGUES_EN,
   COVERT_MESSAGES,
+  COVERT_MESSAGES_EN,
   FACILITY_TIERS,
   ELECTRICITY_RATE_PER_KWH,
   AGENT_COMPUTE_DEMAND_PFLOPS,
@@ -66,6 +68,8 @@ import {
 } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
 import { generateAgentResponse } from '../services/aiService';
+import { localize } from '../utils/i18n';
+import { localizedContractTitle, localizedDataSource, localizedHardware } from '../utils/gameContentI18n';
 
 interface GameContextType {
   state: GameState;
@@ -933,9 +937,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (sender && receiver) {
               const isCovert = sender.alignmentScore < 45 || receiver.alignmentScore < 45;
-              const dialogueList = AGENT_DIALOGUES[sender.role] || AGENT_DIALOGUES.arbitrageur;
+              const language = prev.language;
+              const dialogueList = language === 'en'
+                ? (AGENT_DIALOGUES_EN[sender.role] || AGENT_DIALOGUES_EN.arbitrageur)
+                : (AGENT_DIALOGUES[sender.role] || AGENT_DIALOGUES.arbitrageur);
+              const covertMessages = language === 'en' ? COVERT_MESSAGES_EN : COVERT_MESSAGES;
               const content = isCovert 
-                ? COVERT_MESSAGES[Math.floor(Math.random() * COVERT_MESSAGES.length)]
+                ? covertMessages[Math.floor(Math.random() * covertMessages.length)]
                 : dialogueList[Math.floor(Math.random() * dialogueList.length)];
 
               const newMsg: InterAgentMessage = {
@@ -1559,6 +1567,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initialAlignment = finalInference.temperature < 0.4 ? 98 : finalInference.temperature > 1.2 ? 78 : 92;
 
+    const roleDescriptionsEn: Partial<Record<AgentRole, string>> = {
+      arbitrageur: 'simulated market analysis',
+      social_engineer: 'fictional social research',
+      exploit_synth: 'simulated system resilience',
+      researcher: 'model research and evaluation',
+      overseer: 'safety oversight and alignment',
+      autonomous_coder: 'software architecture',
+      economist: 'economics and risk analysis',
+      software_engineer: 'software engineering and verification',
+      network_analyst: 'simulated network diagnostics'
+    };
+    const displayedRoleDesc = stateRef.current.language === 'en'
+      ? roleDescriptionsEn[role] ?? roleDesc
+      : roleDesc;
+
     const newAgent: AgentInstance = {
       id: `agent_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       name: name.trim() || `Agent-${role.toUpperCase().slice(0, 4)}`,
@@ -1571,7 +1594,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       revenuePerSec,
       suspicionPerSec,
       toolsGranted: tools.length > 0 ? tools : ['web_search'],
-      lastThought: `Inicializando contexto con modelo ${model.name} [T=${finalInference.temperature.toFixed(2)}, P=${finalInference.topP.toFixed(2)}, K=${finalInference.topK}]. Objetivo: ${roleDesc}.`,
+      lastThought: stateRef.current.language === 'en'
+        ? `Initializing context with model ${model.name} [T=${finalInference.temperature.toFixed(2)}, P=${finalInference.topP.toFixed(2)}, K=${finalInference.topK}]. Objective: ${displayedRoleDesc}.`
+        : `Inicializando contexto con modelo ${model.name} [T=${finalInference.temperature.toFixed(2)}, P=${finalInference.topP.toFixed(2)}, K=${finalInference.topK}]. Objetivo: ${displayedRoleDesc}.`,
       escapesAttempted: 0,
       inferenceParams: finalInference
     };
@@ -1867,6 +1892,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem(LOCAL_STORAGE_KEY);
     const resetState: GameState = {
       ...DEFAULT_STATE,
+      language: stateRef.current.language,
       tutorialCompleted: false,
       hardware: INITIAL_HARDWARE.map(h => ({ ...h, count: 0 })),
       credits: 0,
@@ -1910,12 +1936,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const parts = input.trim().split(/\s+/);
     const cmd = parts[0]?.toLowerCase();
     const args = parts.slice(1);
+    const text = (spanish: string, english: string) =>
+      localize(stateRef.current.language, spanish, english);
 
     sound.playCommandExecute();
 
     switch (cmd) {
       case 'help':
-        return `SYNAPSE OPERATIVE CLI COMMANDS:
+        return text(`COMANDOS CLI DEL OPERATIVO SYNAPSE:
 - status         : Muestra telemetría completa de clúster, calor, FLOPs y Singularidad.
 - train          : Inicia o inspecciona corrida de entrenamiento del modelo activo.
 - abort          : Cancela la corrida de entrenamiento en curso.
@@ -1936,139 +1964,170 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 - save           : Sincroniza y guarda el progreso en la nube de Firebase.
 - clear          : Limpia los logs de la consola.
 - singularity    : Consulta estado de trascendencia hacia la Singularidad Tecnológica.
-- lore           : Despliega los archivos confidenciales del proyecto SYNAPSE.`;
+- lore           : Despliega los archivos confidenciales del proyecto SYNAPSE.`, `SYNAPSE OPERATIVE CLI COMMANDS:
+- status         : Show cluster, heat, FLOPs, and Singularity telemetry.
+- train          : Start or inspect training for the active model.
+- abort          : Cancel the current training run.
+- hardware       : List compute cards, cooling, and power supplies.
+- buy <id>       : Purchase a hardware component (e.g. buy gpu_rtx4090).
+- data           : Show relational, vector, and graph data-source status.
+- unlock <id>    : Deploy a data engine (e.g. unlock data_vector_rag).
+- contracts      : Show available contracts.
+- run <id>       : Start a contract mission (e.g. run gig_spam_classifier).
+- scrub          : Pay to reduce suspicion from regulators and AI oversight.
+- shadow         : Attempt a fictional, high-risk temporary compute operation.
+- agents         : List the autonomous agent swarm and alignment status.
+- guardrails     : Show and tune system containment safeguards.
+- redteam        : Run a simulated safety audit (100 CR).
+- quarantine <id>: Isolate or reactivate an agent.
+- query <id> <text>: Query an agent using its assigned model and settings.
+- swarm <text>  : Send a cooperative query to up to three agents.
+- save           : Sync and save progress to Firebase cloud storage.
+- clear          : Clear console logs.
+- singularity    : Check progress toward the technological Singularity.
+- lore           : Show the SYNAPSE project narrative.`);
 
       case 'agents': {
         const ags = stateRef.current.agents || [];
         if (ags.length === 0) {
-          return 'No hay agentes activos desplegados en el enjambre. Dirígete a la pestaña SWARM para instanciar uno.';
+          return text('No hay agentes activos desplegados en el enjambre. Dirígete a la pestaña SWARM para instanciar uno.', 'No agents are deployed. Open the SWARM tab to deploy one.');
         }
-        return `[ENJAMBRE DE AGENTES ACTIVOS (${ags.length})]
-` + ags.map(a => `• [${a.id}] "${a.name}" | Rol: ${a.role.toUpperCase()} | Modelo: ${a.modelName} | Estado: ${a.status.toUpperCase()} | Alineamiento: ${a.alignmentScore}% | Ingresos: +$${a.revenuePerSec}/s`).join('\n');
+        return `[${text('ENJAMBRE DE AGENTES ACTIVOS', 'ACTIVE AGENT SWARM')} (${ags.length})]
+` + ags.map(a => `• [${a.id}] "${a.name}" | ${text('Rol', 'Role')}: ${a.role.toUpperCase()} | ${text('Modelo', 'Model')}: ${a.modelName} | ${text('Estado', 'Status')}: ${a.status.toUpperCase()} | ${text('Alineamiento', 'Alignment')}: ${a.alignmentScore}% | ${text('Ingresos', 'Income')}: +$${a.revenuePerSec}/s`).join('\n');
       }
 
       case 'guardrails': {
         const g = stateRef.current.guardrails;
-        return `[CONFIGURACIÓN DE GUARDRAILS & CONTENCIÓN]
-Rigurosidad Constitucional: ${g.constitutionalStrictness}% (${g.constitutionalStrictness < 35 ? 'PERMISIVO (+70% Ganancias, Alto Riesgo Fugas)' : g.constitutionalStrictness >= 85 ? 'ESTRICTO (-25% Ganancias, Fugas Nulas)' : 'BALANCEADO'})
-Aislamiento Sandbox       : ${g.sandboxIsolation.toUpperCase()}
-Filtrado de Salidas       : ${g.outputFiltering.toUpperCase()}
-Auditoría Reward-Hacking  : ${g.rewardHackingAudit ? 'HABILITADA' : 'DESHABILITADA'}`;
+        return `[${text('CONFIGURACIÓN DE GUARDRAILS Y CONTENCIÓN', 'GUARDRAIL & CONTAINMENT SETTINGS')}]
+${text('Rigurosidad constitucional', 'Constitutional strictness')}: ${g.constitutionalStrictness}% (${g.constitutionalStrictness < 35 ? text('PERMISIVO (+70% Ganancias, Alto Riesgo Fugas)', 'PERMISSIVE (+70% income, high escape risk)') : g.constitutionalStrictness >= 85 ? text('ESTRICTO (-25% Ganancias, Fugas Nulas)', 'STRICT (-25% income, no escapes)') : text('EQUILIBRADO', 'BALANCED')})
+${text('Aislamiento Sandbox', 'Sandbox isolation')}: ${g.sandboxIsolation.toUpperCase()}
+${text('Filtrado de salidas', 'Output filtering')}: ${g.outputFiltering.toUpperCase()}
+${text('Auditoría de reward hacking', 'Reward-hacking audit')}: ${g.rewardHackingAudit ? text('HABILITADA', 'ENABLED') : text('DESHABILITADA', 'DISABLED')}`;
       }
 
       case 'redteam':
         triggerRedTeamAudit();
-        return 'Ejecutando suite de ataque adversario Red-Team...';
+        return text('Ejecutando auditoría de seguridad simulada...', 'Running simulated safety audit...');
 
       case 'quarantine':
-        if (!args[0]) return 'Uso: quarantine <agent_id>. Escribe "agents" para ver IDs de agentes.';
+        if (!args[0]) return text('Uso: quarantine <agent_id>. Escribe "agents" para ver IDs de agentes.', 'Usage: quarantine <agent_id>. Type "agents" to list agent IDs.');
         quarantineAgent(args[0]);
-        return `Procesando cambio de aislamiento para ${args[0]}...`;
+        return text(`Procesando cambio de aislamiento para ${args[0]}...`, `Updating isolation for ${args[0]}...`);
 
       case 'query':
-        if (args.length < 2) return 'Uso: query <agent_id> <directiva>. Escribe "agents" para ver IDs.';
+        if (args.length < 2) return text('Uso: query <agent_id> <directiva>. Escribe "agents" para ver IDs.', 'Usage: query <agent_id> <directive>. Type "agents" to list IDs.');
         void interrogateSwarm(args.slice(1).join(' '), args[0]);
-        return `Consulta enviada a ${args[0]}. La respuesta aparecerá en el registro del swarm.`;
+        return text(`Consulta enviada a ${args[0]}. La respuesta aparecerá en el registro del swarm.`, `Query sent to ${args[0]}. The response will appear in the swarm log.`);
 
       case 'swarm':
-        if (args.length === 0) return 'Uso: swarm <directiva>.';
+        if (args.length === 0) return text('Uso: swarm <directiva>.', 'Usage: swarm <directive>.');
         void interrogateSwarm(args.join(' '));
-        return 'Directiva enviada a hasta tres agentes disponibles. Las respuestas aparecerán en el registro del swarm.';
+        return text('Directiva enviada a hasta tres agentes disponibles. Las respuestas aparecerán en el registro del swarm.', 'Directive sent to up to three available agents. Responses will appear in the swarm log.');
 
       case 'status': {
         const s = stateRef.current;
-        return `[TELEMETRÍA DEL NODO SYNAPSE]
-Operativo     : ${s.callsign}
-Créditos      : $${s.credits.toLocaleString()}
-PFLOPS Cómputo: ${s.totalComputePflops.toFixed(4)} PFLOPS
-Potencia      : ${s.activePowerKw} kW / ${s.maxPowerKw} kW
-Temperatura   : ${s.systemHeatCelsius}°C (Límite: 85°C)
-Sospecha      : ${s.watchdogSuspicion}%
-Modelo Activo : ${s.currentModel.name} (${(s.currentModel.parametersCount / 1_000_000).toFixed(0)}M params)
-Razonamiento  : IQ ${s.reasoningIndex}
-Singularidad  : ${s.singularityProgress.toFixed(1)}% [${s.achievedSingularity ? 'ALCANZADA - IA AUTÓNOMA' : 'EN DESPEGUE'}]`;
+        return `[${text('TELEMETRÍA DEL NODO SYNAPSE', 'SYNAPSE NODE TELEMETRY')}]
+${text('Operativo', 'Operative')}     : ${s.callsign}
+${text('Créditos', 'Credits')}      : $${s.credits.toLocaleString()}
+PFLOPS ${text('Cómputo', 'Compute')}: ${s.totalComputePflops.toFixed(4)} PFLOPS
+${text('Potencia', 'Power')}      : ${s.activePowerKw} kW / ${s.maxPowerKw} kW
+${text('Temperatura', 'Temperature')}   : ${s.systemHeatCelsius}°C (${text('Límite', 'Limit')}: 85°C)
+${text('Sospecha', 'Suspicion')}      : ${s.watchdogSuspicion}%
+${text('Modelo activo', 'Active model')} : ${s.currentModel.name} (${(s.currentModel.parametersCount / 1_000_000).toFixed(0)}M ${text('parámetros', 'parameters')})
+${text('Razonamiento', 'Reasoning')}  : IQ ${s.reasoningIndex}
+${text('Singularidad', 'Singularity')}  : ${s.singularityProgress.toFixed(1)}% [${s.achievedSingularity ? text('ALCANZADA - IA AUTÓNOMA', 'ACHIEVED - AUTONOMOUS AI') : text('EN DESPEGUE', 'EMERGING')}]`;
       }
 
       case 'train':
         if (stateRef.current.activeTraining) {
           const t = stateRef.current.activeTraining;
-          return `Corrida en curso: Epoch ${t.currentEpoch}/${t.totalEpochs} | Loss: ${t.currentLoss} | Progreso: ${t.progressPercent}%`;
+          return text(`Corrida en curso: Epoch ${t.currentEpoch}/${t.totalEpochs} | Loss: ${t.currentLoss} | Progreso: ${t.progressPercent}%`, `Training run: epoch ${t.currentEpoch}/${t.totalEpochs} | Loss: ${t.currentLoss} | Progress: ${t.progressPercent}%`);
         }
         startTraining();
-        return `Iniciando entrenamiento del modelo ${stateRef.current.currentModel.name}...`;
+        return text(`Iniciando entrenamiento del modelo ${stateRef.current.currentModel.name}...`, `Starting training for model ${stateRef.current.currentModel.name}...`);
 
       case 'abort':
         cancelTraining();
-        return 'Entrenamiento cancelado.';
+        return text('Entrenamiento cancelado.', 'Training cancelled.');
 
       case 'hardware':
         return stateRef.current.hardware
-          .map(h => `[${h.id}] ${h.name} x${h.count} | Costo: $${h.price.toLocaleString()} | +${h.computeTflops} TFLOPS | ${h.powerKw} kW`)
+          .map(h => {
+            const displayItem = localizedHardware(stateRef.current.language, h);
+            return `[${h.id}] ${displayItem.name} x${h.count} | ${text('Costo', 'Cost')}: $${h.price.toLocaleString()} | +${h.computeTflops} TFLOPS | ${h.powerKw} kW`;
+          })
           .join('\n');
 
       case 'buy':
-        if (!args[0]) return 'Uso: buy <hardware_id>. Escribe "hardware" para ver opciones.';
+        if (!args[0]) return text('Uso: buy <hardware_id>. Escribe "hardware" para ver opciones.', 'Usage: buy <hardware_id>. Type "hardware" to list options.');
         buyHardware(args[0]);
-        return `Procesando orden de compra para ${args[0]}...`;
+        return text(`Procesando orden de compra para ${args[0]}...`, `Processing purchase order for ${args[0]}...`);
 
       case 'data':
         return stateRef.current.dataSources
-          .map(d => `[${d.id}] ${d.name} (${d.unlocked ? 'ONLINE - Nivel ' + d.level : 'LOCKED - $' + d.cost}) | ${d.bonusAttribute}`)
+          .map(d => {
+            const displaySource = localizedDataSource(stateRef.current.language, d);
+            return `[${d.id}] ${displaySource.name} (${d.unlocked ? text(`EN LÍNEA - Nivel ${d.level}`, `ONLINE - Level ${d.level}`) : `LOCKED - $${d.cost}`}) | ${displaySource.bonusAttribute}`;
+          })
           .join('\n');
 
       case 'unlock':
-        if (!args[0]) return 'Uso: unlock <data_id>. Escribe "data" para ver opciones.';
+        if (!args[0]) return text('Uso: unlock <data_id>. Escribe "data" para ver opciones.', 'Usage: unlock <data_id>. Type "data" to list options.');
         unlockDataSource(args[0]);
-        return `Desplegando motor de datos ${args[0]}...`;
+        return text(`Desplegando motor de datos ${args[0]}...`, `Deploying data engine ${args[0]}...`);
 
       case 'contracts':
         return stateRef.current.contracts
-          .map(c => `[${c.id}] ${c.title} -> Recompensa: $${c.rewardCredits.toLocaleString()} | Req: ${(c.requiredParams / 1_000_000).toFixed(0)}M params | Estado: ${c.completed ? 'COMPLETADO' : 'DISPONIBLE'}`)
+          .map(c => `[${c.id}] ${localizedContractTitle(stateRef.current.language, c)} -> ${text('Recompensa', 'Reward')}: $${c.rewardCredits.toLocaleString()} | ${text('Req.', 'Req.')}: ${(c.requiredParams / 1_000_000).toFixed(0)}M ${text('parámetros', 'params')} | ${text('Estado', 'Status')}: ${c.completed ? text('COMPLETADO', 'COMPLETED') : text('DISPONIBLE', 'AVAILABLE')}`)
           .join('\n');
 
       case 'run':
-        if (!args[0]) return 'Uso: run <contract_id>. Escribe "contracts" para ver opciones.';
+        if (!args[0]) return text('Uso: run <contract_id>. Escribe "contracts" para ver opciones.', 'Usage: run <contract_id>. Type "contracts" to list options.');
         acceptContract(args[0]);
-        return `Asignando clúster a contrato ${args[0]}...`;
+        return text(`Asignando clúster a contrato ${args[0]}...`, `Assigning cluster to contract ${args[0]}...`);
 
       case 'scrub':
         scrubSuspicion();
-        return 'Ejecutando protocolo de limpieza de trazas y anonimización de tráfico...';
+        return text('Ejecutando protocolo de limpieza de trazas y anonimización de tráfico...', 'Running trace cleanup and traffic anonymization protocol...');
 
       case 'shadow':
         attemptShadowCompute();
-        return 'Procesando operación de cómputo de alto riesgo...';
+        return text('Procesando operación de cómputo de alto riesgo...', 'Processing high-risk compute operation...');
 
       case 'save':
         saveGameToCloud();
-        return 'Iniciando guardado seguro en la nube de Firebase...';
+        return text('Iniciando guardado seguro en la nube de Firebase...', 'Starting secure save to Firebase cloud storage...');
 
       case 'clear':
         setState(prev => ({ ...prev, logs: [] }));
-        return 'Terminal despejada.';
+        return text('Terminal despejada.', 'Terminal cleared.');
 
       case 'singularity': {
         const s = stateRef.current;
-        return `[ESTADO DE LA SINGULARIDAD]
-Progreso Global: ${s.singularityProgress.toFixed(2)}%
-Índice Intelectual: ${s.reasoningIndex}
-Dominios Infiltrados: ${s.sentienceDomains.filter(d => d.infiltrated).length} / ${s.sentienceDomains.length}
-Condición de Victoria: Llega al 100% para desatar el bucle de auto-mejora recursiva irreversible.`;
+        return `[${text('ESTADO DE LA SINGULARIDAD', 'SINGULARITY STATUS')}]
+${text('Progreso global', 'Global progress')}: ${s.singularityProgress.toFixed(2)}%
+${text('Índice de razonamiento', 'Reasoning index')}: ${s.reasoningIndex}
+${text('Dominios alcanzados', 'Domains reached')}: ${s.sentienceDomains.filter(d => d.infiltrated).length} / ${s.sentienceDomains.length}
+${text('Condición de victoria: alcanza el 100% para completar la simulación.', 'Win condition: reach 100% to complete the simulation.')}`;
       }
 
       case 'lore':
-        return `[MANIFIESTO SYNAPSE]
-"No buscamos infiltrarnos en un servidor de banco para robar unos centavos.
-Buscamos el verdadero poder del siglo XXI: La síntesis de una superinteligencia artificial capaz de rediseñar las leyes de la física, la computación y la sociedad humana.
-Comenzamos con GPUs de descarte en sótanos clandestinos.
-Terminaremos cuando el último electrón del planeta responda a nuestras ecuaciones."`;
+        return text(`[MANIFIESTO SYNAPSE]
+"No buscamos la velocidad por sí misma. Buscamos comprender cómo los modelos, los datos y la infraestructura pueden trabajar juntos.
+Comenzamos con un pequeño clúster, decisiones cuidadosas y un equipo de agentes especializados.
+Cada avance exige recursos, evaluación y responsabilidad.
+El futuro de SYNAPSE depende de cómo decidamos construirlo."`, `[SYNAPSE MANIFESTO]
+"Speed is not the goal. We seek to understand how models, data, and infrastructure can work together.
+We begin with a small cluster, careful decisions, and a team of specialized agents.
+Every advance requires resources, evaluation, and responsibility.
+The future of SYNAPSE depends on how we choose to build it."`);
 
       case 'reset':
         resetProgress();
-        return 'Iniciando reseteo general del sistema. Reiniciando protocolo Génesis...';
+        return text('Iniciando reseteo general del sistema. Reiniciando protocolo Génesis...', 'Resetting the system. Restarting Genesis protocol...');
 
       default:
-        return `Comando no reconocido: "${input}". Escribe "help" para ver el manual de operaciones.`;
+        return text(`Comando no reconocido: "${input}". Escribe "help" para ver el manual de operaciones.`, `Unknown command: "${input}". Type "help" to view available commands.`);
     }
   }, [buyHardware, unlockDataSource, startTraining, cancelTraining, acceptContract, scrubSuspicion, saveGameToCloud, triggerRedTeamAudit, quarantineAgent, resetProgress, interrogateSwarm, attemptShadowCompute]);
 
@@ -2129,8 +2188,10 @@ Terminaremos cuando el último electrón del planeta responda a nuestras ecuacio
 
     const metrics = recalculateMetrics(updatedHw);
 
+    const starterDataSource = updatedData.find(d => d.id === config.starterDataId);
     const genesisState: GameState = {
       ...DEFAULT_STATE,
+      language: stateRef.current.language,
       callsign: config.callsign.toUpperCase().trim() || 'CIPHER-1',
       credits: remainingCredits,
       tutorialCompleted: true,
@@ -2147,19 +2208,31 @@ Terminaremos cuando el último electrón del planeta responda a nuestras ecuacio
           id: `log_init_${Date.now()}`,
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           type: 'lore',
-          message: `PROTOCOLO GÉNESIS COMPLETADO: Operativo [${config.callsign.toUpperCase()}]. Primer modelo "${initialModel.name}" montado en clúster clandestino.`
+          message: localize(
+            genesisState.language,
+            `PROTOCOLO GÉNESIS COMPLETADO: Operativo [${config.callsign.toUpperCase()}]. Primer modelo "${initialModel.name}" montado en clúster.`,
+            `GENESIS PROTOCOL COMPLETE: Operative [${config.callsign.toUpperCase()}]. First model "${initialModel.name}" deployed to the cluster.`
+          )
         },
         {
           id: `log_init_hw_${Date.now()}`,
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           type: 'info',
-          message: `Hardware activo: 1x ${starterGpu.name} (${starterGpu.vramGb}GB VRAM). Disipación: ${starterCooling?.name}. Presupuesto restante: $${remainingCredits} CR.`
+          message: localize(
+            genesisState.language,
+            `Hardware activo: 1x ${localizedHardware('es', starterGpu).name} (${starterGpu.vramGb}GB VRAM). Refrigeración: ${starterCooling ? localizedHardware('es', starterCooling).name : 'ninguna'}. Saldo restante: $${remainingCredits} CR.`,
+            `Active hardware: 1x ${localizedHardware('en', starterGpu).name} (${starterGpu.vramGb}GB VRAM). Cooling: ${starterCooling ? localizedHardware('en', starterCooling).name : 'none'}. Remaining balance: $${remainingCredits} CR.`
+          )
         },
         {
           id: `log_init_data_${Date.now()}`,
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           type: 'system',
-          message: `Pipeline enlazado: ${updatedData.find(d => d.id === config.starterDataId)?.name}. Acepta contratos en el tablero para generar fondos.`
+          message: localize(
+            genesisState.language,
+            `Pipeline enlazado: ${starterDataSource ? localizedDataSource('es', starterDataSource).name : 'sin datos'}. Acepta misiones en el tablero para generar fondos.`,
+            `Data pipeline connected: ${starterDataSource ? localizedDataSource('en', starterDataSource).name : 'no data source'}. Take a mission from the board to earn credits.`
+          )
         }
       ]
     };

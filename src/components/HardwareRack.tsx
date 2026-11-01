@@ -19,7 +19,8 @@ import {
   Lock
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { t } from '../utils/i18n';
+import { localize, t } from '../utils/i18n';
+import { localizedHardware } from '../utils/gameContentI18n';
 import {
   AGENT_COMPUTE_DEMAND_PFLOPS,
   AGENT_POWER_DRAW_KW,
@@ -154,7 +155,7 @@ export const HardwareRack: React.FC = () => {
           disabled={state.detentionSeconds > 0 || state.borrowedComputeSeconds > 0}
           className="rounded border border-amber-600/70 bg-amber-950/70 px-3 py-1.5 text-[10px] font-bold text-amber-200 hover:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          INTENTAR OPERACIÓN · {shadowDetectionChance.toFixed(0)}% RIESGO
+          {localize(state.language, 'INTENTAR OPERACIÓN', 'ATTEMPT OPERATION')} · {shadowDetectionChance.toFixed(0)}% {t(state.language, 'risk')}
         </button>
       </section>
 
@@ -188,6 +189,7 @@ export const HardwareRack: React.FC = () => {
       {/* Hardware List for Current Category */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {filteredItems.map(item => {
+          const displayItem = localizedHardware(state.language, item);
           const canAfford = state.credits >= item.price;
           const isLocked = item.minSingularityRequired !== undefined && item.minSingularityRequired > 0 && state.singularityProgress < item.minSingularityRequired;
 
@@ -206,7 +208,7 @@ export const HardwareRack: React.FC = () => {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="font-bold text-xs text-zinc-100 flex items-center gap-1.5">
-                      {item.name}
+                      {displayItem.name}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[10px] text-cyan-400 font-mono">
@@ -229,7 +231,7 @@ export const HardwareRack: React.FC = () => {
                 </div>
 
                 <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                  {item.description}
+                  {displayItem.description}
                 </p>
 
                 {/* Technical Specs Tags */}

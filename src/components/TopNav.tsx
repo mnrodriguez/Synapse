@@ -23,6 +23,7 @@ import {
   Languages
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
+import { localize } from '../utils/i18n';
 
 interface TopNavProps {
   onOpenManual: () => void;
@@ -77,7 +78,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
         </div>
 
         <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/90 border border-zinc-700/60 text-zinc-300">
-          <span className="text-zinc-500 text-[10px]">OPERATIVE:</span>
+          <span className="text-zinc-500 text-[10px]">{localize(state.language, 'OPERATIVO:', 'OPERATIVE:')}</span>
           <span className="text-cyan-300 font-semibold">{state.callsign}</span>
         </div>
 
@@ -92,28 +93,28 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
       {/* Telemetry gauges */}
       <div className="flex items-center flex-wrap gap-2 sm:gap-3">
         {/* Compute Power */}
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-950/30 border border-cyan-500/30 text-cyan-300" title="Capacidad de cómputo total del clúster">
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-950/30 border border-cyan-500/30 text-cyan-300" title={localize(state.language, 'Capacidad de cómputo total del clúster', 'Total cluster compute capacity')}>
           <Cpu className="w-3.5 h-3.5 text-cyan-400" />
           <span className="text-zinc-400 text-[10px]">COMPUTE:</span>
           <span className="font-bold">{state.totalComputePflops.toFixed(4)} PFLOPS</span>
         </div>
 
         {/* Power Grid */}
-        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${isPowerOverloaded ? 'bg-red-950/40 border-red-500 text-red-400 animate-pulse' : 'bg-zinc-900/80 border-zinc-700/60 text-zinc-300'}`} title="Consumo eléctrico vs capacidad de red">
+        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${isPowerOverloaded ? 'bg-red-950/40 border-red-500 text-red-400 animate-pulse' : 'bg-zinc-900/80 border-zinc-700/60 text-zinc-300'}`} title={localize(state.language, 'Consumo eléctrico vs capacidad de red', 'Power draw vs grid capacity')}>
           <Zap className={`w-3.5 h-3.5 ${isPowerOverloaded ? 'text-red-400' : 'text-yellow-400'}`} />
           <span className="text-zinc-400 text-[10px]">POWER:</span>
           <span>{state.activePowerKw} / {state.maxPowerKw} kW</span>
         </div>
 
         {/* Core Temperature */}
-        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${getTempColor(state.systemHeatCelsius)}`} title="Temperatura térmica del clúster (Límite 85°C)">
+        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${getTempColor(state.systemHeatCelsius)}`} title={localize(state.language, 'Temperatura térmica del clúster (Límite 85°C)', 'Cluster temperature (85°C limit)')}>
           <Flame className="w-3.5 h-3.5" />
           <span className="text-[10px] opacity-75">HEAT:</span>
           <span className="font-bold">{state.systemHeatCelsius}°C</span>
         </div>
 
         {/* Watchdog Suspicion */}
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700/60 text-zinc-300" title="Sospecha de agencias reguladoras de IA">
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700/60 text-zinc-300" title={localize(state.language, 'Sospecha de agencias reguladoras de IA', 'AI regulator suspicion')}>
           <ShieldAlert className={`w-3.5 h-3.5 ${state.watchdogSuspicion > 50 ? 'text-red-400 animate-pulse' : 'text-purple-400'}`} />
           <span className="text-zinc-400 text-[10px]">SUSPICION:</span>
           <span className={state.watchdogSuspicion > 60 ? 'text-red-400 font-bold' : 'text-zinc-200'}>
@@ -123,7 +124,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
             <button 
               onClick={() => scrubSuspicion()}
               className="ml-1 px-1 py-0.2 text-[9px] bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded border border-purple-500/40 transition-colors"
-              title="Pagar $250 para disipar sospecha con proxies anónimos"
+              title={localize(state.language, 'Pagar $250 para disipar sospecha', 'Pay $250 to reduce suspicion')}
             >
               SCRUB
             </button>
@@ -133,7 +134,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
         {/* Singularity Gauge */}
         <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-gradient-to-r from-cyan-950/60 via-purple-950/60 to-pink-950/60 border border-cyan-400/50 text-cyan-200 shadow-[0_0_12px_rgba(0,255,200,0.15)]">
           <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-spin" style={{ animationDuration: '8s' }} />
-          <span className="text-[10px] text-cyan-400 font-bold">SINGULARIDAD:</span>
+          <span className="text-[10px] text-cyan-400 font-bold">{localize(state.language, 'SINGULARIDAD:', 'SINGULARITY:')}</span>
           <span className="font-bold text-cyan-200">{state.singularityProgress.toFixed(1)}%</span>
         </div>
       </div>
@@ -159,7 +160,9 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
         <button
           onClick={toggleSound}
           className={`p-1.5 rounded border transition-colors ${soundMuted ? 'text-zinc-500 border-zinc-800 bg-zinc-900/50 hover:text-zinc-300' : 'text-cyan-400 border-cyan-800/60 bg-cyan-950/40 hover:bg-cyan-900/40'}`}
-          title={soundMuted ? 'Activar audio sfx' : 'Silenciar audio'}
+          title={soundMuted
+            ? localize(state.language, 'Activar efectos de sonido', 'Enable sound effects')
+            : localize(state.language, 'Silenciar audio', 'Mute audio')}
         >
           {soundMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
         </button>
@@ -168,7 +171,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
         <button
           onClick={() => { sound.playNavSwitch(); onOpenManual(); }}
           className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-cyan-300 transition-colors"
-          title="Manual técnico de entrenamiento y conceptos de IA"
+          title={localize(state.language, 'Manual técnico de entrenamiento y conceptos de IA', 'Technical manual for training and AI concepts')}
         >
           <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
           <span className="hidden md:inline">MANUAL</span>
@@ -178,7 +181,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
         <button
           onClick={() => { sound.playNavSwitch(); onOpenLeaderboard(); }}
           className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-yellow-300 transition-colors"
-          title="Ver matriz global de agentes y progreso de singularidad"
+          title={localize(state.language, 'Ver matriz global de agentes y progreso de singularidad', 'View global agent and singularity leaderboard')}
         >
           <Trophy className="w-3.5 h-3.5 text-yellow-400" />
           <span className="hidden md:inline">RANKING</span>
@@ -195,11 +198,15 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
               ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300 animate-pulse'
               : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
           }`}
-          title="Guardar progreso en la nube de Firebase"
+          title={localize(state.language, 'Guardar progreso en la nube de Firebase', 'Save progress to Firebase cloud')}
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isSaving || savingAnim ? 'animate-spin text-cyan-400' : ''}`} />
           <span className="hidden lg:inline">
-            {cloudSyncStatus === 'synced' ? 'NUBE OK' : isSaving || savingAnim ? 'GUARDANDO...' : 'GUARDAR'}
+            {cloudSyncStatus === 'synced'
+              ? localize(state.language, 'NUBE OK', 'CLOUD OK')
+              : isSaving || savingAnim
+                ? localize(state.language, 'GUARDANDO...', 'SAVING...')
+                : localize(state.language, 'GUARDAR', 'SAVE')}
           </span>
         </button>
 
@@ -207,7 +214,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
         <button
           onClick={() => { sound.playNavSwitch(); onOpenAuth(); }}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-600/40 text-cyan-300 transition-colors"
-          title="Identificación de usuario y autenticación segura"
+          title={localize(state.language, 'Identificación de usuario y autenticación segura', 'User identity and secure sign-in')}
         >
           {user ? (
             <>
@@ -221,7 +228,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
           ) : (
             <>
               <CloudOff className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="hidden sm:inline">CONECTAR</span>
+              <span className="hidden sm:inline">{localize(state.language, 'CONECTAR', 'SIGN IN')}</span>
             </>
           )}
         </button>

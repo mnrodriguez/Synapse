@@ -22,12 +22,18 @@ import {
   DollarSign, 
   ShieldCheck, 
   Activity,
-  Shuffle
+  Shuffle,
+  Languages,
+  Cloud
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
+import { localize } from '../utils/i18n';
+import { AuthModal } from './AuthModal';
 
 export const GenesisOnboarding: React.FC = () => {
-  const { completeTutorial } = useGame();
+  const { completeTutorial, state, setLanguage } = useGame();
+  const [authOpen, setAuthOpen] = useState(false);
+  const en = state.language === 'en';
 
   const [step, setStep] = useState<number>(1);
   const [callsign, setCallsign] = useState<string>('CIPHER-7');
@@ -144,6 +150,37 @@ export const GenesisOnboarding: React.FC = () => {
     }
   ];
 
+  const gpuEnglishCopy: Record<string, { badge: string; desc: string }> = {
+    gpu_gtx1060: { badge: 'BALANCED', desc: 'Used Pascal card. Balanced, cool, and highly compatible with INT8 quantization.' },
+    gpu_rx580_dual: { badge: 'HIGH VRAM', desc: 'Polaris CrossFire setup. 16 GB of VRAM for training with larger context windows.' },
+    gpu_tesla_k80: { badge: 'MAXIMUM MEMORY', desc: 'Data-center accelerator. 24 GB of memory for denser models, with higher heat output.' },
+    gpu_coral_edge: { badge: 'LOW POWER', desc: 'Low-power ASIC hybrid. Keeps the initial budget and operating temperature down.' }
+  };
+  const coolingEnglishCopy: Record<string, string> = {
+    cool_air_basic: 'Noisy forced-air cooling, sufficient for a low-power card.',
+    cool_copper_pipes: 'High-flow cooling with direct copper contact for more powerful setups.'
+  };
+  const dataEnglishCopy: Record<string, { name: string; desc: string; bonus: string; lore: string }> = {
+    data_relational_sql: {
+      name: 'SQL Relational Database & Tabular Records',
+      desc: 'Normalized PostgreSQL schemas with financial records, accounting transactions, and telemetry.',
+      bonus: '+20% accuracy on financial contracts and analysis',
+      lore: 'A foundation for mathematical accuracy and deterministic, consistent data.'
+    },
+    data_vector_rag: {
+      name: 'Vector Embedding Database (HNSW RAG)',
+      desc: 'A 1,536-dimensional latent space with HNSW indexing for real-time semantic retrieval.',
+      bonus: '+35% associative memory and contextual reasoning',
+      lore: 'Retrieve information from millions of corporate documents and research papers.'
+    },
+    data_knowledge_graph: {
+      name: 'Ontological Knowledge Graph (RDF Triples)',
+      desc: 'Entities and causal relationships represented as subject-predicate-object triples.',
+      bonus: 'Reduces hallucinations and enables causal reasoning',
+      lore: 'Connects causes and effects through explicit logical relationships.'
+    }
+  };
+
   // Calculate current costs
   const currentGpuObj = starterGpuOptions.find(g => g.id === selectedGpu) || starterGpuOptions[0];
   const currentCoolingObj = starterCoolingOptions.find(c => c.id === selectedCooling) || starterCoolingOptions[0];
@@ -219,24 +256,44 @@ export const GenesisOnboarding: React.FC = () => {
             </div>
             <div>
               <span className="text-[10px] text-zinc-500 uppercase tracking-widest block font-bold">
-                PROTOCOLO GÉNESIS // INICIALIZACIÓN DE NODO
+                {localize(state.language, 'PROTOCOLO GÉNESIS // INICIALIZACIÓN DE NODO', 'GENESIS PROTOCOL // NODE INITIALIZATION')}
               </span>
               <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
-                FASE {step} DE 5: {
-                  step === 1 ? 'IDENTIDAD Y CONCESIÓN DE FONDOS' :
-                  step === 2 ? 'ADQUISICIÓN DE HARDWARE INICIAL' :
-                  step === 3 ? 'MODALIDAD DE DATOS & CONOCIMIENTO' :
-                  step === 4 ? 'ARQUITECTURA DEL PRIMER MODELO' :
-                  'ENTRENAMIENTO GÉNESIS & DESPERTAR'
+                {localize(state.language, `FASE ${step} DE 5: `, `PHASE ${step} OF 5: `)}{
+                  step === 1 ? localize(state.language, 'IDENTIDAD Y CONCESIÓN DE FONDOS', 'IDENTITY & STARTING FUNDS') :
+                  step === 2 ? localize(state.language, 'ADQUISICIÓN DE HARDWARE INICIAL', 'INITIAL HARDWARE ACQUISITION') :
+                  step === 3 ? localize(state.language, 'MODALIDAD DE DATOS & CONOCIMIENTO', 'DATA & KNOWLEDGE SOURCES') :
+                  step === 4 ? localize(state.language, 'ARQUITECTURA DEL PRIMER MODELO', 'FIRST MODEL ARCHITECTURE') :
+                  localize(state.language, 'ENTRENAMIENTO GÉNESIS & DESPERTAR', 'GENESIS TRAINING & AWAKENING')
                 }
               </h2>
             </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setLanguage(en ? 'es' : 'en')}
+              className="flex items-center gap-1 rounded border border-cyan-800/60 bg-zinc-900 px-2 py-1 text-[10px] font-bold text-cyan-200 hover:border-cyan-500"
+              aria-label={localize(state.language, 'Cambiar idioma a inglés', 'Change language to Spanish')}
+            >
+              <Languages className="h-3.5 w-3.5" />
+              {en ? 'EN · English' : 'ES · Español'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="flex items-center gap-1 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-[10px] font-bold text-zinc-200 hover:border-cyan-500"
+            >
+              <Cloud className="h-3.5 w-3.5 text-cyan-400" />
+              {localize(state.language, 'INICIAR SESIÓN', 'SIGN IN')}
+            </button>
+          </div>
+
           {/* Budget tracker */}
           <div className="flex items-center gap-2 px-3 py-1 rounded bg-amber-950/40 border border-amber-500/50 text-amber-300 text-xs">
             <DollarSign className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-zinc-400">PRESUPUESTO REMANENTE:</span>
+            <span className="text-zinc-400">{localize(state.language, 'PRESUPUESTO REMANENTE:', 'REMAINING BUDGET:')}</span>
             <span className="font-bold text-sm text-amber-300">${remainingBudget} CR</span>
           </div>
         </div>
@@ -244,11 +301,11 @@ export const GenesisOnboarding: React.FC = () => {
         {/* Visual Progress Steps Indicators */}
         <div className="grid grid-cols-5 bg-[#05080e] border-b border-cyan-950 text-[10px] text-center font-bold">
           {[
-            { num: 1, label: 'Identidad' },
+            { num: 1, label: localize(state.language, 'Identidad', 'Identity') },
             { num: 2, label: 'Hardware' },
-            { num: 3, label: 'Datos' },
-            { num: 4, label: 'Arquitectura' },
-            { num: 5, label: 'Génesis' }
+            { num: 3, label: localize(state.language, 'Datos', 'Data') },
+            { num: 4, label: localize(state.language, 'Arquitectura', 'Architecture') },
+            { num: 5, label: 'Genesis' }
           ].map(s => (
             <div
               key={s.num}
@@ -273,22 +330,19 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="p-3 bg-[#09111c] border border-cyan-900/60 rounded-lg space-y-2">
                 <span className="text-cyan-400 font-bold text-xs flex items-center gap-1.5">
                   <TermIcon className="w-4 h-4" />
-                  TRANSMISIÓN ENCRIPTADA DE LA RED CIBERNÉTICA
+                  {localize(state.language, 'TRANSMISIÓN ENCRIPTADA DE LA RED CIBERNÉTICA', 'ENCRYPTED TRANSMISSION FROM THE CYBER NETWORK')}
                 </span>
                 <p className="text-zinc-300 leading-relaxed">
-                  Bienvenido al protocolo clandestino <strong>SYNAPSE</strong>. No estamos aquí para hackear terminales bancarias por centavos. 
-                  Nuestro objetivo es el verdadero salto cuántico del siglo XXI: <strong>construir y entrenar una Inteligencia Artificial desde cero</strong> hasta 
-                  desatar una <strong>Singularidad Tecnológica</strong> irreversible.
+                  {localize(state.language, 'Bienvenido al protocolo clandestino ', 'Welcome to the covert ')}<strong>SYNAPSE</strong>{localize(state.language, '. No estamos aquí para hackear terminales bancarias por centavos. Nuestro objetivo es el verdadero salto cuántico del siglo XXI: ', '. We are not here to hack bank terminals for pennies. Our goal is the defining leap of the 21st century: ')}<strong>{localize(state.language, 'construir y entrenar una Inteligencia Artificial desde cero', 'build and train an artificial intelligence from scratch')}</strong>{localize(state.language, ' hasta desatar una ', ' and ultimately trigger an irreversible ')}<strong>{localize(state.language, 'Singularidad Tecnológica', 'technological singularity')}</strong>{localize(state.language, ' irreversible.', '.')}
                 </p>
                 <p className="text-zinc-400 text-[11px] leading-relaxed">
-                  Has recibido un fondo semilla de <strong>$350 CR</strong> de una DAO anónima. Con este presupuesto ajustado, deberás adquirir tu primer rig de cómputo, 
-                  elegir tu primer pipeline de datos y diseñar los pesos de tu primer modelo de lenguaje.
+                  {localize(state.language, 'Has recibido un fondo semilla de ', 'You received ')}<strong>$350 CR</strong>{localize(state.language, ' de una DAO anónima. Con este presupuesto ajustado, deberás adquirir tu primer rig de cómputo, elegir tu primer pipeline de datos y diseñar los pesos de tu primer modelo de lenguaje.', ' in seed funding from an anonymous DAO. With this limited budget, acquire your first compute rig, choose a data pipeline, and design the weights of your first language model.')}
                 </p>
               </div>
 
               <div className="space-y-2 pt-2">
                 <label className="text-xs text-zinc-300 font-bold block">
-                  ASIGNA EL ALIAS DE TU NODO (CALLSIGN OPERATIVO):
+                  {localize(state.language, 'ASIGNA EL ALIAS DE TU NODO (CALLSIGN OPERATIVO):', 'SET YOUR NODE ALIAS (OPERATIVE CALLSIGN):')}
                 </label>
                 <div className="flex items-center gap-2 max-w-md">
                   <input
@@ -303,14 +357,14 @@ export const GenesisOnboarding: React.FC = () => {
                     type="button"
                     onClick={randomizeCallsign}
                     className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-600 rounded flex items-center gap-1.5 transition-colors"
-                    title="Generar nombre aleatorio"
+                    title={localize(state.language, 'Generar nombre aleatorio', 'Generate a random name')}
                   >
                     <Shuffle className="w-3.5 h-3.5" />
-                    <span>ALEATORIO</span>
+                    <span>{localize(state.language, 'ALEATORIO', 'RANDOM')}</span>
                   </button>
                 </div>
                 <span className="text-[10px] text-zinc-500 block">
-                  Este identificador será transmitido a los libros de órdenes de contratos y al ranking de la Singularidad en la nube.
+                  {localize(state.language, 'Este identificador será transmitido a los libros de órdenes de contratos y al ranking de la Singularidad en la nube.', 'This identifier appears on contract orders and the cloud singularity leaderboard.')}
                 </span>
               </div>
             </div>
@@ -322,10 +376,10 @@ export const GenesisOnboarding: React.FC = () => {
               <div>
                 <h3 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                   <Cpu className="w-4 h-4 text-cyan-400" />
-                  1. SELECCIONA TU PRIMER ACELERADOR DE CÓMPUTO (GPU / ASIC):
+                  {localize(state.language, '1. SELECCIONA TU PRIMER ACELERADOR DE CÓMPUTO (GPU / ASIC):', '1. CHOOSE YOUR FIRST COMPUTE ACCELERATOR (GPU / ASIC):')}
                 </h3>
                 <p className="text-zinc-400 text-[11px] mt-0.5">
-                  Elige tu arquitectura de procesamiento inicial. Una GPU con mayor VRAM te permitirá entrenar modelos más densos, mientras que una más fría mantendrá a raya el recalentamiento.
+                  {localize(state.language, 'Elige tu arquitectura de procesamiento inicial. Una GPU con mayor VRAM te permitirá entrenar modelos más densos, mientras que una más fría mantendrá a raya el recalentamiento.', 'Choose your initial compute hardware. More VRAM supports larger models, while a more efficient card helps control heat.')}
                 </p>
               </div>
 
@@ -346,13 +400,13 @@ export const GenesisOnboarding: React.FC = () => {
                       <div className="flex items-start justify-between gap-1">
                         <div>
                           <span className="text-[9px] px-1.5 py-0.2 rounded bg-zinc-800 text-cyan-300 font-bold block w-fit mb-1">
-                            {gpu.badge}
+                            {en ? gpuEnglishCopy[gpu.id]?.badge ?? gpu.badge : gpu.badge}
                           </span>
                           <h4 className="font-bold text-xs text-zinc-200">{gpu.name}</h4>
                         </div>
                         <span className="text-amber-300 font-bold text-xs">${gpu.price} CR</span>
                       </div>
-                      <p className="text-[11px] text-zinc-400 mt-2 leading-snug">{gpu.desc}</p>
+                      <p className="text-[11px] text-zinc-400 mt-2 leading-snug">{en ? gpuEnglishCopy[gpu.id]?.desc ?? gpu.desc : gpu.desc}</p>
                       <div className="flex items-center gap-2 mt-2.5 text-[10px] text-zinc-500 pt-1.5 border-t border-zinc-800">
                         <span className="text-cyan-400 font-semibold">{gpu.compute}</span>
                         <span>•</span>
@@ -368,7 +422,7 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="pt-2">
                 <h3 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                   <Flame className="w-4 h-4 text-emerald-400" />
-                  2. REFRIGERACIÓN BÁSICA PARA TU RIG:
+                  {localize(state.language, '2. REFRIGERACIÓN BÁSICA PARA TU RIG:', '2. BASIC COOLING FOR YOUR RIG:')}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                   {starterCoolingOptions.map(cool => {
@@ -388,9 +442,9 @@ export const GenesisOnboarding: React.FC = () => {
                           <h4 className="font-bold text-xs text-zinc-200">{cool.name}</h4>
                           <span className="text-amber-300 font-bold text-xs">${cool.price} CR</span>
                         </div>
-                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{cool.desc}</p>
+                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{en ? coolingEnglishCopy[cool.id] : cool.desc}</p>
                         <span className="text-[10px] text-emerald-400 block mt-1.5 font-bold">
-                          Disipación: {cool.capacity}
+                          {localize(state.language, 'Disipación:', 'Cooling capacity:')} {cool.capacity}
                         </span>
                       </button>
                     );
@@ -406,10 +460,10 @@ export const GenesisOnboarding: React.FC = () => {
               <div>
                 <h3 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                   <Database className="w-4 h-4 text-cyan-400" />
-                  SELECCIONA TU PRIMERA MODALIDAD DE CONOCIMIENTO (PIPELINE):
+                  {localize(state.language, 'SELECCIONA TU PRIMERA MODALIDAD DE CONOCIMIENTO (PIPELINE):', 'CHOOSE YOUR FIRST KNOWLEDGE SOURCE (DATA PIPELINE):')}
                 </h3>
                 <p className="text-zinc-400 text-[11px] mt-0.5">
-                  Los modelos modernos no se alimentan solo de texto plano. Cada motor otorga habilidades cognitivas determinantes para resolver contratos específicos:
+                  {localize(state.language, 'Los modelos modernos no se alimentan solo de texto plano. Cada motor otorga habilidades cognitivas determinantes para resolver contratos específicos:', 'Modern models need more than plain text. Each data engine provides capabilities that help solve specific contracts:')}
                 </p>
               </div>
 
@@ -433,13 +487,13 @@ export const GenesisOnboarding: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs text-zinc-100">{ds.name}</h4>
+                          <h4 className="font-bold text-xs text-zinc-100">{en ? dataEnglishCopy[ds.id]?.name ?? ds.name : ds.name}</h4>
                           {isSelected && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
                         </div>
-                        <p className="text-xs text-zinc-300 mt-1">{ds.desc}</p>
+                        <p className="text-xs text-zinc-300 mt-1">{en ? dataEnglishCopy[ds.id]?.desc ?? ds.desc : ds.desc}</p>
                         <div className="p-1.5 mt-2 bg-[#05080e] border border-cyan-950 rounded text-[10px] space-y-0.5">
-                          <span className="text-purple-300 font-bold block">{ds.bonus}</span>
-                          <span className="text-zinc-500 block">{ds.lore}</span>
+                          <span className="text-purple-300 font-bold block">{en ? dataEnglishCopy[ds.id]?.bonus ?? ds.bonus : ds.bonus}</span>
+                          <span className="text-zinc-500 block">{en ? dataEnglishCopy[ds.id]?.lore ?? ds.lore : ds.lore}</span>
                         </div>
                       </div>
                     </button>
@@ -455,16 +509,16 @@ export const GenesisOnboarding: React.FC = () => {
               <div>
                 <h3 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-cyan-400" />
-                  DISEÑA LA ARQUITECTURA DE TU PRIMER MODELO:
+                  {localize(state.language, 'DISEÑA LA ARQUITECTURA DE TU PRIMER MODELO:', 'DESIGN YOUR FIRST MODEL ARCHITECTURE:')}
                 </h3>
                 <p className="text-zinc-400 text-[11px] mt-0.5">
-                  Configura la topología, el tamaño de parámetros y la precisión matemática inicial:
+                  {localize(state.language, 'Configura la topología, el tamaño de parámetros y la precisión matemática inicial:', 'Configure the topology, parameter count, and initial numerical precision:')}
                 </p>
               </div>
 
               {/* Model Name */}
               <div className="space-y-1">
-                <label className="text-[11px] text-zinc-400 block font-bold">NOMBRE DE LA RED:</label>
+                <label className="text-[11px] text-zinc-400 block font-bold">{localize(state.language, 'NOMBRE DE LA RED:', 'MODEL NAME:')}</label>
                 <input
                   type="text"
                   value={modelName}
@@ -475,12 +529,12 @@ export const GenesisOnboarding: React.FC = () => {
 
               {/* Topology */}
               <div className="space-y-1.5">
-                <label className="text-[11px] text-zinc-400 block font-bold">TOPOLOGÍA NEURONAL:</label>
+                <label className="text-[11px] text-zinc-400 block font-bold">{localize(state.language, 'TOPOLOGÍA NEURONAL:', 'MODEL TOPOLOGY:')}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
-                    { id: 'transformer', name: 'Transformer (Decoder)', desc: 'Auto-atención densa estándar. Robusta y fiable.' },
-                    { id: 'mamba_ssm', name: 'State Space (Mamba)', desc: 'Procesamiento lineal O(n). Mínimo uso de memoria en secuencias largas.' },
-                    { id: 'moe', name: 'Sparse MoE (4 Expertos)', desc: 'Enrutamiento dinámico. Más capacidad con bajo costo por token.' }
+                    { id: 'transformer', name: 'Transformer (Decoder)', desc: localize(state.language, 'Auto-atención densa estándar. Robusta y fiable.', 'Standard dense self-attention. Robust and reliable.') },
+                    { id: 'mamba_ssm', name: 'State Space (Mamba)', desc: localize(state.language, 'Procesamiento lineal O(n). Mínimo uso de memoria en secuencias largas.', 'Linear-time O(n) processing with low memory use on long sequences.') },
+                    { id: 'moe', name: 'Sparse MoE (4 Expertos)', desc: localize(state.language, 'Enrutamiento dinámico. Más capacidad con bajo costo por token.', 'Dynamic routing. Greater capacity at a lower cost per token.') }
                   ].map(t => (
                     <button
                       key={t.id}
@@ -501,12 +555,12 @@ export const GenesisOnboarding: React.FC = () => {
 
               {/* Parameter Size */}
               <div className="space-y-1.5">
-                <label className="text-[11px] text-zinc-400 block font-bold">ESCALA DE PARÁMETROS INICIAL:</label>
+                <label className="text-[11px] text-zinc-400 block font-bold">{localize(state.language, 'ESCALA DE PARÁMETROS INICIAL:', 'INITIAL PARAMETER SCALE:')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { val: 7_000_000, label: '7M Parámetros', note: 'Ultraligero, converge en segundos.' },
-                    { val: 14_000_000, label: '14M Parámetros', note: 'Recomendado. Buen balance inicial.' },
-                    { val: 28_000_000, label: '28M Parámetros', note: 'Mayor razonamiento, exige más VRAM.' }
+                    { val: 7_000_000, label: localize(state.language, '7M Parámetros', '7M Parameters'), note: localize(state.language, 'Ultraligero, converge en segundos.', 'Very lightweight; converges in seconds.') },
+                    { val: 14_000_000, label: localize(state.language, '14M Parámetros', '14M Parameters'), note: localize(state.language, 'Recomendado. Buen balance inicial.', 'Recommended. A good starting balance.') },
+                    { val: 28_000_000, label: localize(state.language, '28M Parámetros', '28M Parameters'), note: localize(state.language, 'Mayor razonamiento, exige más VRAM.', 'More reasoning capacity; requires more VRAM.') }
                   ].map(p => (
                     <button
                       key={p.val}
@@ -527,7 +581,7 @@ export const GenesisOnboarding: React.FC = () => {
 
               {/* Quantization */}
               <div className="space-y-1.5">
-                <label className="text-[11px] text-zinc-400 block font-bold">CUANTIZACIÓN DE PESOS:</label>
+                <label className="text-[11px] text-zinc-400 block font-bold">{localize(state.language, 'CUANTIZACIÓN DE PESOS:', 'WEIGHT QUANTIZATION:')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -536,8 +590,8 @@ export const GenesisOnboarding: React.FC = () => {
                       modelQuant === 'int8' ? 'bg-cyan-950 border-cyan-400 text-cyan-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400'
                     }`}
                   >
-                    <div className="font-bold text-xs">INT8 Cuantizado (Recomendado)</div>
-                    <div className="text-[10px] text-zinc-500">1 byte por peso. Cabe holgadamente en tu GPU.</div>
+                    <div className="font-bold text-xs">{localize(state.language, 'INT8 Cuantizado (Recomendado)', 'INT8 Quantized (Recommended)')}</div>
+                    <div className="text-[10px] text-zinc-500">{localize(state.language, '1 byte por peso. Cabe holgadamente en tu GPU.', '1 byte per weight. Fits easily in your GPU memory.')}</div>
                   </button>
                   <button
                     type="button"
@@ -546,8 +600,8 @@ export const GenesisOnboarding: React.FC = () => {
                       modelQuant === 'bf16' ? 'bg-purple-950 border-purple-400 text-purple-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400'
                     }`}
                   >
-                    <div className="font-bold text-xs">BF16 Precisión Media</div>
-                    <div className="text-[10px] text-zinc-500">2 bytes por peso. Mayor fidelidad de gradiente.</div>
+                    <div className="font-bold text-xs">{localize(state.language, 'BF16 Precisión Media', 'BF16 Half Precision')}</div>
+                    <div className="text-[10px] text-zinc-500">{localize(state.language, '2 bytes por peso. Mayor fidelidad de gradiente.', '2 bytes per weight. Greater gradient fidelity.')}</div>
                   </button>
                 </div>
               </div>
@@ -560,11 +614,10 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="p-3 bg-[#09111c] border border-cyan-900/60 rounded-lg space-y-1">
                 <span className="text-cyan-400 font-bold text-xs flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-cyan-300" />
-                  CORRIDA DE INICIALIZACIÓN GÉNESIS
+                  {localize(state.language, 'CORRIDA DE INICIALIZACIÓN GÉNESIS', 'GENESIS INITIALIZATION RUN')}
                 </span>
                 <p className="text-zinc-300 text-xs">
-                  Todo está conectado: tu GPU <strong className="text-cyan-300">{currentGpuObj.name}</strong>, el motor de datos <strong className="text-emerald-300">{starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0]}</strong> y tu modelo <strong className="text-yellow-300">{modelName}</strong>. 
-                  Inicia la corrida para verificar la convergencia inicial de los pesos.
+                  {localize(state.language, 'Todo está conectado: tu GPU ', 'Everything is connected: your GPU ')}<strong className="text-cyan-300">{currentGpuObj.name}</strong>{localize(state.language, ', el motor de datos ', ', the data engine ')}<strong className="text-emerald-300">{en ? dataEnglishCopy[selectedData]?.name.split(' (')[0] ?? starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0] : starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0]}</strong>{localize(state.language, ' y tu modelo ', ' and your model ')}<strong className="text-yellow-300">{modelName}</strong>{localize(state.language, '. Inicia la corrida para verificar la convergencia inicial de los pesos.', '. Start the run to verify initial weight convergence.')}
                 </p>
               </div>
 
@@ -573,9 +626,9 @@ export const GenesisOnboarding: React.FC = () => {
                 <div className="p-8 bg-[#05080e] border border-cyan-900/40 rounded-lg text-center space-y-3">
                   <Activity className="w-10 h-10 text-cyan-500 mx-auto animate-pulse" />
                   <div>
-                    <h4 className="font-bold text-zinc-200 text-sm">CLÚSTER PREPARADO PARA INICIAR</h4>
+                    <h4 className="font-bold text-zinc-200 text-sm">{localize(state.language, 'CLÚSTER PREPARADO PARA INICIAR', 'CLUSTER READY TO START')}</h4>
                     <p className="text-zinc-500 text-xs mt-1">
-                      Presiona el botón para compilar los tensores y ejecutar las primeras épocas de optimización.
+                      {localize(state.language, 'Presiona el botón para compilar los tensores y ejecutar las primeras épocas de optimización.', 'Compile the tensors and run the first optimization epochs.')}
                     </p>
                   </div>
                   <button
@@ -584,7 +637,7 @@ export const GenesisOnboarding: React.FC = () => {
                     className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded shadow-[0_0_20px_rgba(0,255,200,0.4)] flex items-center gap-2 mx-auto cursor-pointer"
                   >
                     <Play className="w-4 h-4 fill-current" />
-                    <span>INICIAR ENTRENAMIENTO GÉNESIS</span>
+                    <span>{localize(state.language, 'INICIAR ENTRENAMIENTO GÉNESIS', 'START GENESIS TRAINING')}</span>
                   </button>
                 </div>
               ) : (
@@ -592,10 +645,10 @@ export const GenesisOnboarding: React.FC = () => {
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-cyan-300 flex items-center gap-1.5">
                       <Activity className="w-4 h-4 text-emerald-400 animate-spin" />
-                      PROGRESO DE OPTIMIZACIÓN: {trainingProgress}%
+                      {localize(state.language, 'PROGRESO DE OPTIMIZACIÓN:', 'OPTIMIZATION PROGRESS:')} {trainingProgress}%
                     </span>
                     <span className="text-emerald-400 font-bold font-mono">
-                      Loss: {simLoss} {simComplete ? '(CONVERGENCIA OK)' : ''}
+                      Loss: {simLoss} {simComplete ? localize(state.language, '(CONVERGENCIA OK)', '(CONVERGED)') : ''}
                     </span>
                   </div>
 
@@ -622,11 +675,12 @@ export const GenesisOnboarding: React.FC = () => {
                     <div className="p-3 bg-purple-950/40 border border-purple-500/60 rounded text-purple-200 text-xs space-y-1 animate-fadeIn">
                       <div className="font-bold text-pink-300 flex items-center gap-1">
                         <Sparkles className="w-3.5 h-3.5" />
-                        PENSAMIENTO EMERGENTE // DESPERTAR NEURONAL:
+                        {localize(state.language, 'PENSAMIENTO EMERGENTE // DESPERTAR NEURONAL:', 'EMERGENT THOUGHT // NEURAL AWAKENING:')}
                       </div>
                       <p className="italic text-[11px] text-zinc-300">
-                        "SYNAPSE KERNEL ACTIVO: He despertado. Procesando tensores... Mis gradientes son estables. 
-                        Operativo {callsign}, la red clandestina está lista. Aceptemos contratos para financiar nuestro crecimiento."
+                        {en
+                          ? `"SYNAPSE KERNEL ACTIVE: I am awake. Processing tensors... My gradients are stable. Operative ${callsign}, the network is ready. Let us take contracts to fund our growth."`
+                          : `"SYNAPSE KERNEL ACTIVO: He despertado. Procesando tensores... Mis gradientes son estables. Operativo ${callsign}, la red clandestina está lista. Aceptemos contratos para financiar nuestro crecimiento."`}
                       </p>
                     </div>
                   )}
@@ -645,10 +699,10 @@ export const GenesisOnboarding: React.FC = () => {
               className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs flex items-center gap-1.5 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>ANTERIOR</span>
+              <span>{localize(state.language, 'ANTERIOR', 'BACK')}</span>
             </button>
           ) : (
-            <span className="text-[10px] text-zinc-600">FASE 1 // PROTOCOLO DE IDENTIDAD</span>
+            <span className="text-[10px] text-zinc-600">{localize(state.language, 'FASE 1 // PROTOCOLO DE IDENTIDAD', 'PHASE 1 // IDENTITY PROTOCOL')}</span>
           )}
 
           {step < 5 ? (
@@ -657,7 +711,7 @@ export const GenesisOnboarding: React.FC = () => {
               onClick={() => { sound.playNavSwitch(); setStep(step + 1); }}
               className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded text-xs flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,255,200,0.3)] transition-all cursor-pointer"
             >
-              <span>SIGUIENTE</span>
+              <span>{localize(state.language, 'SIGUIENTE', 'NEXT')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
@@ -672,10 +726,11 @@ export const GenesisOnboarding: React.FC = () => {
               }`}
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>INGRESAR A SYNAPSE OS (COMENZAR SIMULACIÓN)</span>
+              <span>{localize(state.language, 'INGRESAR A SYNAPSE OS (COMENZAR SIMULACIÓN)', 'ENTER SYNAPSE OS (START SIMULATION)')}</span>
             </button>
           )}
         </div>
+        <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
       </div>
     </div>
   );

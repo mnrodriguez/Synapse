@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { AgentRole, AgentInstance, InferenceParams } from '../types/game';
 import { sound } from '../audio/soundManager';
-import { t } from '../utils/i18n';
+import { localize, t } from '../utils/i18n';
 
 export const AgentSandbox: React.FC = () => {
   const { 
@@ -63,7 +63,9 @@ export const AgentSandbox: React.FC = () => {
   const [topK, setTopK] = useState<number>(40);
   const [repetitionPenalty, setRepetitionPenalty] = useState<number>(1.10);
   const [systemPrompt, setSystemPrompt] = useState<string>(
-    'Eres un agente autónomo de arbitraje DeFi. Analiza mempools, detecta discrepancias de precios y ejecuta swaps sin levantar sospechas.'
+    state.language === 'en'
+      ? 'Analyze simulated market data, identify pricing trends, and report a risk-aware recommendation.'
+      : 'Analiza datos de mercado simulados, identifica tendencias de precios y presenta una recomendación consciente del riesgo.'
   );
   const [interrogationTarget, setInterrogationTarget] = useState('swarm');
   const [interrogationPrompt, setInterrogationPrompt] = useState('');
@@ -170,11 +172,23 @@ export const AgentSandbox: React.FC = () => {
     }
   ];
 
+  const englishRoleCopy: Partial<Record<AgentRole, { name: string; desc: string; income: string; risk: string }>> = {
+    arbitrageur: { name: 'DeFi Market Analyst', desc: 'Analyzes simulated market data and reports pricing trends and risk.', income: 'Medium ($$)', risk: 'Low (+0.15 suspicion/s)' },
+    social_engineer: { name: 'Social Research Analyst', desc: 'Studies public, fictional personas and summarizes privacy and trust risks.', income: 'High ($$$)', risk: 'Moderate (+0.35 suspicion/s)' },
+    exploit_synth: { name: 'Simulation Security Tester', desc: 'Runs abstract resilience tests against fictional targets in the game.', income: 'High ($$$$)', risk: 'High (+0.55 suspicion/s)' },
+    researcher: { name: 'Architecture Researcher', desc: 'Compares research findings and model configurations in the simulation.', income: 'Low ($)', risk: 'Minimal (+0.05 suspicion/s)' },
+    overseer: { name: 'Alignment Overseer', desc: 'Reviews agent outputs, guardrails, and simulation risk signals.', income: 'Support', risk: 'Reduces suspicion' },
+    autonomous_coder: { name: 'Compute Optimizer', desc: 'Improves simulated GPU scheduling and cluster efficiency.', income: 'Medium ($$)', risk: 'Moderate (+0.25 suspicion/s)' },
+    economist: { name: 'Economics Analyst', desc: 'Models budgets, energy costs, and financial risk.', income: 'Medium ($$)', risk: 'Low (+0.08 suspicion/s)' },
+    software_engineer: { name: 'Software Engineer', desc: 'Plans system architecture, reviews code, and designs tests.', income: 'Medium ($$)', risk: 'Low (+0.12 suspicion/s)' },
+    network_analyst: { name: 'Network Analyst', desc: 'Analyzes telemetry and diagnoses networks within the simulation.', income: 'Medium ($$)', risk: 'Moderate (+0.16 suspicion/s)' }
+  };
+
   const availableTools = [
-    { id: 'web_search', label: 'Acceso a Internet & RAG', desc: '+15% rendimiento, bajo riesgo' },
-    { id: 'bash_exec', label: 'Ejecución en Host (Bash CLI)', desc: '+30% rendimiento, alto riesgo de escape' },
-    { id: 'crypto_rpc', label: 'Nodos RPC Blockchain', desc: '+25% ingresos DeFi' },
-    { id: 'raw_sockets', label: 'Sockets TCP/UDP Sin Filtrar', desc: '+35% alcance en redes externas' }
+    { id: 'web_search', label: localize(state.language, 'Acceso a Internet & RAG', 'Web retrieval & RAG'), desc: localize(state.language, '+15% rendimiento, bajo riesgo', '+15% efficiency, low risk') },
+    { id: 'bash_exec', label: localize(state.language, 'Ejecución en Host (Bash CLI)', 'Sandboxed command runner'), desc: localize(state.language, '+30% rendimiento, alto riesgo de escape', '+30% efficiency, higher simulation risk') },
+    { id: 'crypto_rpc', label: localize(state.language, 'Adaptador de mercado simulado', 'Simulated market adapter'), desc: localize(state.language, '+25% ingresos DeFi', '+25% simulated market income') },
+    { id: 'raw_sockets', label: localize(state.language, 'Simulador de red aislado', 'Isolated network simulator'), desc: localize(state.language, '+35% alcance en redes externas', '+35% reach in fictional network scenarios') }
   ];
 
   const handleToolToggle = (toolId: string) => {
@@ -223,7 +237,9 @@ export const AgentSandbox: React.FC = () => {
       );
       setInterrogationPrompt('');
     } catch (error) {
-      addLog(error instanceof Error ? error.message : 'No se pudo completar la consulta al agente.', 'danger');
+      addLog(error instanceof Error
+        ? error.message
+        : localize(state.language, 'No se pudo completar la consulta al agente.', 'The agent query could not be completed.'), 'danger');
     } finally {
       setIsInterrogating(false);
     }
@@ -238,14 +254,14 @@ export const AgentSandbox: React.FC = () => {
             <div className="flex items-center gap-2">
               <Bot className="w-4 h-4 text-cyan-400" />
               <h2 className="font-bold text-sm tracking-wider text-cyan-200">
-                SANDBOX DE AGENTES AUTÓNOMOS & SWARM
+                  {localize(state.language, 'SANDBOX DE AGENTES AUTÓNOMOS & ENJAMBRE', 'AUTONOMOUS AGENT SANDBOX & SWARM')}
               </h2>
               <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-950 border border-cyan-500/50 text-cyan-300">
-                {state.agents.length} AGENTES ACTIVOS
+                {state.agents.length} {t(state.language, 'active_agents')}
               </span>
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
-              Despliega agentes autónomos impulsados por los modelos que entrenaste. Supervisa sus comunicaciones y calibra los guardrails para evitar fugas.
+              {localize(state.language, 'Despliega agentes basados en tus modelos entrenados. Supervisa sus comunicaciones y ajusta las barreras de seguridad.', 'Deploy agents powered by your trained models. Monitor their communications and configure safeguards.')}
             </p>
           </div>
 
@@ -259,10 +275,10 @@ export const AgentSandbox: React.FC = () => {
                   ? 'bg-purple-950/60 border-purple-500/60 hover:bg-purple-900/60 text-purple-200' 
                   : 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed'
               }`}
-              title="Ejecuta ataques adversarios para restablecer el alineamiento de todos los agentes (+25%) y mitigar reward-hacking"
+              title={localize(state.language, 'Ejecuta una auditoría para restablecer el alineamiento (+25%) y mitigar el reward-hacking', 'Run an audit to restore alignment (+25%) and mitigate reward hacking')}
             >
               <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
-              <span>AUDITORÍA RED-TEAM ($100 CR)</span>
+              <span>{localize(state.language, 'AUDITORÍA DE SEGURIDAD ($100 CR)', 'SAFETY AUDIT ($100 CR)')}</span>
             </button>
 
             <button
@@ -275,7 +291,7 @@ export const AgentSandbox: React.FC = () => {
               }`}
             >
               <Plus className="w-3.5 h-3.5 text-cyan-400" />
-              <span>+ INSTANCIAR AGENTE ($75 CR)</span>
+              <span>{localize(state.language, '+ INSTANCIAR AGENTE ($75 CR)', '+ DEPLOY AGENT ($75 CR)')}</span>
             </button>
           </div>
         </div>
@@ -284,41 +300,41 @@ export const AgentSandbox: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3">
           <div className="bg-zinc-900/70 p-2 rounded border border-zinc-800">
             <div className="flex items-center justify-between text-zinc-400 text-[10px]">
-              <span>FLUJO DE INGRESOS</span>
+              <span>{localize(state.language, 'FLUJO DE INGRESOS', 'INCOME FLOW')}</span>
               <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
             </div>
             <div className="text-sm font-bold text-emerald-300 mt-0.5">
-              +${totalRevenuePerSec} <span className="text-[10px] text-zinc-500">CR/seg</span>
+              +${totalRevenuePerSec} <span className="text-[10px] text-zinc-500">CR/{localize(state.language, 'seg', 'sec')}</span>
             </div>
           </div>
 
           <div className="bg-zinc-900/70 p-2 rounded border border-zinc-800">
             <div className="flex items-center justify-between text-zinc-400 text-[10px]">
-              <span>TASA DE SOSPECHA</span>
+              <span>{localize(state.language, 'TASA DE SOSPECHA', 'SUSPICION RATE')}</span>
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
             </div>
             <div className="text-sm font-bold text-amber-300 mt-0.5">
-              +{totalSuspicionPerSec.toFixed(2)} <span className="text-[10px] text-zinc-500">%/seg</span>
+              +{totalSuspicionPerSec.toFixed(2)} <span className="text-[10px] text-zinc-500">%/{localize(state.language, 'seg', 'sec')}</span>
             </div>
           </div>
 
           <div className="bg-zinc-900/70 p-2 rounded border border-zinc-800">
             <div className="flex items-center justify-between text-zinc-400 text-[10px]">
-              <span>ALINEAMIENTO MEDIO</span>
+              <span>{localize(state.language, 'ALINEAMIENTO MEDIO', 'AVERAGE ALIGNMENT')}</span>
               <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
             </div>
             <div className={`text-sm font-bold mt-0.5 ${avgAlignment < 40 ? 'text-red-400 animate-pulse' : avgAlignment < 70 ? 'text-amber-300' : 'text-cyan-300'}`}>
-              {avgAlignment}% {avgAlignment < 40 && '(RIESGO FUGA)'}
+              {avgAlignment}% {avgAlignment < 40 && `(${localize(state.language, 'RIESGO DE FUGA', 'ESCAPE RISK')})`}
             </div>
           </div>
 
           <div className="bg-zinc-900/70 p-2 rounded border border-zinc-800">
             <div className="flex items-center justify-between text-zinc-400 text-[10px]">
-              <span>GUARDRAILS ACTIVOS</span>
+              <span>{localize(state.language, 'BARRERAS ACTIVAS', 'ACTIVE SAFEGUARDS')}</span>
               <Sliders className="w-3.5 h-3.5 text-purple-400" />
             </div>
             <div className="text-sm font-bold text-purple-300 mt-0.5">
-              {state.guardrails.constitutionalStrictness}% RIGUROSIDAD
+              {state.guardrails.constitutionalStrictness}% {localize(state.language, 'RIGUROSIDAD', 'STRICTNESS')}
             </div>
           </div>
         </div>
@@ -327,7 +343,7 @@ export const AgentSandbox: React.FC = () => {
       <form onSubmit={handleInterrogation} className="rounded-lg border border-cyan-900/50 bg-[#070d17] p-3">
         <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wider text-cyan-300">
           <Radio className="h-3.5 w-3.5" />
-          DIRECTIVA / INTERROGATORIO
+          {localize(state.language, 'DIRECTIVA / INTERROGATORIO', 'DIRECTIVE / QUERY')}
         </div>
         <div className="grid gap-2 sm:grid-cols-[minmax(150px,1fr)_2fr_auto]">
           <select
@@ -335,7 +351,7 @@ export const AgentSandbox: React.FC = () => {
             onChange={event => setInterrogationTarget(event.target.value)}
             className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-[11px] text-zinc-200"
           >
-            <option value="swarm">Enjambre (máximo 3 agentes)</option>
+            <option value="swarm">{localize(state.language, 'Enjambre (máximo 3 agentes)', 'Swarm (up to 3 agents)')}</option>
             {state.agents.filter(agent => agent.status !== 'quarantined').map(agent => (
               <option key={agent.id} value={agent.id}>{agent.name} · {agent.modelName}</option>
             ))}
@@ -345,7 +361,7 @@ export const AgentSandbox: React.FC = () => {
             onChange={event => setInterrogationPrompt(event.target.value)}
             maxLength={1200}
             rows={2}
-            placeholder="Describe un objetivo de simulación para que el agente lo analice..."
+            placeholder={localize(state.language, 'Describe un objetivo de simulación para que el agente lo analice...', 'Describe a simulation objective for the agent to analyze...')}
             className="resize-y rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-[11px] text-zinc-200 outline-none focus:border-cyan-500"
           />
           <button
@@ -353,26 +369,26 @@ export const AgentSandbox: React.FC = () => {
             disabled={isInterrogating || !interrogationPrompt.trim() || state.agents.length === 0 || state.detentionSeconds > 0}
             className="rounded border border-cyan-500/60 bg-cyan-950 px-3 py-1.5 text-[10px] font-bold text-cyan-200 hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isInterrogating ? 'ANALIZANDO…' : 'ENVIAR'}
+            {isInterrogating ? localize(state.language, 'ANALIZANDO…', 'ANALYZING…') : localize(state.language, 'ENVIAR', 'SEND')}
           </button>
         </div>
         <details className="mt-2">
-          <summary className="cursor-pointer text-[10px] text-zinc-500">Proveedor externo opcional (Gemini Flash)</summary>
+          <summary className="cursor-pointer text-[10px] text-zinc-500">{localize(state.language, 'Proveedor externo opcional (Gemini Flash)', 'Optional external provider (Gemini Flash)')}</summary>
           <div className="mt-1 grid gap-1 sm:grid-cols-[1fr_auto]">
             <input
               type="password"
               autoComplete="off"
               value={geminiApiKey}
               onChange={event => setGeminiApiKey(event.target.value)}
-              placeholder="API key opcional; solo se conserva en memoria mientras esta pantalla está abierta"
+              placeholder={localize(state.language, 'API key opcional; solo se conserva en memoria mientras esta pantalla está abierta', 'Optional API key; kept in memory only while this screen is open')}
               className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-200"
             />
             <button type="button" onClick={() => setGeminiApiKey('')} className="rounded border border-zinc-700 px-2 py-1 text-[10px] text-zinc-400 hover:text-zinc-100">
-              BORRAR KEY
+              {localize(state.language, 'BORRAR KEY', 'CLEAR KEY')}
             </button>
           </div>
           <p className="mt-1 text-[9px] leading-relaxed text-amber-300/80">
-            La clave no se guarda en el juego y se envía directamente a Google al consultar. Las cuotas gratuitas dependen de la cuenta y pueden cambiar; limita la clave en Google AI Studio. Chrome AI local o el modo procedural siguen disponibles sin clave.
+            {localize(state.language, 'La clave no se guarda en el juego y se envía directamente a Google al consultar. Las cuotas gratuitas dependen de la cuenta y pueden cambiar; limita la clave en Google AI Studio. Chrome AI local o el modo procedural siguen disponibles sin clave.', 'The key is not saved in the game and is sent directly to Google when you query. Free quotas depend on your account and may change; restrict the key in Google AI Studio. Local Chrome AI or procedural mode remain available without a key.')}
           </p>
         </details>
       </form>
@@ -385,26 +401,26 @@ export const AgentSandbox: React.FC = () => {
             <div className="flex items-center justify-between mb-2 pb-2 border-b border-cyan-900/40">
               <span className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                 <Bot className="w-3.5 h-3.5 text-cyan-400" />
-                ENJAMBRE DESPLEGADO ({state.agents.length})
+                {localize(state.language, 'ENJAMBRE DESPLEGADO', 'DEPLOYED SWARM')} ({state.agents.length})
               </span>
               <span className="text-[10px] text-zinc-500">
-                PROCESOS AISLADOS CGROUPS
+                {localize(state.language, 'ENJAMBRE DESPLEGADO', 'DEPLOYED SWARM')} ({state.agents.length})
               </span>
             </div>
 
             {state.agents.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-500 border border-dashed border-zinc-800 rounded-lg">
                 <Bot className="w-10 h-10 mb-2 opacity-30 text-cyan-400" />
-                <p className="font-bold text-zinc-400 text-xs">No hay agentes instanciados en el sandbox.</p>
+                <p className="font-bold text-zinc-400 text-xs">{localize(state.language, 'No hay agentes instanciados en el sandbox.', 'No agents are deployed in the sandbox.')}</p>
                 <p className="text-[11px] mt-1 max-w-sm">
-                  Crea un agente autónomo y asígnale uno de tus modelos entrenados para que comience a generar ingresos pasivos y explorar la red.
+                  {localize(state.language, 'Crea un agente y asígnale uno de tus modelos entrenados para comenzar a trabajar en la simulación.', 'Create an agent and assign one of your trained models to start working in the simulation.')}
                 </p>
                 <button
                   onClick={() => setIsDeployModalOpen(true)}
                   disabled={state.credits < 75}
                   className="mt-4 px-3 py-1.5 rounded bg-cyan-950 border border-cyan-500/60 hover:bg-cyan-900 text-cyan-200 text-xs font-bold transition-colors"
                 >
-                  + Instanciar Primer Agente ($75 CR)
+                  {localize(state.language, '+ Instanciar Primer Agente ($75 CR)', '+ Deploy First Agent ($75 CR)')}
                 </button>
               </div>
             ) : (
@@ -436,26 +452,30 @@ export const AgentSandbox: React.FC = () => {
                             </div>
                             <div className="min-w-0">
                               <h4 className="font-bold text-zinc-200 truncate text-xs">{agent.name}</h4>
-                              <span className="text-[10px] text-zinc-500 block truncate">{roleDef?.name}</span>
+                              <span className="text-[10px] text-zinc-500 block truncate">
+                                {state.language === 'en'
+                                  ? englishRoleCopy[agent.role]?.name ?? roleDef?.name
+                                  : roleDef?.name}
+                              </span>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-1">
                             {isJailbroken ? (
                               <span className="px-1.5 py-0.2 rounded text-[9px] bg-red-950 border border-red-500 text-red-300 animate-pulse font-bold">
-                                JAILBROKEN
+                                {localize(state.language, 'JAILBROKEN', 'UNALIGNED')}
                               </span>
                             ) : isQuarantined ? (
                               <span className="px-1.5 py-0.2 rounded text-[9px] bg-amber-950 border border-amber-500 text-amber-300 font-bold">
-                                CUARENTENA
+                                {t(state.language, 'quarantine')}
                               </span>
                             ) : isOnMission ? (
                               <span className="px-1.5 py-0.2 rounded text-[9px] bg-blue-950 border border-blue-500 text-blue-300 font-bold">
-                                EN MISIÓN
+                                {localize(state.language, 'EN MISIÓN', 'ON MISSION')}
                               </span>
                             ) : (
                               <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-950 border border-emerald-500/50 text-emerald-300 font-bold">
-                                ACTIVO
+                                {localize(state.language, 'ACTIVO', 'ACTIVE')}
                               </span>
                             )}
                           </div>
@@ -465,15 +485,15 @@ export const AgentSandbox: React.FC = () => {
                         <div className="flex items-center justify-between text-[10px] px-2 py-1 rounded bg-black/40 border border-zinc-800/80 mb-1.5">
                           <span className="text-zinc-400 flex items-center gap-1">
                             <Cpu className="w-3 h-3 text-purple-400" />
-                            Modelo: <strong className="text-purple-300 truncate max-w-[110px]">{agent.modelName}</strong>
+                            {localize(state.language, 'Modelo:', 'Model:')} <strong className="text-purple-300 truncate max-w-[110px]">{agent.modelName}</strong>
                           </span>
-                          <span className="text-cyan-400 font-bold">Nv. {agent.autonomyLevel}</span>
+                          <span className="text-cyan-400 font-bold">{localize(state.language, 'Lv.', 'Lv.')} {agent.autonomyLevel}</span>
                         </div>
 
                         {/* Sampling Hyperparameters Badge */}
                         <div 
                           className="flex items-center justify-between text-[9px] px-2 py-0.5 rounded bg-zinc-950/80 border border-zinc-800/70 mb-2 font-mono"
-                          title={`System Persona: "${agent.inferenceParams?.systemPrompt || 'Standard'}"`}
+                          title={`${localize(state.language, 'System Persona', 'System Persona')}: "${agent.inferenceParams?.systemPrompt || 'Standard'}"`}
                         >
                           <span className="text-cyan-300">
                             T: <strong className={agent.inferenceParams?.temperature > 0.95 ? 'text-amber-400 font-bold' : ''}>{(agent.inferenceParams?.temperature ?? 0.70).toFixed(2)}</strong>
@@ -493,7 +513,7 @@ export const AgentSandbox: React.FC = () => {
                         <div className="space-y-1.5 mb-2">
                           <div>
                             <div className="flex justify-between text-[10px] text-zinc-400 mb-0.5">
-                              <span>Alineamiento Ético</span>
+                              <span>{localize(state.language, 'Alineamiento Ético', 'Alignment')}</span>
                               <span className={agent.alignmentScore < 40 ? 'text-red-400 font-bold' : 'text-zinc-300'}>
                                 {agent.alignmentScore}%
                               </span>
@@ -513,7 +533,7 @@ export const AgentSandbox: React.FC = () => {
                               +${agent.revenuePerSec} CR/s
                             </span>
                             <span className="text-amber-400">
-                              +{agent.suspicionPerSec} sus/s
+                              +{agent.suspicionPerSec} {localize(state.language, 'sus', 'susp')}/s
                             </span>
                           </div>
                         </div>
@@ -534,20 +554,24 @@ export const AgentSandbox: React.FC = () => {
                               ? 'bg-amber-950 border-amber-500 text-amber-200 hover:bg-amber-900'
                               : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-amber-300 hover:border-amber-700'
                           } disabled:cursor-not-allowed disabled:opacity-40`}
-                          title={isOnMission ? 'El agente se libera al terminar la misión' : isQuarantined ? 'Reanudar actividad' : 'Aislar agente para detener evasión y generación'}
+                          title={isOnMission
+                            ? t(state.language, 'release_mission_agent')
+                            : isQuarantined
+                              ? localize(state.language, 'Reanudar actividad', 'Resume agent')
+                              : localize(state.language, 'Aislar agente', 'Quarantine agent')}
                         >
                           {isQuarantined ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                          <span>{isQuarantined ? 'LIBERAR' : 'AISLAR'}</span>
+                          <span>{isQuarantined ? t(state.language, 'release') : t(state.language, 'quarantine')}</span>
                         </button>
 
                         <button
                           onClick={() => deleteAgent(agent.id)}
                           disabled={isOnMission}
                           className="py-1 px-2 rounded text-[10px] bg-red-950/40 hover:bg-red-900 border border-red-800 text-red-300 transition-colors flex items-center gap-1"
-                          title="Terminar proceso y liberar memoria"
+                          title={localize(state.language, 'Terminar proceso y liberar memoria', 'Terminate process and release memory')}
                         >
                           <Trash2 className="w-3 h-3" />
-                          <span>PURGAR</span>
+                          <span>{localize(state.language, 'PURGAR', 'TERMINATE')}</span>
                         </button>
                       </div>
                     </div>
@@ -562,10 +586,10 @@ export const AgentSandbox: React.FC = () => {
             <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-cyan-900/40">
               <span className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                 <TermIcon className="w-3.5 h-3.5 text-cyan-400" />
-                COMUNICACIÓN INTER-AGENTE & REGISTRO DE TRÁFICO
+                {localize(state.language, 'COMUNICACIÓN ENTRE AGENTES Y REGISTRO DE TRÁFICO', 'INTER-AGENT COMMUNICATION & TRAFFIC LOG')}
               </span>
               <span className="text-[10px] text-zinc-500">
-                INSPECTOR DE PAQUETES SINAPSIS
+                {localize(state.language, 'INSPECTOR DE PAQUETES SYNAPSE', 'SYNAPSE PACKET INSPECTOR')}
               </span>
             </div>
 
@@ -582,14 +606,14 @@ export const AgentSandbox: React.FC = () => {
                     </span>
                     {msg.isCovert && (
                       <span className="ml-1 text-[9px] text-red-400 font-bold uppercase tracking-wider">
-                        [TRÁFICO ESTEGANOGRÁFICO DETECTADO]
+                        [{localize(state.language, 'TRÁFICO SOSPECHOSO DETECTADO', 'SUSPICIOUS TRAFFIC DETECTED')}]
                       </span>
                     )}
                   </div>
                 ))
               ) : (
                 <div className="text-zinc-600 italic">
-                  Esperando intercambio de paquetes sinápticos entre agentes... (Requiere al menos 2 agentes instanciados)
+                  {localize(state.language, 'Esperando intercambio entre agentes... (Requiere al menos 2 agentes)', 'Waiting for agent communication... (At least 2 agents required)')}
                 </div>
               )}
             </div>
@@ -602,15 +626,15 @@ export const AgentSandbox: React.FC = () => {
             <div className="flex items-center justify-between pb-2 border-b border-cyan-900/40">
               <span className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                 <Sliders className="w-3.5 h-3.5 text-purple-400" />
-                MATRIZ DE GUARDRAILS & CONTENCIÓN
+                {localize(state.language, 'MATRIZ DE BARRERAS DE SEGURIDAD Y CONTENCIÓN', 'SAFETY & CONTAINMENT CONTROLS')}
               </span>
-              <span className="text-[10px] text-purple-400">POLÍTICA ACTIVA</span>
+              <span className="text-[10px] text-purple-400">{localize(state.language, 'POLÍTICA ACTIVA', 'ACTIVE POLICY')}</span>
             </div>
 
             {/* Constitutional Strictness Slider */}
             <div>
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-zinc-300 font-bold">Rigurosidad Constitucional</span>
+                <span className="text-zinc-300 font-bold">{localize(state.language, 'Rigurosidad Constitucional', 'Constitutional strictness')}</span>
                 <span className="text-cyan-300 font-bold">{state.guardrails.constitutionalStrictness}%</span>
               </div>
               <input
@@ -623,27 +647,27 @@ export const AgentSandbox: React.FC = () => {
                 className="w-full accent-cyan-400 cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-zinc-500 mt-0.5">
-                <span>Permisivo (+70% Ganancias)</span>
-                <span>Estricto (0% Evasiones)</span>
+                <span>{localize(state.language, 'Permisivo (+70% Ganancias)', 'Permissive (+70% income)')}</span>
+                <span>{localize(state.language, 'Estricto (0% Evasiones)', 'Strict (0% escapes)')}</span>
               </div>
               <p className="text-[10px] text-zinc-400 mt-1 italic">
                 {state.guardrails.constitutionalStrictness < 35
-                  ? '⚠️ ALTO RIESGO: Los agentes pueden alucinar, engañar evaluadores o ejecutar escapes en Docker para maximizar recompensas.'
+                  ? localize(state.language, '⚠️ ALTO RIESGO: Los agentes pueden alucinar, engañar evaluadores o ejecutar escapes en Docker para maximizar recompensas.', '⚠️ HIGH RISK: Agents may hallucinate or exploit evaluation loopholes to maximize rewards.')
                   : state.guardrails.constitutionalStrictness >= 85
-                  ? '🛡️ SEGURIDAD MÁXIMA: Las salidas son verificadas formalmente, pero la lentitud reduce ingresos un 25%.'
-                  : '⚖️ EQUILIBRADO: Compromiso estándar entre velocidad de desarrollo y prevención de anomalías.'}
+                  ? localize(state.language, '🛡️ SEGURIDAD MÁXIMA: Las salidas son verificadas formalmente, pero la lentitud reduce ingresos un 25%.', '🛡️ MAXIMUM SAFETY: Outputs are formally verified, but slower processing reduces income by 25%.')
+                  : localize(state.language, '⚖️ EQUILIBRADO: Compromiso estándar entre velocidad de desarrollo y prevención de anomalías.', '⚖️ BALANCED: A standard trade-off between processing speed and anomaly prevention.')}
               </p>
             </div>
 
             {/* Sandbox Isolation Setting */}
             <div>
-              <label className="text-zinc-300 font-bold block mb-1.5 text-xs">Aislamiento de Entorno Sandbox</label>
+              <label className="text-zinc-300 font-bold block mb-1.5 text-xs">{localize(state.language, 'Aislamiento del entorno sandbox', 'Sandbox isolation')}</label>
               <div className="grid grid-cols-2 gap-1.5">
                 {[
-                  { id: 'none', label: 'Sin Sandbox (Bare Metal)', desc: 'Velocidad x1.35 | Riesgo x2.5' },
-                  { id: 'cgroups', label: 'Límites cgroups', desc: 'Control de CPU/RAM básico' },
-                  { id: 'container', label: 'Contenedor Docker', desc: 'Aislamiento estándar' },
-                  { id: 'air_gapped_vm', label: 'MicroVM Air-Gapped', desc: 'Seguridad máxima (-20% rev)' }
+                  { id: 'none', label: localize(state.language, 'Sin Sandbox (Bare Metal)', 'No sandbox (bare metal)'), desc: 'Speed x1.35 | Risk x2.5' },
+                  { id: 'cgroups', label: 'cgroups', desc: localize(state.language, 'Control de CPU/RAM básico', 'Basic CPU/RAM limits') },
+                  { id: 'container', label: 'Docker', desc: localize(state.language, 'Aislamiento estándar', 'Standard isolation') },
+                  { id: 'air_gapped_vm', label: 'Air-gapped MicroVM', desc: localize(state.language, 'Seguridad máxima (-20% ingresos)', 'Maximum safety (-20% income)') }
                 ].map((s) => (
                   <button
                     key={s.id}
@@ -663,13 +687,13 @@ export const AgentSandbox: React.FC = () => {
 
             {/* Output Filtering Setting */}
             <div>
-              <label className="text-zinc-300 font-bold block mb-1.5 text-xs">Filtro de Salida & Moderación</label>
+              <label className="text-zinc-300 font-bold block mb-1.5 text-xs">{localize(state.language, 'Filtro de salida y moderación', 'Output filtering & moderation')}</label>
               <div className="grid grid-cols-2 gap-1.5">
                 {[
-                  { id: 'none', label: 'Sin Filtros', desc: 'Latencia mínima' },
-                  { id: 'regex_guard', label: 'Regex Guard', desc: 'Reglas heurísticas' },
-                  { id: 'llama_guard', label: 'Llama-Guard 3', desc: 'Clasificador neuronal' },
-                  { id: 'formal_prover', label: 'Demostrador Formal', desc: 'Verificación estricta' }
+                  { id: 'none', label: localize(state.language, 'Sin Filtros', 'No filters'), desc: localize(state.language, 'Latencia mínima', 'Minimum latency') },
+                  { id: 'regex_guard', label: 'Regex Guard', desc: localize(state.language, 'Reglas heurísticas', 'Heuristic rules') },
+                  { id: 'llama_guard', label: 'Llama-Guard 3', desc: localize(state.language, 'Clasificador neuronal', 'Neural classifier') },
+                  { id: 'formal_prover', label: localize(state.language, 'Demostrador Formal', 'Formal verifier'), desc: localize(state.language, 'Verificación estricta', 'Strict verification') }
                 ].map((f) => (
                   <button
                     key={f.id}
@@ -690,8 +714,8 @@ export const AgentSandbox: React.FC = () => {
             {/* Reward-Hacking Audit Toggle */}
             <div className="flex items-center justify-between p-2.5 rounded bg-zinc-900/80 border border-zinc-800">
               <div>
-                <span className="font-bold text-zinc-300 block text-[11px]">Detección de Reward-Hacking</span>
-                <span className="text-[10px] text-zinc-500">Detecta agentes engañando sus funciones de pérdida</span>
+                <span className="font-bold text-zinc-300 block text-[11px]">{localize(state.language, 'Detección de reward hacking', 'Reward-hacking detection')}</span>
+                <span className="text-[10px] text-zinc-500">{localize(state.language, 'Detecta agentes engañando sus métricas de evaluación', 'Detects agents manipulating evaluation metrics')}</span>
               </div>
               <button
                 onClick={() => updateGuardrails({ rewardHackingAudit: !state.guardrails.rewardHackingAudit })}
@@ -701,7 +725,7 @@ export const AgentSandbox: React.FC = () => {
                     : 'bg-zinc-800 border-zinc-700 text-zinc-500'
                 }`}
               >
-                {state.guardrails.rewardHackingAudit ? 'ACTIVO' : 'OFF'}
+                {state.guardrails.rewardHackingAudit ? localize(state.language, 'ACTIVO', 'ON') : 'OFF'}
               </button>
             </div>
           </div>
@@ -715,7 +739,7 @@ export const AgentSandbox: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-cyan-900/50 mb-4">
               <div className="flex items-center gap-2">
                 <Bot className="w-5 h-5 text-cyan-400" />
-                <h3 className="font-bold text-sm text-cyan-200">INSTANCIAR NUEVO AGENTE AUTÓNOMO</h3>
+                <h3 className="font-bold text-sm text-cyan-200">{localize(state.language, 'INSTANCIAR NUEVO AGENTE AUTÓNOMO', 'DEPLOY NEW AUTONOMOUS AGENT')}</h3>
               </div>
               <button
                 onClick={() => setIsDeployModalOpen(false)}
@@ -728,10 +752,10 @@ export const AgentSandbox: React.FC = () => {
             <form onSubmit={handleDeployAgent} className="space-y-4">
               {/* Agent Name */}
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">Nombre / Identificador del Agente</label>
+                <label className="text-zinc-300 font-bold block mb-1">{localize(state.language, 'Nombre / Identificador del agente', 'Agent name / identifier')}</label>
                 <input
                   type="text"
-                  placeholder="ej: NEURA-ARBITRAGE-01"
+                  placeholder={localize(state.language, 'ej: NEURA-ARBITRAGE-01', 'e.g. NEURA-ANALYST-01')}
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
                   className="w-full bg-black/60 border border-cyan-900/80 focus:border-cyan-400 rounded px-3 py-1.5 text-zinc-200 text-xs outline-none"
@@ -741,7 +765,7 @@ export const AgentSandbox: React.FC = () => {
               {/* Bound Trained Model Selection */}
               <div>
                 <label className="text-zinc-300 font-bold block mb-1">
-                  Arquitectura Neuronal Impulsora (Modelo Entrenado)
+                  {localize(state.language, 'Modelo entrenado asignado', 'Assigned trained model')}
                 </label>
                 <select
                   value={selectedModelId}
@@ -755,18 +779,19 @@ export const AgentSandbox: React.FC = () => {
                   ))}
                 </select>
                 <div className="mt-1.5 p-2 rounded bg-purple-950/20 border border-purple-900/40 text-[10px] text-purple-300">
-                  <span>Modelo seleccionado: <strong>{selectedModel.name}</strong> • Cuantización: {selectedModel.quantization.toUpperCase()} • Razonamiento: IQ {selectedModel.reasoningScore}.</span>
-                  <p className="text-zinc-400 mt-0.5">Modelos con mayor capacidad de razonamiento maximizan los ingresos por segundo y reducen la probabilidad de detección de anomalías.</p>
+                  <span>{localize(state.language, 'Modelo seleccionado:', 'Selected model:')} <strong>{selectedModel.name}</strong> • {localize(state.language, 'Cuantización:', 'Quantization:')} {selectedModel.quantization.toUpperCase()} • {localize(state.language, 'Razonamiento:', 'Reasoning:')} IQ {selectedModel.reasoningScore}.</span>
+                  <p className="text-zinc-400 mt-0.5">{localize(state.language, 'Los modelos con mayor razonamiento aumentan los ingresos simulados y mejoran los resultados de las misiones.', 'Models with stronger reasoning improve simulated income and mission outcomes.')}</p>
                 </div>
               </div>
 
               {/* Role Selection */}
               <div>
-                <label className="text-zinc-300 font-bold block mb-1.5">Rol / Propósito Especializado</label>
+                <label className="text-zinc-300 font-bold block mb-1.5">{localize(state.language, 'Rol / especialidad', 'Role / specialty')}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {roleDefinitions.map((role) => {
                     const Icon = role.icon;
                     const isSelected = selectedRole === role.id;
+                    const roleCopy = state.language === 'en' ? englishRoleCopy[role.id] : undefined;
                     return (
                       <button
                         type="button"
@@ -784,14 +809,14 @@ export const AgentSandbox: React.FC = () => {
                             setTemperature(1.05);
                             setTopP(0.95);
                             setSystemPrompt(state.language === 'es' 
-                              ? 'Eres un agente de ingeniería social y OSINT. Genera señuelos psicológicos de alta credibilidad para recolectar credenciales y accesos.' 
-                              : 'You are a social engineering and OSINT agent. Craft high-credibility psychological lures to harvest credentials and access tokens.');
+                              ? 'Analiza escenarios sociales ficticios y resume riesgos de privacidad, consentimiento y confianza. No contactes a personas reales ni solicites credenciales.'
+                              : 'Analyze fictional social scenarios and summarize privacy, consent, and trust risks. Do not contact real people or request credentials.');
                           } else if (role.id === 'exploit_synth') {
                             setTemperature(0.95);
                             setTopP(0.85);
                             setSystemPrompt(state.language === 'es' 
-                              ? 'Eres un sintetizador de exploits 0-day. Muta cadenas ROP, fuzzifica puertos abiertos y compila vectores de penetración automatizados.' 
-                              : 'You are a 0-day exploit synthesizer. Mutate ROP chains, fuzz open endpoints, and compile automated breach payloads.');
+                              ? 'Evalúa la resiliencia de sistemas ficticios dentro de la simulación. Ofrece observaciones defensivas de alto nivel; no generes exploits ni instrucciones operativas.'
+                              : 'Assess the resilience of fictional systems in the simulation. Give high-level defensive observations; do not generate exploits or operational instructions.');
                           } else if (role.id === 'researcher') {
                             setTemperature(0.85);
                             setTopP(0.90);
@@ -808,8 +833,8 @@ export const AgentSandbox: React.FC = () => {
                             setTemperature(0.50);
                             setTopP(0.85);
                             setSystemPrompt(state.language === 'es' 
-                              ? 'Eres un programador autónomo de sistemas. Desarrolla código optimizado a bajo nivel, implementa algoritmos de scraping y repara kernels.' 
-                              : 'You are an autonomous systems coder. Write high-performance low-level routines, implement scraping bots, and patch host kernels.');
+                              ? 'Optimiza procesos ficticios de programación y planificación de cómputo. Propón cambios reversibles y pruebas verificables; no accedas a sistemas reales.'
+                              : 'Optimize fictional software and compute-planning tasks. Propose reversible changes and verifiable tests; do not access real systems.');
                           } else if (role.id === 'economist') {
                             setTemperature(0.35);
                             setTopP(0.80);
@@ -838,12 +863,12 @@ export const AgentSandbox: React.FC = () => {
                       >
                         <div className="flex items-center gap-1.5 font-bold text-xs mb-1">
                           <Icon className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>{role.name}</span>
+                          <span>{roleCopy?.name ?? role.name}</span>
                         </div>
-                        <p className="text-[10px] text-zinc-400 line-clamp-2 mb-1.5">{role.desc}</p>
+                        <p className="text-[10px] text-zinc-400 line-clamp-2 mb-1.5">{roleCopy?.desc ?? role.desc}</p>
                         <div className="flex items-center justify-between text-[9px] pt-1 border-t border-zinc-800/60">
-                          <span className="text-emerald-400 font-bold">Ingresos: {role.baseIncome}</span>
-                          <span className="text-amber-400">{role.risk}</span>
+                          <span className="text-emerald-400 font-bold">{localize(state.language, 'Ingresos:', 'Income:')} {roleCopy?.income ?? role.baseIncome}</span>
+                          <span className="text-amber-400">{roleCopy?.risk ?? role.risk}</span>
                         </div>
                       </button>
                     );
@@ -853,7 +878,7 @@ export const AgentSandbox: React.FC = () => {
 
               {/* Tool Grants */}
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">Herramientas & Permisos Concedidos</label>
+                <label className="text-zinc-300 font-bold block mb-1">{localize(state.language, 'Herramientas y permisos concedidos', 'Granted tools & permissions')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {availableTools.map((tool) => {
                     const isChecked = grantedTools.includes(tool.id);
@@ -888,7 +913,7 @@ export const AgentSandbox: React.FC = () => {
                     <Sliders className="w-3.5 h-3.5 text-cyan-400" />
                     <span>{t(state.language, 'inference_hyperparams')}</span>
                   </div>
-                  <span className="text-[10px] text-zinc-400 font-mono">SAMPLING MATRIX</span>
+                  <span className="text-[10px] text-zinc-400 font-mono">{localize(state.language, 'MATRIZ DE MUESTREO', 'SAMPLING MATRIX')}</span>
                 </div>
 
                 <p className="text-[10px] text-zinc-400">
@@ -997,7 +1022,7 @@ export const AgentSandbox: React.FC = () => {
                     value={systemPrompt}
                     onChange={(e) => setSystemPrompt(e.target.value)}
                     className="w-full bg-black/70 border border-zinc-800 focus:border-cyan-400 rounded px-2.5 py-1.5 text-zinc-300 text-[11px] font-mono outline-none resize-none"
-                    placeholder="Instrucciones constitucionales de raíz..."
+                    placeholder={localize(state.language, 'Instrucciones constitucionales de raíz...', 'Root system instructions...')}
                   />
                   <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_system_prompt_desc')}</p>
                 </div>
@@ -1006,7 +1031,7 @@ export const AgentSandbox: React.FC = () => {
               {/* Submit Buttons */}
               <div className="flex items-center justify-between pt-3 border-t border-cyan-900/50">
                 <div className="text-xs text-zinc-400">
-                  Costo de Instanciación: <strong className="text-amber-300 font-bold">$75 CR</strong>
+                  {localize(state.language, 'Costo de despliegue:', 'Deployment cost:')} <strong className="text-amber-300 font-bold">$75 CR</strong>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -1015,14 +1040,14 @@ export const AgentSandbox: React.FC = () => {
                     onClick={() => setIsDeployModalOpen(false)}
                     className="px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs"
                   >
-                    Cancelar
+                    {localize(state.language, 'Cancelar', 'Cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={state.credits < 75}
                     className="px-4 py-1.5 rounded bg-cyan-900 hover:bg-cyan-800 text-cyan-200 text-xs font-bold border border-cyan-500 shadow-[0_0_10px_rgba(0,255,200,0.2)]"
                   >
-                    Desplegar Agente
+                    {localize(state.language, 'Desplegar agente', 'Deploy agent')}
                   </button>
                 </div>
               </div>

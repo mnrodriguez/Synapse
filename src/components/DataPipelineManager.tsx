@@ -19,6 +19,8 @@ import {
   HardDrive
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
+import { localize } from '../utils/i18n';
+import { localizedDataSource } from '../utils/gameContentI18n';
 
 export const DataPipelineManager: React.FC = () => {
   const { state, unlockDataSource, upgradeDataSource } = useGame();
@@ -46,24 +48,27 @@ export const DataPipelineManager: React.FC = () => {
         <div className="flex items-center gap-2">
           <Network className="w-4 h-4 text-cyan-400" />
           <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
-            MOTOR DE DATOS Y CONOCIMIENTO // INGESTA MULTIMODAL
+            {localize(state.language, 'MOTOR DE DATOS Y CONOCIMIENTO // INGESTA MULTIMODAL', 'DATA & KNOWLEDGE ENGINES // MULTIMODAL INGESTION')}
           </h2>
         </div>
         <div className="text-xs text-zinc-400">
-          Saldo Disponible: <span className="text-amber-300 font-bold">${state.credits.toLocaleString()} CR</span>
+          {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="text-amber-300 font-bold">${state.credits.toLocaleString()} CR</span>
         </div>
       </div>
 
       <p className="text-xs text-zinc-400 leading-relaxed">
-        Los modelos de IA más avanzados no dependen únicamente de texto plano. Para alcanzar la Singularidad, necesitas 
+        {state.language === 'en'
+          ? <>Advanced AI models need more than plain text. To reach the Singularity, you need a <strong className="text-cyan-300">modular data architecture</strong>: SQL transaction records for numerical accuracy, vector spaces (RAG) for associative memory, knowledge graphs for logical deduction, and synthetic self-play to extend beyond human knowledge.</>
+          : <>Los modelos de IA más avanzados no dependen únicamente de texto plano. Para alcanzar la Singularidad, necesitas
         una <strong className="text-cyan-300">arquitectura modular de datos</strong>: registros transaccionales SQL para exactitud numérica, 
         espacios vectoriales (RAG) para memoria asociativa, grafos de conocimiento para deducción lógica sin alucinaciones, 
-        y auto-juego sintético (Flywheel) para superar los límites del conocimiento humano.
+        y auto-juego sintético (Flywheel) para superar los límites del conocimiento humano.</>}
       </p>
 
       {/* Interactive Data Architecture Pipeline Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {state.dataSources.map(ds => {
+          const content = localizedDataSource(state.language, ds);
           const isConnected = state.currentModel.activeDataSources.includes(ds.id);
           const upgradeCost = Math.round(ds.cost * 1.5 * (ds.level || 1));
 
@@ -84,9 +89,11 @@ export const DataPipelineManager: React.FC = () => {
                       {getIcon(ds.type)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-xs text-zinc-100">{ds.name}</h3>
+                      <h3 className="font-bold text-xs text-zinc-100">{content.name}</h3>
                       <span className="text-[10px] text-cyan-400 font-mono">
-                        {ds.unlocked ? `ESTADO: ONLINE (NIVEL ${ds.level})` : 'ESTADO: SIN DESPLEGAR'}
+                        {ds.unlocked
+                          ? localize(state.language, `ESTADO: ONLINE (NIVEL ${ds.level})`, `STATUS: ONLINE (LEVEL ${ds.level})`)
+                          : localize(state.language, 'ESTADO: SIN DESPLEGAR', 'STATUS: NOT DEPLOYED')}
                       </span>
                     </div>
                   </div>
@@ -97,34 +104,36 @@ export const DataPipelineManager: React.FC = () => {
                         ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300' 
                         : 'bg-zinc-900 border-zinc-700 text-zinc-500'
                     }`}>
-                      {isConnected ? 'ENLAZADO A IA' : 'DESCONECTADO'}
+                      {isConnected
+                        ? localize(state.language, 'ENLAZADO A IA', 'CONNECTED TO AI')
+                        : localize(state.language, 'DESCONECTADO', 'DISCONNECTED')}
                     </span>
                   )}
                 </div>
 
                 {/* Description & Technical Specs */}
                 <p className="text-xs text-zinc-300 mt-2.5 leading-snug">
-                  {ds.description}
+                  {content.description}
                 </p>
 
                 <div className="mt-2 p-2 rounded bg-[#060a10] border border-cyan-950 text-[11px] space-y-1">
-                  <div className="text-purple-300 font-semibold">{ds.bonusAttribute}</div>
-                  <div className="text-zinc-500 text-[10px]">{ds.technicalDetails}</div>
+                  <div className="text-purple-300 font-semibold">{content.bonusAttribute}</div>
+                  <div className="text-zinc-500 text-[10px]">{content.technicalDetails}</div>
                 </div>
 
                 {/* Metric Bars if unlocked */}
                 {ds.unlocked && (
                   <div className="grid grid-cols-3 gap-2 mt-3 pt-2 border-t border-zinc-800 text-[11px]">
                     <div>
-                      <span className="text-zinc-500 text-[10px] block">TOKENS INDEXADOS</span>
+                      <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'TOKENS INDEXADOS', 'INDEXED TOKENS')}</span>
                       <span className="text-cyan-300 font-bold">{ds.tokensIndexed}M</span>
                     </div>
                     <div>
-                      <span className="text-zinc-500 text-[10px] block">CALIDAD & PUREZA</span>
+                      <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'CALIDAD Y PUREZA', 'QUALITY & PURITY')}</span>
                       <span className="text-emerald-400 font-bold">{ds.qualityScore}%</span>
                     </div>
                     <div>
-                      <span className="text-zinc-500 text-[10px] block">ALMACENAMIENTO</span>
+                      <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'ALMACENAMIENTO', 'STORAGE')}</span>
                       <span className="text-yellow-300 font-bold">{ds.storageGb} GB</span>
                     </div>
                   </div>
@@ -144,12 +153,12 @@ export const DataPipelineManager: React.FC = () => {
                     }`}
                   >
                     <Unlock className="w-3.5 h-3.5" />
-                    <span>DESPLEGAR MOTOR (${ds.cost.toLocaleString()} CR)</span>
+                    <span>{localize(state.language, 'DESPLEGAR MOTOR', 'DEPLOY ENGINE')} (${ds.cost.toLocaleString()} CR)</span>
                   </button>
                 ) : (
                   <div className="flex items-center justify-between w-full">
                     <span className="text-[10px] text-zinc-500">
-                      Capacidad Nivel {ds.level}
+                      {localize(state.language, 'Capacidad Nivel', 'Capacity level')} {ds.level}
                     </span>
                     <button
                       onClick={() => upgradeDataSource(ds.id)}
@@ -161,7 +170,7 @@ export const DataPipelineManager: React.FC = () => {
                       }`}
                     >
                       <TrendingUp className="w-3.5 h-3.5" />
-                      <span>ESCALAR ÍNDICE (${upgradeCost.toLocaleString()} CR)</span>
+                      <span>{localize(state.language, 'ESCALAR ÍNDICE', 'SCALE INDEX')} (${upgradeCost.toLocaleString()} CR)</span>
                     </button>
                   </div>
                 )}
@@ -175,7 +184,7 @@ export const DataPipelineManager: React.FC = () => {
       <div className="bg-[#09111c] border border-cyan-900/50 p-3 rounded-lg text-xs space-y-2">
         <h4 className="font-bold text-cyan-300 flex items-center gap-1.5">
           <GitFork className="w-3.5 h-3.5 text-cyan-400" />
-          FLUJO ARQUITECTÓNICO DE ALIMENTACIÓN NEURONAL (DAG)
+          {localize(state.language, 'FLUJO ARQUITECTÓNICO DE ALIMENTACIÓN NEURONAL (DAG)', 'NEURAL DATA FLOW ARCHITECTURE (DAG)')}
         </h4>
         <div className="flex flex-wrap items-center justify-center gap-2 py-2 text-center">
           <div className="px-2 py-1 rounded bg-blue-950/60 border border-blue-500/50 text-blue-300 text-[10px]">
@@ -183,15 +192,15 @@ export const DataPipelineManager: React.FC = () => {
           </div>
           <ArrowRight className="w-3 h-3 text-zinc-600" />
           <div className="px-2 py-1 rounded bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 text-[10px]">
-            Vectores Semánticos (HNSW RAG)
+            {localize(state.language, 'Vectores Semánticos (HNSW RAG)', 'Semantic Vectors (HNSW RAG)')}
           </div>
           <ArrowRight className="w-3 h-3 text-zinc-600" />
           <div className="px-2 py-1 rounded bg-purple-950/60 border border-purple-500/50 text-purple-300 text-[10px]">
-            Grafo Ontológico (RDF Tripletas)
+            {localize(state.language, 'Grafo Ontológico (RDF Tripletas)', 'Ontological Graph (RDF Triples)')}
           </div>
           <ArrowRight className="w-3 h-3 text-zinc-600" />
           <div className="px-2 py-1 rounded bg-amber-950/60 border border-amber-500/50 text-amber-300 text-[10px]">
-            Auto-Juego Sintético (Flywheel)
+            {localize(state.language, 'Auto-Juego Sintético (Flywheel)', 'Synthetic Self-Play (Flywheel)')}
           </div>
           <ArrowRight className="w-3 h-3 text-zinc-600" />
           <div className="px-2 py-1 rounded bg-cyan-500 text-zinc-950 font-bold text-[10px] shadow-[0_0_10px_rgba(0,255,200,0.5)]">
