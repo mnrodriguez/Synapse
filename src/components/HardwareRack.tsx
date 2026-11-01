@@ -27,6 +27,8 @@ import {
   ELECTRICITY_RATE_PER_KWH,
   FACILITY_TIERS
 } from '../utils/constants';
+import { HARDWARE_DOCS } from '../utils/aiDocumentation';
+import { DocLinkBadge } from './DocLinkBadge';
 
 export const HardwareRack: React.FC = () => {
   const { state, buyHardware, upgradeFacility, attemptShadowCompute } = useGame();
@@ -99,7 +101,7 @@ export const HardwareRack: React.FC = () => {
           <p className="mt-1 text-[10px] text-zinc-400">
             {t(state.language, 'monthly_estimate')}: ${estimatedMonthlyCost.toFixed(2)} CR
             {' '}· {t(state.language, 'electricity')}: ${ELECTRICITY_RATE_PER_KWH.toFixed(2)}/kWh
-            {' '}· {t(state.language, 'billing_cycle')}: {Math.floor((state.billingCycleTicks / 60) * 100)}% ({t(state.language, 'simulated_month')})
+            {' '}· {t(state.language, 'billing_cycle')}: {Math.floor(((state.dayTicks || 0) / 48) * 100)}% ({state.language === 'en' ? `Day ${state.gameDay || 1} = Month ${state.gameMonth || 1}` : `Día ${state.gameDay || 1} = Mes ${state.gameMonth || 1}`})
           </p>
           <p className={`mt-1 text-[10px] ${state.utilityDebt > 0 ? 'text-red-300' : 'text-zinc-500'}`}>
             {t(state.language, 'utility_debt')}: ${state.utilityDebt.toFixed(2)} CR · {t(state.language, 'monthly_rent')}: ${facility.monthlyLeaseCost.toLocaleString()} CR{t(state.language, 'per_month')}
@@ -207,9 +209,14 @@ export const HardwareRack: React.FC = () => {
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-bold text-xs text-zinc-100 flex items-center gap-1.5">
-                      {displayItem.name}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-xs text-zinc-100 flex items-center gap-1.5">
+                        {displayItem.name}
+                      </h3>
+                      {HARDWARE_DOCS[item.id] && (
+                        <DocLinkBadge doc={HARDWARE_DOCS[item.id]} language={state.language} />
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[10px] text-cyan-400 font-mono">
                         {t(state.language, 'installed')}: <strong className="text-zinc-100">{item.count} {t(state.language, 'units')}</strong>

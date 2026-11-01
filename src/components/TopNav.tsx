@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { 
   Cpu, 
@@ -20,7 +20,12 @@ import {
   User, 
   RefreshCw,
   Sparkles,
-  Languages
+  Languages,
+  Calendar,
+  Clock,
+  Play,
+  Pause,
+  FastForward
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
@@ -40,11 +45,34 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
     soundMuted, 
     toggleSound, 
     setLanguage,
+    setGameSpeed,
     scrubSuspicion, 
     saveGameToCloud 
   } = useGame();
 
   const [savingAnim, setSavingAnim] = useState(false);
+
+  // Keyboard shortcut listener for simulation speed controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setGameSpeed(state.gameSpeed === 0 ? 1 : 0);
+      } else if (e.key === '1') {
+        setGameSpeed(1);
+      } else if (e.key === '2') {
+        setGameSpeed(2);
+      } else if (e.key === '5' || e.key === '3') {
+        setGameSpeed(5);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.gameSpeed, setGameSpeed]);
 
   const handleManualSave = async () => {
     sound.playNavSwitch();
@@ -90,8 +118,85 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
         </div>
       </div>
 
-      {/* Telemetry gauges */}
-      <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+      {/* Telemetry gauges & Simulation Speed */}
+      <div className="flex items-center flex-wrap gap-2 sm:gap-2.5">
+        {/* Game Time & Calendar (1 Day = 1 Month) */}
+        <div 
+          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/40 text-cyan-300 shadow-[0_0_8px_rgba(0,255,200,0.1)]"
+          title={localize(
+            state.language,
+            `Tiempo de simulación: 1 día equivale a 1 mes operativo. La facturación mensual de alquiler y electricidad se procesa al finalizar el día (24:00).`,
+            `Simulation time: 1 game day equals 1 operational month. Monthly lease and power billing triggers at the end of the day (24:00).`
+          )}
+        >
+          <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="font-bold text-[11px] tracking-wide text-cyan-200">
+            {localize(state.language, `DÍA ${state.gameDay || 1} (MES ${state.gameMonth || 1})`, `DAY ${state.gameDay || 1} (MO ${state.gameMonth || 1})`)}
+          </span>
+          <span className="text-zinc-600">·</span>
+          <span className="text-emerald-300 font-mono font-bold text-[11px]">
+            {String(state.gameHour ?? 8).padStart(2, '0')}:{String(state.gameMinute ?? 0).padStart(2, '0')}
+          </span>
+        </div>
+
+        {/* Speed Toggle Controls */}
+        <div className="flex items-center bg-zinc-950/90 p-0.5 rounded border border-cyan-800/60 shadow-[0_0_8px_rgba(0,255,200,0.1)]">
+          <button
+            type="button"
+            onClick={() => { sound.playKeyClick(); setGameSpeed(state.gameSpeed === 0 ? 1 : 0); }}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all ${
+              state.gameSpeed === 0
+                ? 'bg-amber-500 text-zinc-950 font-black shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+            title={state.gameSpeed === 0 
+              ? localize(state.language, 'Reanudar simulación (Espacio)', 'Resume simulation (Space)')
+              : localize(state.language, 'Pausar simulación (Espacio)', 'Pause simulation (Space)')}
+          >
+            {state.gameSpeed === 0 ? <Play className="w-2.5 h-2.5 fill-current" /> : <Pause className="w-2.5 h-2.5 fill-current" />}
+            <span className="text-[9px]">{state.gameSpeed === 0 ? 'PAUSA' : 'PAUSE'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { sound.playKeyClick(); setGameSpeed(1); }}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono transition-all ${
+              state.gameSpeed === 1
+                ? 'bg-cyan-500 text-zinc-950 font-black shadow-[0_0_8px_rgba(0,255,200,0.4)]'
+                : 'text-zinc-400 hover:text-cyan-300'
+            }`}
+            title={localize(state.language, 'Velocidad Normal 1x (Tecla 1)', 'Normal Speed 1x (Key 1)')}
+          >
+            1x
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { sound.playKeyClick(); setGameSpeed(2); }}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono transition-all ${
+              state.gameSpeed === 2
+                ? 'bg-cyan-400 text-zinc-950 font-black shadow-[0_0_8px_rgba(0,255,200,0.4)]'
+                : 'text-zinc-400 hover:text-cyan-300'
+            }`}
+            title={localize(state.language, 'Velocidad Rápida 2x (Tecla 2)', 'Fast Speed 2x (Key 2)')}
+          >
+            2x
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { sound.playKeyClick(); setGameSpeed(5); }}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono transition-all ${
+              state.gameSpeed === 5
+                ? 'bg-pink-500 text-zinc-950 font-black shadow-[0_0_8px_rgba(236,72,153,0.5)]'
+                : 'text-zinc-400 hover:text-pink-300'
+            }`}
+            title={localize(state.language, 'Velocidad Turbo 5x (Tecla 5)', 'Turbo Speed 5x (Key 5)')}
+          >
+            5x
+          </button>
+        </div>
+
         {/* Compute Power */}
         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-950/30 border border-cyan-500/30 text-cyan-300" title={localize(state.language, 'Capacidad de cómputo total del clúster', 'Total cluster compute capacity')}>
           <Cpu className="w-3.5 h-3.5 text-cyan-400" />

@@ -87,6 +87,8 @@ export interface ContractGig {
   loreDescription: string;
   technicalObjective: string;
   completed: boolean;
+  generatedByAI?: boolean;
+  docsUrl?: string;
 }
 
 export interface ResearchNode {
@@ -141,6 +143,15 @@ export interface GameState {
   dateTimestamp: number;
   language: 'es' | 'en';
   
+  // Time, Calendar & Speed (1 game day = 1 game month)
+  gameDay: number;
+  gameMonth: number;
+  gameYear: number;
+  gameHour: number;
+  gameMinute: number;
+  gameSpeed: number;
+  dayTicks: number;
+  
   // Compute & Telemetry
   totalComputePflops: number;
   activePowerKw: number;
@@ -194,9 +205,11 @@ export interface GameState {
   // Sentience infiltration
   sentienceDomains: SentienceDomain[];
 
-  // Onboarding & Tutorial
+  // Onboarding & Guided Mission Tutorial
   tutorialCompleted: boolean;
-  tutorialStep?: number;
+  tutorialStep: number;
+  tutorialDismissed?: boolean;
+  completedContractsCount: number;
 
   // System logs
   logs: TerminalLog[];

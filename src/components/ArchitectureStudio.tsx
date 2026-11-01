@@ -32,6 +32,13 @@ import { sound } from '../audio/soundManager';
 import { t } from '../utils/i18n';
 import { localize } from '../utils/i18n';
 import { localizedDataSource } from '../utils/gameContentI18n';
+import { 
+  TOPOLOGY_DOCS, 
+  ATTENTION_DOCS, 
+  QUANTIZATION_DOCS, 
+  LOSS_DOCS 
+} from '../utils/aiDocumentation';
+import { DocLinkBadge } from './DocLinkBadge';
 
 export const ArchitectureStudio: React.FC = () => {
   const {
@@ -344,7 +351,12 @@ export const ArchitectureStudio: React.FC = () => {
             >
               <div className="font-bold text-xs flex items-center justify-between">
                 <span>{top.name.split(' (')[0]}</span>
-                {current.topology === top.id && <CheckCircle2 className="w-3 h-3 text-cyan-400" />}
+                <div className="flex items-center gap-1">
+                  {TOPOLOGY_DOCS[top.id] && (
+                    <DocLinkBadge doc={TOPOLOGY_DOCS[top.id]} language={state.language} />
+                  )}
+                  {current.topology === top.id && <CheckCircle2 className="w-3 h-3 text-cyan-400" />}
+                </div>
               </div>
               <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{top.desc}</p>
             </button>
@@ -429,7 +441,12 @@ export const ArchitectureStudio: React.FC = () => {
                     : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <div className="font-semibold">{q.label}</div>
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold">{q.label}</div>
+                  {QUANTIZATION_DOCS[q.id] && (
+                    <DocLinkBadge doc={QUANTIZATION_DOCS[q.id]} language={state.language} />
+                  )}
+                </div>
                 <div className="text-[9px] text-zinc-500">{q.hint}</div>
               </button>
             ))}
@@ -455,7 +472,12 @@ export const ArchitectureStudio: React.FC = () => {
                     : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <div className="font-semibold">{att.label}</div>
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold">{att.label}</div>
+                  {ATTENTION_DOCS[att.id] && (
+                    <DocLinkBadge doc={ATTENTION_DOCS[att.id]} language={state.language} />
+                  )}
+                </div>
                 <div className="text-[9px] text-zinc-500">{att.hint}</div>
               </button>
             ))}
@@ -482,7 +504,12 @@ export const ArchitectureStudio: React.FC = () => {
                     : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <div className="font-semibold">{loss.label}</div>
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold">{loss.label}</div>
+                  {LOSS_DOCS[loss.id] && (
+                    <DocLinkBadge doc={LOSS_DOCS[loss.id]} language={state.language} />
+                  )}
+                </div>
                 <div className="text-[9px] text-zinc-500">{loss.hint}</div>
               </button>
             ))}

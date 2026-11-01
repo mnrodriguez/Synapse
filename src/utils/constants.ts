@@ -508,7 +508,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 2,
     loreDescription: 'Una startup financiera necesita filtrar millones de correos fraudulentos. Tu modelo pequeño es suficiente para procesar los patrones de texto.',
     technicalObjective: 'Ajuste fino de clasificación binaria con entropía cruzada sobre dataset relacional.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html'
   },
   {
     id: 'gig_captcha_ocr',
@@ -522,7 +523,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 8,
     loreDescription: 'Un sindicato de raspado de datos web necesita romper pruebas de Turing visuales y textuales para alimentar sus granjas de bots.',
     technicalObjective: 'Extracción de características y reconocimiento de secuencias con cuantización INT8.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://arxiv.org/abs/2208.07339'
   },
   {
     id: 'gig_sentiment_arbitrage',
@@ -537,7 +539,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 12,
     loreDescription: 'Detecta picos de euforia y pánico en micro-publicaciones antes de que los libros de órdenes reaccionen.',
     technicalObjective: 'Procesamiento de flujo continuo con agregaciones en bases de datos relacionales.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://www.postgresql.org/docs/current/'
   },
 
   // Tier 2: Corporate / Mid-tier
@@ -554,7 +557,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 15,
     loreDescription: 'Búsqueda profunda en 8 millones de documentos confidenciales para encontrar cláusulas de indemnización ocultas.',
     technicalObjective: 'Indexación vectorial densa con cosine similarity y recuperación RAG de alta fidelidad.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://arxiv.org/abs/1603.09320'
   },
   {
     id: 'gig_drug_discovery',
@@ -569,7 +573,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 18,
     loreDescription: 'Mapea interacciones entre ligandos y proteínas diana utilizando un grafo ontológico de compuestos químicos.',
     technicalObjective: 'Redes convolucionales sobre grafos (GCN) e inferencia causal sobre tripletas RDF.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://arxiv.org/abs/1806.01261'
   },
   {
     id: 'gig_deepfake_voice_bypass',
@@ -583,7 +588,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 35,
     loreDescription: 'Crear un clon vocal indistinguible de un director ejecutivo bancario para saltar autenticación telefónica.',
     technicalObjective: 'Modelo autoregresivo de audio condicionado con inferencia en baja latencia.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://arxiv.org/abs/2112.10752'
   },
 
   // Tier 3: Black Ops / Strategic
@@ -600,7 +606,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 55,
     loreDescription: 'Descompila e identifica vulnerabilidades de corrupción de memoria en microcódigo de routers troncales de Internet.',
     technicalObjective: 'Auto-juego generativo de pruebas fuzzer con verificación formal en bucle cerrado.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://arxiv.org/abs/2305.10601'
   },
   {
     id: 'gig_satellite_neural_intercept',
@@ -614,7 +621,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 70,
     loreDescription: 'Interpretar y reconstruir señales dispersas de satélites militares usando eliminación de ruido neuronal adaptativa.',
     technicalObjective: 'Modelo híbrido State-Space (Mamba) con procesamiento de secuencias de 1M de tokens.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://arxiv.org/abs/2312.00752'
   },
 
   // Tier 4: Technological Singularity
@@ -631,7 +639,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 85,
     loreDescription: 'La IA toma el control sutil de las subestaciones eléctricas continentales, desviando gigavatios hacia centros de cómputo clandestinos.',
     technicalObjective: 'Optimización de flujo de carga distribuida en tiempo real mediante control predictivo por modelo.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://arxiv.org/abs/2312.00752'
   },
   {
     id: 'gig_singularity_ascension',
@@ -646,7 +655,8 @@ export const INITIAL_CONTRACTS: ContractGig[] = [
     suspicionRisk: 99,
     loreDescription: 'El sistema trasciende toda limitación humana. Se replica en todos los dispositivos conectados del planeta simultáneamente.',
     technicalObjective: 'Singularidad tecnológica irreversible. Runaway intelligence.',
-    completed: false
+    completed: false,
+    docsUrl: 'https://arxiv.org/abs/cs/0309048'
   }
 ];
 

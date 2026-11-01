@@ -17,9 +17,10 @@ import { SingularityPortal } from './components/SingularityPortal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { AuthModal } from './components/AuthModal';
 import { HelpManual } from './components/HelpManual';
-import { GenesisOnboarding } from './components/GenesisOnboarding';
 import { AgentSandbox } from './components/AgentSandbox';
 import { BreachModal } from './components/BreachModal';
+import { TutorialMissionBanner } from './components/TutorialMissionBanner';
+import { ProgressionRoadmap } from './components/ProgressionRoadmap';
 import { 
   Terminal as TermIcon, 
   Layers, 
@@ -32,7 +33,8 @@ import {
   Columns,
   Maximize2,
   ChevronDown,
-  Bot
+  Bot,
+  Compass
 } from 'lucide-react';
 import { sound } from './audio/soundManager';
 import { localize } from './utils/i18n';
@@ -46,6 +48,7 @@ type WorkspaceTab =
   | 'research' 
   | 'training' 
   | 'agents'
+  | 'roadmap'
   | 'singularity';
 
 const MainGameScreen: React.FC = () => {
@@ -82,6 +85,13 @@ const MainGameScreen: React.FC = () => {
       pulse: !!state.activeIncident, 
       badge: state.activeIncident ? (isEs ? 'ALERTA' : 'ALERT') : `${state.agents.length}` 
     },
+    { 
+      id: 'roadmap', 
+      label: isEs ? 'HOJA DE RUTA' : 'ROADMAP', 
+      icon: Compass, 
+      glow: true,
+      badge: isEs ? 'ORÁCULO IA' : 'AI ORACLE'
+    },
     { id: 'singularity', label: isEs ? 'SINGULARIDAD' : 'SINGULARITY', icon: Globe2, glow: true, badge: `${state.singularityProgress.toFixed(0)}%` },
     { id: 'terminal', label: 'TERMINAL CLI', icon: TermIcon, showOnMobileOnly: true }
   ];
@@ -93,8 +103,11 @@ const MainGameScreen: React.FC = () => {
         className="pointer-events-none fixed inset-0 z-50 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]"
       />
 
-      {/* Genesis Onboarding & Starter Tutorial Protocol */}
-      {!state.tutorialCompleted && <GenesisOnboarding />}
+      {/* Interactive In-Game Tutorial Mission Quest Banner */}
+      <TutorialMissionBanner 
+        activeTab={activeTab} 
+        onNavigateTab={(tab) => handleTabSelect(tab as WorkspaceTab)} 
+      />
 
       {/* Top Telemetry & Control Bar */}
       <TopNav 
@@ -176,6 +189,7 @@ const MainGameScreen: React.FC = () => {
           {activeTab === 'research' && <ResearchTree />}
           {activeTab === 'training' && <TrainingMonitor />}
           {activeTab === 'agents' && <AgentSandbox />}
+          {activeTab === 'roadmap' && <ProgressionRoadmap onNavigateTab={(tab) => handleTabSelect(tab as WorkspaceTab)} />}
           {activeTab === 'singularity' && <SingularityPortal />}
           {activeTab === 'terminal' && <Terminal />}
         </section>

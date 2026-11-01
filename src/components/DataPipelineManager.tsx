@@ -21,6 +21,8 @@ import {
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
 import { localizedDataSource } from '../utils/gameContentI18n';
+import { DATA_DOCS } from '../utils/aiDocumentation';
+import { DocLinkBadge } from './DocLinkBadge';
 
 export const DataPipelineManager: React.FC = () => {
   const { state, unlockDataSource, upgradeDataSource } = useGame();
@@ -89,7 +91,12 @@ export const DataPipelineManager: React.FC = () => {
                       {getIcon(ds.type)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-xs text-zinc-100">{content.name}</h3>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h3 className="font-bold text-xs text-zinc-100">{content.name}</h3>
+                        {DATA_DOCS[ds.id] && (
+                          <DocLinkBadge doc={DATA_DOCS[ds.id]} language={state.language} />
+                        )}
+                      </div>
                       <span className="text-[10px] text-cyan-400 font-mono">
                         {ds.unlocked
                           ? localize(state.language, `ESTADO: ONLINE (NIVEL ${ds.level})`, `STATUS: ONLINE (LEVEL ${ds.level})`)

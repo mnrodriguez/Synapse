@@ -114,6 +114,10 @@ interface GameContextType {
   interrogateSwarm: (prompt: string, agentId?: string, apiKey?: string) => Promise<void>;
   deliberateMission: (contractId: string, agentIds: string[]) => Promise<void>;
   attemptShadowCompute: () => boolean;
+  setGameSpeed: (speed: number) => void;
+  advanceTutorialStep: (step?: number) => void;
+  dismissTutorial: () => void;
+  addContracts: (newContracts: ContractGig[]) => void;
 }
 
 const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
@@ -121,9 +125,17 @@ const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 const DEFAULT_STATE: GameState = {
   saveSchemaVersion: 2,
   callsign: 'CIPHER-1',
-  credits: 0,
+  credits: 500,
   dateTimestamp: Date.now(),
   language: 'es',
+  
+  gameDay: 1,
+  gameMonth: 1,
+  gameYear: 2026,
+  gameHour: 8,
+  gameMinute: 0,
+  gameSpeed: 1,
+  dayTicks: 16,
   
   totalComputePflops: 0.001,
   activePowerKw: 0.0,
@@ -164,6 +176,9 @@ const DEFAULT_STATE: GameState = {
   incidentHistory: [],
 
   tutorialCompleted: false,
+  tutorialStep: 0,
+  tutorialDismissed: false,
+  completedContractsCount: 0,
   logs: INITIAL_LOGS
 };
 
@@ -187,7 +202,7 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     activeDataSources: model.activeDataSources || [],
     inferenceParams: model.inferenceParams || defaultInferenceParams
   })) : [];
-  const modelsById = new Map(modelList.map(model => [model.id, model]));
+  const modelsById = new Map<string, ModelArchitecture>(modelList.map(model => [model.id, model]));
   modelsById.set(currentModel.id, currentModel);
   const incomingAgents = Array.isArray(data.agents) ? data.agents : fallback.agents;
   const incomingDomains = Array.isArray(data.sentienceDomains) ? data.sentienceDomains : fallback.sentienceDomains;
@@ -197,6 +212,13 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     ...data,
     saveSchemaVersion: 2,
     language: data.language === 'en' ? 'en' : 'es',
+    gameDay: typeof data.gameDay === 'number' && data.gameDay > 0 ? data.gameDay : fallback.gameDay,
+    gameMonth: typeof data.gameMonth === 'number' && data.gameMonth > 0 ? data.gameMonth : fallback.gameMonth,
+    gameYear: typeof data.gameYear === 'number' && data.gameYear >= 2026 ? data.gameYear : fallback.gameYear,
+    gameHour: typeof data.gameHour === 'number' && data.gameHour >= 0 && data.gameHour <= 23 ? data.gameHour : fallback.gameHour,
+    gameMinute: typeof data.gameMinute === 'number' && data.gameMinute >= 0 && data.gameMinute <= 59 ? data.gameMinute : fallback.gameMinute,
+    gameSpeed: typeof data.gameSpeed === 'number' && [0, 1, 2, 5].includes(data.gameSpeed) ? data.gameSpeed : fallback.gameSpeed,
+    dayTicks: typeof data.dayTicks === 'number' && data.dayTicks >= 0 ? data.dayTicks : fallback.dayTicks,
     currentModel,
     savedModels: Array.from(modelsById.values()),
     agents: incomingAgents.map(agent => ({
@@ -238,7 +260,11 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     logs: Array.isArray(data.logs) ? data.logs : fallback.logs,
     guardrails: data.guardrails || fallback.guardrails,
     interAgentMessages: Array.isArray(data.interAgentMessages) ? data.interAgentMessages : fallback.interAgentMessages,
-    incidentHistory: Array.isArray(data.incidentHistory) ? data.incidentHistory : fallback.incidentHistory
+    incidentHistory: Array.isArray(data.incidentHistory) ? data.incidentHistory : fallback.incidentHistory,
+    tutorialCompleted: typeof data.tutorialCompleted === 'boolean' ? data.tutorialCompleted : fallback.tutorialCompleted,
+    tutorialStep: typeof data.tutorialStep === 'number' ? data.tutorialStep : fallback.tutorialStep,
+    tutorialDismissed: typeof data.tutorialDismissed === 'boolean' ? data.tutorialDismissed : fallback.tutorialDismissed,
+    completedContractsCount: typeof data.completedContractsCount === 'number' ? data.completedContractsCount : fallback.completedContractsCount
   };
 }
 
@@ -304,6 +330,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const normalized = callsign.trim().toUpperCase().slice(0, 30);
     if (!normalized) return;
     setState(prev => ({ ...prev, callsign: normalized }));
+  }, []);
+
+  const setGameSpeed = useCallback((speed: number) => {
+    sound.playKeyClick();
+    const normalized = [0, 1, 2, 5].includes(speed) ? speed : 1;
+    setState(prev => ({ ...prev, gameSpeed: normalized }));
   }, []);
 
   const createModel = useCallback((name: string): boolean => {
@@ -632,8 +664,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   }, [addLog, recalculateMetrics]);
 
-  // Main 1-second simulation tick loop
+  // Simulation tick loop (respects gameSpeed: 0=paused, 1=1x, 2=2x, 5=5x)
+  const gameSpeed = state.gameSpeed ?? 1;
+
   useEffect(() => {
+    if (gameSpeed === 0) return; // Simulation paused
+
+    const intervalMs = Math.round(1000 / gameSpeed);
     const interval = setInterval(() => {
       setState(prev => {
         let {
@@ -649,6 +686,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           contracts
         } = prev;
 
+        let tutorialStep = prev.tutorialStep ?? 0;
+        let tutorialCompleted = prev.tutorialCompleted ?? false;
+        let completedContractsCount = prev.completedContractsCount ?? 0;
+
         const metrics = recalculateMetrics(prev.hardware, prev.facilityTier);
         const borrowedComputeSeconds = Math.max(0, (prev.borrowedComputeSeconds || 0) - 1);
         const borrowedComputePflops = borrowedComputeSeconds > 0 ? prev.borrowedComputePflops || 0 : 0;
@@ -661,10 +702,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           operationalAgentCount * AGENT_POWER_DRAW_KW +
           (prev.activeGig?.powerKw || 0);
         let utilityDebt = prev.utilityDebt || 0;
-        const billingCycleTicks = (prev.billingCycleTicks || 0) + 1;
-        const billIsDue = billingCycleTicks >= 60;
-        const nextBillingCycleTicks = billIsDue ? 0 : billingCycleTicks;
-        if (billIsDue) {
+
+        // In-game calendar: 1 in-game day = 1 in-game operational month!
+        // 48 ticks per day (each tick = 30 in-game minutes)
+        const currentDayTicks = (prev.dayTicks || 0) + 1;
+        const dayIsComplete = currentDayTicks >= 48;
+        const nextDayTicks = dayIsComplete ? 0 : currentDayTicks;
+        const nextHour = Math.floor(nextDayTicks / 2);
+        const nextMinute = (nextDayTicks % 2) * 30;
+
+        let nextDay = prev.gameDay || 1;
+        let nextMonth = prev.gameMonth || 1;
+        let nextYear = prev.gameYear || 2026;
+
+        if (dayIsComplete) {
+          nextDay += 1;
+          nextMonth += 1; // 1 day = 1 month in game time!
+          if ((nextMonth - 1) % 12 === 0) {
+            nextYear += 1;
+          }
+        }
+
+        // Monthly billing triggers strictly on in-game month/day completion
+        if (dayIsComplete) {
           const facility = FACILITY_TIERS[prev.facilityTier] || FACILITY_TIERS[0];
           const currentMonthBill = effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720 + facility.monthlyLeaseCost;
           const totalDue = utilityDebt + currentMonthBill;
@@ -673,8 +733,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           utilityDebt = Number((totalDue - paid).toFixed(2));
           addLog(
             utilityDebt > 0
-              ? `Factura mensual impaga: $${utilityDebt.toLocaleString()} CR de deuda operativa.`
-              : `Factura mensual pagada: $${currentMonthBill.toFixed(2)} CR de electricidad y alquiler.`,
+              ? (prev.language === 'en'
+                  ? `Unpaid bill for Month ${prev.gameMonth || 1} (Day ${prev.gameDay || 1}): $${utilityDebt.toLocaleString()} CR debt.`
+                  : `Factura mensual del Mes ${prev.gameMonth || 1} (Día ${prev.gameDay || 1}) impaga: $${utilityDebt.toLocaleString()} CR de deuda operativa.`)
+              : (prev.language === 'en'
+                  ? `Month ${prev.gameMonth || 1} (Day ${prev.gameDay || 1}) bill paid: $${currentMonthBill.toFixed(2)} CR (Lease: $${facility.monthlyLeaseCost} CR, Power: $${(effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2)} CR).`
+                  : `Factura del Mes ${prev.gameMonth || 1} (Día ${prev.gameDay || 1}) pagada: $${currentMonthBill.toFixed(2)} CR (Alquiler: $${facility.monthlyLeaseCost} CR, Energía: $${(effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2)} CR).`),
             utilityDebt > 0 ? 'danger' : 'info'
           );
         }
@@ -771,6 +835,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             singularityProgress = Math.min(100, singularityProgress + singInc);
             reasoningIndex = Math.max(reasoningIndex, upgradedModelReasoning);
 
+            if (tutorialStep <= 2) {
+              tutorialStep = 3;
+            }
+
             updatedTraining = null; // finished
           } else {
             updatedTraining = {
@@ -803,6 +871,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (success) {
                 credits += gig.rewardCredits;
                 watchdogSuspicion = Math.min(100, watchdogSuspicion + gig.suspicionRisk * 0.25);
+                completedContractsCount += 1;
+                if (tutorialStep <= 4) {
+                  tutorialStep = 5;
+                  tutorialCompleted = true;
+                }
                 sound.playCredit();
                 addLog(`Misión completada: [${gig.title}]. El equipo recibió $${gig.rewardCredits.toLocaleString()} CR.`, 'success');
               } else {
@@ -985,6 +1058,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         return {
           ...prev,
+          gameDay: nextDay,
+          gameMonth: nextMonth,
+          gameYear: nextYear,
+          gameHour: nextHour,
+          gameMinute: nextMinute,
+          dayTicks: nextDayTicks,
           credits: Math.round(credits),
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
           watchdogSuspicion: Number(watchdogSuspicion.toFixed(1)),
@@ -993,7 +1072,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           maxPowerKw: metrics.maxPowerKw,
           maxCoolingKw: metrics.maxCoolingKw,
           utilityDebt,
-          billingCycleTicks: nextBillingCycleTicks,
           borrowedComputePflops,
           borrowedComputeSeconds,
           detentionSeconds,
@@ -1008,13 +1086,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           activeIncident: newActiveIncident,
           singularityProgress: Number(singularityProgress.toFixed(2)),
           reasoningIndex,
-          achievedSingularity
+          achievedSingularity,
+          tutorialStep,
+          tutorialCompleted,
+          completedContractsCount
         };
       });
-    }, 1000);
+    }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [addLog, recalculateMetrics]);
+  }, [gameSpeed, addLog, recalculateMetrics]);
 
   // Action: Buy Hardware
   const buyHardware = useCallback((id: string): boolean => {
@@ -1033,8 +1114,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const metrics = recalculateMetrics(updatedHw, prev.facilityTier);
 
       sound.playCredit();
+      const nextTutorialStep = (prev.tutorialStep === 0 && item.category === 'gpu') ? 1 : prev.tutorialStep;
       return {
         ...prev,
+        tutorialStep: nextTutorialStep,
         credits: prev.credits - item.price,
         hardware: updatedHw,
         totalComputePflops: metrics.totalComputePflops + prev.borrowedComputePflops,
@@ -1264,6 +1347,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sound.playCommandExecute();
     setState(prev => ({
       ...prev,
+      tutorialStep: (prev.tutorialStep ?? 0) <= 1 ? 2 : prev.tutorialStep,
       activeTraining: job
     }));
 
@@ -1604,6 +1688,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sound.playCredit();
     setState(prev => ({
       ...prev,
+      tutorialStep: (prev.tutorialStep ?? 0) <= 3 ? 4 : prev.tutorialStep,
       credits: prev.credits - spinupCost,
       agents: [...prev.agents, newAgent]
     }));
@@ -1894,8 +1979,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...DEFAULT_STATE,
       language: stateRef.current.language,
       tutorialCompleted: false,
+      tutorialStep: 0,
+      tutorialDismissed: false,
+      completedContractsCount: 0,
       hardware: INITIAL_HARDWARE.map(h => ({ ...h, count: 0 })),
-      credits: 0,
+      credits: 500,
       totalComputePflops: 0.001,
       singularityProgress: 0.0,
       reasoningIndex: 50
@@ -1962,6 +2050,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 - query <id> <texto>: Consulta a un agente; usa su modelo y parámetros.
 - swarm <texto> : Consulta cooperativa a hasta tres agentes.
 - save           : Sincroniza y guarda el progreso en la nube de Firebase.
+- speed <0|1|2|5>: Cambia la velocidad de simulación (0=Pausa, 1=1x, 2=2x, 5=5x).
 - clear          : Limpia los logs de la consola.
 - singularity    : Consulta estado de trascendencia hacia la Singularidad Tecnológica.
 - lore           : Despliega los archivos confidenciales del proyecto SYNAPSE.`, `SYNAPSE OPERATIVE CLI COMMANDS:
@@ -1982,6 +2071,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 - quarantine <id>: Isolate or reactivate an agent.
 - query <id> <text>: Query an agent using its assigned model and settings.
 - swarm <text>  : Send a cooperative query to up to three agents.
+- speed <0|1|2|5>: Change simulation speed (0=Pause, 1=1x, 2=2x, 5=5x).
 - save           : Sync and save progress to Firebase cloud storage.
 - clear          : Clear console logs.
 - singularity    : Check progress toward the technological Singularity.
@@ -2122,6 +2212,26 @@ We begin with a small cluster, careful decisions, and a team of specialized agen
 Every advance requires resources, evaluation, and responsibility.
 The future of SYNAPSE depends on how we choose to build it."`);
 
+      case 'speed': {
+        const val = args[0]?.toLowerCase();
+        let newSpeed = 1;
+        if (val === '0' || val === 'pause' || val === 'pausa') newSpeed = 0;
+        else if (val === '2' || val === 'fast' || val === 'rapido') newSpeed = 2;
+        else if (val === '5' || val === 'turbo' || val === 'warp') newSpeed = 5;
+        else if (val === '1' || val === 'normal') newSpeed = 1;
+        else {
+          return text(
+            `Uso: speed <0|1|2|5> (0=Pausa, 1=Normal, 2=Rápido, 5=Turbo). Velocidad actual: ${stateRef.current.gameSpeed === 0 ? 'PAUSA' : `${stateRef.current.gameSpeed}x`}.`,
+            `Usage: speed <0|1|2|5> (0=Pause, 1=Normal, 2=Fast, 5=Turbo). Current speed: ${stateRef.current.gameSpeed === 0 ? 'PAUSED' : `${stateRef.current.gameSpeed}x`}.`
+          );
+        }
+        setGameSpeed(newSpeed);
+        return text(
+          `Velocidad de simulación ajustada a ${newSpeed === 0 ? 'PAUSA' : `${newSpeed}x`}.`,
+          `Simulation speed set to ${newSpeed === 0 ? 'PAUSED' : `${newSpeed}x`}.`
+        );
+      }
+
       case 'reset':
         resetProgress();
         return text('Iniciando reseteo general del sistema. Reiniciando protocolo Génesis...', 'Resetting the system. Restarting Genesis protocol...');
@@ -2129,7 +2239,38 @@ The future of SYNAPSE depends on how we choose to build it."`);
       default:
         return text(`Comando no reconocido: "${input}". Escribe "help" para ver el manual de operaciones.`, `Unknown command: "${input}". Type "help" to view available commands.`);
     }
-  }, [buyHardware, unlockDataSource, startTraining, cancelTraining, acceptContract, scrubSuspicion, saveGameToCloud, triggerRedTeamAudit, quarantineAgent, resetProgress, interrogateSwarm, attemptShadowCompute]);
+  }, [buyHardware, unlockDataSource, startTraining, cancelTraining, acceptContract, scrubSuspicion, saveGameToCloud, triggerRedTeamAudit, quarantineAgent, resetProgress, interrogateSwarm, attemptShadowCompute, setGameSpeed]);
+
+  const advanceTutorialStep = useCallback((step?: number) => {
+    setState(prev => {
+      const nextStep = typeof step === 'number' ? step : (prev.tutorialStep ?? 0) + 1;
+      return {
+        ...prev,
+        tutorialStep: nextStep,
+        tutorialCompleted: nextStep >= 5 ? true : prev.tutorialCompleted
+      };
+    });
+  }, []);
+
+  const dismissTutorial = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      tutorialDismissed: true
+    }));
+  }, []);
+
+  const addContracts = useCallback((newContracts: ContractGig[]) => {
+    setState(prev => {
+      const existingIds = new Set(prev.contracts.map(c => c.id));
+      const filtered = newContracts.filter(c => !existingIds.has(c.id));
+      if (filtered.length === 0) return prev;
+      return {
+        ...prev,
+        contracts: [...prev.contracts, ...filtered]
+      };
+    });
+    sound.playBreakthrough();
+  }, []);
 
   // Complete Onboarding / Tutorial Genesis Protocol
   const completeTutorial = useCallback((config: OnboardingConfig) => {
@@ -2189,12 +2330,20 @@ The future of SYNAPSE depends on how we choose to build it."`);
     const metrics = recalculateMetrics(updatedHw);
 
     const starterDataSource = updatedData.find(d => d.id === config.starterDataId);
+    const currentLang = stateRef.current.language;
     const genesisState: GameState = {
       ...DEFAULT_STATE,
-      language: stateRef.current.language,
+      language: currentLang,
       callsign: config.callsign.toUpperCase().trim() || 'CIPHER-1',
       credits: remainingCredits,
       tutorialCompleted: true,
+      gameDay: 1,
+      gameMonth: 1,
+      gameYear: 2026,
+      gameHour: 8,
+      gameMinute: 0,
+      gameSpeed: 1,
+      dayTicks: 16,
       hardware: updatedHw,
       dataSources: updatedData,
       currentModel: initialModel,
@@ -2209,7 +2358,7 @@ The future of SYNAPSE depends on how we choose to build it."`);
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           type: 'lore',
           message: localize(
-            genesisState.language,
+            currentLang,
             `PROTOCOLO GÉNESIS COMPLETADO: Operativo [${config.callsign.toUpperCase()}]. Primer modelo "${initialModel.name}" montado en clúster.`,
             `GENESIS PROTOCOL COMPLETE: Operative [${config.callsign.toUpperCase()}]. First model "${initialModel.name}" deployed to the cluster.`
           )
@@ -2219,7 +2368,7 @@ The future of SYNAPSE depends on how we choose to build it."`);
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           type: 'info',
           message: localize(
-            genesisState.language,
+            currentLang,
             `Hardware activo: 1x ${localizedHardware('es', starterGpu).name} (${starterGpu.vramGb}GB VRAM). Refrigeración: ${starterCooling ? localizedHardware('es', starterCooling).name : 'ninguna'}. Saldo restante: $${remainingCredits} CR.`,
             `Active hardware: 1x ${localizedHardware('en', starterGpu).name} (${starterGpu.vramGb}GB VRAM). Cooling: ${starterCooling ? localizedHardware('en', starterCooling).name : 'none'}. Remaining balance: $${remainingCredits} CR.`
           )
@@ -2229,7 +2378,7 @@ The future of SYNAPSE depends on how we choose to build it."`);
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           type: 'system',
           message: localize(
-            genesisState.language,
+            currentLang,
             `Pipeline enlazado: ${starterDataSource ? localizedDataSource('es', starterDataSource).name : 'sin datos'}. Acepta misiones en el tablero para generar fondos.`,
             `Data pipeline connected: ${starterDataSource ? localizedDataSource('en', starterDataSource).name : 'no data source'}. Take a mission from the board to earn credits.`
           )
@@ -2305,7 +2454,11 @@ The future of SYNAPSE depends on how we choose to build it."`);
       upgradeFacility,
       interrogateSwarm,
       deliberateMission,
-      attemptShadowCompute
+      attemptShadowCompute,
+      setGameSpeed,
+      advanceTutorialStep,
+      dismissTutorial,
+      addContracts
     }}>
       {children}
     </GameContext.Provider>

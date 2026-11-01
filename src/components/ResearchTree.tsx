@@ -20,6 +20,8 @@ import {
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
 import { localizedResearch } from '../utils/gameContentI18n';
+import { RESEARCH_DOCS } from '../utils/aiDocumentation';
+import { DocLinkBadge } from './DocLinkBadge';
 
 export const ResearchTree: React.FC = () => {
   const { state, unlockResearch } = useGame();
@@ -99,7 +101,12 @@ export const ResearchTree: React.FC = () => {
                         autonomy: 'Autonomy'
                       } as Record<string, string>)[node.category] || node.category)}
                     </span>
-                    <h3 className="font-bold text-xs text-zinc-100">{content.title}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-xs text-zinc-100">{content.title}</h3>
+                      {RESEARCH_DOCS[node.id] && (
+                        <DocLinkBadge doc={RESEARCH_DOCS[node.id]} language={state.language} />
+                      )}
+                    </div>
                   </div>
 
                   {node.unlocked ? (

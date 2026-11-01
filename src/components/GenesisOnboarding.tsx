@@ -228,17 +228,22 @@ export const GenesisOnboarding: React.FC = () => {
   };
 
   const handleFinishOnboarding = () => {
-    const config: OnboardingConfig = {
-      callsign: callsign.trim() || 'CIPHER-7',
-      starterGpuId: selectedGpu,
-      starterCoolingId: selectedCooling,
-      starterDataId: selectedData,
-      modelTopology,
-      modelParams,
-      modelQuantization: modelQuant,
-      modelName
-    };
-    completeTutorial(config);
+    try {
+      sound.playBreakthrough();
+      const config: OnboardingConfig = {
+        callsign: callsign.trim() || 'CIPHER-7',
+        starterGpuId: selectedGpu,
+        starterCoolingId: selectedCooling,
+        starterDataId: selectedData,
+        modelTopology,
+        modelParams,
+        modelQuantization: modelQuant,
+        modelName: modelName.trim() || `SYNAPSE-Proto-${(modelParams / 1_000_000).toFixed(0)}M`
+      };
+      completeTutorial(config);
+    } catch (err) {
+      console.error("Failed to complete genesis onboarding:", err);
+    }
   };
 
   return (
@@ -717,13 +722,8 @@ export const GenesisOnboarding: React.FC = () => {
           ) : (
             <button
               type="button"
-              disabled={!simComplete}
               onClick={handleFinishOnboarding}
-              className={`px-5 py-2 rounded text-xs font-bold flex items-center gap-2 transition-all ${
-                simComplete
-                  ? 'bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 text-zinc-950 shadow-[0_0_20px_rgba(0,255,200,0.5)] cursor-pointer animate-pulse'
-                  : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-              }`}
+              className="px-5 py-2.5 rounded-lg text-xs font-black flex items-center gap-2 transition-all bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-zinc-950 shadow-[0_0_20px_rgba(0,255,200,0.5)] cursor-pointer hover:scale-[1.02] active:scale-95 animate-pulse"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>{localize(state.language, 'INGRESAR A SYNAPSE OS (COMENZAR SIMULACIÓN)', 'ENTER SYNAPSE OS (START SIMULATION)')}</span>

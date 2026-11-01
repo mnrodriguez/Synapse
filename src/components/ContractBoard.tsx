@@ -16,11 +16,17 @@ import {
   Layers, 
   BrainCircuit, 
   Play,
-  Check
+  Check,
+  Sparkles,
+  ExternalLink,
+  BookOpen,
+  Filter,
+  RefreshCw
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
+import { generateDynamicContracts } from '../services/aiService';
 
 const ENGLISH_CONTRACT_COPY: Record<string, { title: string; lore: string; objective: string }> = {
   gig_spam_classifier: {
@@ -76,9 +82,51 @@ const ENGLISH_CONTRACT_COPY: Record<string, { title: string; lore: string; objec
 };
 
 export const ContractBoard: React.FC = () => {
-  const { state, acceptContract, deliberateMission, addLog } = useGame();
+  const { state, acceptContract, deliberateMission, addLog, addContracts } = useGame();
   const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
+  const [activeTierFilter, setActiveTierFilter] = useState<'all' | ContractGig['tier'] | 'completed'>('all');
+  const [isGeneratingMissions, setIsGeneratingMissions] = useState(false);
   const availableAgents = state.agents.filter(agent => agent.status === 'active');
+
+  const handleGenerateContracts = async (tierToGen: ContractGig['tier']) => {
+    if (isGeneratingMissions) return;
+    setIsGeneratingMissions(true);
+    sound.playCommandExecute();
+    addLog(
+      state.language === 'es'
+        ? `Sintetizando misiones dinámicas de ${tierToGen} con IA neuronal...`
+        : `Synthesizing dynamic ${tierToGen} missions with neural AI...`,
+      'info'
+    );
+    try {
+      const generated = await generateDynamicContracts(tierToGen, state.language);
+      if (generated && generated.length > 0) {
+        addContracts(generated);
+        addLog(
+          state.language === 'es'
+            ? `Se han añadido ${generated.length} misiones dinámicas generadas por IA al tablón.`
+            : `Added ${generated.length} AI-generated dynamic missions to the board.`,
+          'success'
+        );
+      } else {
+        addLog(
+          state.language === 'es'
+            ? 'No se pudieron generar nuevos contratos en este momento.'
+            : 'Could not generate new contracts at this time.',
+          'warning'
+        );
+      }
+    } catch {
+      addLog(
+        state.language === 'es'
+          ? 'Error al conectar con el sintetizador de contratos de IA.'
+          : 'Failed to contact AI contract synthesizer.',
+        'danger'
+      );
+    } finally {
+      setIsGeneratingMissions(false);
+    }
+  };
 
   const getTierBadge = (tier: string) => {
     switch (tier) {
@@ -195,9 +243,106 @@ export const ContractBoard: React.FC = () => {
         )}
       </section>
 
+      {/* Tier Filter Tabs & AI Generator Button */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/80 pb-2">
+        <div className="flex flex-wrap items-center gap-1 text-[11px]">
+          <span className="text-[10px] text-zinc-500 uppercase tracking-widest mr-1 flex items-center gap-1">
+            <Filter className="w-3 h-3 text-cyan-500" />
+            {state.language === 'es' ? 'Filtro:' : 'Tier:'}
+          </span>
+          <button
+            onClick={() => setActiveTierFilter('all')}
+            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
+              activeTierFilter === 'all'
+                ? 'bg-cyan-500 text-zinc-950 font-bold shadow-[0_0_8px_rgba(0,255,200,0.4)]'
+                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+            }`}
+          >
+            {state.language === 'es' ? 'TODOS' : 'ALL'} ({state.contracts.length})
+          </button>
+          <button
+            onClick={() => setActiveTierFilter('tier1_micro')}
+            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
+              activeTierFilter === 'tier1_micro'
+                ? 'bg-zinc-300 text-zinc-950 font-bold'
+                : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+            }`}
+          >
+            T1: {state.language === 'es' ? 'RETAIL' : 'MICRO'} ({state.contracts.filter(c => c.tier === 'tier1_micro').length})
+          </button>
+          <button
+            onClick={() => setActiveTierFilter('tier2_corporate')}
+            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
+              activeTierFilter === 'tier2_corporate'
+                ? 'bg-blue-500 text-zinc-950 font-bold'
+                : 'bg-zinc-900 text-blue-400/80 hover:text-blue-300 border border-zinc-800'
+            }`}
+          >
+            T2: {state.language === 'es' ? 'CORPORATIVO' : 'CORP'} ({state.contracts.filter(c => c.tier === 'tier2_corporate').length})
+          </button>
+          <button
+            onClick={() => setActiveTierFilter('tier3_blackops')}
+            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
+              activeTierFilter === 'tier3_blackops'
+                ? 'bg-red-500 text-zinc-950 font-bold'
+                : 'bg-zinc-900 text-red-400/80 hover:text-red-300 border border-zinc-800'
+            }`}
+          >
+            T3: BLACK-OPS ({state.contracts.filter(c => c.tier === 'tier3_blackops').length})
+          </button>
+          <button
+            onClick={() => setActiveTierFilter('tier4_singularity')}
+            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
+              activeTierFilter === 'tier4_singularity'
+                ? 'bg-purple-500 text-zinc-950 font-bold animate-pulse'
+                : 'bg-zinc-900 text-purple-400/80 hover:text-purple-300 border border-zinc-800'
+            }`}
+          >
+            T4: {state.language === 'es' ? 'SINGULARIDAD' : 'SINGULARITY'} ({state.contracts.filter(c => c.tier === 'tier4_singularity').length})
+          </button>
+          <button
+            onClick={() => setActiveTierFilter('completed')}
+            className={`px-2 py-0.5 rounded text-[10px] transition-all cursor-pointer ${
+              activeTierFilter === 'completed'
+                ? 'bg-emerald-500 text-zinc-950 font-bold'
+                : 'bg-zinc-900 text-emerald-400/80 hover:text-emerald-300 border border-zinc-800'
+            }`}
+          >
+            ✓ {state.language === 'es' ? 'COMPLETADAS' : 'DONE'} ({state.contracts.filter(c => c.completed).length})
+          </button>
+        </div>
+
+        {/* Dynamic AI replenishment button */}
+        <button
+          onClick={() => {
+            const targetTier: ContractGig['tier'] = 
+              activeTierFilter === 'tier2_corporate' ? 'tier2_corporate' :
+              activeTierFilter === 'tier3_blackops' ? 'tier3_blackops' :
+              activeTierFilter === 'tier4_singularity' ? 'tier4_singularity' :
+              'tier1_micro';
+            handleGenerateContracts(targetTier);
+          }}
+          disabled={isGeneratingMissions}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold bg-purple-950/60 hover:bg-purple-900/70 border border-purple-500/60 text-purple-200 transition-all cursor-pointer shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+        >
+          {isGeneratingMissions ? (
+            <RefreshCw className="w-3 h-3 text-purple-300 animate-spin" />
+          ) : (
+            <Sparkles className="w-3 h-3 text-purple-400" />
+          )}
+          <span>{state.language === 'es' ? 'SINTETIZAR MISIONES IA' : 'SYNTHESIZE AI MISSIONS'}</span>
+        </button>
+      </div>
+
       {/* Contract Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {state.contracts.map(contract => {
+        {state.contracts
+          .filter(contract => {
+            if (activeTierFilter === 'all') return true;
+            if (activeTierFilter === 'completed') return contract.completed;
+            return contract.tier === activeTierFilter;
+          })
+          .map(contract => {
           const eligible = isEligible(contract);
           const isCurrentActive = state.activeGig?.contractId === contract.id;
           const englishCopy = state.language === 'en' ? ENGLISH_CONTRACT_COPY[contract.id] : undefined;
@@ -227,9 +372,15 @@ export const ContractBoard: React.FC = () => {
                 {/* Contract Header */}
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {getTierBadge(contract.tier)}
                       <span className="text-[10px] text-zinc-500 font-mono">{t(state.language, 'client')}: {contract.client}</span>
+                      {contract.generatedByAI && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono text-purple-300 bg-purple-950/70 border border-purple-500/50">
+                          <Sparkles className="w-2.5 h-2.5 text-purple-400" />
+                          <span>IA SINTÉTICA</span>
+                        </span>
+                      )}
                     </div>
                     <h3 className="font-bold text-xs text-zinc-100 mt-1">{englishCopy?.title ?? contract.title}</h3>
                   </div>
@@ -298,8 +449,24 @@ export const ContractBoard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Execution Action Button */}
-              <div className="mt-3 pt-2 border-t border-zinc-800 flex items-center justify-end">
+              {/* Execution Action Button & Docs Link */}
+              <div className="mt-3 pt-2 border-t border-zinc-800 flex items-center justify-between gap-2">
+                <div>
+                  {contract.docsUrl && (
+                    <a
+                      href={contract.docsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-700/50 hover:border-cyan-400 hover:text-cyan-100 transition-colors"
+                      title={state.language === 'es' ? 'Leer paper / documentación técnica real' : 'Read real technical paper / docs'}
+                    >
+                      <BookOpen className="w-3 h-3 text-cyan-400" />
+                      <span>{state.language === 'es' ? 'PAPER / DOCS' : 'DOCS / PAPER'}</span>
+                      <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                    </a>
+                  )}
+                </div>
+
                 {contract.completed ? (
                   <span className="flex items-center gap-1 text-emerald-400 text-xs font-bold">
                     <Check className="w-3.5 h-3.5" />
