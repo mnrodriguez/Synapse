@@ -545,7 +545,10 @@ export const RESEARCH_DOCS: Record<string, DocEntry> = {
 };
 
 // 8. INFERENCE & AGENT PARAMETERS DOCS
-export const INFERENCE_DOCS: Record<string, DocEntry> = {
+export const INFERENCE_DOCS: Record<
+  'temperature' | 'top_p' | 'top_k' | 'repetition_penalty' | 'constitutional_guardrails',
+  DocEntry
+> = {
   temperature: {
     title: 'Temperature Sampling in Softmax Distributions',
     url: 'https://huggingface.co/blog/how-to-generate',

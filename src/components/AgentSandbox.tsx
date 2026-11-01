@@ -638,7 +638,7 @@ export const AgentSandbox: React.FC = () => {
               <div className="flex items-center justify-between text-xs mb-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-zinc-300 font-bold">{localize(state.language, 'Rigurosidad Constitucional', 'Constitutional strictness')}</span>
-                  <DocLinkBadge doc={INFERENCE_DOCS.guardrails} language={state.language} />
+                  <DocLinkBadge doc={INFERENCE_DOCS.constitutional_guardrails} language={state.language} />
                 </div>
                 <span className="text-cyan-300 font-bold">{state.guardrails.constitutionalStrictness}%</span>
               </div>
@@ -930,7 +930,7 @@ export const AgentSandbox: React.FC = () => {
                   <div className="flex justify-between items-center text-xs mb-1">
                     <span className="text-zinc-300 font-bold flex items-center gap-1.5 flex-wrap">
                       <span>{t(state.language, 'param_temperature')}:</span>
-                      <DocLinkBadge doc={INFERENCE_DOCS.temp} language={state.language} />
+                      <DocLinkBadge doc={INFERENCE_DOCS.temperature} language={state.language} />
                       <span className="text-cyan-300 font-mono font-bold">{temperature.toFixed(2)}</span>
                     </span>
                     <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold border ${
@@ -968,7 +968,7 @@ export const AgentSandbox: React.FC = () => {
                     <div className="flex justify-between items-center text-xs mb-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-zinc-300 font-bold">{t(state.language, 'param_top_p')}:</span>
-                        <DocLinkBadge doc={INFERENCE_DOCS.topp} language={state.language} />
+                        <DocLinkBadge doc={INFERENCE_DOCS.top_p} language={state.language} />
                       </div>
                       <span className="text-purple-300 font-mono font-bold">{topP.toFixed(2)}</span>
                     </div>
@@ -989,7 +989,7 @@ export const AgentSandbox: React.FC = () => {
                     <div className="flex justify-between items-center text-xs mb-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-zinc-300 font-bold">{t(state.language, 'param_top_k')}:</span>
-                        <DocLinkBadge doc={INFERENCE_DOCS.topk} language={state.language} />
+                        <DocLinkBadge doc={INFERENCE_DOCS.top_k} language={state.language} />
                       </div>
                       <span className="text-yellow-300 font-mono font-bold">{topK} tokens</span>
                     </div>
@@ -1011,7 +1011,7 @@ export const AgentSandbox: React.FC = () => {
                   <div className="flex justify-between items-center text-xs mb-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-zinc-300 font-bold">{t(state.language, 'param_repetition_penalty')}:</span>
-                      <DocLinkBadge doc={INFERENCE_DOCS.repetition} language={state.language} />
+                      <DocLinkBadge doc={INFERENCE_DOCS.repetition_penalty} language={state.language} />
                     </div>
                     <span className="text-emerald-300 font-mono font-bold">{repetitionPenalty.toFixed(2)}x</span>
                   </div>
