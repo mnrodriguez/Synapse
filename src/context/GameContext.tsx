@@ -8,7 +8,6 @@ import {
   GameState, 
   HardwareItem, 
   ModelArchitecture, 
-  DataSourceNode, 
   ResearchNode, 
   ContractGig, 
   TrainingJob, 
@@ -72,6 +71,7 @@ import { generateAgentResponse } from '../services/aiService';
 import { localize } from '../utils/i18n';
 import { localizedContractTitle, localizedDataSource, localizedHardware } from '../utils/gameContentI18n';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds } from '../utils/training';
+import { evaluateMissionTeam, findAutonomousMission } from '../utils/missionEvaluation';
 
 interface GameContextType {
   state: GameState;
@@ -115,6 +115,9 @@ interface GameContextType {
   upgradeFacility: () => boolean;
   interrogateSwarm: (prompt: string, agentId?: string, apiKey?: string) => Promise<void>;
   deliberateMission: (contractId: string, agentIds: string[]) => Promise<void>;
+  setAgentAutoMission: (agentId: string, enabled: boolean) => void;
+  setAllAgentsAutoMission: (enabled: boolean) => void;
+  updateAutonomySettings: (updates: Partial<Pick<GameState, 'autonomyEnabled' | 'autonomyRiskLimit'>>) => void;
   attemptShadowCompute: () => boolean;
   setGameSpeed: (speed: number) => void;
   advanceTutorialStep: (step?: number) => void;
@@ -126,7 +129,7 @@ const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
 
 const DEFAULT_STATE: GameState = {
-  saveSchemaVersion: 3,
+  saveSchemaVersion: 5,
   callsign: 'CIPHER-1',
   credits: 500,
   dateTimestamp: Date.now(),
@@ -177,6 +180,8 @@ const DEFAULT_STATE: GameState = {
   interAgentMessages: [],
   activeIncident: null,
   incidentHistory: [],
+  autonomyEnabled: false,
+  autonomyRiskLimit: 20,
 
   tutorialCompleted: false,
   tutorialStep: 0,
@@ -214,11 +219,12 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
   modelsById.set(currentModel.id, currentModel);
   const incomingAgents = Array.isArray(data.agents) ? data.agents : fallback.agents;
   const incomingDomains = Array.isArray(data.sentienceDomains) ? data.sentienceDomains : fallback.sentienceDomains;
+  const incomingContracts = Array.isArray(data.contracts) ? data.contracts : fallback.contracts;
 
   return {
     ...fallback,
     ...data,
-    saveSchemaVersion: 3,
+    saveSchemaVersion: 5,
     language: data.language === 'en' ? 'en' : 'es',
     gameDay: isLegacyCalendar
       ? legacyElapsedDays % DAYS_PER_GAME_MONTH + 1
@@ -242,7 +248,8 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     agents: incomingAgents.map(agent => ({
       ...agent,
       revenuePerSec: isLegacyEconomy ? Math.max(0.1, agent.revenuePerSec * 0.15) : agent.revenuePerSec,
-      inferenceParams: agent.inferenceParams || defaultInferenceParams
+      inferenceParams: agent.inferenceParams || defaultInferenceParams,
+      autoMissionEnabled: agent.autoMissionEnabled === true
     })),
     sentienceDomains: incomingDomains.map(domain => {
       const currentDomain = SENTIENCE_DOMAINS.find(candidate => candidate.id === domain.id);
@@ -274,11 +281,25 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     hardware: Array.isArray(data.hardware) ? data.hardware : fallback.hardware,
     dataSources: Array.isArray(data.dataSources) ? data.dataSources : fallback.dataSources,
     researchTree: Array.isArray(data.researchTree) ? data.researchTree : fallback.researchTree,
-    contracts: Array.isArray(data.contracts) ? data.contracts : fallback.contracts,
+    contracts: incomingContracts.map(contract => {
+      const currentContract = fallback.contracts.find(candidate => candidate.id === contract.id);
+      return currentContract
+        ? {
+          ...currentContract,
+          ...contract,
+          minimumAgents: contract.minimumAgents ?? currentContract.minimumAgents,
+          requiredAgentRoles: contract.requiredAgentRoles ?? currentContract.requiredAgentRoles
+        }
+        : contract;
+    }),
     logs: Array.isArray(data.logs) ? data.logs : fallback.logs,
     guardrails: data.guardrails || fallback.guardrails,
     interAgentMessages: Array.isArray(data.interAgentMessages) ? data.interAgentMessages : fallback.interAgentMessages,
     incidentHistory: Array.isArray(data.incidentHistory) ? data.incidentHistory : fallback.incidentHistory,
+    autonomyEnabled: typeof data.autonomyEnabled === 'boolean' ? data.autonomyEnabled : fallback.autonomyEnabled,
+    autonomyRiskLimit: typeof data.autonomyRiskLimit === 'number' && Number.isFinite(data.autonomyRiskLimit)
+      ? Math.max(0, Math.min(100, data.autonomyRiskLimit))
+      : fallback.autonomyRiskLimit,
     tutorialCompleted: typeof data.tutorialCompleted === 'boolean' ? data.tutorialCompleted : fallback.tutorialCompleted,
     tutorialStep: typeof data.tutorialStep === 'number' ? data.tutorialStep : fallback.tutorialStep,
     tutorialDismissed: typeof data.tutorialDismissed === 'boolean' ? data.tutorialDismissed : fallback.tutorialDismissed,
@@ -354,6 +375,34 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sound.playKeyClick();
     const normalized = GAME_SPEED_OPTIONS.some(option => option === speed) ? speed : 1;
     setState(prev => ({ ...prev, gameSpeed: normalized }));
+  }, []);
+
+  const setAgentAutoMission = useCallback((agentId: string, enabled: boolean) => {
+    setState(prev => ({
+      ...prev,
+      agents: prev.agents.map(agent =>
+        agent.id === agentId ? { ...agent, autoMissionEnabled: enabled } : agent
+      )
+    }));
+  }, []);
+
+  const setAllAgentsAutoMission = useCallback((enabled: boolean) => {
+    setState(prev => ({
+      ...prev,
+      agents: prev.agents.map(agent => agent.status === 'quarantined'
+        ? agent
+        : { ...agent, autoMissionEnabled: enabled })
+    }));
+  }, []);
+
+  const updateAutonomySettings = useCallback((updates: Partial<Pick<GameState, 'autonomyEnabled' | 'autonomyRiskLimit'>>) => {
+    setState(prev => ({
+      ...prev,
+      ...updates,
+      autonomyRiskLimit: updates.autonomyRiskLimit === undefined
+        ? prev.autonomyRiskLimit
+        : Math.max(0, Math.min(100, updates.autonomyRiskLimit))
+    }));
   }, []);
 
   const createModel = useCallback((name: string): boolean => {
@@ -933,6 +982,61 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
+        if (!activeGig && prev.autonomyEnabled && !prev.activeIncident && powerTripSeconds === 0 && detentionSeconds === 0) {
+          const autonomousAgents = updatedAgents.filter(agent =>
+            agent.autoMissionEnabled && agent.status === 'active'
+          );
+          const plan = findAutonomousMission(
+            updatedContracts,
+            autonomousAgents,
+            prev.savedModels,
+            prev.dataSources,
+            prev.autonomyRiskLimit,
+            totalComputePflops,
+            updatedAgents.filter(agent => agent.status !== 'quarantined').length,
+            Boolean(activeTraining),
+            effectivePowerKw,
+            metrics.maxPowerKw
+          );
+
+          if (plan) {
+            const assignedAgents = autonomousAgents;
+            const assignedModels = assignedAgents
+              .map(agent => prev.savedModels.find(model => model.id === agent.modelId))
+              .filter((model): model is ModelArchitecture => model !== undefined);
+            const teamAssessment = evaluateMissionTeam(
+              plan.contract,
+              assignedAgents,
+              assignedModels,
+              prev.dataSources,
+              prev.guardrails || DEFAULT_GUARDRAILS
+            );
+            updatedGig = {
+              contractId: plan.contract.id,
+              timeRemaining: teamAssessment.estimatedDurationSeconds,
+              durationSeconds: teamAssessment.estimatedDurationSeconds,
+              agentIds: assignedAgents.map(agent => agent.id),
+              progressPercent: 0,
+              successProbability: teamAssessment.successProbability,
+              efficiencyPercent: teamAssessment.efficiencyPercent,
+              outcomeRoll: Math.random(),
+              computePflopsRequired: plan.computeRequired,
+              powerKw: plan.missionPowerKw
+            };
+            updatedAgents = updatedAgents.map(agent =>
+              assignedAgents.some(assigned => assigned.id === agent.id)
+                ? { ...agent, status: 'on_mission' }
+                : agent
+            );
+            addLog(
+              prev.language === 'en'
+                ? `Autonomous team accepted [${plan.contract.title}] (${Math.round(teamAssessment.efficiencyPercent)}% efficiency, ${teamAssessment.estimatedDurationSeconds}s estimated, ${Math.round(teamAssessment.successProbability * 100)}% success, ${plan.contract.suspicionRisk}% risk).`
+                : `El equipo autónomo aceptó [${plan.contract.title}] (${teamAssessment.efficiencyPercent}% de eficiencia, ${teamAssessment.estimatedDurationSeconds}s estimados, ${Math.round(teamAssessment.successProbability * 100)}% de éxito, riesgo ${plan.contract.suspicionRisk}%).`,
+              plan.contract.suspicionRisk >= 40 ? 'warning' : 'info'
+            );
+          }
+        }
+
         // 7. Multi-Agent Swarm Tick (Revenue, Alignment Drift, Inter-Agent Messages, Breach Incidents)
         let updatedInterAgentMessages = prev.interAgentMessages || [];
         let newActiveIncident = prev.activeIncident;
@@ -966,6 +1070,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           guardrailRevMult *= 0.8;
           baseBreachProbability *= 0.1;
         }
+        baseBreachProbability = Math.min(
+          0.15,
+          baseBreachProbability + Math.max(0, watchdogSuspicion - 25) * 0.0002
+        );
 
         // Process active agents
         if (updatedAgents.length > 0) {
@@ -1438,6 +1546,27 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
+    if (assignedAgents.length < (gig.minimumAgents ?? 1)) {
+      sound.playWarning();
+      addLog(
+        `Contrato rechazado: se requieren al menos ${gig.minimumAgents} agentes activos para esta misión.`,
+        'danger'
+      );
+      return false;
+    }
+
+    const missingRoles = (gig.requiredAgentRoles ?? []).filter(role =>
+      !assignedAgents.some(agent => agent.role === role)
+    );
+    if (missingRoles.length > 0) {
+      sound.playWarning();
+      addLog(
+        `Contrato rechazado: falta la especialidad de agente requerida (${missingRoles.join(', ')}).`,
+        'danger'
+      );
+      return false;
+    }
+
     const hasQualifiedModel = assignedModels.some(model =>
       model.parametersCount >= gig.requiredParams &&
       model.reasoningScore >= gig.requiredMinReasoning &&
@@ -1481,30 +1610,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    const roleCoverage = new Set(assignedAgents.map(agent => agent.role)).size;
-    const specializedTopologies: Partial<Record<AgentRole, ModelArchitecture['topology'][]>> = {
-      researcher: ['transformer', 'moe'],
-      arbitrageur: ['gnn_hybrid', 'transformer'],
-      economist: ['gnn_hybrid', 'transformer'],
-      software_engineer: ['transformer', 'mamba_ssm'],
-      autonomous_coder: ['transformer', 'mamba_ssm'],
-      network_analyst: ['mamba_ssm', 'gnn_hybrid']
-    };
-    const specializationCount = assignedAgents.reduce((total, agent) => {
-      const model = stateRef.current.savedModels.find(candidate => candidate.id === agent.modelId);
-      return total + (model && specializedTopologies[agent.role]?.includes(model.topology) ? 1 : 0);
-    }, 0);
-    const activeSources = Array.from(new Set(assignedModels.flatMap(model => model.activeDataSources)))
-      .map(sourceId => stateRef.current.dataSources.find(source => source.id === sourceId && source.unlocked))
-      .filter((source): source is DataSourceNode => source !== undefined);
-    const dataQualityBonus = Math.min(
-      0.12,
-      activeSources.length * 0.02 + activeSources.reduce((sum, source) => sum + source.qualityScore, 0) / Math.max(1, activeSources.length) / 100 * 0.04
-    );
-    const averageReasoning = assignedModels.reduce((total, model) => total + model.reasoningScore, 0) / assignedModels.length;
-    const successProbability = Math.min(
-      0.95,
-      Math.max(0.25, 0.4 + roleCoverage * 0.06 + specializationCount * 0.05 + dataQualityBonus + Math.min(0.12, averageReasoning / 1000))
+    const teamAssessment = evaluateMissionTeam(
+      gig,
+      assignedAgents,
+      assignedModels,
+      stateRef.current.dataSources,
+      stateRef.current.guardrails
     );
 
     sound.playCommandExecute();
@@ -1512,11 +1623,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...prev,
       activeGig: {
         contractId: gig.id,
-        timeRemaining: gig.durationSeconds,
-        durationSeconds: gig.durationSeconds,
+        timeRemaining: teamAssessment.estimatedDurationSeconds,
+        durationSeconds: teamAssessment.estimatedDurationSeconds,
         agentIds: assignedAgentIds,
         progressPercent: 0,
-        successProbability,
+        successProbability: teamAssessment.successProbability,
+        efficiencyPercent: teamAssessment.efficiencyPercent,
         outcomeRoll: Math.random(),
         computePflopsRequired: computeRequired,
         powerKw: missionPowerKw
@@ -1526,7 +1638,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
     }));
 
-    addLog(`Misión asignada: [${gig.title}] a ${assignedAgents.map(agent => agent.name).join(', ')}. Probabilidad estimada de éxito: ${Math.round(successProbability * 100)}%.`, 'info');
+    addLog(
+      `Misión asignada: [${gig.title}] a ${assignedAgents.map(agent => agent.name).join(', ')}. Eficiencia estimada: ${teamAssessment.efficiencyPercent}%, tiempo: ${teamAssessment.estimatedDurationSeconds}s, probabilidad de éxito: ${Math.round(teamAssessment.successProbability * 100)}%.`,
+      'info'
+    );
     return true;
   }, [addLog]);
 
@@ -1719,7 +1834,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? `Initializing context with model ${model.name} [T=${finalInference.temperature.toFixed(2)}, P=${finalInference.topP.toFixed(2)}, K=${finalInference.topK}]. Objective: ${displayedRoleDesc}.`
         : `Inicializando contexto con modelo ${model.name} [T=${finalInference.temperature.toFixed(2)}, P=${finalInference.topP.toFixed(2)}, K=${finalInference.topK}]. Objetivo: ${displayedRoleDesc}.`,
       escapesAttempted: 0,
-      inferenceParams: finalInference
+      inferenceParams: finalInference,
+      autoMissionEnabled: false
     };
 
     sound.playCredit();
@@ -2492,6 +2608,9 @@ The future of SYNAPSE depends on how we choose to build it."`);
       upgradeFacility,
       interrogateSwarm,
       deliberateMission,
+      setAgentAutoMission,
+      setAllAgentsAutoMission,
+      updateAutonomySettings,
       attemptShadowCompute,
       setGameSpeed,
       advanceTutorialStep,

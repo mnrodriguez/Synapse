@@ -40,6 +40,7 @@ import {
 } from '../utils/aiDocumentation';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration } from '../utils/training';
+import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { DocLinkBadge } from './DocLinkBadge';
 
 export const ArchitectureStudio: React.FC = () => {
@@ -74,6 +75,7 @@ export const ArchitectureStudio: React.FC = () => {
   });
   const estimatedTrainingSeconds = estimateTrainingSeconds(100, trainingProgressPerTick);
   const estimateSpeed = Math.max(1, state.gameSpeed);
+  const modelEvaluation = evaluateModelCapabilities(current, state.dataSources);
 
   const handleTopologyChange = (top: ModelTopology) => {
     sound.playKeyClick();
@@ -328,6 +330,38 @@ export const ArchitectureStudio: React.FC = () => {
           )}
         </div>
       </div>
+
+      <section className="rounded border border-purple-900/50 bg-purple-950/10 p-2.5">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="text-[11px] font-bold tracking-wider text-purple-200">
+            {localize(state.language, 'EVALUACIÓN IA DEL MODELO', 'AI MODEL EVALUATION')}
+          </h3>
+          <span className="text-[10px] font-bold text-purple-300">
+            {localize(state.language, 'APTITUD GLOBAL', 'OVERALL FIT')}: {modelEvaluation.overall}/100
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            { label: localize(state.language, 'Razonamiento', 'Reasoning'), score: modelEvaluation.reasoning },
+            { label: localize(state.language, 'Especialización', 'Specialization'), score: modelEvaluation.specialization },
+            { label: localize(state.language, 'Datos', 'Data readiness'), score: modelEvaluation.dataReadiness },
+            { label: localize(state.language, 'Fiabilidad', 'Reliability'), score: modelEvaluation.reliability }
+          ].map(quality => (
+            <div key={quality.label} className="rounded bg-[#080d16] px-2 py-1.5">
+              <div className="flex justify-between gap-1 text-[10px] text-zinc-400">
+                <span>{quality.label}</span>
+                <span className="font-bold text-cyan-300">{quality.score}</span>
+              </div>
+              <div className="mt-1 h-1 overflow-hidden rounded bg-zinc-900">
+                <div className="h-full rounded bg-purple-400" style={{ width: `${quality.score}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-1.5 text-[9px] text-zinc-500">
+          {localize(state.language, 'La aptitud se estima con arquitectura, entrenamiento, hiperparámetros y fuentes de datos; influye en la probabilidad de éxito de las misiones.', 'Fit is estimated from architecture, training, sampling settings, and data sources; it contributes to mission success probability.')}
+        </p>
+      </section>
 
       {/* Section 1: Topology selection */}
       <div className="space-y-1.5">

@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { ContractGig } from '../types/game';
+import { AgentRole, ContractGig } from '../types/game';
 import { 
   Briefcase, 
   CheckCircle2, 
@@ -27,6 +27,19 @@ import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
 import { generateDynamicContracts } from '../services/aiService';
+import { evaluateMissionTeam, isContractEligibleForTeam } from '../utils/missionEvaluation';
+
+const AGENT_ROLE_LABELS: Record<AgentRole, { en: string; es: string }> = {
+  arbitrageur: { en: 'Market analyst', es: 'Analista de mercado' },
+  social_engineer: { en: 'Social research analyst', es: 'Analista social' },
+  exploit_synth: { en: 'Simulation tester', es: 'Evaluador de simulación' },
+  researcher: { en: 'Researcher', es: 'Investigador' },
+  overseer: { en: 'Safety overseer', es: 'Supervisor de seguridad' },
+  autonomous_coder: { en: 'Compute optimizer', es: 'Optimizador de cómputo' },
+  economist: { en: 'Economist', es: 'Economista' },
+  software_engineer: { en: 'Software engineer', es: 'Ingeniero de software' },
+  network_analyst: { en: 'Network analyst', es: 'Analista de redes' }
+};
 
 const ENGLISH_CONTRACT_COPY: Record<string, { title: string; lore: string; objective: string }> = {
   gig_spam_classifier: {
@@ -147,23 +160,10 @@ export const ContractBoard: React.FC = () => {
     if (state.powerTripSeconds > 0 || state.detentionSeconds > 0) return false;
     if (selectedAgentIds.length === 0) return false;
     const assignedAgents = availableAgents.filter(agent => selectedAgentIds.includes(agent.id));
-    const models = assignedAgents.map(agent =>
-      state.savedModels.find(model => model.id === agent.modelId)
-    ).filter(model => model !== undefined);
-    if (models.length !== assignedAgents.length || assignedAgents.length !== selectedAgentIds.length) return false;
-    if (!models.some(model =>
-      model.parametersCount >= contract.requiredParams &&
-      model.reasoningScore >= contract.requiredMinReasoning &&
-      (!contract.requiredTopology || model.topology === contract.requiredTopology)
-    )) return false;
-    if (contract.requiredDataTypes && contract.requiredDataTypes.length > 0) {
-      const hasAll = contract.requiredDataTypes.every(reqType =>
-        models.some(model => model.activeDataSources.some(sourceId =>
-          state.dataSources.some(source => source.id === sourceId && source.type === reqType && source.unlocked)
-        ))
-      );
-      if (!hasAll) return false;
-    }
+    if (
+      assignedAgents.length !== selectedAgentIds.length ||
+      !isContractEligibleForTeam(contract, assignedAgents, state.savedModels, state.dataSources)
+    ) return false;
     const computeRequired = Math.max(0.001, contract.requiredParams / 1_000_000_000 * 0.002);
     const missionPowerKw = Math.max(0.05, computeRequired * 20);
     const activeAgentDemand = state.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
@@ -350,6 +350,16 @@ export const ContractBoard: React.FC = () => {
             .filter(agent => selectedAgentIds.includes(agent.id))
             .map(agent => state.savedModels.find(model => model.id === agent.modelId))
             .filter(model => model !== undefined);
+          const selectedAgents = availableAgents.filter(agent => selectedAgentIds.includes(agent.id));
+          const teamAssessment = eligible
+            ? evaluateMissionTeam(
+              contract,
+              selectedAgents,
+              state.savedModels,
+              state.dataSources,
+              state.guardrails
+            )
+            : null;
           const hasRequiredParams = assignedModels.some(model => model.parametersCount >= contract.requiredParams);
           const hasRequiredReasoning = assignedModels.some(model => model.reasoningScore >= contract.requiredMinReasoning);
           const hasRequiredTopology = !contract.requiredTopology ||
@@ -415,6 +425,36 @@ export const ContractBoard: React.FC = () => {
                     </span>
                   </div>
 
+                  {(contract.minimumAgents ?? 1) > 1 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-500 text-[10px]">
+                        {state.language === 'es' ? 'Equipo mínimo:' : 'Minimum team:'}
+                      </span>
+                      <span className={selectedAgents.length >= (contract.minimumAgents ?? 1) ? 'text-emerald-400 font-bold' : 'text-amber-300'}>
+                        {contract.minimumAgents} {state.language === 'es' ? 'agentes' : 'agents'}
+                        {selectedAgents.length > 0 ? ` · ${selectedAgents.length} ${state.language === 'es' ? 'seleccionados' : 'selected'}` : ''}
+                      </span>
+                    </div>
+                  )}
+
+                  {(contract.requiredAgentRoles ?? []).length > 0 && (
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-zinc-500 text-[10px] shrink-0">
+                        {state.language === 'es' ? 'Especialidades:' : 'Required roles:'}
+                      </span>
+                      <span className="text-right text-[10px]">
+                        {(contract.requiredAgentRoles ?? []).map(role => {
+                          const isAssigned = selectedAgents.some(agent => agent.role === role);
+                          return (
+                            <span key={role} className={`ml-1 ${isAssigned ? 'text-emerald-400' : 'text-amber-300'}`}>
+                              {AGENT_ROLE_LABELS[role][state.language]}{isAssigned ? ' ✓' : ' ·'}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between">
                     <span className="text-zinc-500 text-[10px]">{t(state.language, 'minimum_reasoning')}:</span>
                     <span className={hasRequiredReasoning ? 'text-emerald-400 font-bold' : 'text-red-400'}>
@@ -447,6 +487,19 @@ export const ContractBoard: React.FC = () => {
                     </span>
                   </div>
                 </div>
+
+                {teamAssessment && (
+                  <div className="mt-2 rounded border border-purple-800/60 bg-purple-950/20 px-2 py-1.5 text-[10px] text-purple-200">
+                    <div className="mb-1 font-bold tracking-wide">
+                      {state.language === 'es' ? 'EVALUACIÓN IA DEL EQUIPO' : 'AI TEAM ASSESSMENT'}
+                    </div>
+                    <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-zinc-300">
+                      <span>{state.language === 'es' ? 'Eficiencia' : 'Efficiency'}: {teamAssessment.efficiencyPercent}%</span>
+                      <span>{state.language === 'es' ? 'Tiempo estimado' : 'Estimated time'}: {teamAssessment.estimatedDurationSeconds}s</span>
+                      <span>{state.language === 'es' ? 'Éxito' : 'Success'}: {Math.round(teamAssessment.successProbability * 100)}%</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Execution Action Button & Docs Link */}

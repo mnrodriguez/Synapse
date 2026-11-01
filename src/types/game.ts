@@ -79,6 +79,8 @@ export interface ContractGig {
   tier: 'tier1_micro' | 'tier2_corporate' | 'tier3_blackops' | 'tier4_singularity';
   rewardCredits: number;
   requiredParams: number;
+  minimumAgents?: number;
+  requiredAgentRoles?: AgentRole[];
   requiredTopology?: ModelTopology;
   requiredDataTypes?: DataSourceType[];
   requiredMinReasoning: number;
@@ -190,6 +192,7 @@ export interface GameState {
     agentIds?: string[];
     progressPercent?: number;
     successProbability?: number;
+    efficiencyPercent?: number;
     outcomeRoll?: number;
     computePflopsRequired?: number;
     powerKw?: number;
@@ -201,6 +204,8 @@ export interface GameState {
   interAgentMessages: InterAgentMessage[];
   activeIncident: BreachIncident | null;
   incidentHistory: BreachIncident[];
+  autonomyEnabled: boolean;
+  autonomyRiskLimit: number;
 
   // Sentience infiltration
   sentienceDomains: SentienceDomain[];
@@ -263,6 +268,7 @@ export interface AgentInstance {
   lastThought: string;
   escapesAttempted: number;
   inferenceParams: InferenceParams;
+  autoMissionEnabled: boolean;
 }
 
 export interface GuardrailConfig {

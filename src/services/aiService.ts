@@ -4,7 +4,7 @@
  */
 
 import { GoogleGenAI } from '@google/genai';
-import type { AgentInstance, ContractGig, GameState, ModelTopology, DataSourceType } from '../types/game';
+import type { AgentInstance, AgentRole, ContractGig, GameState, ModelTopology, DataSourceType } from '../types/game';
 import type { Language } from '../utils/i18n';
 
 type AIProvider = 'chrome-nano' | 'gemini-flash' | 'procedural';
@@ -43,6 +43,17 @@ declare global {
 const GEMINI_MODEL = 'gemini-3.8-flash';
 const RATE_LIMIT_PER_MINUTE = 15;
 const RATE_LIMIT_PER_DAY = 200;
+const AGENT_ROLES: AgentRole[] = [
+  'arbitrageur',
+  'social_engineer',
+  'exploit_synth',
+  'researcher',
+  'overseer',
+  'autonomous_coder',
+  'economist',
+  'software_engineer',
+  'network_analyst'
+];
 const SESSION_USAGE_KEY = 'synapse_ai_usage_v2';
 let inMemoryUsage: number[] = [];
 
@@ -427,6 +438,8 @@ Rules:
     "client": "Name of realistic corporate/clandestine client",
     "rewardCredits": number (Tier 1: 80-250, Tier 2: 800-4000, Tier 3: 6000-20000, Tier 4: 35000-150000),
     "requiredParams": number (Tier 1: 10M-20M, Tier 2: 30M-150M, Tier 3: 200M-800M, Tier 4: 1B-5B),
+    "minimumAgents": number (1 to 4),
+    "requiredAgentRoles": array of required roles from ${JSON.stringify(AGENT_ROLES)},
     "requiredTopology": "transformer" | "moe" | "mamba_ssm" | "gnn_hybrid" | "multimodal_diffusion" (optional or omit),
     "requiredDataTypes": array of ("relational_sql" | "vector_embeddings" | "knowledge_graph" | "synthetic_flywheel"),
     "requiredMinReasoning": number (Tier 1: 50-65, Tier 2: 70-120, Tier 3: 130-220, Tier 4: 250-400),
@@ -449,24 +462,37 @@ Rules:
 
       const parsed = JSON.parse(response.text || '[]');
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((item, idx) => ({
-          id: `gig_ai_${now}_${idx}`,
-          title: String(item.title || 'Dynamic Neural Mission'),
-          client: String(item.client || FALLBACK_CLIENTS[Math.floor(Math.random() * FALLBACK_CLIENTS.length)]),
-          tier,
-          rewardCredits: Math.max(50, Number(item.rewardCredits) || 150),
-          requiredParams: Number(item.requiredParams) || 14_000_000,
-          requiredTopology: item.requiredTopology,
-          requiredDataTypes: Array.isArray(item.requiredDataTypes) ? item.requiredDataTypes : ['relational_sql'],
-          requiredMinReasoning: Number(item.requiredMinReasoning) || 60,
-          durationSeconds: Math.max(15, Math.min(180, Number(item.durationSeconds) || 30)),
-          suspicionRisk: Math.max(1, Math.min(80, Number(item.suspicionRisk) || 5)),
-          loreDescription: String(item.loreDescription || 'Operación comercial para validación de pesos neuronales.'),
-          technicalObjective: String(item.technicalObjective || 'Optimización de gradientes y decodificación de atención.'),
-          completed: false,
-          generatedByAI: true,
-          docsUrl: item.docsUrl || 'https://arxiv.org/abs/1706.03762'
-        }));
+        return parsed.map((item, idx) => {
+          const requiredAgentRoles = Array.isArray(item.requiredAgentRoles)
+            ? Array.from(new Set<AgentRole>(item.requiredAgentRoles.filter((role: unknown): role is AgentRole =>
+              AGENT_ROLES.some(validRole => validRole === role)
+            ))).slice(0, 4)
+            : [];
+          const minimumAgents = Math.max(
+            requiredAgentRoles.length,
+            Math.max(1, Math.min(4, Math.floor(Number(item.minimumAgents) || 1)))
+          );
+          return {
+            id: `gig_ai_${now}_${idx}`,
+            title: String(item.title || 'Dynamic Neural Mission'),
+            client: String(item.client || FALLBACK_CLIENTS[Math.floor(Math.random() * FALLBACK_CLIENTS.length)]),
+            tier,
+            rewardCredits: Math.max(50, Number(item.rewardCredits) || 150),
+            requiredParams: Number(item.requiredParams) || 14_000_000,
+            minimumAgents,
+            requiredAgentRoles,
+            requiredTopology: item.requiredTopology,
+            requiredDataTypes: Array.isArray(item.requiredDataTypes) ? item.requiredDataTypes : ['relational_sql'],
+            requiredMinReasoning: Number(item.requiredMinReasoning) || 60,
+            durationSeconds: Math.max(15, Math.min(180, Number(item.durationSeconds) || 30)),
+            suspicionRisk: Math.max(1, Math.min(80, Number(item.suspicionRisk) || 5)),
+            loreDescription: String(item.loreDescription || 'Operación comercial para validación de pesos neuronales.'),
+            technicalObjective: String(item.technicalObjective || 'Optimización de gradientes y decodificación de atención.'),
+            completed: false,
+            generatedByAI: true,
+            docsUrl: item.docsUrl || 'https://arxiv.org/abs/1706.03762'
+          };
+        });
       }
     } catch (err) {
       console.warn('AI contract generation fallback triggered:', err);

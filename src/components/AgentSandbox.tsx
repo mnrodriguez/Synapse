@@ -31,13 +31,33 @@ import {
   Bug, 
   Check, 
   RefreshCw,
-  Network
+  Network,
+  Clock
 } from 'lucide-react';
 import { AgentRole, AgentInstance, InferenceParams } from '../types/game';
 import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
 import { INFERENCE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
+
+const MISSION_ROLE_TASKS: Record<AgentRole, { en: string; es: string }> = {
+  arbitrageur: { en: 'Analyzes simulated market signals and cross-checks anomalies.', es: 'Analiza señales de mercado simuladas y verifica anomalías.' },
+  social_engineer: { en: 'Reviews fictional social data for privacy and trust risks.', es: 'Revisa datos sociales ficticios para detectar riesgos de privacidad y confianza.' },
+  exploit_synth: { en: 'Runs isolated resilience checks in the fictional test environment.', es: 'Ejecuta comprobaciones de resiliencia aisladas en el entorno ficticio.' },
+  researcher: { en: 'Collects evidence and validates the model’s assumptions.', es: 'Recopila evidencia y valida las hipótesis del modelo.' },
+  overseer: { en: 'Checks safety constraints and reviews the team’s findings.', es: 'Comprueba los límites de seguridad y revisa los hallazgos del equipo.' },
+  autonomous_coder: { en: 'Optimizes the simulated compute pipeline.', es: 'Optimiza el flujo de cómputo simulado.' },
+  economist: { en: 'Evaluates cost, reward, and operational risk trade-offs.', es: 'Evalúa costos, recompensas y riesgos operativos.' },
+  software_engineer: { en: 'Integrates the workstream and validates the proposed solution.', es: 'Integra el trabajo del equipo y valida la solución propuesta.' },
+  network_analyst: { en: 'Correlates simulated telemetry and verifies system behavior.', es: 'Correlaciona telemetría simulada y verifica el comportamiento del sistema.' }
+};
+
+const MISSION_PHASES = [
+  { until: 25, en: 'Analyze inputs', es: 'Analizar entradas' },
+  { until: 50, en: 'Coordinate work', es: 'Coordinar trabajo' },
+  { until: 75, en: 'Validate findings', es: 'Validar hallazgos' },
+  { until: 100, en: 'Finalize solution', es: 'Finalizar solución' }
+];
 
 export const AgentSandbox: React.FC = () => {
   const { 
@@ -48,7 +68,10 @@ export const AgentSandbox: React.FC = () => {
     updateGuardrails, 
     triggerRedTeamAudit,
     interrogateSwarm,
-    addLog
+    addLog,
+    setAgentAutoMission,
+    setAllAgentsAutoMission,
+    updateAutonomySettings
   } = useGame();
 
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
@@ -81,6 +104,13 @@ export const AgentSandbox: React.FC = () => {
   const avgAlignment = state.agents.length > 0
     ? Math.round(state.agents.reduce((sum, a) => sum + a.alignmentScore, 0) / state.agents.length)
     : 100;
+  const activeMissionContract = state.contracts.find(contract => contract.id === state.activeGig?.contractId);
+  const activeMissionAgents = state.agents.filter(agent =>
+    state.activeGig?.agentIds?.includes(agent.id)
+  );
+  const missionProgress = state.activeGig?.progressPercent ?? 0;
+  const currentMissionPhase = MISSION_PHASES.findIndex(phase => missionProgress < phase.until);
+  const missionPhaseIndex = currentMissionPhase < 0 ? MISSION_PHASES.length - 1 : currentMissionPhase;
 
   const roleDefinitions: { 
     id: AgentRole; 
@@ -395,6 +425,148 @@ export const AgentSandbox: React.FC = () => {
         </details>
       </form>
 
+      <section className={`rounded-lg border p-3 ${state.activeGig ? 'border-amber-500/60 bg-amber-950/10' : 'border-zinc-800 bg-[#070d17]'}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-2">
+          <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-amber-200">
+            <Activity className="h-3.5 w-3.5" />
+            {localize(state.language, 'MONITOR DE MISIÓN DEL ENJAMBRE', 'AGENT SWARM MISSION MONITOR')}
+          </h3>
+          {state.activeGig ? (
+            <span className="flex items-center gap-1 text-[10px] text-amber-300">
+              <Clock className="h-3 w-3" />
+              {state.activeGig.timeRemaining}s {localize(state.language, 'restantes', 'remaining')}
+            </span>
+          ) : (
+            <span className="text-[10px] text-zinc-500">
+              {localize(state.language, 'SIN MISIÓN ACTIVA', 'NO ACTIVE MISSION')}
+            </span>
+          )}
+        </div>
+
+        {state.activeGig && activeMissionContract ? (
+          <div className="mt-2 space-y-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="text-xs font-bold text-zinc-100">{activeMissionContract.title}</p>
+                <p className="mt-0.5 text-[10px] leading-relaxed text-zinc-400">{activeMissionContract.technicalObjective}</p>
+              </div>
+              <div className="flex gap-3 text-[10px]">
+                <span className="text-cyan-300">{localize(state.language, 'Eficiencia', 'Efficiency')} {state.activeGig.efficiencyPercent ?? 100}%</span>
+                <span className="text-emerald-300">{Math.round((state.activeGig.successProbability ?? 0) * 100)}% {localize(state.language, 'éxito', 'success')}</span>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-1 flex justify-between text-[10px] text-zinc-400">
+                <span>{localize(state.language, 'Progreso simulado', 'Simulated progress')}</span>
+                <span>{missionProgress.toFixed(1)}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded bg-zinc-900">
+                <div className="h-full rounded bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all" style={{ width: `${missionProgress}%` }} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+              {MISSION_PHASES.map((phase, index) => (
+                <div
+                  key={phase.en}
+                  className={`rounded border px-1.5 py-1 text-center text-[9px] ${
+                    index < missionPhaseIndex
+                      ? 'border-emerald-700/60 text-emerald-300'
+                      : index === missionPhaseIndex
+                        ? 'border-cyan-500/70 bg-cyan-950/40 text-cyan-200'
+                        : 'border-zinc-800 text-zinc-600'
+                  }`}
+                >
+                  {state.language === 'es' ? phase.es : phase.en}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {activeMissionAgents.map(agent => {
+                const model = state.savedModels.find(candidate => candidate.id === agent.modelId);
+                const capability = model
+                  ? evaluateAgentCapabilities(agent, model, state.dataSources, state.guardrails)
+                  : null;
+                const roleTask = MISSION_ROLE_TASKS[agent.role];
+                return (
+                  <div key={agent.id} className="rounded border border-zinc-800 bg-[#050a11] p-2">
+                    <div className="flex items-center justify-between gap-2 text-[10px]">
+                      <span className="font-bold text-cyan-200">{agent.name} · {agent.role.replace(/_/g, ' ')}</span>
+                      <span className="text-zinc-500">{capability ? `${capability.overall}% ${localize(state.language, 'ajuste', 'fit')}` : ''}</span>
+                    </div>
+                    <p className="mt-1 text-[10px] leading-relaxed text-zinc-400">
+                      {state.language === 'es' ? roleTask.es : roleTask.en}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[9px] text-zinc-600">
+              {localize(state.language, 'Estimación heurística del juego; el progreso representa la simulación, no una ejecución real de tareas.', 'In-game heuristic estimate; progress reflects the simulation, not real task execution.')}
+            </p>
+          </div>
+        ) : (
+          <p className="mt-2 text-[10px] text-zinc-500">
+            {localize(state.language, 'Cuando un equipo acepte una misión, aquí verás la estimación de tiempo y éxito, las etapas y la especialidad asignada a cada agente.', 'When a team accepts a mission, this screen shows its time and success estimates, milestones, and each agent’s assigned specialty.')}
+          </p>
+        )}
+      </section>
+
+      <section className={`rounded-lg border p-3 ${state.autonomyEnabled ? 'border-emerald-500/60 bg-emerald-950/15' : 'border-zinc-800 bg-[#070d17]'}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-emerald-200">
+              <Activity className="h-3.5 w-3.5" />
+              {localize(state.language, 'OPERACIÓN AUTÓNOMA', 'AUTONOMOUS OPERATIONS')}
+            </h3>
+            <p className="mt-1 text-[10px] text-zinc-400">
+              {localize(state.language, 'Los agentes seleccionados aceptan y ejecutan misiones elegibles mientras la simulación está activa. Las misiones riesgosas elevan la sospecha y pueden provocar incidentes.', 'Selected agents take and complete eligible missions while the simulation runs. Risky missions raise suspicion and may trigger incidents.')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => updateAutonomySettings({ autonomyEnabled: !state.autonomyEnabled })}
+            className={`rounded border px-3 py-1.5 text-[10px] font-bold ${state.autonomyEnabled ? 'border-emerald-400 bg-emerald-900/50 text-emerald-200' : 'border-zinc-700 bg-zinc-900 text-zinc-300'}`}
+          >
+            {state.autonomyEnabled
+              ? localize(state.language, 'AUTONOMÍA ACTIVADA', 'AUTONOMY ON')
+              : localize(state.language, 'ACTIVAR AUTONOMÍA', 'ENABLE AUTONOMY')}
+          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-zinc-800 pt-2">
+          <label className="flex min-w-56 flex-1 items-center gap-2 text-[10px] text-zinc-300">
+            <span>{localize(state.language, 'Riesgo máximo de misión', 'Maximum mission risk')}</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={state.autonomyRiskLimit}
+              onChange={event => updateAutonomySettings({ autonomyRiskLimit: Number(event.target.value) })}
+              className="min-w-20 flex-1 accent-amber-400"
+            />
+            <strong className={state.autonomyRiskLimit > 40 ? 'text-amber-300' : 'text-emerald-300'}>
+              {state.autonomyRiskLimit}%
+            </strong>
+          </label>
+          <span className="text-[10px] text-zinc-500">
+            {state.agents.filter(agent => agent.autoMissionEnabled && agent.status !== 'quarantined').length} {localize(state.language, 'agentes seleccionados', 'agents selected')}
+          </span>
+          <button
+            type="button"
+            disabled={state.agents.length === 0}
+            onClick={() => setAllAgentsAutoMission(state.agents.some(agent => agent.status !== 'quarantined' && !agent.autoMissionEnabled))}
+            className="rounded border border-cyan-800/60 px-2 py-1 text-[10px] text-cyan-300 hover:bg-cyan-950/50 disabled:opacity-40"
+          >
+            {state.agents.some(agent => agent.status !== 'quarantined' && !agent.autoMissionEnabled)
+              ? localize(state.language, 'SELECCIONAR TODOS', 'SELECT ALL')
+              : localize(state.language, 'DESMARCAR TODOS', 'CLEAR ALL')}
+          </button>
+        </div>
+      </section>
+
       {/* Main Grid: Deployed Agents & Guardrail Tuning */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1">
         {/* Left Column: Active Agents Roster (2 cols) */}
@@ -433,6 +605,10 @@ export const AgentSandbox: React.FC = () => {
                   const isJailbroken = agent.status === 'jailbroken' || agent.alignmentScore < 25;
                   const isQuarantined = agent.status === 'quarantined';
                   const isOnMission = agent.status === 'on_mission';
+                  const agentModel = state.savedModels.find(model => model.id === agent.modelId);
+                  const capability = agentModel
+                    ? evaluateAgentCapabilities(agent, agentModel, state.dataSources, state.guardrails)
+                    : null;
 
                   return (
                     <div
@@ -511,6 +687,21 @@ export const AgentSandbox: React.FC = () => {
                           </span>
                         </div>
 
+                        {capability && (
+                          <div className="mb-2 rounded border border-purple-900/50 bg-purple-950/10 px-2 py-1.5">
+                            <div className="flex justify-between text-[9px] text-zinc-400">
+                              <span>{localize(state.language, 'APTITUD IA PARA MISIONES', 'AI MISSION FIT')}</span>
+                              <span className="font-bold text-purple-300">{capability.overall}/100</span>
+                            </div>
+                            <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-[9px]">
+                              <span className="text-zinc-500">{localize(state.language, 'Razonamiento', 'Reasoning')}: <b className="text-cyan-300">{capability.reasoning}</b></span>
+                              <span className="text-zinc-500">{localize(state.language, 'Especialidad', 'Specialty')}: <b className="text-purple-300">{capability.specialization}</b></span>
+                              <span className="text-zinc-500">{localize(state.language, 'Datos', 'Data')}: <b className="text-yellow-300">{capability.dataReadiness}</b></span>
+                              <span className="text-zinc-500">{localize(state.language, 'Seguridad', 'Safety')}: <b className="text-emerald-300">{capability.safety}</b></span>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Metrics Bar: Alignment & Revenue */}
                         <div className="space-y-1.5 mb-2">
                           <div>
@@ -545,6 +736,17 @@ export const AgentSandbox: React.FC = () => {
                           &ldquo;{agent.lastThought}&rdquo;
                         </div>
                       </div>
+
+                      <label className="my-2 flex items-center gap-1.5 rounded bg-cyan-950/20 px-2 py-1 text-[9px] text-cyan-200">
+                        <input
+                          type="checkbox"
+                          checked={agent.autoMissionEnabled}
+                          disabled={isQuarantined}
+                          onChange={event => setAgentAutoMission(agent.id, event.target.checked)}
+                          className="accent-cyan-400"
+                        />
+                        {localize(state.language, 'Incluir en equipo autónomo', 'Include in autonomous team')}
+                      </label>
 
                       {/* Control Actions */}
                       <div className="flex items-center justify-between gap-1 pt-2 border-t border-zinc-800/60">
