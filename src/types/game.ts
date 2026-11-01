@@ -116,7 +116,7 @@ export interface TrainingJob {
   lossHistory: number[]; // Last 30 data points
   step: number;
   tokensProcessed: number;
-  timeRemainingSeconds: number;
+  timeRemainingSeconds: number | null;
 }
 
 export interface SentienceDomain {
@@ -143,7 +143,7 @@ export interface GameState {
   dateTimestamp: number;
   language: 'es' | 'en';
   
-  // Time, Calendar & Speed (1 game day = 1 game month)
+  // Time, Calendar & Speed
   gameDay: number;
   gameMonth: number;
   gameYear: number;

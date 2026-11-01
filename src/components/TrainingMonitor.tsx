@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
+import { formatTrainingDuration } from '../utils/training';
 
 export const TrainingMonitor: React.FC = () => {
   const { state, cancelTraining, startTraining } = useGame();
@@ -96,9 +97,17 @@ export const TrainingMonitor: React.FC = () => {
           />
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-zinc-500">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-500">
           <span>{localize(state.language, 'Tokens procesados:', 'Tokens processed:')} {(job.tokensProcessed / 1_000_000).toFixed(1)}M</span>
           <span>{localize(state.language, 'FLOPs activos:', 'Active FLOPs:')} {state.totalComputePflops.toFixed(4)} PFLOPS</span>
+          <span className="text-emerald-300">
+            {localize(state.language, 'Tiempo estimado restante:', 'Estimated time remaining:')}{' '}
+            {state.gameSpeed === 0
+              ? localize(state.language, 'PAUSADO', 'PAUSED')
+              : job.timeRemainingSeconds === null
+                ? localize(state.language, 'Sin cómputo disponible', 'No compute available')
+                : `${formatTrainingDuration(job.timeRemainingSeconds / state.gameSpeed)} @ ${state.gameSpeed}x`}
+          </span>
         </div>
       </div>
 

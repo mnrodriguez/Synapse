@@ -39,7 +39,8 @@ import {
   FACILITY_TIERS,
   ELECTRICITY_RATE_PER_KWH,
   AGENT_COMPUTE_DEMAND_PFLOPS,
-  AGENT_POWER_DRAW_KW
+  AGENT_POWER_DRAW_KW,
+  DAYS_PER_GAME_MONTH
 } from '../utils/constants';
 import { sound } from '../audio/soundManager';
 import { 
@@ -70,6 +71,7 @@ import confetti from 'canvas-confetti';
 import { generateAgentResponse } from '../services/aiService';
 import { localize } from '../utils/i18n';
 import { localizedContractTitle, localizedDataSource, localizedHardware } from '../utils/gameContentI18n';
+import { calculateTrainingProgressPerTick, estimateTrainingSeconds } from '../utils/training';
 
 interface GameContextType {
   state: GameState;
@@ -121,9 +123,10 @@ interface GameContextType {
 }
 
 const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
+const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
 
 const DEFAULT_STATE: GameState = {
-  saveSchemaVersion: 2,
+  saveSchemaVersion: 3,
   callsign: 'CIPHER-1',
   credits: 500,
   dateTimestamp: Date.now(),
@@ -184,6 +187,11 @@ const DEFAULT_STATE: GameState = {
 
 function mergeGameState(data: Partial<GameState>, fallback: GameState): GameState {
   const isLegacyEconomy = (data.saveSchemaVersion ?? 0) < 2;
+  const isLegacyCalendar = (data.saveSchemaVersion ?? 0) < 3 &&
+    typeof data.gameDay === 'number' && Number.isFinite(data.gameDay) && data.gameDay > 0 &&
+    typeof data.gameMonth === 'number' && Number.isFinite(data.gameMonth) && data.gameMonth > 0;
+  const legacyElapsedDays = isLegacyCalendar ? Math.max(0, data.gameDay - 1) : 0;
+  const legacyElapsedMonths = Math.floor(legacyElapsedDays / DAYS_PER_GAME_MONTH);
   const rawCurrentModel = data.currentModel ?? fallback.currentModel;
   const defaultInferenceParams: InferenceParams = {
     temperature: 0.70,
@@ -210,15 +218,25 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
   return {
     ...fallback,
     ...data,
-    saveSchemaVersion: 2,
+    saveSchemaVersion: 3,
     language: data.language === 'en' ? 'en' : 'es',
-    gameDay: typeof data.gameDay === 'number' && data.gameDay > 0 ? data.gameDay : fallback.gameDay,
-    gameMonth: typeof data.gameMonth === 'number' && data.gameMonth > 0 ? data.gameMonth : fallback.gameMonth,
-    gameYear: typeof data.gameYear === 'number' && data.gameYear >= 2026 ? data.gameYear : fallback.gameYear,
+    gameDay: isLegacyCalendar
+      ? legacyElapsedDays % DAYS_PER_GAME_MONTH + 1
+      : typeof data.gameDay === 'number' && data.gameDay > 0 ? data.gameDay : fallback.gameDay,
+    gameMonth: isLegacyCalendar
+      ? legacyElapsedMonths % 12 + 1
+      : typeof data.gameMonth === 'number' && data.gameMonth > 0 ? data.gameMonth : fallback.gameMonth,
+    gameYear: isLegacyCalendar
+      ? 2026 + Math.floor(legacyElapsedMonths / 12)
+      : typeof data.gameYear === 'number' && data.gameYear >= 2026 ? data.gameYear : fallback.gameYear,
     gameHour: typeof data.gameHour === 'number' && data.gameHour >= 0 && data.gameHour <= 23 ? data.gameHour : fallback.gameHour,
     gameMinute: typeof data.gameMinute === 'number' && data.gameMinute >= 0 && data.gameMinute <= 59 ? data.gameMinute : fallback.gameMinute,
-    gameSpeed: typeof data.gameSpeed === 'number' && [0, 1, 2, 5].includes(data.gameSpeed) ? data.gameSpeed : fallback.gameSpeed,
-    dayTicks: typeof data.dayTicks === 'number' && data.dayTicks >= 0 ? data.dayTicks : fallback.dayTicks,
+    gameSpeed: typeof data.gameSpeed === 'number' && GAME_SPEED_OPTIONS.some(speed => speed === data.gameSpeed)
+      ? data.gameSpeed
+      : data.gameSpeed === 2 ? 1 : fallback.gameSpeed,
+    dayTicks: typeof data.dayTicks === 'number' && data.dayTicks >= 0 && data.dayTicks < 48
+      ? data.dayTicks
+      : fallback.dayTicks,
     currentModel,
     savedModels: Array.from(modelsById.values()),
     agents: incomingAgents.map(agent => ({
@@ -334,7 +352,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setGameSpeed = useCallback((speed: number) => {
     sound.playKeyClick();
-    const normalized = [0, 1, 2, 5].includes(speed) ? speed : 1;
+    const normalized = GAME_SPEED_OPTIONS.some(option => option === speed) ? speed : 1;
     setState(prev => ({ ...prev, gameSpeed: normalized }));
   }, []);
 
@@ -664,7 +682,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   }, [addLog, recalculateMetrics]);
 
-  // Simulation tick loop (respects gameSpeed: 0=paused, 1=1x, 2=2x, 5=5x)
+  // Simulation tick loop (respects gameSpeed: 0=paused, 1x, 5x, 20x, 50x)
   const gameSpeed = state.gameSpeed ?? 1;
 
   useEffect(() => {
@@ -703,8 +721,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           (prev.activeGig?.powerKw || 0);
         let utilityDebt = prev.utilityDebt || 0;
 
-        // In-game calendar: 1 in-game day = 1 in-game operational month!
-        // 48 ticks per day (each tick = 30 in-game minutes)
+        // 48 ticks represent one in-game day; monthly bills settle every 30 days.
         const currentDayTicks = (prev.dayTicks || 0) + 1;
         const dayIsComplete = currentDayTicks >= 48;
         const nextDayTicks = dayIsComplete ? 0 : currentDayTicks;
@@ -714,17 +731,25 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let nextDay = prev.gameDay || 1;
         let nextMonth = prev.gameMonth || 1;
         let nextYear = prev.gameYear || 2026;
+        let monthIsComplete = false;
 
         if (dayIsComplete) {
-          nextDay += 1;
-          nextMonth += 1; // 1 day = 1 month in game time!
-          if ((nextMonth - 1) % 12 === 0) {
-            nextYear += 1;
+          if (nextDay >= DAYS_PER_GAME_MONTH) {
+            nextDay = 1;
+            monthIsComplete = true;
+            if (nextMonth >= 12) {
+              nextMonth = 1;
+              nextYear += 1;
+            } else {
+              nextMonth += 1;
+            }
+          } else {
+            nextDay += 1;
           }
         }
 
-        // Monthly billing triggers strictly on in-game month/day completion
-        if (dayIsComplete) {
+        // Monthly billing triggers only when the calendar rolls into a new month.
+        if (monthIsComplete) {
           const facility = FACILITY_TIERS[prev.facilityTier] || FACILITY_TIERS[0];
           const currentMonthBill = effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720 + facility.monthlyLeaseCost;
           const totalDue = utilityDebt + currentMonthBill;
@@ -786,13 +811,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let updatedTraining = activeTraining;
         let newCurrentModel = prev.currentModel;
         if (activeTraining && activeTraining.active) {
-          const thermalThrottle = systemHeatCelsius > 85 ? 0.4 : 1.0;
           // Step progress based on compute PFLOPS vs parameters
           const reservedForMission = activeGig?.computePflopsRequired || 0;
-          const trainingScale = Math.sqrt(Math.max(1, prev.currentModel.parametersCount / 14_000_000));
+          const progressPerTick = calculateTrainingProgressPerTick({
+            parametersCount: prev.currentModel.parametersCount,
+            totalComputePflops,
+            agentComputeDemand,
+            reservedComputePflops: reservedForMission,
+            systemHeatCelsius
+          });
           const progressInc = powerTripSeconds > 0
             ? 0
-            : (Math.max(0, totalComputePflops - agentComputeDemand - reservedForMission) * 100 * thermalThrottle) / (5 * trainingScale);
+            : progressPerTick;
           const pausedByBreaker = powerTripSeconds > 0;
           const newStep = activeTraining.step + (pausedByBreaker ? 0 : 1);
           const newProgress = Math.min(100, activeTraining.progressPercent + progressInc);
@@ -853,7 +883,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               currentEpoch: Math.min(activeTraining.totalEpochs, Math.floor((newProgress / 100) * activeTraining.totalEpochs) + 1),
               timeRemainingSeconds: pausedByBreaker
                 ? activeTraining.timeRemainingSeconds
-                : Math.ceil((100 - newProgress) / Math.max(0.001, progressInc))
+                : estimateTrainingSeconds(100 - newProgress, progressInc)
             };
           }
         }
@@ -1324,6 +1354,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Initial training state
+    const trainingState = stateRef.current;
+    const agentComputeDemand = trainingState.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
+    const reservedForMission = trainingState.activeGig?.computePflopsRequired || 0;
+    const progressPerTick = calculateTrainingProgressPerTick({
+      parametersCount: trainingState.currentModel.parametersCount,
+      totalComputePflops: trainingState.totalComputePflops,
+      agentComputeDemand,
+      reservedComputePflops: reservedForMission,
+      systemHeatCelsius: trainingState.systemHeatCelsius
+    });
     const job: TrainingJob = {
       active: true,
       modelId: stateRef.current.currentModel.id,
@@ -1338,10 +1378,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       lossHistory: [4.82],
       step: 0,
       tokensProcessed: 0,
-      timeRemainingSeconds: Math.ceil(
-        100 / Math.max(0.001, stateRef.current.totalComputePflops * 100 /
-          (5 * Math.sqrt(Math.max(1, stateRef.current.currentModel.parametersCount / 14_000_000))))
-      )
+      timeRemainingSeconds: estimateTrainingSeconds(100, progressPerTick)
     };
 
     sound.playCommandExecute();
@@ -2050,7 +2087,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 - query <id> <texto>: Consulta a un agente; usa su modelo y parámetros.
 - swarm <texto> : Consulta cooperativa a hasta tres agentes.
 - save           : Sincroniza y guarda el progreso en la nube de Firebase.
-- speed <0|1|2|5>: Cambia la velocidad de simulación (0=Pausa, 1=1x, 2=2x, 5=5x).
+- speed <0|1|5|20|50>: Cambia la velocidad de simulación (0=Pausa, 1x, 5x, 20x, 50x).
 - clear          : Limpia los logs de la consola.
 - singularity    : Consulta estado de trascendencia hacia la Singularidad Tecnológica.
 - lore           : Despliega los archivos confidenciales del proyecto SYNAPSE.`, `SYNAPSE OPERATIVE CLI COMMANDS:
@@ -2071,7 +2108,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 - quarantine <id>: Isolate or reactivate an agent.
 - query <id> <text>: Query an agent using its assigned model and settings.
 - swarm <text>  : Send a cooperative query to up to three agents.
-- speed <0|1|2|5>: Change simulation speed (0=Pause, 1=1x, 2=2x, 5=5x).
+- speed <0|1|5|20|50>: Change simulation speed (0=Pause, 1x, 5x, 20x, 50x).
 - save           : Sync and save progress to Firebase cloud storage.
 - clear          : Clear console logs.
 - singularity    : Check progress toward the technological Singularity.
@@ -2216,13 +2253,14 @@ The future of SYNAPSE depends on how we choose to build it."`);
         const val = args[0]?.toLowerCase();
         let newSpeed = 1;
         if (val === '0' || val === 'pause' || val === 'pausa') newSpeed = 0;
-        else if (val === '2' || val === 'fast' || val === 'rapido') newSpeed = 2;
-        else if (val === '5' || val === 'turbo' || val === 'warp') newSpeed = 5;
+        else if (val === '5' || val === 'fast' || val === 'rapido') newSpeed = 5;
+        else if (val === '20' || val === 'turbo') newSpeed = 20;
+        else if (val === '50' || val === 'warp') newSpeed = 50;
         else if (val === '1' || val === 'normal') newSpeed = 1;
         else {
           return text(
-            `Uso: speed <0|1|2|5> (0=Pausa, 1=Normal, 2=Rápido, 5=Turbo). Velocidad actual: ${stateRef.current.gameSpeed === 0 ? 'PAUSA' : `${stateRef.current.gameSpeed}x`}.`,
-            `Usage: speed <0|1|2|5> (0=Pause, 1=Normal, 2=Fast, 5=Turbo). Current speed: ${stateRef.current.gameSpeed === 0 ? 'PAUSED' : `${stateRef.current.gameSpeed}x`}.`
+            `Uso: speed <0|1|5|20|50> (0=Pausa). Velocidad actual: ${stateRef.current.gameSpeed === 0 ? 'PAUSA' : `${stateRef.current.gameSpeed}x`}.`,
+            `Usage: speed <0|1|5|20|50> (0=Pause). Current speed: ${stateRef.current.gameSpeed === 0 ? 'PAUSED' : `${stateRef.current.gameSpeed}x`}.`
           );
         }
         setGameSpeed(newSpeed);

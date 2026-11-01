@@ -16,6 +16,8 @@ import {
   FacilityTier
 } from '../types/game';
 
+export const DAYS_PER_GAME_MONTH = 30;
+
 export const INITIAL_HARDWARE: HardwareItem[] = [
   // GPUs & Accelerators (Starter Options + Progressive Unlocks)
   {

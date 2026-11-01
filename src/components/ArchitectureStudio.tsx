@@ -38,6 +38,8 @@ import {
   QUANTIZATION_DOCS, 
   LOSS_DOCS 
 } from '../utils/aiDocumentation';
+import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
+import { calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration } from '../utils/training';
 import { DocLinkBadge } from './DocLinkBadge';
 
 export const ArchitectureStudio: React.FC = () => {
@@ -62,6 +64,16 @@ export const ArchitectureStudio: React.FC = () => {
   );
 
   const isVramSufficient = totalClusterVram >= current.vramRequiredGb;
+  const agentComputeDemand = state.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
+  const trainingProgressPerTick = calculateTrainingProgressPerTick({
+    parametersCount: current.parametersCount,
+    totalComputePflops: state.totalComputePflops,
+    agentComputeDemand,
+    reservedComputePflops: state.activeGig?.computePflopsRequired || 0,
+    systemHeatCelsius: state.systemHeatCelsius
+  });
+  const estimatedTrainingSeconds = estimateTrainingSeconds(100, trainingProgressPerTick);
+  const estimateSpeed = Math.max(1, state.gameSpeed);
 
   const handleTopologyChange = (top: ModelTopology) => {
     sound.playKeyClick();
@@ -281,7 +293,7 @@ export const ArchitectureStudio: React.FC = () => {
       </section>
 
       {/* Model Spec Card */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#09111c] border border-cyan-900/50 p-2.5 rounded text-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-[#09111c] border border-cyan-900/50 p-2.5 rounded text-xs">
         <div>
           <span className="text-zinc-500 text-[10px] block">{t(state.language, 'base_model')}</span>
           <span className="text-cyan-300 font-bold">{current.name}</span>
@@ -303,6 +315,17 @@ export const ArchitectureStudio: React.FC = () => {
         <div>
           <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
           <span className="text-purple-300 font-bold">IQ {current.reasoningScore} pts</span>
+        </div>
+        <div>
+          <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'TIEMPO ESTIMADO DE ENTRENAMIENTO', 'ESTIMATED TRAINING TIME')}</span>
+          <span className="text-emerald-300 font-bold">
+            {estimatedTrainingSeconds === null
+              ? localize(state.language, 'Sin cómputo disponible', 'No compute available')
+              : `${formatTrainingDuration(estimatedTrainingSeconds / estimateSpeed)} @ ${estimateSpeed}x`}
+          </span>
+          {state.gameSpeed === 0 && (
+            <span className="text-[9px] text-zinc-500 block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>
+          )}
         </div>
       </div>
 

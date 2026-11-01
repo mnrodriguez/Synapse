@@ -24,6 +24,7 @@ import { localizedHardware } from '../utils/gameContentI18n';
 import {
   AGENT_COMPUTE_DEMAND_PFLOPS,
   AGENT_POWER_DRAW_KW,
+  DAYS_PER_GAME_MONTH,
   ELECTRICITY_RATE_PER_KWH,
   FACILITY_TIERS
 } from '../utils/constants';
@@ -101,7 +102,7 @@ export const HardwareRack: React.FC = () => {
           <p className="mt-1 text-[10px] text-zinc-400">
             {t(state.language, 'monthly_estimate')}: ${estimatedMonthlyCost.toFixed(2)} CR
             {' '}· {t(state.language, 'electricity')}: ${ELECTRICITY_RATE_PER_KWH.toFixed(2)}/kWh
-            {' '}· {t(state.language, 'billing_cycle')}: {Math.floor(((state.dayTicks || 0) / 48) * 100)}% ({state.language === 'en' ? `Day ${state.gameDay || 1} = Month ${state.gameMonth || 1}` : `Día ${state.gameDay || 1} = Mes ${state.gameMonth || 1}`})
+            {' '}· {t(state.language, 'billing_cycle')}: {Math.floor((((state.gameDay || 1) - 1 + (state.dayTicks || 0) / 48) / DAYS_PER_GAME_MONTH) * 100)}% ({state.language === 'en' ? `Day ${state.gameDay || 1} of ${DAYS_PER_GAME_MONTH} · Month ${state.gameMonth || 1}` : `Día ${state.gameDay || 1} de ${DAYS_PER_GAME_MONTH} · Mes ${state.gameMonth || 1}`})
           </p>
           <p className={`mt-1 text-[10px] ${state.utilityDebt > 0 ? 'text-red-300' : 'text-zinc-500'}`}>
             {t(state.language, 'utility_debt')}: ${state.utilityDebt.toFixed(2)} CR · {t(state.language, 'monthly_rent')}: ${facility.monthlyLeaseCost.toLocaleString()} CR{t(state.language, 'per_month')}
