@@ -1,0 +1,88 @@
+{
+  "entities": {
+    "UserSave": {
+      "title": "UserSave",
+      "description": "Operative game save state including hardware, active model architectures, datasets, research, and singularity progress",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the player"
+        },
+        "email": {
+          "type": "string",
+          "description": "Player email"
+        },
+        "callsign": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Operative alias"
+        },
+        "gameState": {
+          "type": "object",
+          "description": "Serialized game state including credits, heat, energy, hardware racks, neural models, dataset nodes, research tree, and active jobs"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last save timestamp"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["userId", "callsign"]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Public global operative rankings and singularity telemetry",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Auth UID"
+        },
+        "callsign": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Operative alias"
+        },
+        "computePFLOPS": {
+          "type": "number",
+          "description": "Total cluster raw compute power"
+        },
+        "singularityProgress": {
+          "type": "number",
+          "description": "Singularity threshold percentage 0 to 100"
+        },
+        "activeArchitecture": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Primary architecture type e.g. MoE + Vector RAG + Graph KG"
+        },
+        "achievedSingularity": {
+          "type": "boolean",
+          "description": "Whether the operative unlocked total runaway autonomy"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of ranking update"
+        }
+      },
+      "required": ["userId", "callsign", "computePFLOPS", "singularityProgress"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserSave",
+      "description": "Private profile and game save state for the authenticated operative"
+    },
+    "/leaderboard/{userId}": {
+      "schema": "LeaderboardEntry",
+      "description": "Operative global rankings in the Singularity matrix"
+    }
+  }
+}

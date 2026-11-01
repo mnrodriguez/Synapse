@@ -1,0 +1,266 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from 'react';
+import { useGame } from '../context/GameContext';
+import { 
+  User, 
+  X, 
+  Cloud, 
+  ShieldCheck, 
+  LogOut, 
+  Save, 
+  Download, 
+  CheckCircle2, 
+  AlertCircle,
+  Sparkles,
+  Key,
+  RotateCcw
+} from 'lucide-react';
+import { sound } from '../audio/soundManager';
+
+interface AuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const { 
+    user, 
+    loginWithGoogle, 
+    logoutUser, 
+    state, 
+    saveGameToCloud, 
+    loadGameFromCloud, 
+    cloudSyncStatus,
+    isSaving,
+    addLog,
+    resetProgress
+  } = useGame();
+
+  const [callsignInput, setCallsignInput] = useState(state.callsign);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleUpdateCallsign = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (callsignInput.trim()) {
+      sound.playKeyClick();
+      state.callsign = callsignInput.trim().toUpperCase().substring(0, 30);
+      addLog(`Identificador de operativo actualizado a: [${state.callsign}]`, 'info');
+      setSaveSuccessMsg('Callsign actualizado.');
+      setTimeout(() => setSaveSuccessMsg(''), 2500);
+    }
+  };
+
+  const handleSave = async () => {
+    sound.playNavSwitch();
+    const ok = await saveGameToCloud();
+    if (ok) {
+      setSaveSuccessMsg('¡Progreso guardado en la nube con éxito!');
+      setTimeout(() => setSaveSuccessMsg(''), 3000);
+    }
+  };
+
+  const handleLoad = async () => {
+    sound.playNavSwitch();
+    const ok = await loadGameFromCloud();
+    if (ok) {
+      setSaveSuccessMsg('¡Progreso descargado desde la nube!');
+      setTimeout(() => setSaveSuccessMsg(''), 3000);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono select-none">
+      <div className="bg-[#080d15] border border-cyan-800/80 rounded-lg max-w-md w-full shadow-[0_0_30px_rgba(0,255,200,0.15)] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-3.5 bg-[#0b131f] border-b border-cyan-900/60">
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-cyan-400" />
+            <h3 className="font-bold text-sm text-cyan-300 tracking-wider">
+              AUTENTICACIÓN // PROTOCOLO DE ALMACENAMIENTO NUBE
+            </h3>
+          </div>
+          <button
+            onClick={() => { sound.playNavSwitch(); onClose(); }}
+            className="p-1 rounded text-zinc-400 hover:text-zinc-200"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-4 text-xs">
+          {/* Free Tier Guarantee Banner */}
+          <div className="p-2.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>PLAN GRATUITO GARANTIZADO (0 COSTOS)</span>
+            </div>
+            <p className="text-[11px] text-zinc-400">
+              Esta aplicación utiliza el plan <strong>Firebase Spark Free Tier</strong>. Las operaciones de guardado y lectura se ejecutan dentro de las cuotas gratuitas diarias de Google Cloud sin posibilidad de generar cobros por uso.
+            </p>
+          </div>
+
+          {/* User Status / Login */}
+          {user ? (
+            <div className="space-y-3 bg-[#09111c] border border-cyan-900/40 p-3 rounded-lg">
+              <div className="flex items-center gap-3">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full border border-cyan-400" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-cyan-950 border border-cyan-500 flex items-center justify-center">
+                    <User className="w-5 h-5 text-cyan-400" />
+                  </div>
+                )}
+                <div className="flex-1 truncate">
+                  <span className="text-[10px] text-zinc-500 block font-mono">USUARIO AUTENTICADO</span>
+                  <div className="font-bold text-zinc-100 truncate">{user.displayName || user.email}</div>
+                  <div className="text-[10px] text-zinc-400 truncate">{user.email}</div>
+                </div>
+              </div>
+
+              {/* Callsign Editor */}
+              <form onSubmit={handleUpdateCallsign} className="pt-2 border-t border-zinc-800 space-y-1">
+                <label className="text-[10px] text-zinc-400 block">CALLSIGN DEL OPERATIVO (PÚBLICO EN RANKING):</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={callsignInput}
+                    onChange={(e) => setCallsignInput(e.target.value)}
+                    maxLength={25}
+                    className="flex-1 bg-zinc-950 border border-cyan-900 rounded px-2 py-1 text-xs text-cyan-200 outline-none focus:border-cyan-400"
+                  />
+                  <button
+                    type="submit"
+                    className="px-2.5 py-1 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-700 rounded text-xs"
+                  >
+                    CAMBIAR
+                  </button>
+                </div>
+              </form>
+
+              {/* Cloud Actions */}
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-800">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="py-1.5 px-3 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>GUARDAR EN NUBE</span>
+                </button>
+                <button
+                  onClick={handleLoad}
+                  disabled={isSaving}
+                  className="py-1.5 px-3 bg-zinc-800 hover:bg-zinc-700 text-cyan-300 font-bold rounded text-xs flex items-center justify-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>RESTAURAR NUBE</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[10px] text-zinc-500">
+                  Estado: <strong className="text-emerald-400">Enlace Criptográfico Activo</strong>
+                </span>
+                <button
+                  onClick={logoutUser}
+                  className="text-red-400 hover:text-red-300 text-[10px] flex items-center gap-1"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span>CERRAR SESIÓN</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 bg-[#09111c] border border-cyan-900/40 rounded-lg text-center space-y-3">
+              <Key className="w-8 h-8 text-cyan-400 mx-auto" />
+              <div>
+                <h4 className="font-bold text-zinc-100 text-xs">VINCULA TU CUENTA DE GOOGLE</h4>
+                <p className="text-[11px] text-zinc-400 mt-1">
+                  Guarda tu progreso de entrenamiento, hardware adquirido y posición en el ranking de la Singularidad de forma persistente y segura.
+                </p>
+              </div>
+
+              <button
+                onClick={loginWithGoogle}
+                className="w-full py-2 px-4 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,255,200,0.3)] transition-all cursor-pointer"
+              >
+                <User className="w-4 h-4 fill-current" />
+                <span>INICIAR SESIÓN CON GOOGLE</span>
+              </button>
+
+              <span className="text-[10px] text-zinc-500 block">
+                Tus datos locales están seguros y se transferirán automáticamente a la nube.
+              </span>
+            </div>
+          )}
+
+          {saveSuccessMsg && (
+            <div className="p-2 bg-emerald-950/60 border border-emerald-500 text-emerald-300 rounded text-center text-xs animate-bounce flex items-center justify-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{saveSuccessMsg}</span>
+            </div>
+          )}
+
+          {/* Reset simulation to zero */}
+          <div className="p-3 bg-red-950/20 border border-red-900/40 rounded-lg space-y-2">
+            <div className="flex items-center gap-1.5 text-red-400 font-bold text-xs">
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>REINICIAR SIMULACIÓN A CERO</span>
+            </div>
+            <p className="text-[10px] text-zinc-400 leading-snug">
+              ¿Quieres empezar de nuevo eligiendo otra configuración de hardware inicial y primer modelo? Puedes reiniciar toda la simulación desde cero. Se reiniciará el protocolo de Génesis.
+            </p>
+            {confirmReset ? (
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await resetProgress();
+                    setConfirmReset(false);
+                    onClose();
+                  }}
+                  className="flex-1 py-1 px-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-[11px] transition-colors"
+                >
+                  CONFIRMAR REINICIO TOTAL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmReset(false)}
+                  className="py-1 px-2 bg-zinc-800 text-zinc-300 rounded text-[11px]"
+                >
+                  CANCELAR
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmReset(true)}
+                className="w-full py-1 px-2 bg-red-950/60 hover:bg-red-900/70 border border-red-800/60 text-red-300 rounded text-[11px] transition-colors text-center"
+              >
+                REINICIAR SIMULACIÓN A CERO (GÉNESIS)
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-3 bg-[#0a111a] border-t border-cyan-900/40 text-[11px] text-zinc-500 flex justify-end">
+          <button
+            onClick={() => { sound.playNavSwitch(); onClose(); }}
+            className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs"
+          >
+            ENTENDIDO
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

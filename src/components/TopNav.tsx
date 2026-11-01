@@ -1,0 +1,231 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from 'react';
+import { useGame } from '../context/GameContext';
+import { 
+  Cpu, 
+  Zap, 
+  Flame, 
+  AlertTriangle, 
+  Volume2, 
+  VolumeX, 
+  Cloud, 
+  CloudOff, 
+  ShieldAlert, 
+  BookOpen, 
+  Trophy, 
+  User, 
+  RefreshCw,
+  Sparkles,
+  Languages
+} from 'lucide-react';
+import { sound } from '../audio/soundManager';
+
+interface TopNavProps {
+  onOpenManual: () => void;
+  onOpenLeaderboard: () => void;
+  onOpenAuth: () => void;
+}
+
+export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard, onOpenAuth }) => {
+  const { 
+    state, 
+    user, 
+    cloudSyncStatus, 
+    isSaving, 
+    soundMuted, 
+    toggleSound, 
+    setLanguage,
+    scrubSuspicion, 
+    saveGameToCloud 
+  } = useGame();
+
+  const [savingAnim, setSavingAnim] = useState(false);
+
+  const handleManualSave = async () => {
+    sound.playNavSwitch();
+    setSavingAnim(true);
+    await saveGameToCloud();
+    setTimeout(() => setSavingAnim(false), 800);
+  };
+
+  // Temperature color styling
+  const getTempColor = (temp: number) => {
+    if (temp >= 85) return 'text-red-400 border-red-500/50 bg-red-950/30 animate-pulse';
+    if (temp >= 65) return 'text-amber-400 border-amber-500/50 bg-amber-950/30';
+    return 'text-emerald-400 border-emerald-500/30 bg-emerald-950/20';
+  };
+
+  // Power load styling
+  const isPowerOverloaded = state.activePowerKw > state.maxPowerKw;
+
+  return (
+    <header className="w-full bg-[#080d14] border-b border-cyan-900/60 text-xs font-mono select-none px-3 py-2 flex flex-wrap items-center justify-between gap-3 shadow-[0_4px_20px_rgba(0,255,200,0.05)] z-20">
+      {/* Brand & Callsign */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <div className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+          </div>
+          <span className="font-bold tracking-widest text-cyan-400 text-sm drop-shadow-[0_0_8px_rgba(0,255,204,0.6)]">
+            SYNAPSE <span className="text-zinc-500 text-[10px]">v4.19</span>
+          </span>
+        </div>
+
+        <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/90 border border-zinc-700/60 text-zinc-300">
+          <span className="text-zinc-500 text-[10px]">OPERATIVE:</span>
+          <span className="text-cyan-300 font-semibold">{state.callsign}</span>
+        </div>
+
+        {/* Credits */}
+        <div className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-amber-950/40 border border-amber-500/40 text-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.1)]">
+          <span className="text-amber-500 font-bold">$</span>
+          <span className="font-bold tracking-wider">{state.credits.toLocaleString()}</span>
+          <span className="text-[10px] text-amber-500/80">CR</span>
+        </div>
+      </div>
+
+      {/* Telemetry gauges */}
+      <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+        {/* Compute Power */}
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-950/30 border border-cyan-500/30 text-cyan-300" title="Capacidad de cómputo total del clúster">
+          <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="text-zinc-400 text-[10px]">COMPUTE:</span>
+          <span className="font-bold">{state.totalComputePflops.toFixed(4)} PFLOPS</span>
+        </div>
+
+        {/* Power Grid */}
+        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${isPowerOverloaded ? 'bg-red-950/40 border-red-500 text-red-400 animate-pulse' : 'bg-zinc-900/80 border-zinc-700/60 text-zinc-300'}`} title="Consumo eléctrico vs capacidad de red">
+          <Zap className={`w-3.5 h-3.5 ${isPowerOverloaded ? 'text-red-400' : 'text-yellow-400'}`} />
+          <span className="text-zinc-400 text-[10px]">POWER:</span>
+          <span>{state.activePowerKw} / {state.maxPowerKw} kW</span>
+        </div>
+
+        {/* Core Temperature */}
+        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${getTempColor(state.systemHeatCelsius)}`} title="Temperatura térmica del clúster (Límite 85°C)">
+          <Flame className="w-3.5 h-3.5" />
+          <span className="text-[10px] opacity-75">HEAT:</span>
+          <span className="font-bold">{state.systemHeatCelsius}°C</span>
+        </div>
+
+        {/* Watchdog Suspicion */}
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700/60 text-zinc-300" title="Sospecha de agencias reguladoras de IA">
+          <ShieldAlert className={`w-3.5 h-3.5 ${state.watchdogSuspicion > 50 ? 'text-red-400 animate-pulse' : 'text-purple-400'}`} />
+          <span className="text-zinc-400 text-[10px]">SUSPICION:</span>
+          <span className={state.watchdogSuspicion > 60 ? 'text-red-400 font-bold' : 'text-zinc-200'}>
+            {state.watchdogSuspicion.toFixed(0)}%
+          </span>
+          {state.watchdogSuspicion > 20 && (
+            <button 
+              onClick={() => scrubSuspicion()}
+              className="ml-1 px-1 py-0.2 text-[9px] bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded border border-purple-500/40 transition-colors"
+              title="Pagar $250 para disipar sospecha con proxies anónimos"
+            >
+              SCRUB
+            </button>
+          )}
+        </div>
+
+        {/* Singularity Gauge */}
+        <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-gradient-to-r from-cyan-950/60 via-purple-950/60 to-pink-950/60 border border-cyan-400/50 text-cyan-200 shadow-[0_0_12px_rgba(0,255,200,0.15)]">
+          <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-spin" style={{ animationDuration: '8s' }} />
+          <span className="text-[10px] text-cyan-400 font-bold">SINGULARIDAD:</span>
+          <span className="font-bold text-cyan-200">{state.singularityProgress.toFixed(1)}%</span>
+        </div>
+      </div>
+
+      {/* Control buttons & Auth */}
+      <div className="flex items-center gap-2">
+        {/* Language Switcher */}
+        <button
+          onClick={() => {
+            sound.playKeyClick();
+            setLanguage(state.language === 'es' ? 'en' : 'es');
+          }}
+          className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900/90 hover:bg-zinc-800 border border-cyan-800/60 hover:border-cyan-500 text-zinc-300 hover:text-cyan-300 transition-colors"
+          title={state.language === 'es' ? 'Switch interface to English' : 'Cambiar interfaz a Español'}
+        >
+          <Languages className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="font-bold text-[10px] text-cyan-300 tracking-wider">
+            {state.language === 'es' ? 'ES' : 'EN'}
+          </span>
+        </button>
+
+        {/* Audio Toggle */}
+        <button
+          onClick={toggleSound}
+          className={`p-1.5 rounded border transition-colors ${soundMuted ? 'text-zinc-500 border-zinc-800 bg-zinc-900/50 hover:text-zinc-300' : 'text-cyan-400 border-cyan-800/60 bg-cyan-950/40 hover:bg-cyan-900/40'}`}
+          title={soundMuted ? 'Activar audio sfx' : 'Silenciar audio'}
+        >
+          {soundMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+        </button>
+
+        {/* AI Manual / Handbook */}
+        <button
+          onClick={() => { sound.playNavSwitch(); onOpenManual(); }}
+          className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-cyan-300 transition-colors"
+          title="Manual técnico de entrenamiento y conceptos de IA"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="hidden md:inline">MANUAL</span>
+        </button>
+
+        {/* Leaderboard */}
+        <button
+          onClick={() => { sound.playNavSwitch(); onOpenLeaderboard(); }}
+          className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-yellow-300 transition-colors"
+          title="Ver matriz global de agentes y progreso de singularidad"
+        >
+          <Trophy className="w-3.5 h-3.5 text-yellow-400" />
+          <span className="hidden md:inline">RANKING</span>
+        </button>
+
+        {/* Cloud Save status button */}
+        <button
+          onClick={handleManualSave}
+          disabled={isSaving || savingAnim}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded border transition-all ${
+            cloudSyncStatus === 'synced' 
+              ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/50' 
+              : cloudSyncStatus === 'syncing' || isSaving || savingAnim
+              ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300 animate-pulse'
+              : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
+          }`}
+          title="Guardar progreso en la nube de Firebase"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isSaving || savingAnim ? 'animate-spin text-cyan-400' : ''}`} />
+          <span className="hidden lg:inline">
+            {cloudSyncStatus === 'synced' ? 'NUBE OK' : isSaving || savingAnim ? 'GUARDANDO...' : 'GUARDAR'}
+          </span>
+        </button>
+
+        {/* User Account / Profile */}
+        <button
+          onClick={() => { sound.playNavSwitch(); onOpenAuth(); }}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-600/40 text-cyan-300 transition-colors"
+          title="Identificación de usuario y autenticación segura"
+        >
+          {user ? (
+            <>
+              {user.photoURL ? (
+                <img src={user.photoURL} alt="Avatar" className="w-4 h-4 rounded-full border border-cyan-400" />
+              ) : (
+                <User className="w-3.5 h-3.5 text-cyan-400" />
+              )}
+              <span className="hidden sm:inline max-w-[90px] truncate">{user.displayName || user.email?.split('@')[0]}</span>
+            </>
+          ) : (
+            <>
+              <CloudOff className="w-3.5 h-3.5 text-zinc-400" />
+              <span className="hidden sm:inline">CONECTAR</span>
+            </>
+          )}
+        </button>
+      </div>
+    </header>
+  );
+};
