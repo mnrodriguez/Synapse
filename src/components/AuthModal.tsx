@@ -37,7 +37,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     cloudSyncStatus,
     isSaving,
     addLog,
-    resetProgress
+    resetProgress,
+    setCallsign
   } = useGame();
 
   const [callsignInput, setCallsignInput] = useState(state.callsign);
@@ -50,8 +51,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     if (callsignInput.trim()) {
       sound.playKeyClick();
-      state.callsign = callsignInput.trim().toUpperCase().substring(0, 30);
-      addLog(`Identificador de operativo actualizado a: [${state.callsign}]`, 'info');
+      const updatedCallsign = callsignInput.trim().toUpperCase().substring(0, 30);
+      setCallsign(updatedCallsign);
+      addLog(`Identificador de operativo actualizado a: [${updatedCallsign}]`, 'info');
       setSaveSuccessMsg('Callsign actualizado.');
       setTimeout(() => setSaveSuccessMsg(''), 2500);
     }

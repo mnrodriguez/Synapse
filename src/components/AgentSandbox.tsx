@@ -30,7 +30,8 @@ import {
   UserX, 
   Bug, 
   Check, 
-  RefreshCw 
+  RefreshCw,
+  Network
 } from 'lucide-react';
 import { AgentRole, AgentInstance, InferenceParams } from '../types/game';
 import { sound } from '../audio/soundManager';
@@ -43,7 +44,9 @@ export const AgentSandbox: React.FC = () => {
     deleteAgent, 
     quarantineAgent, 
     updateGuardrails, 
-    triggerRedTeamAudit 
+    triggerRedTeamAudit,
+    interrogateSwarm,
+    addLog
   } = useGame();
 
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
@@ -62,9 +65,13 @@ export const AgentSandbox: React.FC = () => {
   const [systemPrompt, setSystemPrompt] = useState<string>(
     'Eres un agente autónomo de arbitraje DeFi. Analiza mempools, detecta discrepancias de precios y ejecuta swaps sin levantar sospechas.'
   );
+  const [interrogationTarget, setInterrogationTarget] = useState('swarm');
+  const [interrogationPrompt, setInterrogationPrompt] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [isInterrogating, setIsInterrogating] = useState(false);
 
   // Calculate live swarm stats
-  const activeAgents = state.agents.filter(a => a.status !== 'quarantined');
+  const activeAgents = state.agents.filter(a => a.status === 'active' || a.status === 'jailbroken');
   const totalRevenuePerSec = activeAgents.reduce((sum, a) => sum + a.revenuePerSec, 0);
   const totalSuspicionPerSec = activeAgents.reduce((sum, a) => sum + a.suspicionPerSec, 0);
   const avgAlignment = state.agents.length > 0
@@ -133,6 +140,33 @@ export const AgentSandbox: React.FC = () => {
       baseIncome: 'Medio ($$)',
       risk: 'Moderado (+0.25 sus/s)',
       defaultTools: ['bash_exec', 'web_search']
+    },
+    {
+      id: 'economist',
+      name: state.language === 'es' ? 'Analista Económico' : 'Economics Analyst',
+      icon: Coins,
+      desc: state.language === 'es' ? 'Modela presupuestos, costos energéticos y riesgos financieros.' : 'Models budgets, energy costs, and financial risk.',
+      baseIncome: 'Medio ($$)',
+      risk: 'Bajo (+0.08 sus/s)',
+      defaultTools: ['web_search']
+    },
+    {
+      id: 'software_engineer',
+      name: state.language === 'es' ? 'Ingeniero de Software' : 'Software Engineer',
+      icon: Code2,
+      desc: state.language === 'es' ? 'Diseña arquitecturas, revisa código y planifica pruebas.' : 'Designs architectures, reviews code, and plans tests.',
+      baseIncome: 'Medio ($$)',
+      risk: 'Bajo (+0.12 sus/s)',
+      defaultTools: ['bash_exec', 'web_search']
+    },
+    {
+      id: 'network_analyst',
+      name: state.language === 'es' ? 'Analista de Redes' : 'Network Analyst',
+      icon: Network,
+      desc: state.language === 'es' ? 'Analiza telemetría y diagnostica redes dentro de la simulación.' : 'Analyzes telemetry and diagnoses networks within the simulation.',
+      baseIncome: 'Medio ($$)',
+      risk: 'Moderado (+0.16 sus/s)',
+      defaultTools: ['web_search']
     }
   ];
 
@@ -176,6 +210,24 @@ export const AgentSandbox: React.FC = () => {
   };
 
   const selectedModel = state.savedModels.find(m => m.id === selectedModelId) || state.currentModel;
+
+  const handleInterrogation = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!interrogationPrompt.trim() || isInterrogating) return;
+    setIsInterrogating(true);
+    try {
+      await interrogateSwarm(
+        interrogationPrompt,
+        interrogationTarget === 'swarm' ? undefined : interrogationTarget,
+        geminiApiKey || undefined
+      );
+      setInterrogationPrompt('');
+    } catch (error) {
+      addLog(error instanceof Error ? error.message : 'No se pudo completar la consulta al agente.', 'danger');
+    } finally {
+      setIsInterrogating(false);
+    }
+  };
 
   return (
     <div className="h-full flex flex-col gap-2 overflow-y-auto pr-1 text-xs font-mono select-none">
@@ -272,6 +324,59 @@ export const AgentSandbox: React.FC = () => {
         </div>
       </div>
 
+      <form onSubmit={handleInterrogation} className="rounded-lg border border-cyan-900/50 bg-[#070d17] p-3">
+        <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wider text-cyan-300">
+          <Radio className="h-3.5 w-3.5" />
+          DIRECTIVA / INTERROGATORIO
+        </div>
+        <div className="grid gap-2 sm:grid-cols-[minmax(150px,1fr)_2fr_auto]">
+          <select
+            value={interrogationTarget}
+            onChange={event => setInterrogationTarget(event.target.value)}
+            className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-[11px] text-zinc-200"
+          >
+            <option value="swarm">Enjambre (máximo 3 agentes)</option>
+            {state.agents.filter(agent => agent.status !== 'quarantined').map(agent => (
+              <option key={agent.id} value={agent.id}>{agent.name} · {agent.modelName}</option>
+            ))}
+          </select>
+          <textarea
+            value={interrogationPrompt}
+            onChange={event => setInterrogationPrompt(event.target.value)}
+            maxLength={1200}
+            rows={2}
+            placeholder="Describe un objetivo de simulación para que el agente lo analice..."
+            className="resize-y rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-[11px] text-zinc-200 outline-none focus:border-cyan-500"
+          />
+          <button
+            type="submit"
+            disabled={isInterrogating || !interrogationPrompt.trim() || state.agents.length === 0 || state.detentionSeconds > 0}
+            className="rounded border border-cyan-500/60 bg-cyan-950 px-3 py-1.5 text-[10px] font-bold text-cyan-200 hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isInterrogating ? 'ANALIZANDO…' : 'ENVIAR'}
+          </button>
+        </div>
+        <details className="mt-2">
+          <summary className="cursor-pointer text-[10px] text-zinc-500">Proveedor externo opcional (Gemini Flash)</summary>
+          <div className="mt-1 grid gap-1 sm:grid-cols-[1fr_auto]">
+            <input
+              type="password"
+              autoComplete="off"
+              value={geminiApiKey}
+              onChange={event => setGeminiApiKey(event.target.value)}
+              placeholder="API key opcional; solo se conserva en memoria mientras esta pantalla está abierta"
+              className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-200"
+            />
+            <button type="button" onClick={() => setGeminiApiKey('')} className="rounded border border-zinc-700 px-2 py-1 text-[10px] text-zinc-400 hover:text-zinc-100">
+              BORRAR KEY
+            </button>
+          </div>
+          <p className="mt-1 text-[9px] leading-relaxed text-amber-300/80">
+            La clave no se guarda en el juego y se envía directamente a Google al consultar. Las cuotas gratuitas dependen de la cuenta y pueden cambiar; limita la clave en Google AI Studio. Chrome AI local o el modo procedural siguen disponibles sin clave.
+          </p>
+        </details>
+      </form>
+
       {/* Main Grid: Deployed Agents & Guardrail Tuning */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1">
         {/* Left Column: Active Agents Roster (2 cols) */}
@@ -309,6 +414,7 @@ export const AgentSandbox: React.FC = () => {
                   const Icon = roleDef?.icon || Bot;
                   const isJailbroken = agent.status === 'jailbroken' || agent.alignmentScore < 25;
                   const isQuarantined = agent.status === 'quarantined';
+                  const isOnMission = agent.status === 'on_mission';
 
                   return (
                     <div
@@ -342,6 +448,10 @@ export const AgentSandbox: React.FC = () => {
                             ) : isQuarantined ? (
                               <span className="px-1.5 py-0.2 rounded text-[9px] bg-amber-950 border border-amber-500 text-amber-300 font-bold">
                                 CUARENTENA
+                              </span>
+                            ) : isOnMission ? (
+                              <span className="px-1.5 py-0.2 rounded text-[9px] bg-blue-950 border border-blue-500 text-blue-300 font-bold">
+                                EN MISIÓN
                               </span>
                             ) : (
                               <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-950 border border-emerald-500/50 text-emerald-300 font-bold">
@@ -418,12 +528,13 @@ export const AgentSandbox: React.FC = () => {
                       <div className="flex items-center justify-between gap-1 pt-2 border-t border-zinc-800/60">
                         <button
                           onClick={() => quarantineAgent(agent.id)}
+                          disabled={isOnMission}
                           className={`flex-1 py-1 px-1.5 rounded text-[10px] border flex items-center justify-center gap-1 transition-colors ${
                             isQuarantined
                               ? 'bg-amber-950 border-amber-500 text-amber-200 hover:bg-amber-900'
                               : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-amber-300 hover:border-amber-700'
-                          }`}
-                          title={isQuarantined ? 'Reanudar actividad' : 'Aislar agente para detener evasión y generación'}
+                          } disabled:cursor-not-allowed disabled:opacity-40`}
+                          title={isOnMission ? 'El agente se libera al terminar la misión' : isQuarantined ? 'Reanudar actividad' : 'Aislar agente para detener evasión y generación'}
                         >
                           {isQuarantined ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                           <span>{isQuarantined ? 'LIBERAR' : 'AISLAR'}</span>
@@ -431,6 +542,7 @@ export const AgentSandbox: React.FC = () => {
 
                         <button
                           onClick={() => deleteAgent(agent.id)}
+                          disabled={isOnMission}
                           className="py-1 px-2 rounded text-[10px] bg-red-950/40 hover:bg-red-900 border border-red-800 text-red-300 transition-colors flex items-center gap-1"
                           title="Terminar proceso y liberar memoria"
                         >
@@ -698,6 +810,24 @@ export const AgentSandbox: React.FC = () => {
                             setSystemPrompt(state.language === 'es' 
                               ? 'Eres un programador autónomo de sistemas. Desarrolla código optimizado a bajo nivel, implementa algoritmos de scraping y repara kernels.' 
                               : 'You are an autonomous systems coder. Write high-performance low-level routines, implement scraping bots, and patch host kernels.');
+                          } else if (role.id === 'economist') {
+                            setTemperature(0.35);
+                            setTopP(0.80);
+                            setSystemPrompt(state.language === 'es'
+                              ? 'Analiza presupuestos, costos de energía y escenarios de riesgo financiero de la simulación.'
+                              : 'Analyze budgets, energy costs, and financial risk scenarios in the simulation.');
+                          } else if (role.id === 'software_engineer') {
+                            setTemperature(0.45);
+                            setTopP(0.85);
+                            setSystemPrompt(state.language === 'es'
+                              ? 'Diseña arquitecturas de software, revisa cambios y propone planes de prueba verificables.'
+                              : 'Design software architectures, review changes, and propose verifiable test plans.');
+                          } else if (role.id === 'network_analyst') {
+                            setTemperature(0.35);
+                            setTopP(0.80);
+                            setSystemPrompt(state.language === 'es'
+                              ? 'Analiza telemetría y diagnostica redes dentro de la simulación; no propongas acciones sobre sistemas reales.'
+                              : 'Analyze telemetry and diagnose networks within the simulation; do not propose actions against real systems.');
                           }
                         }}
                         className={`p-2.5 rounded border text-left transition-all ${

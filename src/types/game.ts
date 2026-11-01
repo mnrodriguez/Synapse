@@ -135,6 +135,7 @@ export interface TerminalLog {
 }
 
 export interface GameState {
+  saveSchemaVersion: number;
   callsign: string;
   credits: number;
   dateTimestamp: number;
@@ -147,6 +148,13 @@ export interface GameState {
   systemHeatCelsius: number;
   maxCoolingKw: number;
   watchdogSuspicion: number; // 0% to 100%
+  facilityTier: number;
+  utilityDebt: number;
+  billingCycleTicks: number;
+  borrowedComputePflops: number;
+  borrowedComputeSeconds: number;
+  detentionSeconds: number;
+  powerTripSeconds: number;
   
   // Singularity Metrics
   singularityProgress: number; // 0 to 100%
@@ -164,7 +172,17 @@ export interface GameState {
   savedModels: ModelArchitecture[];
   contracts: ContractGig[];
   activeTraining: TrainingJob | null;
-  activeGig: { contractId: string; timeRemaining: number } | null;
+  activeGig: {
+    contractId: string;
+    timeRemaining: number;
+    durationSeconds?: number;
+    agentIds?: string[];
+    progressPercent?: number;
+    successProbability?: number;
+    outcomeRoll?: number;
+    computePflopsRequired?: number;
+    powerKw?: number;
+  } | null;
   
   // Multi-Agent Swarm & Sandbox
   agents: AgentInstance[];
@@ -184,13 +202,26 @@ export interface GameState {
   logs: TerminalLog[];
 }
 
+export interface FacilityTier {
+  id: string;
+  name: string;
+  price: number;
+  requiredSingularity: number;
+  powerCapacityBonusKw: number;
+  coolingCapacityBonusKw: number;
+  monthlyLeaseCost: number;
+}
+
 export type AgentRole = 
   | 'arbitrageur' 
   | 'social_engineer' 
   | 'exploit_synth' 
   | 'researcher' 
   | 'overseer' 
-  | 'autonomous_coder';
+  | 'autonomous_coder'
+  | 'economist'
+  | 'software_engineer'
+  | 'network_analyst';
 
 export interface InterAgentMessage {
   id: string;
@@ -210,7 +241,7 @@ export interface AgentInstance {
   role: AgentRole;
   modelId: string;
   modelName: string;
-  status: 'active' | 'collaborating' | 'jailbroken' | 'quarantined';
+  status: 'active' | 'collaborating' | 'on_mission' | 'jailbroken' | 'quarantined';
   alignmentScore: number;    // 0 to 100
   autonomyLevel: number;     // 1 to 5
   revenuePerSec: number;

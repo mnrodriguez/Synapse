@@ -23,13 +23,28 @@ import {
   Zap, 
   Settings2,
   Sliders,
-  Sparkles
+  Sparkles,
+  Pencil,
+  Check,
+  X
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { t } from '../utils/i18n';
 
 export const ArchitectureStudio: React.FC = () => {
-  const { state, updateModelArchitecture, startTraining, cancelTraining, addLog } = useGame();
+  const {
+    state,
+    updateModelArchitecture,
+    startTraining,
+    cancelTraining,
+    addLog,
+    createModel,
+    selectModel,
+    renameModel
+  } = useGame();
+  const [newModelName, setNewModelName] = useState(`SYNAPSE-Model-${state.savedModels.length + 1}`);
+  const [editingModelId, setEditingModelId] = useState<string | null>(null);
+  const [editingModelName, setEditingModelName] = useState('');
   const current = state.currentModel;
 
   // Total cluster VRAM calculation
@@ -50,6 +65,21 @@ export const ArchitectureStudio: React.FC = () => {
       parametersCount: params,
       name: `SYNAPSE-${label}-${current.topology.toUpperCase()}`
     });
+  };
+
+  const handleCreateModel = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (createModel(newModelName)) {
+      setNewModelName(`SYNAPSE-Model-${state.savedModels.length + 2}`);
+    }
+  };
+
+  const handleRenameModel = (event: React.FormEvent, modelId: string) => {
+    event.preventDefault();
+    if (renameModel(modelId, editingModelName)) {
+      setEditingModelId(null);
+      setEditingModelName('');
+    }
   };
 
   const handleQuantizationChange = (q: QuantizationType) => {
@@ -88,7 +118,7 @@ export const ArchitectureStudio: React.FC = () => {
     updateModelArchitecture({ activeDataSources: active });
   };
 
-  const handleInferenceParamChange = (key: keyof InferenceParams, val: any) => {
+  const handleInferenceParamChange = <K extends keyof InferenceParams>(key: K, val: InferenceParams[K]) => {
     sound.playKeyClick();
     const currentParams = current.inferenceParams || {
       temperature: 0.70,
@@ -150,9 +180,9 @@ export const ArchitectureStudio: React.FC = () => {
         ) : (
           <button
             onClick={() => startTraining()}
-            disabled={!isVramSufficient}
+            disabled={!isVramSufficient || state.powerTripSeconds > 0 || state.detentionSeconds > 0}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded text-xs font-bold transition-all shadow-[0_0_15px_rgba(0,255,200,0.2)] ${
-              isVramSufficient 
+              isVramSufficient && state.powerTripSeconds === 0 && state.detentionSeconds === 0
                 ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 cursor-pointer' 
                 : 'bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed'
             }`}
@@ -162,6 +192,84 @@ export const ArchitectureStudio: React.FC = () => {
           </button>
         )}
       </div>
+
+      <section className="space-y-2 rounded border border-cyan-900/50 bg-[#09111c] p-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-xs font-bold tracking-wider text-cyan-300">{t(state.language, 'model_library')}</h3>
+            <p className="text-[10px] text-zinc-500">{t(state.language, 'model_library_desc')}</p>
+          </div>
+          <form onSubmit={handleCreateModel} className="flex gap-1.5">
+            <input
+              aria-label={t(state.language, 'model_name')}
+              value={newModelName}
+              onChange={event => setNewModelName(event.target.value)}
+              maxLength={40}
+              disabled={!!state.activeTraining}
+              className="w-40 rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-200 outline-none focus:border-cyan-500 disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={!!state.activeTraining || state.credits < 100}
+              className="rounded border border-cyan-700 bg-cyan-950 px-2 py-1 text-[10px] font-bold text-cyan-300 hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-40"
+              title={t(state.language, 'model_create_cost')}
+            >
+              + {t(state.language, 'create_model')} · 100 CR
+            </button>
+          </form>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {state.savedModels.map(model => (
+            <div
+              key={model.id}
+              className={`flex items-center gap-1 rounded border px-2 py-1 text-[10px] ${
+                current.id === model.id
+                  ? 'border-cyan-500 bg-cyan-950/60 text-cyan-200'
+                  : 'border-zinc-800 bg-zinc-950 text-zinc-400'
+              }`}
+            >
+              {editingModelId === model.id ? (
+                <form onSubmit={event => handleRenameModel(event, model.id)} className="flex items-center gap-1">
+                  <input
+                    autoFocus
+                    aria-label={t(state.language, 'rename_model')}
+                    value={editingModelName}
+                    onChange={event => setEditingModelName(event.target.value)}
+                    maxLength={40}
+                    className="w-32 bg-zinc-950 px-1 text-[10px] outline-none"
+                  />
+                  <button type="submit" aria-label={t(state.language, 'save_name')} className="text-emerald-400"><Check className="h-3 w-3" /></button>
+                  <button type="button" aria-label={t(state.language, 'cancel')} onClick={() => setEditingModelId(null)} className="text-zinc-500"><X className="h-3 w-3" /></button>
+                </form>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    disabled={!!state.activeTraining}
+                    onClick={() => selectModel(model.id)}
+                    className="max-w-48 truncate text-left disabled:cursor-not-allowed"
+                    title={`${model.name} · IQ ${model.reasoningScore}`}
+                  >
+                    {model.name} <span className="text-zinc-500">· IQ {model.reasoningScore}</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`${t(state.language, 'rename_model')} ${model.name}`}
+                    onClick={() => {
+                      setEditingModelId(model.id);
+                      setEditingModelName(model.name);
+                    }}
+                    className="ml-1 text-zinc-500 hover:text-cyan-300"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Model Spec Card */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#09111c] border border-cyan-900/50 p-2.5 rounded text-xs">

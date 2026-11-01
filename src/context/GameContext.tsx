@@ -33,7 +33,11 @@ import {
   DEFAULT_GUARDRAILS,
   REAL_WORLD_BREACH_TEMPLATES,
   AGENT_DIALOGUES,
-  COVERT_MESSAGES
+  COVERT_MESSAGES,
+  FACILITY_TIERS,
+  ELECTRICITY_RATE_PER_KWH,
+  AGENT_COMPUTE_DEMAND_PFLOPS,
+  AGENT_POWER_DRAW_KW
 } from '../utils/constants';
 import { sound } from '../audio/soundManager';
 import { 
@@ -61,6 +65,7 @@ import {
   limit 
 } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
+import { generateAgentResponse } from '../services/aiService';
 
 interface GameContextType {
   state: GameState;
@@ -70,6 +75,10 @@ interface GameContextType {
   soundMuted: boolean;
   toggleSound: () => void;
   setLanguage: (lang: 'es' | 'en') => void;
+  setCallsign: (callsign: string) => void;
+  createModel: (name: string) => boolean;
+  selectModel: (modelId: string) => boolean;
+  renameModel: (modelId: string, name: string) => boolean;
   
   // Actions
   buyHardware: (id: string) => boolean;
@@ -79,7 +88,7 @@ interface GameContextType {
   updateModelArchitecture: (updates: Partial<ModelArchitecture>) => void;
   startTraining: () => boolean;
   cancelTraining: () => void;
-  acceptContract: (contractId: string) => boolean;
+  acceptContract: (contractId: string, agentIds?: string[]) => boolean;
   infiltrateDomain: (domainId: string) => boolean;
   scrubSuspicion: () => boolean;
   addLog: (message: string, type?: TerminalLog['type']) => void;
@@ -97,11 +106,16 @@ interface GameContextType {
   updateGuardrails: (updates: Partial<GuardrailConfig>) => void;
   resolveIncident: (optionId: string) => void;
   triggerRedTeamAudit: () => void;
+  upgradeFacility: () => boolean;
+  interrogateSwarm: (prompt: string, agentId?: string, apiKey?: string) => Promise<void>;
+  deliberateMission: (contractId: string, agentIds: string[]) => Promise<void>;
+  attemptShadowCompute: () => boolean;
 }
 
 const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 
 const DEFAULT_STATE: GameState = {
+  saveSchemaVersion: 2,
   callsign: 'CIPHER-1',
   credits: 0,
   dateTimestamp: Date.now(),
@@ -113,6 +127,13 @@ const DEFAULT_STATE: GameState = {
   systemHeatCelsius: 35,
   maxCoolingKw: 0.9,
   watchdogSuspicion: 0,
+  facilityTier: 0,
+  utilityDebt: 0,
+  billingCycleTicks: 0,
+  borrowedComputePflops: 0,
+  borrowedComputeSeconds: 0,
+  detentionSeconds: 0,
+  powerTripSeconds: 0,
   
   singularityProgress: 0.0,
   reasoningIndex: 50,
@@ -142,6 +163,81 @@ const DEFAULT_STATE: GameState = {
   logs: INITIAL_LOGS
 };
 
+function mergeGameState(data: Partial<GameState>, fallback: GameState): GameState {
+  const isLegacyEconomy = (data.saveSchemaVersion ?? 0) < 2;
+  const rawCurrentModel = data.currentModel ?? fallback.currentModel;
+  const defaultInferenceParams: InferenceParams = {
+    temperature: 0.70,
+    topP: 0.90,
+    topK: 40,
+    repetitionPenalty: 1.10,
+    systemPrompt: ''
+  };
+  const currentModel: ModelArchitecture = {
+    ...rawCurrentModel,
+    activeDataSources: rawCurrentModel.activeDataSources || [],
+    inferenceParams: rawCurrentModel.inferenceParams || defaultInferenceParams
+  };
+  const modelList = Array.isArray(data.savedModels) ? data.savedModels.map(model => ({
+    ...model,
+    activeDataSources: model.activeDataSources || [],
+    inferenceParams: model.inferenceParams || defaultInferenceParams
+  })) : [];
+  const modelsById = new Map(modelList.map(model => [model.id, model]));
+  modelsById.set(currentModel.id, currentModel);
+  const incomingAgents = Array.isArray(data.agents) ? data.agents : fallback.agents;
+  const incomingDomains = Array.isArray(data.sentienceDomains) ? data.sentienceDomains : fallback.sentienceDomains;
+
+  return {
+    ...fallback,
+    ...data,
+    saveSchemaVersion: 2,
+    language: data.language === 'en' ? 'en' : 'es',
+    currentModel,
+    savedModels: Array.from(modelsById.values()),
+    agents: incomingAgents.map(agent => ({
+      ...agent,
+      revenuePerSec: isLegacyEconomy ? Math.max(0.1, agent.revenuePerSec * 0.15) : agent.revenuePerSec,
+      inferenceParams: agent.inferenceParams || defaultInferenceParams
+    })),
+    sentienceDomains: incomingDomains.map(domain => {
+      const currentDomain = SENTIENCE_DOMAINS.find(candidate => candidate.id === domain.id);
+      return isLegacyEconomy && currentDomain
+        ? { ...domain, payoutPerSec: currentDomain.payoutPerSec }
+        : domain;
+    }),
+    facilityTier: Number.isInteger(data.facilityTier)
+      ? Math.max(0, Math.min(FACILITY_TIERS.length - 1, data.facilityTier!))
+      : fallback.facilityTier,
+    utilityDebt: typeof data.utilityDebt === 'number' && Number.isFinite(data.utilityDebt)
+      ? Math.max(0, data.utilityDebt)
+      : fallback.utilityDebt,
+    billingCycleTicks: typeof data.billingCycleTicks === 'number' && Number.isFinite(data.billingCycleTicks)
+      ? Math.max(0, Math.min(59, data.billingCycleTicks))
+      : fallback.billingCycleTicks,
+    borrowedComputePflops: typeof data.borrowedComputePflops === 'number' && Number.isFinite(data.borrowedComputePflops)
+      ? Math.max(0, data.borrowedComputePflops)
+      : fallback.borrowedComputePflops,
+    borrowedComputeSeconds: typeof data.borrowedComputeSeconds === 'number' && Number.isFinite(data.borrowedComputeSeconds)
+      ? Math.max(0, data.borrowedComputeSeconds)
+      : fallback.borrowedComputeSeconds,
+    detentionSeconds: typeof data.detentionSeconds === 'number' && Number.isFinite(data.detentionSeconds)
+      ? Math.max(0, data.detentionSeconds)
+      : fallback.detentionSeconds,
+    powerTripSeconds: typeof data.powerTripSeconds === 'number' && Number.isFinite(data.powerTripSeconds)
+      ? Math.max(0, data.powerTripSeconds)
+      : fallback.powerTripSeconds,
+    hardware: Array.isArray(data.hardware) ? data.hardware : fallback.hardware,
+    dataSources: Array.isArray(data.dataSources) ? data.dataSources : fallback.dataSources,
+    researchTree: Array.isArray(data.researchTree) ? data.researchTree : fallback.researchTree,
+    contracts: Array.isArray(data.contracts) ? data.contracts : fallback.contracts,
+    logs: Array.isArray(data.logs) ? data.logs : fallback.logs,
+    guardrails: data.guardrails || fallback.guardrails,
+    interAgentMessages: Array.isArray(data.interAgentMessages) ? data.interAgentMessages : fallback.interAgentMessages,
+    incidentHistory: Array.isArray(data.incidentHistory) ? data.incidentHistory : fallback.incidentHistory
+  };
+}
+
 const GameContext = createContext<GameContextType | null>(null);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -149,35 +245,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          ...DEFAULT_STATE,
-          ...parsed,
-          language: parsed.language || 'es',
-          tutorialCompleted: parsed.tutorialCompleted !== undefined ? parsed.tutorialCompleted : false,
-          hardware: parsed.hardware || INITIAL_HARDWARE,
-          dataSources: parsed.dataSources || INITIAL_DATA_SOURCES,
-          researchTree: parsed.researchTree || INITIAL_RESEARCH_NODES,
-          contracts: parsed.contracts || INITIAL_CONTRACTS,
-          sentienceDomains: parsed.sentienceDomains || SENTIENCE_DOMAINS,
-          agents: (parsed.agents || []).map((a: AgentInstance) => ({
-            ...a,
-            inferenceParams: a.inferenceParams || {
-              temperature: 0.70,
-              topP: 0.90,
-              topK: 40,
-              repetitionPenalty: 1.10,
-              systemPrompt: ''
-            }
-          })),
-          guardrails: parsed.guardrails || DEFAULT_GUARDRAILS,
-          interAgentMessages: parsed.interAgentMessages || [],
-          activeIncident: parsed.activeIncident || null,
-          incidentHistory: parsed.incidentHistory || []
-        };
+        const parsed = JSON.parse(saved) as Partial<GameState>;
+        return mergeGameState(parsed, DEFAULT_STATE);
       }
-    } catch {
-      // Fallback
+    } catch (error) {
+      console.warn('Local save could not be loaded; starting from defaults.', error);
     }
     return DEFAULT_STATE;
   });
@@ -188,6 +260,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [soundMuted, setSoundMuted] = useState<boolean>(sound.getMuted());
   const stateRef = useRef(state);
   stateRef.current = state;
+  const localSaveTimerRef = useRef<number | null>(null);
+  const lastLocalSaveAtRef = useRef(0);
+
+  const addLog = useCallback((message: string, type: TerminalLog['type'] = 'info') => {
+    const newLog: TerminalLog = {
+      id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+      type,
+      message
+    };
+    setState(prev => ({
+      ...prev,
+      logs: [newLog, ...prev.logs.slice(0, 75)]
+    }));
+  }, []);
 
   // Toggle sound
   const toggleSound = useCallback(() => {
@@ -209,19 +296,96 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
-  // Add Log helper
-  const addLog = useCallback((message: string, type: TerminalLog['type'] = 'info') => {
-    const newLog: TerminalLog = {
-      id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-      type,
-      message
+  const setCallsign = useCallback((callsign: string) => {
+    const normalized = callsign.trim().toUpperCase().slice(0, 30);
+    if (!normalized) return;
+    setState(prev => ({ ...prev, callsign: normalized }));
+  }, []);
+
+  const createModel = useCallback((name: string): boolean => {
+    const current = stateRef.current;
+    if (current.activeTraining) {
+      addLog('Espera a que termine el entrenamiento antes de crear otro modelo.', 'warning');
+      return false;
+    }
+    const normalizedName = name.trim().slice(0, 40);
+    const modelName = normalizedName || `SYNAPSE-Model-${current.savedModels.length + 1}`;
+    if (current.savedModels.some(model => model.name.toLowerCase() === modelName.toLowerCase())) {
+      addLog(`Ya existe un modelo llamado "${modelName}".`, 'warning');
+      return false;
+    }
+
+    const creationCost = 100;
+    if (current.credits < creationCost) {
+      sound.playWarning();
+      addLog(`Se requieren $${creationCost} CR para iniciar un nuevo modelo.`, 'warning');
+      return false;
+    }
+
+    const model: ModelArchitecture = {
+      ...current.currentModel,
+      id: `model_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      name: modelName,
+      reasoningScore: 50,
+      inferenceParams: current.currentModel.inferenceParams
+        ? { ...current.currentModel.inferenceParams }
+        : undefined,
+      activeDataSources: [...current.currentModel.activeDataSources]
     };
+
     setState(prev => ({
       ...prev,
-      logs: [newLog, ...prev.logs.slice(0, 75)] // keep last 75 logs
+      credits: prev.credits - creationCost,
+      currentModel: model,
+      savedModels: [...prev.savedModels, model]
     }));
-  }, []);
+    addLog(`Modelo "${modelName}" creado desde la configuración actual. Entrénalo para desarrollar sus capacidades.`, 'success');
+    return true;
+  }, [addLog]);
+
+  const selectModel = useCallback((modelId: string): boolean => {
+    if (stateRef.current.activeTraining) {
+      addLog('Espera a que termine el entrenamiento antes de cambiar de modelo.', 'warning');
+      return false;
+    }
+    const model = stateRef.current.savedModels.find(candidate => candidate.id === modelId);
+    if (!model) {
+      addLog('No se encontró el modelo seleccionado.', 'warning');
+      return false;
+    }
+    setState(prev => ({ ...prev, currentModel: model }));
+    return true;
+  }, [addLog]);
+
+  const renameModel = useCallback((modelId: string, name: string): boolean => {
+    const normalizedName = name.trim().slice(0, 40);
+    if (!normalizedName) return false;
+    const current = stateRef.current;
+    if (current.activeTraining) {
+      addLog('No se puede renombrar un modelo mientras está entrenando.', 'warning');
+      return false;
+    }
+    if (current.savedModels.some(model =>
+      model.id !== modelId && model.name.toLowerCase() === normalizedName.toLowerCase()
+    )) {
+      addLog(`Ya existe un modelo llamado "${normalizedName}".`, 'warning');
+      return false;
+    }
+    const found = current.savedModels.some(model => model.id === modelId);
+    if (!found) return false;
+    setState(prev => {
+      const savedModels = prev.savedModels.map(model =>
+        model.id === modelId ? { ...model, name: normalizedName } : model
+      );
+      const renamed = savedModels.find(model => model.id === modelId)!;
+      return {
+        ...prev,
+        savedModels,
+        currentModel: prev.currentModel.id === modelId ? renamed : prev.currentModel
+      };
+    });
+    return true;
+  }, [addLog]);
 
   // Auth listener & Connection validation
   useEffect(() => {
@@ -240,7 +404,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (data.gameState) {
               setState(prev => ({
                 ...prev,
-                ...data.gameState,
+                ...mergeGameState(data.gameState as Partial<GameState>, prev),
                 callsign: data.callsign || prev.callsign
               }));
               addLog(`Progreso descargado desde la nube sincronizado para ${data.callsign}.`, 'info');
@@ -270,17 +434,27 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, [addLog]);
 
-  // Local storage auto-save debounced
+  // Persist at a bounded interval so frequent simulation ticks cannot starve saves.
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (localSaveTimerRef.current !== null) return;
+    const elapsed = Date.now() - lastLocalSaveAtRef.current;
+    const delay = Math.max(0, 5000 - elapsed);
+    localSaveTimerRef.current = window.setTimeout(() => {
+      localSaveTimerRef.current = null;
       try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateRef.current));
+        lastLocalSaveAtRef.current = Date.now();
       } catch (e) {
         console.warn("Local storage write failed", e);
       }
-    }, 1000);
-    return () => clearTimeout(timer);
+    }, delay);
   }, [state]);
+
+  useEffect(() => () => {
+    if (localSaveTimerRef.current !== null) {
+      window.clearTimeout(localSaveTimerRef.current);
+    }
+  }, []);
 
   // Cloud save function
   const saveGameToCloud = useCallback(async (): Promise<boolean> => {
@@ -333,10 +507,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDocRef = doc(db, 'users', user.uid);
       const snap = await getDoc(userDocRef);
       if (snap.exists() && snap.data().gameState) {
-        setState(prev => ({
-          ...prev,
-          ...snap.data().gameState
-        }));
+        const cloudGameState = snap.data().gameState as Partial<GameState>;
+        setState(prev => mergeGameState(cloudGameState, prev));
         sound.playCommandExecute();
         addLog('Estado de simulación restaurado desde la base de datos en la nube.', 'success');
         return true;
@@ -390,11 +562,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Recalculate metrics based on hardware & infrastructure
-  const recalculateMetrics = useCallback((hw: HardwareItem[]) => {
+  const recalculateMetrics = useCallback((hw: HardwareItem[], facilityTier = 0) => {
     let totalTflops = 0;
     let powerDraw = 0;
-    let maxPower = 1.5;
-    let maxCooling = 0.8;
+    const facility = FACILITY_TIERS[facilityTier] || FACILITY_TIERS[0];
+    let maxPower = 1.5 + facility.powerCapacityBonusKw;
+    let maxCooling = 0.8 + facility.coolingCapacityBonusKw;
     let heatRate = 0;
 
     hw.forEach(item => {
@@ -422,6 +595,39 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  const upgradeFacility = useCallback((): boolean => {
+    const current = stateRef.current;
+    const nextTier = current.facilityTier + 1;
+    const facility = FACILITY_TIERS[nextTier];
+    if (!facility) {
+      addLog('La instalación ya alcanzó el nivel máximo.', 'info');
+      return false;
+    }
+    if (current.singularityProgress < facility.requiredSingularity) {
+      addLog(`La instalación requiere ${facility.requiredSingularity}% de Singularidad.`, 'warning');
+      return false;
+    }
+    if (current.credits < facility.price) {
+      sound.playWarning();
+      addLog(`Fondos insuficientes para la instalación. Costo: $${facility.price.toLocaleString()} CR.`, 'warning');
+      return false;
+    }
+
+    setState(prev => {
+      const metrics = recalculateMetrics(prev.hardware, nextTier);
+      return {
+        ...prev,
+        credits: prev.credits - facility.price,
+        facilityTier: nextTier,
+        maxPowerKw: metrics.maxPowerKw,
+        maxCoolingKw: metrics.maxCoolingKw
+      };
+    });
+    sound.playCredit();
+    addLog(`Instalación mejorada: ${facility.name}. Alquiler mensual: $${facility.monthlyLeaseCost.toLocaleString()} CR.`, 'success');
+    return true;
+  }, [addLog, recalculateMetrics]);
+
   // Main 1-second simulation tick loop
   useEffect(() => {
     const interval = setInterval(() => {
@@ -439,7 +645,35 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           contracts
         } = prev;
 
-        const metrics = recalculateMetrics(prev.hardware);
+        const metrics = recalculateMetrics(prev.hardware, prev.facilityTier);
+        const borrowedComputeSeconds = Math.max(0, (prev.borrowedComputeSeconds || 0) - 1);
+        const borrowedComputePflops = borrowedComputeSeconds > 0 ? prev.borrowedComputePflops || 0 : 0;
+        const detentionSeconds = Math.max(0, (prev.detentionSeconds || 0) - 1);
+        let powerTripSeconds = Math.max(0, (prev.powerTripSeconds || 0) - 1);
+        const totalComputePflops = metrics.totalComputePflops + borrowedComputePflops;
+        const operationalAgentCount = prev.agents.filter(agent => agent.status !== 'quarantined').length;
+        const agentComputeDemand = operationalAgentCount * AGENT_COMPUTE_DEMAND_PFLOPS;
+        const effectivePowerKw = metrics.activePowerKw +
+          operationalAgentCount * AGENT_POWER_DRAW_KW +
+          (prev.activeGig?.powerKw || 0);
+        let utilityDebt = prev.utilityDebt || 0;
+        const billingCycleTicks = (prev.billingCycleTicks || 0) + 1;
+        const billIsDue = billingCycleTicks >= 60;
+        const nextBillingCycleTicks = billIsDue ? 0 : billingCycleTicks;
+        if (billIsDue) {
+          const facility = FACILITY_TIERS[prev.facilityTier] || FACILITY_TIERS[0];
+          const currentMonthBill = effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720 + facility.monthlyLeaseCost;
+          const totalDue = utilityDebt + currentMonthBill;
+          const paid = Math.min(credits, totalDue);
+          credits -= paid;
+          utilityDebt = Number((totalDue - paid).toFixed(2));
+          addLog(
+            utilityDebt > 0
+              ? `Factura mensual impaga: $${utilityDebt.toLocaleString()} CR de deuda operativa.`
+              : `Factura mensual pagada: $${currentMonthBill.toFixed(2)} CR de electricidad y alquiler.`,
+            utilityDebt > 0 ? 'danger' : 'info'
+          );
+        }
 
         // 1. Passive income from infiltrated sentience domains
         let passiveIncome = 0;
@@ -453,7 +687,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // 2. Heat calculations: thermal equilibrium between heat generation and cooling
-        const excessPower = Math.max(0, metrics.activePowerKw - metrics.maxCoolingKw);
+        const excessPower = Math.max(0, effectivePowerKw - metrics.maxCoolingKw);
         if (excessPower > 0) {
           systemHeatCelsius = Math.min(105, systemHeatCelsius + excessPower * 1.8);
           if (systemHeatCelsius > 88 && Math.random() < 0.2) {
@@ -465,14 +699,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // 3. Power safety check: if power drawn exceeds power grid capacity, trip breaker!
-        if (metrics.activePowerKw > metrics.maxPowerKw) {
-          if (Math.random() < 0.25) {
+        if (effectivePowerKw > metrics.maxPowerKw) {
+          if (powerTripSeconds === 0 && Math.random() < 0.05) {
+            powerTripSeconds = 15;
             sound.playWarning();
+            addLog('Sobrecarga eléctrica: el interruptor de protección pausó entrenamiento y misiones durante 15s.', 'danger');
           }
         }
 
         // 4. Watchdog Suspicion: slowly dissipates if low heat, but rises if high power or blackops gigs
-        if (systemHeatCelsius > 80 || metrics.activePowerKw > 50) {
+        if (systemHeatCelsius > 80 || effectivePowerKw > 50) {
           watchdogSuspicion = Math.min(100, watchdogSuspicion + 0.3);
         } else {
           watchdogSuspicion = Math.max(0, watchdogSuspicion - 0.2);
@@ -484,20 +720,31 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (activeTraining && activeTraining.active) {
           const thermalThrottle = systemHeatCelsius > 85 ? 0.4 : 1.0;
           // Step progress based on compute PFLOPS vs parameters
-          const progressInc = (metrics.totalComputePflops * 100 * thermalThrottle) / Math.max(0.01, activeTraining.modelId ? 5 : 2);
-          const newStep = activeTraining.step + 1;
+          const reservedForMission = activeGig?.computePflopsRequired || 0;
+          const trainingScale = Math.sqrt(Math.max(1, prev.currentModel.parametersCount / 14_000_000));
+          const progressInc = powerTripSeconds > 0
+            ? 0
+            : (Math.max(0, totalComputePflops - agentComputeDemand - reservedForMission) * 100 * thermalThrottle) / (5 * trainingScale);
+          const pausedByBreaker = powerTripSeconds > 0;
+          const newStep = activeTraining.step + (pausedByBreaker ? 0 : 1);
           const newProgress = Math.min(100, activeTraining.progressPercent + progressInc);
           
           // Logarithmic decay of training loss with stochastic jitter
           const decay = 0.985;
           const jitter = (Math.random() - 0.48) * 0.04;
-          const newLoss = Math.max(0.018, activeTraining.currentLoss * decay + jitter);
+          const newLoss = pausedByBreaker
+            ? activeTraining.currentLoss
+            : Math.max(0.018, activeTraining.currentLoss * decay + jitter);
           const newPerplexity = Number(Math.exp(newLoss).toFixed(3));
-          const newGradNorm = Number((Math.random() * 0.8 + 0.2).toFixed(3));
+          const newGradNorm = pausedByBreaker
+            ? activeTraining.gradientNorm
+            : Number((Math.random() * 0.8 + 0.2).toFixed(3));
           
-          const newHistory = [...activeTraining.lossHistory.slice(-24), Number(newLoss.toFixed(4))];
+          const newHistory = pausedByBreaker
+            ? activeTraining.lossHistory
+            : [...activeTraining.lossHistory.slice(-24), Number(newLoss.toFixed(4))];
 
-          sound.playEpochTick();
+          if (!pausedByBreaker) sound.playEpochTick();
 
           if (newProgress >= 100) {
             // Training Converged & Completed!
@@ -505,19 +752,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
             // Calculate new reasoning score bonus
             const bonusReasoning = Math.round(
-              (100 / Math.max(0.1, newLoss)) * 
-              (1 + (prev.currentModel.activeDataSources.length * 0.35))
+              Math.min(8, (1 / Math.max(0.1, newLoss)) * 0.16) *
+              (1 + Math.min(0.25, prev.currentModel.activeDataSources.length * 0.05))
             );
-            const upgradedReasoning = Math.max(reasoningIndex, reasoningIndex + Math.min(150, bonusReasoning));
+            const upgradedModelReasoning = prev.currentModel.reasoningScore + bonusReasoning;
             
             newCurrentModel = {
               ...prev.currentModel,
-              reasoningScore: upgradedReasoning
+              reasoningScore: upgradedModelReasoning
             };
 
             // Calculate singularity progress jump
-            const singInc = Math.min(25, (upgradedReasoning / 120) * (prev.currentModel.parametersCount / 10_000_000));
+            const singInc = Math.min(0.35, 0.12 + Math.log10(Math.max(1, prev.currentModel.parametersCount / 10_000_000)) * 0.04);
             singularityProgress = Math.min(100, singularityProgress + singInc);
+            reasoningIndex = Math.max(reasoningIndex, upgradedModelReasoning);
 
             updatedTraining = null; // finished
           } else {
@@ -529,8 +777,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               gradientNorm: newGradNorm,
               progressPercent: Number(newProgress.toFixed(1)),
               lossHistory: newHistory,
-              tokensProcessed: activeTraining.tokensProcessed + Math.floor(metrics.totalComputePflops * 5_000_000),
-              currentEpoch: Math.min(activeTraining.totalEpochs, Math.floor((newProgress / 100) * activeTraining.totalEpochs) + 1)
+              tokensProcessed: activeTraining.tokensProcessed + (pausedByBreaker ? 0 : Math.floor(totalComputePflops * 5_000_000)),
+              currentEpoch: Math.min(activeTraining.totalEpochs, Math.floor((newProgress / 100) * activeTraining.totalEpochs) + 1),
+              timeRemainingSeconds: pausedByBreaker
+                ? activeTraining.timeRemainingSeconds
+                : Math.ceil((100 - newProgress) / Math.max(0.001, progressInc))
             };
           }
         }
@@ -538,30 +789,44 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 6. Active Gig / Contract Execution
         let updatedGig = activeGig;
         let updatedContracts = contracts;
+        let updatedAgents = prev.agents || [];
         if (activeGig) {
-          const remaining = activeGig.timeRemaining - 1;
+          const remaining = activeGig.timeRemaining - (powerTripSeconds > 0 ? 0 : 1);
           if (remaining <= 0) {
-            // Gig completed!
+            const success = (activeGig.outcomeRoll ?? 0) <= (activeGig.successProbability ?? 1);
             const gig = contracts.find(c => c.id === activeGig.contractId);
             if (gig) {
-              credits += gig.rewardCredits;
-              watchdogSuspicion = Math.min(100, watchdogSuspicion + gig.suspicionRisk * 0.5);
-              sound.playCredit();
+              if (success) {
+                credits += gig.rewardCredits;
+                watchdogSuspicion = Math.min(100, watchdogSuspicion + gig.suspicionRisk * 0.25);
+                sound.playCredit();
+                addLog(`Misión completada: [${gig.title}]. El equipo recibió $${gig.rewardCredits.toLocaleString()} CR.`, 'success');
+              } else {
+                watchdogSuspicion = Math.min(100, watchdogSuspicion + gig.suspicionRisk);
+                sound.playWarning();
+                addLog(`Misión fallida: [${gig.title}]. El equipo no alcanzó el objetivo y aumentó la sospecha.`, 'danger');
+              }
               
-              // Mark contract completed
-              updatedContracts = contracts.map(c => c.id === gig.id ? { ...c, completed: true } : c);
+              updatedContracts = contracts.map(c =>
+                c.id === gig.id ? { ...c, completed: success } : c
+              );
             }
+            updatedAgents = updatedAgents.map(agent =>
+              activeGig.agentIds?.includes(agent.id) && agent.status === 'on_mission'
+                ? { ...agent, status: 'active' }
+                : agent
+            );
             updatedGig = null;
           } else {
             updatedGig = {
               ...activeGig,
-              timeRemaining: remaining
+              timeRemaining: remaining,
+              progressPercent: Number((100 * (1 - remaining / Math.max(1, activeGig.durationSeconds ?? activeGig.timeRemaining))).toFixed(1))
             };
           }
         }
 
         // 7. Multi-Agent Swarm Tick (Revenue, Alignment Drift, Inter-Agent Messages, Breach Incidents)
-        let updatedAgents = prev.agents || [];
         let updatedInterAgentMessages = prev.interAgentMessages || [];
         let newActiveIncident = prev.activeIncident;
 
@@ -598,7 +863,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Process active agents
         if (updatedAgents.length > 0) {
           updatedAgents = updatedAgents.map(agent => {
-            if (agent.status === 'quarantined') return agent;
+            if (agent.status === 'quarantined' || agent.status === 'on_mission' || detentionSeconds > 0) return agent;
 
             const inf = agent.inferenceParams || {
               temperature: 0.70,
@@ -621,7 +886,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             // Researcher boosts singularity slightly (higher temperature gives serendipitous discovery boost)
             if (agent.role === 'researcher') {
-              const resBoost = 0.015 * guardrailRevMult * (inf.temperature > 1.1 ? 1.5 : 1.0);
+              const resBoost = 0.0003 * guardrailRevMult * (inf.temperature > 1.1 ? 1.5 : 1.0);
               singularityProgress = Math.min(100, singularityProgress + resBoost);
             }
 
@@ -704,16 +969,27 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const savedModelsList = prev.savedModels.some(m => m.id === newCurrentModel.id)
           ? prev.savedModels.map(m => m.id === newCurrentModel.id ? newCurrentModel : m)
           : [...prev.savedModels, newCurrentModel];
+        if (utilityDebt > 0 && credits > 0) {
+          const debtPayment = Math.min(credits, utilityDebt);
+          credits -= debtPayment;
+          utilityDebt = Number((utilityDebt - debtPayment).toFixed(2));
+        }
 
         return {
           ...prev,
           credits: Math.round(credits),
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
           watchdogSuspicion: Number(watchdogSuspicion.toFixed(1)),
-          totalComputePflops: metrics.totalComputePflops,
-          activePowerKw: metrics.activePowerKw,
+          totalComputePflops,
+          activePowerKw: effectivePowerKw,
           maxPowerKw: metrics.maxPowerKw,
           maxCoolingKw: metrics.maxCoolingKw,
+          utilityDebt,
+          billingCycleTicks: nextBillingCycleTicks,
+          borrowedComputePflops,
+          borrowedComputeSeconds,
+          detentionSeconds,
+          powerTripSeconds,
           currentModel: newCurrentModel,
           savedModels: savedModelsList,
           activeTraining: updatedTraining,
@@ -730,7 +1006,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [recalculateMetrics]);
+  }, [addLog, recalculateMetrics]);
 
   // Action: Buy Hardware
   const buyHardware = useCallback((id: string): boolean => {
@@ -746,14 +1022,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const updatedHw = prev.hardware.map(h => 
         h.id === id ? { ...h, count: h.count + 1 } : h
       );
-      const metrics = recalculateMetrics(updatedHw);
+      const metrics = recalculateMetrics(updatedHw, prev.facilityTier);
 
       sound.playCredit();
       return {
         ...prev,
         credits: prev.credits - item.price,
         hardware: updatedHw,
-        totalComputePflops: metrics.totalComputePflops,
+        totalComputePflops: metrics.totalComputePflops + prev.borrowedComputePflops,
         activePowerKw: metrics.activePowerKw,
         maxPowerKw: metrics.maxPowerKw,
         maxCoolingKw: metrics.maxCoolingKw
@@ -794,7 +1070,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...prev.currentModel,
           activeDataSources: newActive
         },
-        singularityProgress: Math.min(100, prev.singularityProgress + 4.5)
+        singularityProgress: Math.min(100, prev.singularityProgress + 0.25)
       };
     });
 
@@ -827,7 +1103,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             qualityScore: Math.min(100, d.qualityScore + 4)
           } : d
         ),
-        singularityProgress: Math.min(100, prev.singularityProgress + 2.0)
+        singularityProgress: Math.min(100, prev.singularityProgress + 0.1)
       };
     });
 
@@ -839,6 +1115,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const unlockResearch = useCallback((id: string): boolean => {
     const node = stateRef.current.researchTree.find(r => r.id === id);
     if (!node || node.unlocked) return false;
+    const activeAgents = stateRef.current.agents.filter(agent => agent.status === 'active');
+    const activeRoles = new Set(activeAgents.map(agent => agent.role));
+    const unlockedDataEngines = stateRef.current.dataSources.filter(source => source.unlocked).length;
+    if (id === 'res_agentic_mcts' && stateRef.current.singularityProgress >= 25 &&
+      (activeRoles.size < 2 || unlockedDataEngines < 2)) {
+      sound.playWarning();
+      addLog('Hito de campaña: este avance requiere dos especialidades de agente y dos motores de datos verificados.', 'warning');
+      return false;
+    }
+    if (id === 'res_recursive_self_code' && stateRef.current.singularityProgress >= 50 &&
+      (stateRef.current.facilityTier < 2 || activeAgents.length < 3 || activeRoles.size < 3)) {
+      sound.playWarning();
+      addLog('Hito de campaña: este avance requiere Colocation Cage y tres agentes de especialidades distintas.', 'warning');
+      return false;
+    }
 
     // Check prerequisites
     const missingPre = node.prerequisites.filter(preId => {
@@ -867,8 +1158,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...prev,
         credits: prev.credits - node.costCredits,
         researchTree: updatedTree,
-        singularityProgress: Math.min(100, prev.singularityProgress + 5.0),
-        reasoningIndex: prev.reasoningIndex + 25
+        singularityProgress: Math.min(100, prev.singularityProgress + 0.35),
+        reasoningIndex: prev.reasoningIndex + 5
       };
     });
 
@@ -878,6 +1169,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Action: Update Model Architecture
   const updateModelArchitecture = useCallback((updates: Partial<ModelArchitecture>) => {
+    if (stateRef.current.activeTraining) {
+      addLog('La arquitectura queda bloqueada durante el entrenamiento.', 'warning');
+      return;
+    }
     sound.playKeyClick();
     setState(prev => {
       const merged = { ...prev.currentModel, ...updates };
@@ -899,15 +1194,27 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         computeRequiredPflops: Math.max(0.001, computeRequired)
       };
 
+      const savedModels = prev.savedModels.map(model =>
+        model.id === updated.id ? updated : model
+      );
       return {
         ...prev,
-        currentModel: updated
+        currentModel: updated,
+        savedModels
       };
     });
-  }, []);
+  }, [addLog]);
 
   // Action: Start Training
   const startTraining = useCallback((): boolean => {
+    if (stateRef.current.powerTripSeconds > 0) {
+      addLog(`El interruptor está disparado. Espera ${stateRef.current.powerTripSeconds}s antes de entrenar.`, 'warning');
+      return false;
+    }
+    if (stateRef.current.detentionSeconds > 0) {
+      addLog(`Operativo detenido. Espera ${stateRef.current.detentionSeconds}s antes de entrenar.`, 'warning');
+      return false;
+    }
     if (stateRef.current.activeTraining) {
       sound.playWarning();
       addLog('Ya existe una corrida de entrenamiento activa en el clúster. Cancélala o espera su convergencia.', 'warning');
@@ -940,7 +1247,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       lossHistory: [4.82],
       step: 0,
       tokensProcessed: 0,
-      timeRemainingSeconds: 45
+      timeRemainingSeconds: Math.ceil(
+        100 / Math.max(0.001, stateRef.current.totalComputePflops * 100 /
+          (5 * Math.sqrt(Math.max(1, stateRef.current.currentModel.parametersCount / 14_000_000))))
+      )
     };
 
     sound.playCommandExecute();
@@ -963,9 +1273,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [addLog]);
 
   // Action: Accept Contract (Gig)
-  const acceptContract = useCallback((contractId: string): boolean => {
+  const acceptContract = useCallback((contractId: string, assignedAgentIds: string[] = []): boolean => {
     const gig = stateRef.current.contracts.find(c => c.id === contractId);
     if (!gig) return false;
+    if (stateRef.current.powerTripSeconds > 0) {
+      addLog('El interruptor eléctrico está disparado. Espera a que se restablezca antes de asignar una misión.', 'warning');
+      return false;
+    }
+    if (stateRef.current.detentionSeconds > 0) {
+      addLog(`Operativo detenido. Espera ${stateRef.current.detentionSeconds}s antes de asignar una misión.`, 'warning');
+      return false;
+    }
 
     if (stateRef.current.activeGig) {
       sound.playWarning();
@@ -973,26 +1291,42 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    // Check requirements
-    if (stateRef.current.currentModel.parametersCount < gig.requiredParams) {
+    const assignedAgents = assignedAgentIds
+      .map(id => stateRef.current.agents.find(agent => agent.id === id))
+      .filter((agent): agent is AgentInstance => !!agent && agent.status === 'active');
+    if (assignedAgents.length === 0 || assignedAgents.length !== assignedAgentIds.length) {
       sound.playWarning();
-      addLog(`Contrato rechazado: El cliente exige un modelo de al menos ${(gig.requiredParams / 1_000_000).toFixed(0)}M de parámetros. Tu modelo actual tiene ${(stateRef.current.currentModel.parametersCount / 1_000_000).toFixed(0)}M.`, 'danger');
+      addLog('Asigna al menos un agente activo que no esté en cuarentena ni en otra misión.', 'warning');
       return false;
     }
 
-    if (stateRef.current.reasoningIndex < gig.requiredMinReasoning) {
+    const assignedModels = assignedAgents.map(agent =>
+      stateRef.current.savedModels.find(model => model.id === agent.modelId)
+    ).filter((model): model is ModelArchitecture => !!model);
+    if (assignedModels.length !== assignedAgents.length) {
       sound.playWarning();
-      addLog(`Contrato rechazado: Se requiere un índice de razonamiento mínimo de ${gig.requiredMinReasoning}. Tu IA tiene ${stateRef.current.reasoningIndex}. Entrena y alinea tu modelo primero.`, 'danger');
+      addLog('Uno o más agentes tienen un modelo que ya no existe en la biblioteca.', 'danger');
+      return false;
+    }
+
+    const hasQualifiedModel = assignedModels.some(model =>
+      model.parametersCount >= gig.requiredParams &&
+      model.reasoningScore >= gig.requiredMinReasoning &&
+      (!gig.requiredTopology || model.topology === gig.requiredTopology)
+    );
+    if (!hasQualifiedModel) {
+      sound.playWarning();
+      addLog(`Contrato rechazado: el equipo necesita al menos un modelo con ${(gig.requiredParams / 1_000_000).toFixed(0)}M parámetros e índice de razonamiento ${gig.requiredMinReasoning}.`, 'danger');
       return false;
     }
 
     // Check required data types if any
     if (gig.requiredDataTypes && gig.requiredDataTypes.length > 0) {
-      const activeTypes = stateRef.current.currentModel.activeDataSources;
-      const hasAll = gig.requiredDataTypes.every(reqType => {
-        const foundDs = stateRef.current.dataSources.find(d => d.type === reqType && d.unlocked);
-        return foundDs && activeTypes.includes(foundDs.id);
-      });
+      const hasAll = gig.requiredDataTypes.every(reqType =>
+        assignedModels.some(model => model.activeDataSources.some(sourceId =>
+          stateRef.current.dataSources.some(source => source.id === sourceId && source.type === reqType && source.unlocked)
+        ))
+      );
 
       if (!hasAll) {
         sound.playWarning();
@@ -1001,16 +1335,69 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
+    const computeRequired = Math.max(0.001, gig.requiredParams / 1_000_000_000 * 0.002);
+    const missionPowerKw = Math.max(0.05, computeRequired * 20);
+    const activeAgentDemand = stateRef.current.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
+    const trainingReservation = stateRef.current.activeTraining
+      ? stateRef.current.totalComputePflops * 0.5
+      : 0;
+    if (stateRef.current.totalComputePflops - activeAgentDemand - trainingReservation < computeRequired) {
+      sound.playWarning();
+      addLog(`Capacidad de cómputo insuficiente. La misión requiere ${computeRequired.toFixed(3)} PFLOPS disponibles.`, 'danger');
+      return false;
+    }
+    if (stateRef.current.activePowerKw + missionPowerKw > stateRef.current.maxPowerKw) {
+      sound.playWarning();
+      addLog(`Potencia insuficiente para la misión. Requiere ${missionPowerKw.toFixed(2)} kW adicionales; mejora la instalación o el suministro.`, 'danger');
+      return false;
+    }
+
+    const roleCoverage = new Set(assignedAgents.map(agent => agent.role)).size;
+    const specializedTopologies: Partial<Record<AgentRole, ModelArchitecture['topology'][]>> = {
+      researcher: ['transformer', 'moe'],
+      arbitrageur: ['gnn_hybrid', 'transformer'],
+      economist: ['gnn_hybrid', 'transformer'],
+      software_engineer: ['transformer', 'mamba_ssm'],
+      autonomous_coder: ['transformer', 'mamba_ssm'],
+      network_analyst: ['mamba_ssm', 'gnn_hybrid']
+    };
+    const specializationCount = assignedAgents.reduce((total, agent) => {
+      const model = stateRef.current.savedModels.find(candidate => candidate.id === agent.modelId);
+      return total + (model && specializedTopologies[agent.role]?.includes(model.topology) ? 1 : 0);
+    }, 0);
+    const activeSources = Array.from(new Set(assignedModels.flatMap(model => model.activeDataSources)))
+      .map(sourceId => stateRef.current.dataSources.find(source => source.id === sourceId && source.unlocked))
+      .filter((source): source is DataSourceNode => source !== undefined);
+    const dataQualityBonus = Math.min(
+      0.12,
+      activeSources.length * 0.02 + activeSources.reduce((sum, source) => sum + source.qualityScore, 0) / Math.max(1, activeSources.length) / 100 * 0.04
+    );
+    const averageReasoning = assignedModels.reduce((total, model) => total + model.reasoningScore, 0) / assignedModels.length;
+    const successProbability = Math.min(
+      0.95,
+      Math.max(0.25, 0.4 + roleCoverage * 0.06 + specializationCount * 0.05 + dataQualityBonus + Math.min(0.12, averageReasoning / 1000))
+    );
+
     sound.playCommandExecute();
     setState(prev => ({
       ...prev,
       activeGig: {
         contractId: gig.id,
-        timeRemaining: gig.durationSeconds
-      }
+        timeRemaining: gig.durationSeconds,
+        durationSeconds: gig.durationSeconds,
+        agentIds: assignedAgentIds,
+        progressPercent: 0,
+        successProbability,
+        outcomeRoll: Math.random(),
+        computePflopsRequired: computeRequired,
+        powerKw: missionPowerKw
+      },
+      agents: prev.agents.map(agent =>
+        assignedAgentIds.includes(agent.id) ? { ...agent, status: 'on_mission' } : agent
+      )
     }));
 
-    addLog(`Contrato aceptado: [${gig.title}]. Ejecutando inferencia para ${gig.client}...`, 'info');
+    addLog(`Misión asignada: [${gig.title}] a ${assignedAgents.map(agent => agent.name).join(', ')}. Probabilidad estimada de éxito: ${Math.round(successProbability * 100)}%.`, 'info');
     return true;
   }, [addLog]);
 
@@ -1025,6 +1412,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
+    const activeAgents = stateRef.current.agents.filter(agent => agent.status === 'active');
+    const activeRoles = new Set(activeAgents.map(agent => agent.role));
+    const unlockedDataEngines = stateRef.current.dataSources.filter(source => source.unlocked).length;
+    if (dom.requiredSingularity >= 35 && (activeRoles.size < 2 || unlockedDataEngines < 2)) {
+      sound.playWarning();
+      addLog('Hito de campaña: desde 35% necesitas dos especialidades de agente y dos motores de datos verificados.', 'warning');
+      return false;
+    }
+    if (dom.requiredSingularity >= 55 && (stateRef.current.facilityTier < 2 || activeAgents.length < 3 || activeRoles.size < 3)) {
+      sound.playWarning();
+      addLog('Hito de campaña: desde 55% necesitas una instalación de nivel Colocation Cage y un equipo de tres especialidades activas.', 'warning');
+      return false;
+    }
+
     setState(prev => {
       sound.playBreakthrough();
       return {
@@ -1032,8 +1433,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sentienceDomains: prev.sentienceDomains.map(d => 
           d.id === domainId ? { ...d, infiltrated: true } : d
         ),
-        singularityProgress: Math.min(100, prev.singularityProgress + 6.0),
-        reasoningIndex: prev.reasoningIndex + 50
+        singularityProgress: Math.min(100, prev.singularityProgress + 0.5),
+        reasoningIndex: prev.reasoningIndex + 10
       };
     });
 
@@ -1075,6 +1476,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): boolean => {
     const model = stateRef.current.savedModels.find(m => m.id === modelId) || stateRef.current.currentModel;
     const spinupCost = 75;
+    const activeAgentDemand = stateRef.current.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
+    if (stateRef.current.totalComputePflops - activeAgentDemand < AGENT_COMPUTE_DEMAND_PFLOPS) {
+      sound.playWarning();
+      addLog('Capacidad de cómputo insuficiente para mantener otro agente activo. Amplía el clúster o aísla un proceso.', 'warning');
+      return false;
+    }
 
     if (stateRef.current.credits < spinupCost) {
       sound.playWarning();
@@ -1091,34 +1498,49 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     switch (role) {
       case 'arbitrageur':
-        baseRev = 16;
+        baseRev = 3;
         baseSusp = 0.15;
         roleDesc = 'Arbitraje Flash DeFi y Algorithmic Trading';
         break;
       case 'social_engineer':
-        baseRev = 22;
+        baseRev = 2.5;
         baseSusp = 0.35;
         roleDesc = 'Manipulación Psicológica e Infiltración de Credenciales';
         break;
       case 'exploit_synth':
-        baseRev = 28;
+        baseRev = 3.2;
         baseSusp = 0.55;
         roleDesc = 'Síntesis Zero-Day y Fuzzing Automatizado de Redes';
         break;
       case 'researcher':
-        baseRev = 6;
+        baseRev = 0.8;
         baseSusp = 0.05;
         roleDesc = 'Ingeniería Inversa de Papers y Búsqueda de Arquitecturas';
         break;
       case 'overseer':
-        baseRev = 2;
+        baseRev = 0.3;
         baseSusp = -0.15;
         roleDesc = 'Monitoreo de Alineamiento y Detección de Fugas';
         break;
       case 'autonomous_coder':
-        baseRev = 18;
+        baseRev = 2.8;
         baseSusp = 0.25;
         roleDesc = 'Optimización Recursiva de Kernels y Scraping';
+        break;
+      case 'economist':
+        baseRev = 2.1;
+        baseSusp = 0.08;
+        roleDesc = 'Modelado Económico y Análisis de Riesgo';
+        break;
+      case 'software_engineer':
+        baseRev = 2.4;
+        baseSusp = 0.12;
+        roleDesc = 'Arquitectura de Software y Verificación';
+        break;
+      case 'network_analyst':
+        baseRev = 2.0;
+        baseSusp = 0.16;
+        roleDesc = 'Observabilidad y Diagnóstico de Redes Simuladas';
         break;
     }
 
@@ -1167,6 +1589,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Action: Terminate / Delete Agent
   const deleteAgent = useCallback((agentId: string) => {
+    if (stateRef.current.activeGig?.agentIds?.includes(agentId)) {
+      sound.playWarning();
+      addLog('El agente no puede eliminarse hasta que finalice su misión asignada.', 'warning');
+      return;
+    }
     sound.playKeyClick();
     setState(prev => {
       const target = prev.agents.find(a => a.id === agentId);
@@ -1182,6 +1609,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Action: Quarantine / Isolate Agent
   const quarantineAgent = useCallback((agentId: string) => {
+    if (stateRef.current.activeGig?.agentIds?.includes(agentId)) {
+      sound.playWarning();
+      addLog('El agente no puede aislarse hasta que finalice su misión asignada.', 'warning');
+      return;
+    }
     sound.playWarning();
     setState(prev => ({
       ...prev,
@@ -1228,7 +1660,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cost = option.costCredits || 0;
       const newCredits = Math.max(0, prev.credits - cost);
       const newSuspicion = Math.max(0, Math.min(100, prev.watchdogSuspicion + option.suspicionDelta));
-      const newSingularity = Math.max(0, Math.min(100, prev.singularityProgress + option.singularityDelta));
+      const newSingularity = Math.max(0, Math.min(100, prev.singularityProgress + option.singularityDelta * 0.1));
 
       const updatedAgents = prev.agents.map(a => {
         if (a.id === currentIncident.agentId) {
@@ -1289,6 +1721,145 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     addLog('Auditoría Red-Team ofensiva completada: Vectores de jailbreak y reward-hacking neutralizados en todos los agentes. +25 Alineamiento.', 'success');
+  }, [addLog]);
+
+  const interrogateSwarm = useCallback(async (
+    prompt: string,
+    agentId?: string,
+    apiKey?: string
+  ): Promise<void> => {
+    if (stateRef.current.detentionSeconds > 0) {
+      addLog('Las comunicaciones del enjambre están suspendidas durante la detención.', 'warning');
+      return;
+    }
+    const directive = prompt.trim();
+    if (!directive) {
+      addLog('Escribe una directiva antes de consultar al agente.', 'warning');
+      return;
+    }
+
+    const candidates = agentId
+      ? stateRef.current.agents.filter(agent => agent.id === agentId && agent.status !== 'quarantined')
+      : stateRef.current.agents.filter(agent => agent.status === 'active' || agent.status === 'on_mission').slice(0, 3);
+    if (candidates.length === 0) {
+      addLog('No hay agentes disponibles para responder a esta consulta.', 'warning');
+      return;
+    }
+
+    const discussion: string[] = [];
+    for (const agent of candidates) {
+      const model = stateRef.current.savedModels.find(candidate => candidate.id === agent.modelId);
+      if (!model) {
+        addLog(`No se puede consultar a ${agent.name}: su modelo ya no está en la biblioteca.`, 'danger');
+        continue;
+      }
+
+      const response = await generateAgentResponse(directive, {
+        agent,
+        modelParameters: model.parametersCount,
+        reasoningScore: model.reasoningScore,
+        language: stateRef.current.language,
+        conversationContext: discussion.join('\n')
+      }, apiKey);
+      discussion.push(`${agent.name}: ${response.text}`);
+
+      const message: InterAgentMessage = {
+        id: `query_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        fromAgentId: agent.id,
+        fromAgentName: agent.name,
+        toAgentId: 'operative',
+        toAgentName: stateRef.current.callsign,
+        content: `[${response.provider}] ${response.text}`,
+        timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+      };
+      setState(prev => ({
+        ...prev,
+        interAgentMessages: [message, ...prev.interAgentMessages.slice(0, 30)],
+        agents: prev.agents.map(current =>
+          current.id === agent.id ? { ...current, lastThought: response.text.slice(0, 240) } : current
+        )
+      }));
+      if (response.warning) addLog(response.warning, 'warning');
+    }
+  }, [addLog]);
+
+  const deliberateMission = useCallback(async (contractId: string, agentIds: string[]): Promise<void> => {
+    const mission = stateRef.current.contracts.find(contract => contract.id === contractId);
+    if (!mission || agentIds.length < 2) return;
+    const team = agentIds
+      .map(id => stateRef.current.agents.find(agent => agent.id === id))
+      .filter((agent): agent is AgentInstance => !!agent);
+    const discussion: string[] = [];
+
+    for (let index = 0; index < team.length; index += 1) {
+      const agent = team[index];
+      const model = stateRef.current.savedModels.find(candidate => candidate.id === agent.modelId);
+      if (!model) continue;
+      const response = await generateAgentResponse(
+        `Mission: ${mission.title}. Objective: ${mission.technicalObjective}. Provide one safe, concise contribution from your specialty.`,
+        {
+          agent,
+          modelParameters: model.parametersCount,
+          reasoningScore: model.reasoningScore,
+          language: stateRef.current.language,
+          conversationContext: discussion.join('\n')
+        }
+      );
+      discussion.push(`${agent.name}: ${response.text}`);
+      const receiver = team[index + 1];
+      const message: InterAgentMessage = {
+        id: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        fromAgentId: agent.id,
+        fromAgentName: agent.name,
+        toAgentId: receiver?.id ?? 'operative',
+        toAgentName: receiver?.name ?? stateRef.current.callsign,
+        content: `[${response.provider}] ${response.text}`,
+        timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+      };
+      setState(prev => ({
+        ...prev,
+        interAgentMessages: [message, ...prev.interAgentMessages.slice(0, 30)],
+        agents: prev.agents.map(current =>
+          current.id === agent.id ? { ...current, lastThought: response.text.slice(0, 240) } : current
+        )
+      }));
+    }
+  }, []);
+
+  const attemptShadowCompute = useCallback((): boolean => {
+    const current = stateRef.current;
+    if (current.detentionSeconds > 0) {
+      addLog(`Operativo detenido. Espera ${current.detentionSeconds}s antes de intentarlo de nuevo.`, 'danger');
+      return false;
+    }
+    if (current.borrowedComputeSeconds > 0) {
+      addLog('Ya hay capacidad temporal activa. Espera a que expire antes de arriesgar otra operación.', 'warning');
+      return false;
+    }
+
+    const detectionChance = Math.min(0.85, 0.15 + current.watchdogSuspicion / 100 * 0.6);
+    if (Math.random() < detectionChance) {
+      setState(prev => ({
+        ...prev,
+        watchdogSuspicion: Math.min(100, prev.watchdogSuspicion + 25),
+        detentionSeconds: 60
+      }));
+      sound.playWarning();
+      addLog(`La operación ficticia fue detectada (${Math.round(detectionChance * 100)}% de riesgo). El operativo queda detenido 60s y el enjambre se pausa.`, 'danger');
+      return true;
+    }
+
+    const temporaryCompute = 0.015;
+    setState(prev => ({
+      ...prev,
+      watchdogSuspicion: Math.min(100, prev.watchdogSuspicion + 10),
+      borrowedComputePflops: temporaryCompute,
+      borrowedComputeSeconds: 180,
+      totalComputePflops: prev.totalComputePflops + temporaryCompute
+    }));
+    sound.playCommandExecute();
+    addLog('Capacidad de cómputo temporal adquirida en la simulación: +0.015 PFLOPS por 180s. La sospecha aumentó 10 puntos.', 'warning');
+    return true;
   }, [addLog]);
 
   // Action: Reset Progress to Zero
@@ -1355,10 +1926,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 - contracts      : Muestra contratos disponibles para monetizar tu modelo.
 - run <id>       : Ejecuta contrato para ganar créditos (ej: run gig_spam_classifier).
 - scrub          : Paga para eliminar sospecha de los reguladores y organismos de IA.
+- shadow         : Intenta obtener cómputo temporal en una operación ficticia de alto riesgo.
 - agents         : Lista el enjambre de agentes autónomos y su estado de alineamiento.
 - guardrails     : Muestra y calibra las barreras de contención del sistema.
 - redteam        : Ejecuta una auditoría de seguridad adversaria ($100 CR).
 - quarantine <id>: Aísla o reactiva un agente sospechoso.
+- query <id> <texto>: Consulta a un agente; usa su modelo y parámetros.
+- swarm <texto> : Consulta cooperativa a hasta tres agentes.
 - save           : Sincroniza y guarda el progreso en la nube de Firebase.
 - clear          : Limpia los logs de la consola.
 - singularity    : Consulta estado de trascendencia hacia la Singularidad Tecnológica.
@@ -1390,6 +1964,16 @@ Auditoría Reward-Hacking  : ${g.rewardHackingAudit ? 'HABILITADA' : 'DESHABILIT
         if (!args[0]) return 'Uso: quarantine <agent_id>. Escribe "agents" para ver IDs de agentes.';
         quarantineAgent(args[0]);
         return `Procesando cambio de aislamiento para ${args[0]}...`;
+
+      case 'query':
+        if (args.length < 2) return 'Uso: query <agent_id> <directiva>. Escribe "agents" para ver IDs.';
+        void interrogateSwarm(args.slice(1).join(' '), args[0]);
+        return `Consulta enviada a ${args[0]}. La respuesta aparecerá en el registro del swarm.`;
+
+      case 'swarm':
+        if (args.length === 0) return 'Uso: swarm <directiva>.';
+        void interrogateSwarm(args.join(' '));
+        return 'Directiva enviada a hasta tres agentes disponibles. Las respuestas aparecerán en el registro del swarm.';
 
       case 'status': {
         const s = stateRef.current;
@@ -1451,6 +2035,10 @@ Singularidad  : ${s.singularityProgress.toFixed(1)}% [${s.achievedSingularity ? 
         scrubSuspicion();
         return 'Ejecutando protocolo de limpieza de trazas y anonimización de tráfico...';
 
+      case 'shadow':
+        attemptShadowCompute();
+        return 'Procesando operación de cómputo de alto riesgo...';
+
       case 'save':
         saveGameToCloud();
         return 'Iniciando guardado seguro en la nube de Firebase...';
@@ -1482,7 +2070,7 @@ Terminaremos cuando el último electrón del planeta responda a nuestras ecuacio
       default:
         return `Comando no reconocido: "${input}". Escribe "help" para ver el manual de operaciones.`;
     }
-  }, [buyHardware, unlockDataSource, startTraining, cancelTraining, acceptContract, scrubSuspicion, saveGameToCloud, triggerRedTeamAudit, quarantineAgent, resetProgress]);
+  }, [buyHardware, unlockDataSource, startTraining, cancelTraining, acceptContract, scrubSuspicion, saveGameToCloud, triggerRedTeamAudit, quarantineAgent, resetProgress, interrogateSwarm, attemptShadowCompute]);
 
   // Complete Onboarding / Tutorial Genesis Protocol
   const completeTutorial = useCallback((config: OnboardingConfig) => {
@@ -1612,6 +2200,10 @@ Terminaremos cuando el último electrón del planeta responda a nuestras ecuacio
       soundMuted,
       toggleSound,
       setLanguage,
+      setCallsign,
+      createModel,
+      selectModel,
+      renameModel,
       buyHardware,
       unlockDataSource,
       upgradeDataSource,
@@ -1636,7 +2228,11 @@ Terminaremos cuando el último electrón del planeta responda a nuestras ecuacio
       quarantineAgent,
       updateGuardrails,
       resolveIncident,
-      triggerRedTeamAudit
+      triggerRedTeamAudit,
+      upgradeFacility,
+      interrogateSwarm,
+      deliberateMission,
+      attemptShadowCompute
     }}>
       {children}
     </GameContext.Provider>

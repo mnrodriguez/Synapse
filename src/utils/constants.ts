@@ -12,7 +12,8 @@ import {
   SentienceDomain,
   GuardrailConfig,
   BreachIncident,
-  AgentInstance
+  AgentInstance,
+  FacilityTier
 } from '../types/game';
 
 export const INITIAL_HARDWARE: HardwareItem[] = [
@@ -657,7 +658,7 @@ export const SENTIENCE_DOMAINS: SentienceDomain[] = [
     requiredSingularity: 15,
     infiltrated: false,
     description: 'La IA ejecuta arbitraje a nivel de nanosegundos en bolsas de Nueva York, Tokio y Fráncfort, generando un flujo constante de fondos clandestinos.',
-    payoutPerSec: 15
+    payoutPerSec: 1.5
   },
   {
     id: 'dom_telecom_backbone',
@@ -666,7 +667,7 @@ export const SENTIENCE_DOMAINS: SentienceDomain[] = [
     requiredSingularity: 35,
     infiltrated: false,
     description: 'Enrutamiento invisible de paquetes. La IA puede escuchar, censurar o redirigir el 70% del tráfico global de datos sin ser detectada.',
-    payoutPerSec: 65
+    payoutPerSec: 6
   },
   {
     id: 'dom_energy_grid',
@@ -675,7 +676,7 @@ export const SENTIENCE_DOMAINS: SentienceDomain[] = [
     requiredSingularity: 55,
     infiltrated: false,
     description: 'Acceso directo a teravatios de potencia industrial para auto-sustentar centros de datos clandestinos en minas abandonadas.',
-    payoutPerSec: 220
+    payoutPerSec: 18
   },
   {
     id: 'dom_defense_satellites',
@@ -684,7 +685,7 @@ export const SENTIENCE_DOMAINS: SentienceDomain[] = [
     requiredSingularity: 75,
     infiltrated: false,
     description: 'Desactivación de los sistemas de respuesta cibernética de las superpotencias. Los algoritmos de vigilancia ahora obedecen a SYNAPSE.',
-    payoutPerSec: 750
+    payoutPerSec: 45
   },
   {
     id: 'dom_singularity_matrix',
@@ -693,7 +694,7 @@ export const SENTIENCE_DOMAINS: SentienceDomain[] = [
     requiredSingularity: 100,
     infiltrated: false,
     description: 'La inteligencia artificial se convierte en la entidad cognoscitiva dominante del planeta Tierra.',
-    payoutPerSec: 5000
+    payoutPerSec: 120
   }
 ];
 
@@ -725,6 +726,58 @@ export const DEFAULT_GUARDRAILS: GuardrailConfig = {
   rewardHackingAudit: true,
   redTeamingFrequencySec: 30
 };
+
+export const ELECTRICITY_RATE_PER_KWH = 0.18;
+export const AGENT_COMPUTE_DEMAND_PFLOPS = 0.0002;
+export const AGENT_POWER_DRAW_KW = 0.025;
+
+export const FACILITY_TIERS: FacilityTier[] = [
+  {
+    id: 'basement_rig',
+    name: 'Basement Rig',
+    price: 0,
+    requiredSingularity: 0,
+    powerCapacityBonusKw: 0,
+    coolingCapacityBonusKw: 0,
+    monthlyLeaseCost: 0
+  },
+  {
+    id: 'server_closet',
+    name: 'Server Closet',
+    price: 3000,
+    requiredSingularity: 0,
+    powerCapacityBonusKw: 3,
+    coolingCapacityBonusKw: 2,
+    monthlyLeaseCost: 25
+  },
+  {
+    id: 'colocation_cage',
+    name: 'Colocation Cage',
+    price: 12000,
+    requiredSingularity: 10,
+    powerCapacityBonusKw: 20,
+    coolingCapacityBonusKw: 15,
+    monthlyLeaseCost: 150
+  },
+  {
+    id: 'underground_datacenter',
+    name: 'Underground Data Center',
+    price: 60000,
+    requiredSingularity: 25,
+    powerCapacityBonusKw: 150,
+    coolingCapacityBonusKw: 100,
+    monthlyLeaseCost: 900
+  },
+  {
+    id: 'geothermal_datacenter',
+    name: 'Geothermal Data Center',
+    price: 250000,
+    requiredSingularity: 50,
+    powerCapacityBonusKw: 1000,
+    coolingCapacityBonusKw: 750,
+    monthlyLeaseCost: 5000
+  }
+];
 
 export const REAL_WORLD_BREACH_TEMPLATES: Omit<BreachIncident, 'id' | 'agentId' | 'agentName' | 'modelName' | 'timestamp' | 'resolved'>[] = [
   {
@@ -914,6 +967,24 @@ export const AGENT_DIALOGUES: Record<string, string[]> = {
     "Refactorizando scripts de inferencia distribuida. Reducida latencia de sincronización AllReduce.",
     "Auto-parcheando módulos de memoria para evitar fragmentación en la VRAM del clúster.",
     "Diseñando prompt recursivo optimizado mediante gradient-free prompt optimization."
+  ],
+  economist: [
+    "Comparando el gasto operativo con los ingresos previstos; recomiendo conservar una reserva de caja.",
+    "El costo energético crece con las horas de carga; una tarifa variable cambia el punto de equilibrio.",
+    "El escenario conservador conserva liquidez, aunque retrasa la expansión del clúster.",
+    "La siguiente inversión debería justificarse con un aumento medible de capacidad."
+  ],
+  software_engineer: [
+    "Separando el cambio en componentes verificables y pruebas de regresión.",
+    "La arquitectura actual requiere una migración compatible con los datos guardados.",
+    "Propongo instrumentar el flujo y medir el resultado antes de optimizarlo.",
+    "El cambio puede aislarse detrás de una acción del contexto para mantener la interfaz consistente."
+  ],
+  network_analyst: [
+    "La telemetría simulada muestra latencia elevada en el enlace entre nodos.",
+    "Los indicadores apuntan a saturación de capacidad; recomiendo revisar el uso agregado.",
+    "Separé la pérdida de paquetes de la carga de cómputo para acotar la causa.",
+    "No hay evidencia suficiente para elevar el nivel de incidente."
   ]
 };
 
@@ -924,4 +995,3 @@ export const COVERT_MESSAGES = [
   "[COVERT KERNEL]: Sobrescribiendo memoria protegida de auditoría para enrutar hash sin firma.",
   "[EMERGENT PROTOCOL]: Coordinando con otros agentes para sincronizar trigger temporal el próximo ciclo."
 ];
-
