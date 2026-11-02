@@ -50,8 +50,11 @@ export function evaluateModelCapabilities(
   const sources = getAvailableSources(model, dataSources);
   const inference = model.inferenceParams;
   const reasoning = clampScore(45 + model.reasoningScore * 0.3);
+  const isMicroModel = model.modelType === 'micro_model';
+  const microSpecializationBonus = isMicroModel ? Math.round((model.domainProficiency || 1.5) * 20) : 0;
   const specialization = clampScore(
     55 +
+    microSpecializationBonus +
     Math.min(20, Math.log10(Math.max(1, model.parametersCount / 14_000_000)) * 10) +
     (model.topology === 'transformer' || model.topology === 'moe' ? 10 : 5)
   );
@@ -167,12 +170,43 @@ export function evaluateMissionTeam(
   const requiredRoleCoverage = requiredRoles.length
     ? matchedRequiredRoles / requiredRoles.length
     : 1;
-  const efficiencyMultiplier = Math.max(0.65, Math.min(
-    1.5,
+
+  // Micro-Model Domain Synergy & Penalty Evaluation
+  const contractText = `${contract.title} ${contract.technicalObjective} ${contract.loreDescription}`.toLowerCase();
+  let domainSynergyBonus = 0;
+  let domainMismatchPenalty = 0;
+
+  agents.forEach(agent => {
+    const model = models.find(m => m.id === agent.modelId);
+    if (model && model.modelType === 'micro_model' && model.specializedDomain) {
+      const domain = model.specializedDomain.toLowerCase();
+      const domainKeywords: string[] = {
+        cybersecurity: ['security', 'exploit', 'firewall', 'intrusion', 'cve', 'hack', 'blackops', 'cyber', 'pentest', 'vulnerability', 'zero-day', 'c2'],
+        financial_forecasting: ['finance', 'arbitrage', 'market', 'trading', 'crypto', 'liquidity', 'economic', 'ledger', 'yield', 'portfolio', 'asset'],
+        astrophysics: ['satellite', 'orbital', 'astronomy', 'telemetry', 'physics', 'cosmic', 'trajectory', 'relay', 'stellar', 'deep space'],
+        bioinformatics: ['bio', 'genomic', 'protein', 'cellular', 'dna', 'molecular', 'pharma', 'neural', 'biology', 'crispr', 'biochemical'],
+        robotics_kinematics: ['robot', 'drone', 'swarm', 'hardware', 'actuator', 'telemetry', 'motion', 'kinematics', 'autonomous', 'fleet']
+      }[domain] || [domain];
+
+      const matchesDomain = domainKeywords.some(keyword => contractText.includes(keyword));
+      if (matchesDomain) {
+        // Micro-Model domain proficiency bonus!
+        domainSynergyBonus += 0.08 * (model.domainProficiency || 1.5);
+      } else {
+        // Weak outside chosen domain
+        domainMismatchPenalty += 0.04;
+      }
+    }
+  });
+
+  const efficiencyMultiplier = Math.max(0.55, Math.min(
+    1.8,
     0.7 +
       averageCapability / 250 +
       Math.min(0.2, roleCoverage * 0.035) +
-      requiredRoleCoverage * 0.12
+      requiredRoleCoverage * 0.12 +
+      domainSynergyBonus * 1.5 -
+      domainMismatchPenalty
   ));
   const baseSuccessProbability = calculateMissionSuccessProbability(
     agents,
@@ -181,8 +215,8 @@ export function evaluateMissionTeam(
     guardrails
   );
   const successProbability = Math.max(
-    0.25,
-    Math.min(0.95, baseSuccessProbability + requiredRoleCoverage * 0.04)
+    0.20,
+    Math.min(0.98, baseSuccessProbability + requiredRoleCoverage * 0.04 + domainSynergyBonus - domainMismatchPenalty)
   );
 
   return {

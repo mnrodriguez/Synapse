@@ -13,7 +13,8 @@ import {
   GuardrailConfig,
   BreachIncident,
   AgentInstance,
-  FacilityTier
+  FacilityTier,
+  CustomDataset
 } from '../types/game';
 
 export const DAYS_PER_GAME_MONTH = 30;
@@ -425,6 +426,146 @@ export const INITIAL_DATA_SOURCES: DataSourceNode[] = [
   }
 ];
 
+export const DEFAULT_GENERAL_DATASET: CustomDataset = {
+  id: 'dataset_general_corpus',
+  name: 'General Information & Web Crawl Corpus',
+  domain: 'general',
+  domainLabel: 'General Information',
+  tier: 1,
+  tokensCount: 500, // 500M tokens
+  qualityScore: 72,
+  computeSpentPflops: 0,
+  createdAt: 0,
+  description: 'Broad-spectrum general knowledge baseline collected from open web encyclopedias, technical textbooks, and public discourse. Yields balanced cognitive progression without domain bias.'
+};
+
+export interface DatasetTierConfig {
+  tier: 1 | 2 | 3 | 4;
+  name: string;
+  nameEs: string;
+  minModelIQ: number;
+  minModelParams: number;
+  targetTokensMillions: number;
+  computePflopsRequired: number;
+  durationSeconds: number; // base duration in simulation ticks
+  qualityScore: number;
+  description: string;
+  descriptionEs: string;
+}
+
+export const DATASET_TIER_CONFIGS: Record<number, DatasetTierConfig> = {
+  1: {
+    tier: 1,
+    name: 'Tier 1: Basic Web Scrapes & Public Feeds',
+    nameEs: 'Nivel 1: Scrapes Web Básicos y Fuentes Públicas',
+    minModelIQ: 80,
+    minModelParams: 14_000_000,
+    targetTokensMillions: 75,
+    computePflopsRequired: 0.04,
+    durationSeconds: 24,
+    qualityScore: 75,
+    description: 'Targeted web crawling and text extraction of domain-specific documentation, whitepapers, and forums.',
+    descriptionEs: 'Extracción web dirigida y filtrado de documentación técnica, foros y artículos del dominio seleccionado.'
+  },
+  2: {
+    tier: 2,
+    name: 'Tier 2: Structured Expert Repositories & Ontologies',
+    nameEs: 'Nivel 2: Repositorios de Expertos y Ontologías Estructuradas',
+    minModelIQ: 130,
+    minModelParams: 70_000_000,
+    targetTokensMillions: 250,
+    computePflopsRequired: 0.20,
+    durationSeconds: 48,
+    qualityScore: 86,
+    description: 'Curated peer-reviewed journals, proprietary API schemas, sanitized exploit proofs, and parsed codebases.',
+    descriptionEs: 'Papers de investigación revisados, esquemas de APIs privadas, exploits de seguridad saneados y código fuente especializado.'
+  },
+  3: {
+    tier: 3,
+    name: 'Tier 3: Synthetic Multi-Agent Consensus Datasets',
+    nameEs: 'Nivel 3: Datos Sintéticos Generados por Consenso de Agentes',
+    minModelIQ: 240,
+    minModelParams: 250_000_000,
+    targetTokensMillions: 800,
+    computePflopsRequired: 0.85,
+    durationSeconds: 84,
+    qualityScore: 94,
+    description: 'High-density synthetic data synthesized through competitive self-play, formal logic verification, and chain-of-thought distillation.',
+    descriptionEs: 'Datos sintéticos de máxima pureza sintetizados mediante auto-juego adversarial, verificación formal y destilación de cadenas de razonamiento.'
+  },
+  4: {
+    tier: 4,
+    name: 'Tier 4: Frontier Singularity Syntheses',
+    nameEs: 'Nivel 4: Síntesis de Frontera para Singularidad',
+    minModelIQ: 500,
+    minModelParams: 1_000_000_000,
+    targetTokensMillions: 2500,
+    computePflopsRequired: 3.50,
+    durationSeconds: 144,
+    qualityScore: 99,
+    description: 'Deep theoretical synthesis spanning unproven physics conjectures, post-quantum cryptanalysis, and hyper-dimensional heuristics.',
+    descriptionEs: 'Síntesis teórica de frontera que abarca conjeturas de física teórica, criptoanálisis post-cuántico y heurísticas hiperdimensionales.'
+  }
+};
+
+export interface DomainPreset {
+  id: string;
+  name: string;
+  nameEs: string;
+  iconName: string;
+  description: string;
+  descriptionEs: string;
+  contractKeywords: string[];
+}
+
+export const DOMAIN_PRESETS: DomainPreset[] = [
+  {
+    id: 'cybersecurity',
+    name: 'Cybersecurity & Exploit Synthesis',
+    nameEs: 'Ciberseguridad y Síntesis de Exploits',
+    iconName: 'Shield',
+    description: 'CVE vulnerabilities, decompiled binary patterns, zero-day signatures, and adversarial intrusion chains.',
+    descriptionEs: 'Vulnerabilidades CVE, patrones de binarios desensamblados, firmas de zero-day y cadenas de intrusión adversarial.',
+    contractKeywords: ['security', 'exploit', 'firewall', 'intrusion', 'cve', 'hack', 'blackops', 'cyber', 'pentest', 'vulnerability']
+  },
+  {
+    id: 'financial_forecasting',
+    name: 'Financial Forecasting & High-Frequency Arbitrage',
+    nameEs: 'Previsión Financiera y Arbitraje de Alta Frecuencia',
+    iconName: 'TrendingUp',
+    description: 'Order-book microstructure, global derivatives flows, macroeconomic cycles, and algorithmic sentiment indicators.',
+    descriptionEs: 'Microestructura de libros de órdenes, derivados financieros globales, ciclos macroeconómicos y sentimiento algorítmico.',
+    contractKeywords: ['finance', 'arbitrage', 'market', 'trading', 'crypto', 'liquidity', 'economic', 'ledger', 'yield', 'portfolio']
+  },
+  {
+    id: 'astrophysics',
+    name: 'Astrophysics & Orbital Telemetry',
+    nameEs: 'Astrofísica y Telemetría Orbital',
+    iconName: 'Orbit',
+    description: 'Stellar spectrometry, n-body gravitational trajectory computations, relativistic sensor arrays, and cosmic radiation mapping.',
+    descriptionEs: 'Espectrometría estelar, cálculo de órbitas de n-cuerpos relativistas, matrices de sensores y radiación cósmica.',
+    contractKeywords: ['satellite', 'orbital', 'astronomy', 'telemetry', 'physics', 'cosmic', 'trajectory', 'relay', 'stellar']
+  },
+  {
+    id: 'bioinformatics',
+    name: 'Bioinformatics & Molecular Folding',
+    nameEs: 'Bioinformática y Plegamiento Molecular',
+    iconName: 'Dna',
+    description: 'Amino acid sequencing tensors, CRISPR-Cas targeting affinities, biochemical reaction pathways, and proteomic structures.',
+    descriptionEs: 'Tensores de secuencias de aminoácidos, afinidad CRISPR-Cas, vías bioquímicas y modelos proteómicos 3D.',
+    contractKeywords: ['bio', 'genomic', 'protein', 'cellular', 'dna', 'molecular', 'pharma', 'neural', 'biology']
+  },
+  {
+    id: 'robotics_kinematics',
+    name: 'Robotics, Kinematics & Swarm Control',
+    nameEs: 'Robótica, Cinemática y Control de Enjambres',
+    iconName: 'Cpu',
+    description: 'Inverse kinematics equations, multi-rotor aerodynamics, latency-critical actuator loops, and decentralized swarm coordination.',
+    descriptionEs: 'Cinemática inversa, dinámica de actuadores en tiempo real, aerodinámica de multirotores y coordinación de enjambres descentralizados.',
+    contractKeywords: ['robot', 'drone', 'swarm', 'hardware', 'actuator', 'telemetry', 'motion', 'kinematics', 'autonomous']
+  }
+];
+
 export const INITIAL_MODEL: ModelArchitecture = {
   id: 'model_genesis_01',
   name: 'SYNAPSE-Proto-14M',
@@ -438,6 +579,9 @@ export const INITIAL_MODEL: ModelArchitecture = {
   reasoningScore: 68, // Low starting intelligence
   vramRequiredGb: 2.5,
   computeRequiredPflops: 0.05,
+  modelType: 'general',
+  domainProficiency: 1.0,
+  trainedOnDatasetId: 'dataset_general_corpus',
   inferenceParams: {
     temperature: 0.70,
     topP: 0.90,

@@ -215,7 +215,7 @@ export const ArchitectureStudio: React.FC = () => {
           </button>
         ) : (
           <button
-            onClick={() => startTraining()}
+            onClick={() => startTraining(current.trainedOnDatasetId, current.modelType === 'micro_model')}
             disabled={!isVramSufficient || state.powerTripSeconds > 0 || state.detentionSeconds > 0}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded text-xs font-bold transition-all shadow-[0_0_15px_rgba(0,255,200,0.2)] ${
               isVramSufficient && state.powerTripSeconds === 0 && state.detentionSeconds === 0
@@ -224,7 +224,10 @@ export const ArchitectureStudio: React.FC = () => {
             }`}
           >
             <Play className="w-3.5 h-3.5 fill-current" />
-            <span>{localize(state.language, 'INICIAR ENTRENAMIENTO', 'START TRAINING')} ({current.name})</span>
+            <span>
+              {localize(state.language, 'INICIAR ENTRENAMIENTO', 'START TRAINING')} ({current.name})
+              {current.modelType === 'micro_model' ? ' · MICRO' : ''}
+            </span>
           </button>
         )}
       </div>
@@ -330,16 +333,26 @@ export const ArchitectureStudio: React.FC = () => {
         <div>
           <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
           <span className="text-purple-300 font-bold">IQ {current.reasoningScore} pts</span>
+          {current.modelType === 'micro_model' && (
+            <span className="text-[10px] text-purple-400 block font-bold">
+              +{Math.round(((current.domainProficiency || 1.5) - 1) * 100)}% {current.specializedDomain?.toUpperCase()}
+            </span>
+          )}
         </div>
         <div>
-          <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'TIEMPO ESTIMADO DE ENTRENAMIENTO', 'ESTIMATED TRAINING TIME')}</span>
-          <span className="text-emerald-300 font-bold">
+          <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'PREDICCIÓN CON HARDWARE ACTUAL', 'PREDICTION WITH CURRENT HW')}</span>
+          <span className="text-emerald-300 font-bold block">
             {estimatedTrainingSeconds === null
               ? localize(state.language, 'Sin cómputo disponible', 'No compute available')
-              : `${formatTrainingDuration(estimatedTrainingSeconds / estimateSpeed)} @ ${estimateSpeed}x`}
+              : `${(estimatedTrainingSeconds / 48).toFixed(1)} ${localize(state.language, 'días de simulación', 'in-game days')}`}
+          </span>
+          <span className="text-[10px] text-zinc-400 font-mono block">
+            {estimatedTrainingSeconds === null
+              ? ''
+              : `(~${formatTrainingDuration(estimatedTrainingSeconds / estimateSpeed)} @ ${estimateSpeed}x)`}
           </span>
           {state.gameSpeed === 0 && (
-            <span className="text-[9px] text-zinc-500 block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>
+            <span className="text-[9px] text-yellow-500 block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>
           )}
         </div>
       </div>
@@ -374,6 +387,108 @@ export const ArchitectureStudio: React.FC = () => {
         <p className="mt-1.5 text-[9px] text-zinc-500">
           {localize(state.language, 'La aptitud se estima con arquitectura, entrenamiento, hiperparámetros y fuentes de datos; influye en la probabilidad de éxito de las misiones.', 'Fit is estimated from architecture, training, sampling settings, and data sources; it contributes to mission success probability.')}
         </p>
+      </section>
+
+      {/* Section 0: Dataset Baseline & Micro-Model Specialization */}
+      <section className="space-y-2 rounded border border-cyan-800/60 bg-[#080f1a] p-3 font-mono">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-1.5">
+          <div className="flex items-center gap-1.5">
+            <Database className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-xs font-bold tracking-wider text-cyan-300">
+              {localize(state.language, 'ESPECIALIZACIÓN Y CORPUS DE ENTRENAMIENTO // BASELINE GENERAL VS MICRO-MODELOS', 'TRAINING DATASET & SPECIALIZATION // GENERAL BASELINE VS MICRO-MODELS')}
+            </h3>
+          </div>
+          <span className="text-[10px] text-zinc-400">
+            {current.modelType === 'micro_model'
+              ? localize(state.language, `MODO: MICRO-MODELO (${current.specializedDomain?.toUpperCase()})`, `MODE: MICRO-MODEL (${current.specializedDomain?.toUpperCase()})`)
+              : localize(state.language, 'MODO: MODELO GENERAL (INFORMACIÓN AMPLIA)', 'MODE: GENERAL MODEL (BROAD SPECTRUM)')}
+          </span>
+        </div>
+
+        <p className="text-[11px] text-zinc-400 leading-snug">
+          {state.language === 'en'
+            ? <>Initial AI training defaults to the <strong className="text-cyan-300">General Information baseline</strong> for balanced, broad-spectrum progression. Unlock the <strong className="text-cyan-300">Data Scraping Module</strong> in Data Engines to generate specialized domain datasets (Cybersecurity, Astrophysics, Finance, Bioinformatics, Robotics) and train high-velocity <strong className="text-purple-300">Micro-Models</strong>.</>
+            : <>El entrenamiento inicial predetermina el <strong className="text-cyan-300">baseline de Información General</strong> para un avance equilibrado. Desbloquea el <strong className="text-cyan-300">Módulo de Scraping</strong> en Motores de Datos para sintetizar datasets especializados y entrenar <strong className="text-purple-300">Micro-Modelos</strong> ultrarrápidos.</>}
+        </p>
+
+        {/* Dataset Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
+          {state.customDatasets.map(dataset => {
+            const isSelected = (current.trainedOnDatasetId || 'dataset_general_corpus') === dataset.id;
+            const isGeneral = dataset.domain === 'general' || dataset.id === 'dataset_general_corpus';
+
+            return (
+              <button
+                key={dataset.id}
+                type="button"
+                onClick={() => {
+                  sound.playKeyClick();
+                  if (isGeneral) {
+                    updateModelArchitecture({
+                      trainedOnDatasetId: dataset.id,
+                      modelType: 'general',
+                      specializedDomain: undefined,
+                      domainProficiency: 1.0
+                    });
+                  } else {
+                    const prof = 1.4 + (dataset.tier * 0.3);
+                    updateModelArchitecture({
+                      trainedOnDatasetId: dataset.id,
+                      modelType: 'micro_model',
+                      specializedDomain: dataset.domain,
+                      domainProficiency: prof
+                    });
+                  }
+                }}
+                className={`p-2 rounded text-left border transition-all ${
+                  isSelected
+                    ? isGeneral
+                      ? 'bg-cyan-950/70 border-cyan-400 text-cyan-200 shadow-[0_0_10px_rgba(0,255,200,0.15)]'
+                      : 'bg-purple-950/70 border-purple-400 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
+                    : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="truncate">{dataset.name}</span>
+                  {isSelected && (
+                    <span className="text-[10px] text-cyan-400 font-mono">
+                      ✓ {localize(state.language, 'ACTIVO', 'ACTIVE')}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-[10px] mt-1 text-zinc-400">
+                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                    isGeneral ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'bg-purple-950 text-purple-300 border border-purple-800'
+                  }`}>
+                    {isGeneral ? 'GENERAL T1' : `SPECIALIST T${dataset.tier}`}
+                  </span>
+                  <span>{dataset.tokensCount}M tok</span>
+                  <span>{dataset.qualityScore}% pureza</span>
+                </div>
+                <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2 leading-tight">
+                  {dataset.description}
+                </p>
+                {!isGeneral && (
+                  <div className="mt-1 text-[9px] text-emerald-400 font-bold">
+                    +{Math.round(((1.4 + dataset.tier * 0.3) - 1) * 100)}% {localize(state.language, 'Pericia en contratos de', 'Proficiency in')} {dataset.domainLabel}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {!state.isDataScrapingUnlocked && (
+          <div className="rounded border border-amber-900/60 bg-amber-950/20 p-2 text-xs flex items-center justify-between gap-2">
+            <span className="text-[11px] text-amber-300">
+              {localize(
+                state.language,
+                'Módulo de Scraping Bloqueado: Entrena tu modelo general a IQ ≥ 80 para desbloquear la generación de datasets especializados en la pestaña "Datos & Grafos".',
+                'Data Scraping Locked: Level your general model to Reasoning IQ ≥ 80 to unlock custom specialized datasets in the "Data & Graphs" tab.'
+              )}
+            </span>
+          </div>
+        )}
       </section>
 
       {/* Section 1: Topology selection */}

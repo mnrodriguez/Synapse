@@ -81,10 +81,26 @@ export const TrainingMonitor: React.FC = () => {
 
       {/* Main Epoch Progress Bar */}
       <div className="bg-[#09111c] border border-cyan-900/60 p-3 rounded-lg space-y-2">
-        <div className="flex items-center justify-between text-xs font-bold">
-          <span className="text-cyan-300">
-            {localize(state.language, 'PROGRESO TOTAL DEL ENTRENAMIENTO:', 'TOTAL TRAINING PROGRESS:')} {job.progressPercent}%
-          </span>
+        <div className="flex flex-wrap items-center justify-between text-xs font-bold gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-cyan-300">
+              {localize(state.language, 'PROGRESO TOTAL:', 'TOTAL PROGRESS:')} {job.progressPercent}%
+            </span>
+            {job.targetModelType === 'micro_model' ? (
+              <span className="px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/60 text-purple-300 text-[10px] font-bold">
+                MICRO-MODEL ({job.datasetDomain || 'SPECIALIST'})
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/60 text-cyan-300 text-[10px]">
+                {localize(state.language, 'MODELO GENERAL', 'GENERAL MODEL')}
+              </span>
+            )}
+            {job.datasetName && (
+              <span className="text-[10px] text-zinc-400 font-mono truncate max-w-44">
+                [{job.datasetName}]
+              </span>
+            )}
+          </div>
           <span className="text-yellow-300 font-mono">
             {localize(state.language, 'Época', 'Epoch')} {job.currentEpoch} / {job.totalEpochs} ({localize(state.language, 'Paso', 'Step')} #{job.step})
           </span>
@@ -97,17 +113,29 @@ export const TrainingMonitor: React.FC = () => {
           />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-500">
-          <span>{localize(state.language, 'Tokens procesados:', 'Tokens processed:')} {(job.tokensProcessed / 1_000_000).toFixed(1)}M</span>
-          <span>{localize(state.language, 'FLOPs activos:', 'Active FLOPs:')} {state.totalComputePflops.toFixed(4)} PFLOPS</span>
-          <span className="text-emerald-300">
-            {localize(state.language, 'Tiempo estimado restante:', 'Estimated time remaining:')}{' '}
-            {state.gameSpeed === 0
-              ? localize(state.language, 'PAUSADO', 'PAUSED')
-              : job.timeRemainingSeconds === null
-                ? localize(state.language, 'Sin cómputo disponible', 'No compute available')
-                : `${formatTrainingDuration(job.timeRemainingSeconds / state.gameSpeed)} @ ${state.gameSpeed}x`}
-          </span>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-zinc-400 pt-1">
+          <div>
+            <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'TOKENS Y CÓMPUTO:', 'TOKENS & COMPUTE:')}</span>
+            <span>{(job.tokensProcessed / 1_000_000).toFixed(1)}M tok · {state.totalComputePflops.toFixed(4)} PF</span>
+          </div>
+          <div>
+            <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'DURACIÓN EN HARDWARE:', 'HARDWARE RUNTIME:')}</span>
+            <span className="text-zinc-300">
+              {state.gameSpeed === 0
+                ? localize(state.language, 'PAUSADO', 'PAUSED')
+                : job.timeRemainingSeconds === null
+                  ? localize(state.language, 'Sin cómputo', 'No compute')
+                  : `${formatTrainingDuration(job.timeRemainingSeconds / Math.max(1, state.gameSpeed))} @ ${state.gameSpeed}x`}
+            </span>
+          </div>
+          <div>
+            <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'PREDICCIÓN EN DÍAS CON HARDWARE ACTUAL:', 'ESTIMATED DAYS WITH CURRENT HARDWARE:')}</span>
+            <span className="text-emerald-300 font-bold">
+              {job.timeRemainingSeconds === null
+                ? localize(state.language, 'N/A', 'N/A')
+                : `${(job.timeRemainingSeconds / 48).toFixed(1)} ${localize(state.language, 'días de simulación', 'in-game days')}`}
+            </span>
+          </div>
         </div>
       </div>
 

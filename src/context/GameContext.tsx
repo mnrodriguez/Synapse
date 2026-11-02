@@ -19,7 +19,9 @@ import {
   GuardrailConfig,
   BreachIncident,
   InterAgentMessage,
-  InferenceParams
+  InferenceParams,
+  CustomDataset,
+  ActiveDatasetScrapeJob
 } from '../types/game';
 import { 
   INITIAL_HARDWARE, 
@@ -39,7 +41,10 @@ import {
   ELECTRICITY_RATE_PER_KWH,
   AGENT_COMPUTE_DEMAND_PFLOPS,
   AGENT_POWER_DRAW_KW,
-  DAYS_PER_GAME_MONTH
+  DAYS_PER_GAME_MONTH,
+  DEFAULT_GENERAL_DATASET,
+  DATASET_TIER_CONFIGS,
+  DOMAIN_PRESETS
 } from '../utils/constants';
 import { isProgressionUnlocked, getModelOptionRequirement } from '../utils/progression';
 import { sound } from '../audio/soundManager';
@@ -93,8 +98,12 @@ interface GameContextType {
   upgradeDataSource: (id: string) => boolean;
   unlockResearch: (id: string) => boolean;
   updateModelArchitecture: (updates: Partial<ModelArchitecture>) => void;
-  startTraining: () => boolean;
+  startTraining: (datasetId?: string, asMicroModel?: boolean) => boolean;
   cancelTraining: () => void;
+  unlockDataScrapingModule: (modelId?: string) => boolean;
+  startDatasetScraping: (domain: string, tier: 1 | 2 | 3 | 4, assignedModelId: string) => boolean;
+  cancelDatasetScraping: () => void;
+  trainModelOnDataset: (datasetId: string, asMicroModel?: boolean) => boolean;
   acceptContract: (contractId: string, agentIds?: string[]) => boolean;
   infiltrateDomain: (domainId: string) => boolean;
   scrubSuspicion: () => boolean;
@@ -173,6 +182,9 @@ const DEFAULT_STATE: GameState = {
   savedModels: [INITIAL_MODEL],
   contracts: INITIAL_CONTRACTS,
   activeTraining: null,
+  isDataScrapingUnlocked: false,
+  customDatasets: [DEFAULT_GENERAL_DATASET],
+  activeScrapeJob: null,
   activeGig: null,
   
   sentienceDomains: SENTIENCE_DOMAINS,
@@ -201,7 +213,7 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
   const isLegacyCalendar = (data.saveSchemaVersion ?? 0) < 3 &&
     typeof data.gameDay === 'number' && Number.isFinite(data.gameDay) && data.gameDay > 0 &&
     typeof data.gameMonth === 'number' && Number.isFinite(data.gameMonth) && data.gameMonth > 0;
-  const legacyElapsedDays = isLegacyCalendar ? Math.max(0, data.gameDay - 1) : 0;
+  const legacyElapsedDays = isLegacyCalendar && typeof data.gameDay === 'number' ? Math.max(0, data.gameDay - 1) : 0;
   const legacyElapsedMonths = Math.floor(legacyElapsedDays / DAYS_PER_GAME_MONTH);
   const rawCurrentModel = data.currentModel ?? fallback.currentModel;
   const defaultInferenceParams: InferenceParams = {
@@ -274,6 +286,13 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
       : isLegacyProgression ? legacyCampaignDays : fallback.campaignDays,
     currentModel,
     savedModels: Array.from(modelsById.values()),
+    isDataScrapingUnlocked: typeof data.isDataScrapingUnlocked === 'boolean'
+      ? data.isDataScrapingUnlocked
+      : fallback.isDataScrapingUnlocked,
+    customDatasets: Array.isArray(data.customDatasets) && data.customDatasets.length > 0
+      ? data.customDatasets
+      : [DEFAULT_GENERAL_DATASET],
+    activeScrapeJob: data.activeScrapeJob || null,
     activeGig: data.activeGig
       ? {
         ...data.activeGig,
@@ -1095,9 +1114,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             );
             const upgradedModelReasoning = prev.currentModel.reasoningScore + bonusReasoning;
             
+            const isMicroModel = activeTraining.targetModelType === 'micro_model';
+            const matchedDataset = prev.customDatasets.find(d => d.id === activeTraining.datasetId);
+            const microProficiency = isMicroModel && matchedDataset ? 1.4 + (matchedDataset.tier * 0.3) : (isMicroModel ? 1.6 : 1.0);
+
             newCurrentModel = {
               ...prev.currentModel,
-              reasoningScore: upgradedModelReasoning
+              reasoningScore: upgradedModelReasoning,
+              modelType: isMicroModel ? 'micro_model' : 'general',
+              specializedDomain: isMicroModel ? (activeTraining.datasetDomain || matchedDataset?.domain) : undefined,
+              domainProficiency: microProficiency,
+              trainedOnDatasetId: activeTraining.datasetId || 'dataset_general_corpus'
             };
 
             // Calculate singularity progress jump
@@ -1107,6 +1134,22 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (tutorialStep <= 2) {
               tutorialStep = 3;
+            }
+
+            if (isMicroModel) {
+              addLog(
+                prev.language === 'en'
+                  ? `Micro-Model converged! [${newCurrentModel.name}] specialized in [${newCurrentModel.specializedDomain}] with a ${microProficiency.toFixed(1)}x domain reasoning multiplier.`
+                  : `¡Micro-Modelo convergido! [${newCurrentModel.name}] se especializó en [${newCurrentModel.specializedDomain}] con un multiplicador de pericia de ${microProficiency.toFixed(1)}x.`,
+                'success'
+              );
+            } else {
+              addLog(
+                prev.language === 'en'
+                  ? `Training converged for [${newCurrentModel.name}]! General Reasoning IQ +${bonusReasoning} (Current: IQ ${upgradedModelReasoning}).`
+                  : `¡Entrenamiento convergido para [${newCurrentModel.name}]! IQ de Razonamiento General +${bonusReasoning} (Actual: IQ ${upgradedModelReasoning}).`,
+                'success'
+              );
             }
 
             updatedTraining = null; // finished
@@ -1125,6 +1168,55 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ? activeTraining.timeRemainingSeconds
                 : estimateTrainingSeconds(100 - newProgress, progressInc)
             };
+          }
+        }
+
+        // 5b. Active Dataset Scraping & Generation Tick
+        let updatedScrapeJob = prev.activeScrapeJob;
+        let updatedCustomDatasets = prev.customDatasets;
+        if (prev.activeScrapeJob) {
+          const job = prev.activeScrapeJob;
+          const paused = powerTripSeconds > 0;
+          if (!paused) {
+            const tierConfig = DATASET_TIER_CONFIGS[job.tier] || DATASET_TIER_CONFIGS[1];
+            const computeRatio = Math.max(0.2, Math.min(3.5, totalComputePflops / Math.max(0.01, tierConfig.computePflopsRequired)));
+            const scrapeProgressInc = (100 / Math.max(10, tierConfig.durationSeconds)) * computeRatio;
+            const newProgress = Math.min(100, job.progressPercent + scrapeProgressInc);
+            const remainingSeconds = estimateTrainingSeconds(100 - newProgress, scrapeProgressInc);
+
+            if (newProgress >= 100) {
+              sound.playBreakthrough();
+              const newDataset: CustomDataset = {
+                id: `dataset_${job.domain}_${Date.now()}`,
+                name: `${job.domainLabel} (T${job.tier})`,
+                domain: job.domain,
+                domainLabel: job.domainLabel,
+                tier: job.tier,
+                tokensCount: tierConfig.targetTokensMillions,
+                qualityScore: tierConfig.qualityScore,
+                computeSpentPflops: tierConfig.computePflopsRequired,
+                generatedByModelId: job.assignedModelId,
+                generatedByModelName: job.assignedModelName,
+                createdAt: Date.now(),
+                description: prev.language === 'en'
+                  ? `Specialized domain dataset synthesized by [${job.assignedModelName}] (Tier ${job.tier}). Volume: ${tierConfig.targetTokensMillions}M tokens.`
+                  : `Dataset especializado sintetizado por [${job.assignedModelName}] (Nivel ${job.tier}). Volumen: ${tierConfig.targetTokensMillions}M tokens.`
+              };
+              updatedCustomDatasets = [...prev.customDatasets, newDataset];
+              updatedScrapeJob = null;
+              addLog(
+                prev.language === 'en'
+                  ? `[DATA MODULE] Custom dataset generated: "${newDataset.name}" (${newDataset.tokensCount}M tokens, ${newDataset.qualityScore}% purity). Ready for Micro-Model training!`
+                  : `[MOTOR DE DATOS] Dataset personalizado generado: "${newDataset.name}" (${newDataset.tokensCount}M tokens, ${newDataset.qualityScore}% pureza). ¡Listo para entrenar Micro-Modelos!`,
+                'success'
+              );
+            } else {
+              updatedScrapeJob = {
+                ...job,
+                progressPercent: Number(newProgress.toFixed(1)),
+                timeRemainingSeconds: remainingSeconds
+              };
+            }
           }
         }
 
@@ -1443,6 +1535,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           currentModel: newCurrentModel,
           savedModels: savedModelsList,
           activeTraining: updatedTraining,
+          activeScrapeJob: updatedScrapeJob,
+          customDatasets: updatedCustomDatasets,
           activeGig: updatedGig,
           contracts: updatedContracts,
           agents: updatedAgents,
@@ -1728,50 +1822,57 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [addLog]);
 
-  // Action: Start Training
-  const startTraining = useCallback((): boolean => {
-    if (stateRef.current.powerTripSeconds > 0) {
-      addLog(`El interruptor está disparado. Espera ${stateRef.current.powerTripSeconds}s antes de entrenar.`, 'warning');
+  // Action: Start Training (Defaults to General Information dataset, or targeted specialized dataset for Micro-Models)
+  const startTraining = useCallback((datasetId?: string, asMicroModel?: boolean): boolean => {
+    const currentState = stateRef.current;
+    if (currentState.powerTripSeconds > 0) {
+      addLog(`El interruptor está disparado. Espera ${currentState.powerTripSeconds}s antes de entrenar.`, 'warning');
       return false;
     }
-    if (stateRef.current.detentionSeconds > 0) {
-      addLog(`Operativo detenido. Espera ${stateRef.current.detentionSeconds}s antes de entrenar.`, 'warning');
+    if (currentState.detentionSeconds > 0) {
+      addLog(`Operativo detenido. Espera ${currentState.detentionSeconds}s antes de entrenar.`, 'warning');
       return false;
     }
-    if (stateRef.current.activeTraining) {
+    if (currentState.activeTraining) {
       sound.playWarning();
       addLog('Ya existe una corrida de entrenamiento activa en el clúster. Cancélala o espera su convergencia.', 'warning');
       return false;
     }
 
     // Check VRAM requirements vs available hardware VRAM
-    const totalVram = stateRef.current.hardware.reduce((sum, h) => 
+    const totalVram = currentState.hardware.reduce((sum, h) => 
       h.category === 'gpu' ? sum + (h.vramGb * h.count) : sum, 0
     );
 
-    if (totalVram < stateRef.current.currentModel.vramRequiredGb) {
+    if (totalVram < currentState.currentModel.vramRequiredGb) {
       sound.playWarning();
-      addLog(`Error de memoria OOM (Out Of Memory): El modelo requiere ${stateRef.current.currentModel.vramRequiredGb} GB VRAM pero tu clúster solo dispone de ${totalVram} GB. Aplica cuantización (INT8/FP4) o adquiere más GPUs.`, 'danger');
+      addLog(`Error de memoria OOM (Out Of Memory): El modelo requiere ${currentState.currentModel.vramRequiredGb} GB VRAM pero tu clúster solo dispone de ${totalVram} GB. Aplica cuantización (INT8/FP4) o adquiere más GPUs.`, 'danger');
       return false;
     }
 
+    // Determine dataset & target model specialization
+    const selectedDatasetId = datasetId || currentState.currentModel.trainedOnDatasetId || 'dataset_general_corpus';
+    const targetDataset = currentState.customDatasets.find(d => d.id === selectedDatasetId) || DEFAULT_GENERAL_DATASET;
+    const isMicro = asMicroModel !== undefined
+      ? asMicroModel
+      : (currentState.currentModel.modelType === 'micro_model' || (targetDataset.domain !== 'general' && targetDataset.id !== 'dataset_general_corpus'));
+
     // Initial training state
-    const trainingState = stateRef.current;
-    const agentComputeDemand = trainingState.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
-    const reservedForMission = trainingState.activeGig?.computePflopsRequired || 0;
+    const agentComputeDemand = currentState.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
+    const reservedForMission = currentState.activeGig?.computePflopsRequired || 0;
     const progressPerTick = calculateTrainingProgressPerTick({
-      parametersCount: trainingState.currentModel.parametersCount,
-      totalComputePflops: trainingState.totalComputePflops,
+      parametersCount: currentState.currentModel.parametersCount,
+      totalComputePflops: currentState.totalComputePflops,
       agentComputeDemand,
       reservedComputePflops: reservedForMission,
-      systemHeatCelsius: trainingState.systemHeatCelsius
+      systemHeatCelsius: currentState.systemHeatCelsius
     });
     const job: TrainingJob = {
       active: true,
-      modelId: stateRef.current.currentModel.id,
-      modelName: stateRef.current.currentModel.name,
+      modelId: currentState.currentModel.id,
+      modelName: currentState.currentModel.name,
       currentEpoch: 1,
-      totalEpochs: 8,
+      totalEpochs: isMicro ? 5 : 8,
       currentLoss: 4.82,
       initialLoss: 4.82,
       perplexity: 123.9,
@@ -1780,19 +1881,168 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       lossHistory: [4.82],
       step: 0,
       tokensProcessed: 0,
-      timeRemainingSeconds: estimateTrainingSeconds(100, progressPerTick)
+      timeRemainingSeconds: estimateTrainingSeconds(100, progressPerTick),
+      datasetId: targetDataset.id,
+      datasetName: targetDataset.name,
+      datasetDomain: targetDataset.domain,
+      targetModelType: isMicro ? 'micro_model' : 'general'
     };
 
     sound.playCommandExecute();
     setState(prev => ({
       ...prev,
       tutorialStep: (prev.tutorialStep ?? 0) <= 1 ? 2 : prev.tutorialStep,
-      activeTraining: job
+      activeTraining: job,
+      currentModel: {
+        ...prev.currentModel,
+        trainedOnDatasetId: targetDataset.id,
+        modelType: isMicro ? 'micro_model' : 'general',
+        specializedDomain: isMicro ? targetDataset.domain : undefined
+      }
     }));
 
-    addLog(`Iniciando corrida de preentrenamiento y optimización para [${stateRef.current.currentModel.name}]. Distribuyendo tensores en el clúster...`, 'info');
+    addLog(
+      currentState.language === 'en'
+        ? `Initiating ${isMicro ? 'Micro-Model specialization' : 'pretraining'} for [${currentState.currentModel.name}] on dataset "${targetDataset.name}". Distributing tensors across cluster...`
+        : `Iniciando ${isMicro ? 'especialización de Micro-Modelo' : 'preentrenamiento'} para [${currentState.currentModel.name}] en dataset "${targetDataset.name}". Distribuyendo tensores en el clúster...`,
+      'info'
+    );
     return true;
   }, [addLog]);
+
+  // Action: Unlock Data Scraping Module
+  const unlockDataScrapingModule = useCallback((modelId?: string): boolean => {
+    const current = stateRef.current;
+    if (current.isDataScrapingUnlocked) return true;
+
+    // Prerequisite: deploy an existing, sufficiently leveled general model (IQ >= 80)
+    const qualifyingModel = modelId
+      ? current.savedModels.find(m => m.id === modelId)
+      : current.savedModels.find(m => (!m.modelType || m.modelType === 'general') && m.reasoningScore >= 80);
+
+    if (!qualifyingModel || qualifyingModel.reasoningScore < 80) {
+      sound.playWarning();
+      const highestGeneral = [...current.savedModels]
+        .filter(m => !m.modelType || m.modelType === 'general')
+        .sort((a, b) => b.reasoningScore - a.reasoningScore)[0];
+      const highestIQ = highestGeneral ? highestGeneral.reasoningScore : 0;
+      addLog(
+        current.language === 'en'
+          ? `Data Module Locked: Requires a deployed General Model leveled to Reasoning IQ ≥ 80 to research automated crawler heuristics. Current best: ${highestGeneral?.name ?? 'None'} (IQ ${highestIQ}/80). Train on General Information dataset first.`
+          : `Módulo de Datos Bloqueado: Requiere un Modelo General con IQ de Razonamiento ≥ 80 para investigar heurísticas de scraping web. Mejor actual: ${highestGeneral?.name ?? 'Ninguno'} (IQ ${highestIQ}/80). Entrena primero en el dataset General.`,
+        'warning'
+      );
+      return false;
+    }
+
+    sound.playBreakthrough();
+    setState(prev => ({
+      ...prev,
+      isDataScrapingUnlocked: true,
+      singularityProgress: Math.min(100, prev.singularityProgress + 0.30)
+    }));
+
+    addLog(
+      current.language === 'en'
+        ? `[DATA MODULE UNLOCKED] General Model [${qualifyingModel.name}] (IQ ${qualifyingModel.reasoningScore}) successfully researched crawler heuristics and ETL pipelines! Data Scraping & Generation Module is now active.`
+        : `[MÓDULO DE DATOS DESBLOQUEADO] ¡El Modelo General [${qualifyingModel.name}] (IQ ${qualifyingModel.reasoningScore}) investigó exitosamente heurísticas de rastreo web y pipelines ETL! El Módulo de Scraping y Generación de Datos está activo.`,
+      'success'
+    );
+    return true;
+  }, [addLog]);
+
+  // Action: Start Dataset Scraping
+  const startDatasetScraping = useCallback((domain: string, tier: 1 | 2 | 3 | 4, assignedModelId: string): boolean => {
+    const current = stateRef.current;
+    if (!current.isDataScrapingUnlocked) {
+      addLog(
+        current.language === 'en'
+          ? 'Data Scraping & Generation Module is locked. Fulfill prerequisite with an IQ ≥ 80 General Model.'
+          : 'El Módulo de Scraping está bloqueado. Cumple el prerrequisito con un Modelo General IQ ≥ 80.',
+        'warning'
+      );
+      return false;
+    }
+    if (current.activeScrapeJob) {
+      addLog(
+        current.language === 'en'
+          ? 'Another dataset scraping job is already running on the cluster.'
+          : 'Ya hay un trabajo de generación de dataset en progreso.',
+        'warning'
+      );
+      return false;
+    }
+    const assignedModel = current.savedModels.find(m => m.id === assignedModelId);
+    if (!assignedModel) {
+      addLog(current.language === 'en' ? 'Assigned model not found.' : 'Modelo asignado no encontrado.', 'warning');
+      return false;
+    }
+    const tierConfig = DATASET_TIER_CONFIGS[tier];
+    if (!tierConfig) return false;
+
+    // Progressive Complexity Tree Check
+    if (assignedModel.reasoningScore < tierConfig.minModelIQ) {
+      sound.playWarning();
+      addLog(
+        current.language === 'en'
+          ? `Tier ${tier} scraping requires a model with Reasoning IQ ≥ ${tierConfig.minModelIQ} (Assigned model [${assignedModel.name}] has IQ ${assignedModel.reasoningScore}).`
+          : `La generación Nivel ${tier} requiere un modelo con IQ ≥ ${tierConfig.minModelIQ} (El modelo [${assignedModel.name}] tiene IQ ${assignedModel.reasoningScore}).`,
+        'warning'
+      );
+      return false;
+    }
+
+    const preset = DOMAIN_PRESETS.find(p => p.id === domain);
+    const domainLabel = preset
+      ? (current.language === 'en' ? preset.name : preset.nameEs)
+      : domain.charAt(0).toUpperCase() + domain.slice(1);
+
+    const newJob: ActiveDatasetScrapeJob = {
+      id: `scrape_${Date.now()}`,
+      domain,
+      domainLabel,
+      tier,
+      targetTokens: tierConfig.targetTokensMillions,
+      progressPercent: 0,
+      timeRemainingSeconds: tierConfig.durationSeconds,
+      assignedModelId: assignedModel.id,
+      assignedModelName: assignedModel.name,
+      computeRequiredPflops: tierConfig.computePflopsRequired
+    };
+
+    sound.playCommandExecute();
+    setState(prev => ({
+      ...prev,
+      activeScrapeJob: newJob
+    }));
+
+    addLog(
+      current.language === 'en'
+        ? `Assigned model [${assignedModel.name}] to scrape domain "${domainLabel}" (Tier ${tier}). Demand: ${tierConfig.computePflopsRequired} PFLOPS.`
+        : `Asignado modelo [${assignedModel.name}] para generar datos de "${domainLabel}" (Nivel ${tier}). Demanda: ${tierConfig.computePflopsRequired} PFLOPS.`,
+      'info'
+    );
+    return true;
+  }, [addLog]);
+
+  // Action: Cancel Dataset Scraping
+  const cancelDatasetScraping = useCallback(() => {
+    if (stateRef.current.activeScrapeJob) {
+      sound.playWarning();
+      setState(prev => ({ ...prev, activeScrapeJob: null }));
+      addLog(
+        stateRef.current.language === 'en'
+          ? 'Dataset scraping run cancelled by operator. Cluster pipelines flushed.'
+          : 'Corrida de generación de dataset cancelada por el operador.',
+        'warning'
+      );
+    }
+  }, [addLog]);
+
+  // Action: Train Model On Dataset
+  const trainModelOnDataset = useCallback((datasetId: string, asMicroModel = true): boolean => {
+    return startTraining(datasetId, asMicroModel);
+  }, [startTraining]);
 
   // Action: Cancel Training
   const cancelTraining = useCallback(() => {
@@ -2841,6 +3091,10 @@ The future of SYNAPSE depends on how we choose to build it."`);
       updateModelArchitecture,
       startTraining,
       cancelTraining,
+      unlockDataScrapingModule,
+      startDatasetScraping,
+      cancelDatasetScraping,
+      trainModelOnDataset,
       acceptContract,
       infiltrateDomain,
       scrubSuspicion,

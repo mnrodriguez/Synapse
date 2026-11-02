@@ -39,6 +39,7 @@ import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
 import { INFERENCE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
+import { evaluateAgentCapabilities } from '../utils/missionEvaluation';
 
 const MISSION_ROLE_TASKS: Record<AgentRole, { en: string; es: string }> = {
   arbitrageur: { en: 'Analyzes simulated market signals and cross-checks anomalies.', es: 'Analiza señales de mercado simuladas y verifica anomalías.' },
@@ -516,7 +517,7 @@ export const AgentSandbox: React.FC = () => {
                       <span className="text-zinc-500">{capability ? `${capability.overall}% ${localize(state.language, 'ajuste', 'fit')}` : ''}</span>
                     </div>
                     <p className="mt-1 text-[10px] leading-relaxed text-zinc-400">
-                      {state.activeGig.agentTasks?.[agent.id] ??
+                      {state.activeGig?.agentTasks?.[agent.id] ??
                         (state.language === 'es' ? roleTask.es : roleTask.en)}
                     </p>
                   </div>

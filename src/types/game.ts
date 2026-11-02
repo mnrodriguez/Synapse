@@ -55,6 +55,48 @@ export interface ModelArchitecture {
   vramRequiredGb: number;
   computeRequiredPflops: number;
   inferenceParams?: InferenceParams;
+  modelType?: 'general' | 'micro_model';
+  specializedDomain?: string;
+  domainProficiency?: number;
+  trainedOnDatasetId?: string;
+}
+
+export type DatasetDomain = 
+  | 'general'
+  | 'cybersecurity'
+  | 'astrophysics'
+  | 'financial_forecasting'
+  | 'bioinformatics'
+  | 'robotics_kinematics'
+  | 'quantum_computing'
+  | 'autonomous_systems';
+
+export interface CustomDataset {
+  id: string;
+  name: string;
+  domain: DatasetDomain | string;
+  domainLabel: string;
+  tier: 1 | 2 | 3 | 4;
+  tokensCount: number; // In millions
+  qualityScore: number; // 0 to 100
+  computeSpentPflops: number;
+  generatedByModelId?: string;
+  generatedByModelName?: string;
+  createdAt: number;
+  description: string;
+}
+
+export interface ActiveDatasetScrapeJob {
+  id: string;
+  domain: string;
+  domainLabel: string;
+  tier: 1 | 2 | 3 | 4;
+  targetTokens: number; // In millions
+  progressPercent: number;
+  timeRemainingSeconds: number | null;
+  assignedModelId: string;
+  assignedModelName: string;
+  computeRequiredPflops: number;
 }
 
 export type DataSourceType = 'relational_sql' | 'vector_embeddings' | 'knowledge_graph' | 'synthetic_flywheel';
@@ -125,6 +167,10 @@ export interface TrainingJob {
   step: number;
   tokensProcessed: number;
   timeRemainingSeconds: number | null;
+  datasetId?: string;
+  datasetName?: string;
+  datasetDomain?: string;
+  targetModelType?: 'general' | 'micro_model';
 }
 
 export interface SentienceDomain {
@@ -192,6 +238,12 @@ export interface GameState {
   savedModels: ModelArchitecture[];
   contracts: ContractGig[];
   activeTraining: TrainingJob | null;
+  
+  // Dataset Specialization & Scraping Module
+  isDataScrapingUnlocked: boolean;
+  customDatasets: CustomDataset[];
+  activeScrapeJob: ActiveDatasetScrapeJob | null;
+
   activeGig: {
     contractId: string;
     runId?: string;
@@ -202,7 +254,7 @@ export interface GameState {
     successProbability?: number;
     efficiencyPercent?: number;
     aiAssessmentStatus?: 'pending' | 'complete' | 'fallback';
-    aiAssessmentSource?: 'chrome-nano' | 'gemini-flash' | 'heuristic';
+    aiAssessmentSource?: 'chrome-nano' | 'gemini-flash' | 'heuristic' | 'procedural';
     aiAssessmentSummary?: string;
     agentTasks?: Record<string, string>;
     outcomeRoll?: number;
