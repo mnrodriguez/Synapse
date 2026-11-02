@@ -131,7 +131,7 @@ const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
 
 const DEFAULT_STATE: GameState = {
-  saveSchemaVersion: 8,
+  saveSchemaVersion: 9,
   callsign: 'CIPHER-1',
   credits: 500,
   dateTimestamp: Date.now(),
@@ -194,6 +194,7 @@ const DEFAULT_STATE: GameState = {
 };
 
 function mergeGameState(data: Partial<GameState>, fallback: GameState): GameState {
+  const isLegacyTutorialProgress = (data.saveSchemaVersion ?? 0) < 9;
   const isLegacyLanguagePreference = (data.saveSchemaVersion ?? 0) < 8;
   const isLegacyProgression = (data.saveSchemaVersion ?? 0) < 7;
   const isLegacyEconomy = (data.saveSchemaVersion ?? 0) < 2;
@@ -226,6 +227,17 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
   const incomingDomains = Array.isArray(data.sentienceDomains) ? data.sentienceDomains : fallback.sentienceDomains;
   const incomingContracts = Array.isArray(data.contracts) ? data.contracts : fallback.contracts;
   const incomingResearch = Array.isArray(data.researchTree) ? data.researchTree : fallback.researchTree;
+  const hardware = Array.isArray(data.hardware)
+    ? fallback.hardware.map(item => ({
+      ...item,
+      ...data.hardware?.find(saved => saved.id === item.id)
+    }))
+    : fallback.hardware;
+  const starterHardwareReady =
+    hardware.some(item => item.category === 'gpu' && item.isStarterChoice && item.count > 0) &&
+    hardware.some(item => item.category === 'cooling' && item.isStarterChoice && item.count > 0) &&
+    hardware.some(item => item.category === 'power' && item.count > 0) &&
+    hardware.some(item => item.category === 'network' && item.count > 0);
   const legacyCampaignDays = Math.max(
     0,
     ((data.gameYear ?? 2026) - 2026) * 360 +
@@ -236,7 +248,7 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
   return {
     ...fallback,
     ...data,
-    saveSchemaVersion: 8,
+    saveSchemaVersion: 9,
     language: isLegacyLanguagePreference
       ? 'en'
       : data.language === 'es' ? 'es' : 'en',
@@ -302,12 +314,7 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     powerTripSeconds: typeof data.powerTripSeconds === 'number' && Number.isFinite(data.powerTripSeconds)
       ? Math.max(0, data.powerTripSeconds)
       : fallback.powerTripSeconds,
-    hardware: Array.isArray(data.hardware)
-      ? fallback.hardware.map(item => ({
-        ...item,
-        ...data.hardware?.find(saved => saved.id === item.id)
-      }))
-      : fallback.hardware,
+    hardware,
     dataSources: Array.isArray(data.dataSources)
       ? fallback.dataSources.map(source => {
         const saved = data.dataSources?.find(candidate => candidate.id === source.id);
@@ -346,7 +353,11 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
       ? Math.max(0, Math.min(100, data.autonomyRiskLimit))
       : fallback.autonomyRiskLimit,
     tutorialCompleted: typeof data.tutorialCompleted === 'boolean' ? data.tutorialCompleted : fallback.tutorialCompleted,
-    tutorialStep: typeof data.tutorialStep === 'number' ? data.tutorialStep : fallback.tutorialStep,
+    tutorialStep: isLegacyTutorialProgress &&
+      data.tutorialCompleted !== true &&
+      !starterHardwareReady
+      ? 0
+      : typeof data.tutorialStep === 'number' ? data.tutorialStep : fallback.tutorialStep,
     tutorialDismissed: typeof data.tutorialDismissed === 'boolean' ? data.tutorialDismissed : fallback.tutorialDismissed,
     completedContractsCount: typeof data.completedContractsCount === 'number' ? data.completedContractsCount : fallback.completedContractsCount
   };
@@ -1477,10 +1488,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const metrics = recalculateMetrics(updatedHw, prev.facilityTier);
 
       sound.playCredit();
-      const nextTutorialStep = (prev.tutorialStep === 0 && item.category === 'gpu') ? 1 : prev.tutorialStep;
       return {
         ...prev,
-        tutorialStep: nextTutorialStep,
         credits: prev.credits - item.price,
         hardware: updatedHw,
         totalComputePflops: metrics.totalComputePflops + prev.borrowedComputePflops,

@@ -37,18 +37,22 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
   const step = state.tutorialStep ?? 0;
   const isEs = state.language === 'es';
 
-  const hasGpu = state.hardware.some(h => h.category === 'gpu' && h.count > 0);
+  const hasStarterGpu = state.hardware.some(h => h.category === 'gpu' && h.isStarterChoice && h.count > 0);
+  const hasStarterCooling = state.hardware.some(h => h.category === 'cooling' && h.isStarterChoice && h.count > 0);
+  const hasPowerSupply = state.hardware.some(h => h.category === 'power' && h.count > 0);
+  const hasNetworkConnection = state.hardware.some(h => h.category === 'network' && h.count > 0);
+  const hasStarterHardware = hasStarterGpu && hasStarterCooling && hasPowerSupply && hasNetworkConnection;
   const hasAgent = state.agents.length > 0;
   const hasFinishedContract = (state.completedContractsCount || 0) > 0 || state.contracts.some(c => c.completed);
 
   // Auto-progress stages when conditions are satisfied
   useEffect(() => {
-    if (step === 0 && hasGpu) {
+    if (step === 0 && hasStarterHardware) {
       sound.playCredit();
       advanceTutorialStep(1);
       addLog(isEs 
-        ? 'Protocolo Génesis [1/5]: Primera GPU integrada al rack. Paso completado.' 
-        : 'Genesis Protocol [1/5]: First GPU mounted in rack. Step complete.', 'success');
+        ? 'Protocolo Génesis [1/5]: Rig inicial completo: GPU, refrigeración, fuente de alimentación y red instaladas.'
+        : 'Genesis Protocol [1/5]: Starter rig complete: GPU, cooling, power supply, and network installed.', 'success');
     } else if (step === 3 && hasAgent) {
       sound.playBreakthrough();
       advanceTutorialStep(4);
@@ -63,7 +67,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
         ? 'PROTOCOLO GÉNESIS COMPLETADO: Primera misión comercial ejecutada con éxito. ¡+250 CR otorgados!'
         : 'GENESIS PROTOCOL COMPLETE: First commercial gig executed successfully. +250 CR rewarded!', 'success');
     }
-  }, [hasGpu, hasAgent, hasFinishedContract, step, advanceTutorialStep, addLog, isEs]);
+  }, [hasStarterHardware, hasAgent, hasFinishedContract, step, advanceTutorialStep, addLog, isEs]);
 
   const stepsData = [
     {
@@ -71,11 +75,11 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'hardware',
       title: isEs ? 'Fase 1: Adquirir Hardware Inicial' : 'Stage 1: Acquire Starter Hardware',
       desc: isEs 
-        ? 'Tienes $500 CR de fondo semilla. Ve a HARDWARE y compra tu primera GPU (ej. NVIDIA GTX 1060 por $150 CR) y un ventilador de refrigeración.'
-        : 'You have a $500 CR initial grant. Open HARDWARE and buy your first GPU (e.g. GTX 1060 for $150 CR) and basic cooling.',
+        ? 'Tienes $500 CR de fondo semilla. Ve a HARDWARE y equipa una GPU inicial, refrigeración básica, una fuente de alimentación y una conexión de red. Esta fase no avanzará hasta que los cuatro componentes estén instalados.'
+        : 'You have a $500 CR initial grant. Open HARDWARE and install a starter GPU, basic cooling, a power supply, and a network connection. This stage will not advance until all four are installed.',
       icon: Server,
       buttonText: isEs ? 'IR A HARDWARE' : 'GO TO HARDWARE',
-      isCompleted: hasGpu
+      isCompleted: hasStarterHardware
     },
     {
       id: 1,
