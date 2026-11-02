@@ -156,9 +156,15 @@ export const GenesisOnboarding: React.FC = () => {
     gpu_tesla_k80: { badge: 'MAXIMUM MEMORY', desc: 'Data-center accelerator. 24 GB of memory for denser models, with higher heat output.' },
     gpu_coral_edge: { badge: 'LOW POWER', desc: 'Low-power ASIC hybrid. Keeps the initial budget and operating temperature down.' }
   };
-  const coolingEnglishCopy: Record<string, string> = {
-    cool_air_basic: 'Noisy forced-air cooling, sufficient for a low-power card.',
-    cool_copper_pipes: 'High-flow cooling with direct copper contact for more powerful setups.'
+  const coolingEnglishCopy: Record<string, { name: string; desc: string }> = {
+    cool_air_basic: {
+      name: '120mm Industrial Fans',
+      desc: 'Noisy forced-air cooling, sufficient for a low-power card.'
+    },
+    cool_copper_pipes: {
+      name: 'Copper Heatpipes & Dual-Tower Cooler',
+      desc: 'High-flow cooling with direct copper contact for more powerful setups.'
+    }
   };
   const dataEnglishCopy: Record<string, { name: string; desc: string; bonus: string; lore: string }> = {
     data_relational_sql: {
@@ -444,10 +450,10 @@ export const GenesisOnboarding: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs text-zinc-200">{cool.name}</h4>
+                          <h4 className="font-bold text-xs text-zinc-200">{en ? coolingEnglishCopy[cool.id]?.name ?? cool.name : cool.name}</h4>
                           <span className="text-amber-300 font-bold text-xs">${cool.price} CR</span>
                         </div>
-                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{en ? coolingEnglishCopy[cool.id] : cool.desc}</p>
+                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{en ? coolingEnglishCopy[cool.id]?.desc ?? cool.desc : cool.desc}</p>
                         <span className="text-[10px] text-emerald-400 block mt-1.5 font-bold">
                           {localize(state.language, 'Disipación:', 'Cooling capacity:')} {cool.capacity}
                         </span>
@@ -539,7 +545,7 @@ export const GenesisOnboarding: React.FC = () => {
                   {[
                     { id: 'transformer', name: 'Transformer (Decoder)', desc: localize(state.language, 'Auto-atención densa estándar. Robusta y fiable.', 'Standard dense self-attention. Robust and reliable.') },
                     { id: 'mamba_ssm', name: 'State Space (Mamba)', desc: localize(state.language, 'Procesamiento lineal O(n). Mínimo uso de memoria en secuencias largas.', 'Linear-time O(n) processing with low memory use on long sequences.') },
-                    { id: 'moe', name: 'Sparse MoE (4 Expertos)', desc: localize(state.language, 'Enrutamiento dinámico. Más capacidad con bajo costo por token.', 'Dynamic routing. Greater capacity at a lower cost per token.') }
+                    { id: 'moe', name: localize(state.language, 'Sparse MoE (4 Expertos)', 'Sparse MoE (4 Experts)'), desc: localize(state.language, 'Enrutamiento dinámico. Más capacidad con bajo costo por token.', 'Dynamic routing. Greater capacity at a lower cost per token.') }
                   ].map(t => (
                     <button
                       key={t.id}

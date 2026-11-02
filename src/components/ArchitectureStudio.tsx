@@ -144,7 +144,7 @@ export const ArchitectureStudio: React.FC = () => {
     const idx = active.indexOf(dsId);
     if (idx >= 0) {
       if (active.length === 1) {
-        addLog('El modelo requiere al menos una fuente de datos conectada para entrenar.', 'warning');
+        addLog(localize(state.language, 'El modelo requiere al menos una fuente de datos conectada para entrenar.', 'The model needs at least one connected data source to train.'), 'warning');
         return;
       }
       active.splice(idx, 1);

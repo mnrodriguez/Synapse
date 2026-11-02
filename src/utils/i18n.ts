@@ -6,7 +6,7 @@
 export type Language = 'es' | 'en';
 
 export function localize(language: Language, spanish: string, english: string): string {
-  return language === 'en' ? english : spanish;
+  return language === 'es' ? spanish : english;
 }
 
 export const TRANSLATIONS = {
@@ -377,6 +377,6 @@ export const TRANSLATIONS = {
 export type TranslationKey = keyof typeof TRANSLATIONS['es'];
 
 export function t(lang: Language, key: TranslationKey): string {
-  const dictionary = TRANSLATIONS[lang] || TRANSLATIONS.es;
-  return dictionary[key] || TRANSLATIONS.es[key] || key;
+  const dictionary = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  return dictionary[key] || TRANSLATIONS.en[key] || key;
 }

@@ -17,7 +17,7 @@ interface DocLinkBadgeProps {
 
 export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({ 
   doc, 
-  language = 'es',
+  language = 'en',
   variant = 'badge',
   className = ''
 }) => {

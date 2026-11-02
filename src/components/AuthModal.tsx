@@ -55,7 +55,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       sound.playKeyClick();
       const updatedCallsign = callsignInput.trim().toUpperCase().substring(0, 30);
       setCallsign(updatedCallsign);
-      addLog(`Identificador de operativo actualizado a: [${updatedCallsign}]`, 'info');
+      addLog(localize(state.language, `Identificador de operativo actualizado a: [${updatedCallsign}]`, `Operative callsign updated to: [${updatedCallsign}]`), 'info');
       setSaveSuccessMsg(localize(state.language, 'Callsign actualizado.', 'Callsign updated.'));
       setTimeout(() => setSaveSuccessMsg(''), 2500);
     }
