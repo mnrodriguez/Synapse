@@ -550,7 +550,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
 
 export async function generateDynamicContracts(
   tier: ContractGig['tier'],
-  language: 'es' | 'en' = 'es',
+  language: 'es' | 'en' = 'en',
   apiKey?: string
 ): Promise<ContractGig[]> {
   const effectiveKey = getEffectiveApiKey(apiKey);

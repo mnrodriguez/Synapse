@@ -131,11 +131,11 @@ const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
 
 const DEFAULT_STATE: GameState = {
-  saveSchemaVersion: 7,
+  saveSchemaVersion: 8,
   callsign: 'CIPHER-1',
   credits: 500,
   dateTimestamp: Date.now(),
-  language: 'es',
+  language: 'en',
   
   gameDay: 1,
   gameMonth: 1,
@@ -194,6 +194,7 @@ const DEFAULT_STATE: GameState = {
 };
 
 function mergeGameState(data: Partial<GameState>, fallback: GameState): GameState {
+  const isLegacyLanguagePreference = (data.saveSchemaVersion ?? 0) < 8;
   const isLegacyProgression = (data.saveSchemaVersion ?? 0) < 7;
   const isLegacyEconomy = (data.saveSchemaVersion ?? 0) < 2;
   const isLegacyCalendar = (data.saveSchemaVersion ?? 0) < 3 &&
@@ -235,8 +236,10 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
   return {
     ...fallback,
     ...data,
-    saveSchemaVersion: 7,
-    language: data.language === 'en' ? 'en' : 'es',
+    saveSchemaVersion: 8,
+    language: isLegacyLanguagePreference
+      ? 'en'
+      : data.language === 'es' ? 'es' : 'en',
     gameDay: isLegacyCalendar
       ? legacyElapsedDays % DAYS_PER_GAME_MONTH + 1
       : typeof data.gameDay === 'number' && data.gameDay > 0 ? data.gameDay : fallback.gameDay,

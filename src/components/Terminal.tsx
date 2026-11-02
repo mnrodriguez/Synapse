@@ -16,6 +16,30 @@ export const Terminal: React.FC = () => {
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const logContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const getLogMessage = (log: (typeof state.logs)[number]) => {
+    if (log.id === 'log_0') {
+      return localize(
+        state.language,
+        'Terminal SYNAPSE v4.19.0-alpha inicializada. Interfaz segura montada.',
+        'SYNAPSE Terminal v4.19.0-alpha initialized. Secure interface mounted.'
+      );
+    }
+    if (log.id === 'log_1') {
+      return localize(
+        state.language,
+        'OBJETIVO: Comenzar desde un rig clandestino. Entrenar modelos de IA cada vez más complejos. Alcanzar la Singularidad Tecnológica.',
+        'OBJECTIVE: Start with a covert rig. Train increasingly complex AI models. Reach the Technological Singularity.'
+      );
+    }
+    if (log.id === 'log_2') {
+      return localize(
+        state.language,
+        'Hardware y clúster listos. Laboratorio de Agentes y Red de Guardrails inicializados.',
+        'Hardware and cluster ready. Agent Lab and Guardrail Network initialized.'
+      );
+    }
+    return log.message;
+  };
 
   // Auto-scroll on new logs
   useEffect(() => {
@@ -160,7 +184,7 @@ export const Terminal: React.FC = () => {
           <div key={log.id} className="flex items-start gap-2 leading-relaxed break-words font-mono">
             <span className="text-zinc-600 text-[10px] select-none shrink-0 font-mono">[{log.timestamp}]</span>
             <span className={`flex-1 whitespace-pre-wrap ${getLogStyle(log.type)}`}>
-              {log.message}
+              {getLogMessage(log)}
             </span>
           </div>
         ))}

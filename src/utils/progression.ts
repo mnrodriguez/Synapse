@@ -29,8 +29,7 @@ export function isProgressionUnlocked(
     state.campaignDays >= requirement.availableAfterDays;
   if (
     requirement.requiredResearchId === undefined &&
-    requirement.availableAfterDays === undefined &&
-    requirement.minSingularityRequired === undefined
+    requirement.availableAfterDays === undefined
   ) return true;
 
   return researchUnlocked || timelineUnlocked;

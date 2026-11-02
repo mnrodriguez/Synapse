@@ -917,19 +917,19 @@ export const INITIAL_LOGS = [
     id: 'log_0',
     timestamp: '00:00:01',
     type: 'system' as const,
-    message: 'SYNAPSE Terminal v4.19.0-alpha inicializado. Interfaz segura montada.'
+    message: 'SYNAPSE Terminal v4.19.0-alpha initialized. Secure interface mounted.'
   },
   {
     id: 'log_1',
     timestamp: '00:00:02',
     type: 'lore' as const,
-    message: 'OBJETIVO: Comenzar desde un rig clandestino. Entrenar modelos de IA cada vez más complejos. Alcanzar la Singularidad Tecnológica.'
+    message: 'OBJECTIVE: Start with a covert rig. Train increasingly complex AI models. Reach the Technological Singularity.'
   },
   {
     id: 'log_2',
     timestamp: '00:00:03',
     type: 'info' as const,
-    message: 'Hardware y clúster listos. Laboratorio de Agentes y Red de Guardrails inicializados.'
+    message: 'Hardware and cluster ready. Agent Lab and Guardrail Network initialized.'
   }
 ];
 
