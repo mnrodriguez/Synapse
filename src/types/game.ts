@@ -137,6 +137,8 @@ export interface ContractGig {
   completed: boolean;
   generatedByAI?: boolean;
   docsUrl?: string;
+  lastAttemptFailed?: boolean;
+  failureCount?: number;
 }
 
 export interface ResearchNode {
@@ -260,8 +262,12 @@ export interface GameState {
     outcomeRoll?: number;
     computePflopsRequired?: number;
     powerKw?: number;
+    isAutonomous?: boolean;
   } | null;
   
+  // Mission Outcome Telemetry & History
+  lastMissionOutcome: MissionOutcome | null;
+
   // Multi-Agent Swarm & Sandbox
   agents: AgentInstance[];
   guardrails: GuardrailConfig;
@@ -282,6 +288,18 @@ export interface GameState {
 
   // System logs
   logs: TerminalLog[];
+}
+
+export interface MissionOutcome {
+  contractId: string;
+  contractTitle: string;
+  success: boolean;
+  rewardCredits: number;
+  suspicionAdded: number;
+  roll: number;
+  successProbability: number;
+  timestamp: string;
+  isAutonomous?: boolean;
 }
 
 export interface FacilityTier {

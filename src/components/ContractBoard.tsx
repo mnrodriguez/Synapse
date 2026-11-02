@@ -21,7 +21,10 @@ import {
   ExternalLink,
   BookOpen,
   Filter,
-  RefreshCw
+  RefreshCw,
+  X,
+  RotateCcw,
+  Bot
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
@@ -95,7 +98,7 @@ const ENGLISH_CONTRACT_COPY: Record<string, { title: string; lore: string; objec
 };
 
 export const ContractBoard: React.FC = () => {
-  const { state, acceptContract, addLog, addContracts } = useGame();
+  const { state, acceptContract, addLog, addContracts, dismissMissionOutcome } = useGame();
   const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
   const [activeTierFilter, setActiveTierFilter] = useState<'all' | ContractGig['tier'] | 'completed'>('all');
   const [isGeneratingMissions, setIsGeneratingMissions] = useState(false);
@@ -200,6 +203,96 @@ export const ContractBoard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Recent Mission Outcome Notification Banner */}
+      {state.lastMissionOutcome && (
+        <div
+          className={`p-3 rounded-lg border text-xs flex items-start justify-between gap-3 animate-in fade-in duration-200 ${
+            state.lastMissionOutcome.success
+              ? 'bg-emerald-950/40 border-emerald-500/60 text-emerald-200'
+              : 'bg-red-950/50 border-red-500/70 text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.25)]'
+          }`}
+        >
+          <div className="flex items-start gap-2.5">
+            {state.lastMissionOutcome.success ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5 animate-pulse" />
+            )}
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`font-bold tracking-wider uppercase text-[10px] px-1.5 py-0.5 rounded ${
+                  state.lastMissionOutcome.success
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    : 'bg-red-500/20 text-red-300 border border-red-500/40'
+                }`}>
+                  {state.lastMissionOutcome.success
+                    ? (state.language === 'es' ? 'MISIÓN EXITOSA' : 'MISSION COMPLETED')
+                    : (state.language === 'es' ? 'MISIÓN FALLIDA' : 'MISSION FAILED')}
+                </span>
+                {state.lastMissionOutcome.isAutonomous && (
+                  <span className="flex items-center gap-1 text-[10px] text-zinc-400 bg-zinc-900/80 px-1.5 py-0.5 rounded border border-zinc-700">
+                    <Bot className="w-3 h-3 text-cyan-400" />
+                    <span>{state.language === 'es' ? 'ENJAMBRE AUTÓNOMO' : 'AUTONOMOUS RUN'}</span>
+                  </span>
+                )}
+                <span className="text-[10px] text-zinc-500">{state.lastMissionOutcome.timestamp}</span>
+              </div>
+
+              <div className="font-semibold text-zinc-100 mt-1">
+                {state.lastMissionOutcome.contractTitle}
+              </div>
+
+              {state.lastMissionOutcome.success ? (
+                <div className="mt-1 text-[11px] text-zinc-300 space-y-1">
+                  <p>
+                    {state.language === 'es'
+                      ? `Recompensa acreditada: +$${state.lastMissionOutcome.rewardCredits.toLocaleString()} CR. Sospecha generada: +${state.lastMissionOutcome.suspicionAdded}%.`
+                      : `Reward credited: +$${state.lastMissionOutcome.rewardCredits.toLocaleString()} CR. Watchdog suspicion: +${state.lastMissionOutcome.suspicionAdded}%.`}
+                    {state.lastMissionOutcome.isAutonomous && (
+                      <span className="text-zinc-400 ml-1">
+                        {state.language === 'es' ? '(Tasa de delegación de cómputo del 40% descontada)' : '(40% compute delegation fee deducted)'}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[10px] text-cyan-300/90 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-cyan-400" />
+                    <span>
+                      {state.language === 'es'
+                        ? 'Síntesis automática: Se generó un nuevo contrato del mismo nivel en el tablón para que tus bots sigan operando sin pausa.'
+                        : 'Auto-synthesis active: A replacement mission of the same tier was automatically generated to keep bots continuously employed.'}
+                    </span>
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-1 text-[11px] text-zinc-300 space-y-1">
+                  <p>
+                    {state.language === 'es'
+                      ? `La inferencia no superó la prueba de verificación. Tirada: ${Math.round(state.lastMissionOutcome.roll * 100)}% (Requería ≤ ${Math.round(state.lastMissionOutcome.successProbability * 100)}%). Sospecha de los reguladores: +${state.lastMissionOutcome.suspicionAdded}%.`
+                      : `Neural inference verification failed. Roll: ${Math.round(state.lastMissionOutcome.roll * 100)}% (Required threshold ≤ ${Math.round(state.lastMissionOutcome.successProbability * 100)}%). Watchdog suspicion: +${state.lastMissionOutcome.suspicionAdded}%.`}
+                  </p>
+                  <div className="inline-flex items-center gap-1.5 text-[11px] text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-600/50 mt-1">
+                    <RotateCcw className="w-3 h-3 text-amber-400" />
+                    <span>
+                      {state.language === 'es'
+                        ? 'El contrato NO se ha consumido. Sigue disponible abajo listo para reintentar.'
+                        : 'Contract was NOT consumed. It remains unspent and ready to reattempt below.'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={dismissMissionOutcome}
+            className="text-zinc-400 hover:text-zinc-200 p-1 rounded hover:bg-zinc-800/60 cursor-pointer transition-colors"
+            title={state.language === 'es' ? 'Cerrar aviso' : 'Dismiss notice'}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <p className="text-xs text-zinc-400 leading-relaxed">
         {t(state.language, 'contract_board_desc')}
@@ -327,6 +420,27 @@ export const ContractBoard: React.FC = () => {
         </button>
       </div>
 
+      {/* Auto-Synthesis Active Indicator */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400 px-3 py-1.5 rounded bg-[#050910] border border-cyan-900/30">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="text-emerald-300 font-bold uppercase tracking-wider">
+            {state.language === 'es' ? 'SÍNTESIS CONTINUA ACTIVA:' : 'AUTO-SYNTHESIS CONTINUOUS:'}
+          </span>
+          <span>
+            {state.language === 'es'
+              ? 'Completar cualquier misión genera automáticamente otra del mismo nivel para que los bots nunca se queden sin trabajo.'
+              : 'Every completed mission automatically replenishes one of the same tier so agents always have continuous tasks.'}
+          </span>
+        </div>
+        <span className="text-zinc-500 font-mono">
+          {state.language === 'es' ? 'Bots autónomos: -40% tasa cómputo (60% pago neto)' : 'Autonomous bots: -40% delegation fee (60% net)'}
+        </span>
+      </div>
+
       {/* Contract Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {state.contracts
@@ -378,6 +492,12 @@ export const ContractBoard: React.FC = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       {getTierBadge(contract.tier)}
                       <span className="text-[10px] text-zinc-500 font-mono">{t(state.language, 'client')}: {contract.client}</span>
+                      {contract.lastAttemptFailed && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-amber-300 bg-amber-950/80 border border-amber-500/60 animate-pulse">
+                          <AlertTriangle className="w-2.5 h-2.5 text-amber-400" />
+                          <span>{state.language === 'es' ? 'FALLÓ · LISTO PARA REINTENTO' : 'FAILED · READY TO RETRY'}</span>
+                        </span>
+                      )}
                       {contract.generatedByAI && (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono text-purple-300 bg-purple-950/70 border border-purple-500/50">
                           <Sparkles className="w-2.5 h-2.5 text-purple-400" />
@@ -528,12 +648,22 @@ export const ContractBoard: React.FC = () => {
                     disabled={!eligible || !!state.activeGig}
                     className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
                       eligible && !state.activeGig
-                        ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(0,255,200,0.3)]'
+                        ? contract.lastAttemptFailed
+                          ? 'bg-amber-500 hover:bg-amber-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(245,158,11,0.4)]'
+                          : 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(0,255,200,0.3)]'
                         : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
                     }`}
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>{t(state.language, 'accept_and_run')}</span>
+                    {contract.lastAttemptFailed ? (
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    ) : (
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    <span>
+                      {contract.lastAttemptFailed
+                        ? (state.language === 'es' ? 'REINTENTAR MISIÓN' : 'RETRY MISSION')
+                        : t(state.language, 'accept_and_run')}
+                    </span>
                   </button>
                 )}
               </div>

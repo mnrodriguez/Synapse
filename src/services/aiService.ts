@@ -660,6 +660,39 @@ Rules:
   ];
 }
 
+export function createInstantReplenishmentContract(
+  tier: ContractGig['tier'],
+  language: 'es' | 'en' = 'en'
+): ContractGig {
+  const templates = PROCEDURAL_CONTRACT_TEMPLATES[tier] || PROCEDURAL_CONTRACT_TEMPLATES.tier1_micro;
+  const picked = templates[Math.floor(Math.random() * templates.length)];
+  const client = FALLBACK_CLIENTS[Math.floor(Math.random() * FALLBACK_CLIENTS.length)];
+  const variance = (Math.random() * 0.3) + 0.85;
+  const now = Date.now();
+  const randTag = Math.random().toString(36).substring(2, 7);
+
+  return {
+    id: `gig_synth_${tier}_${now}_${randTag}`,
+    title: language === 'en' ? picked.titleEn : picked.titleEs,
+    client,
+    tier,
+    rewardCredits: Math.round(picked.baseReward * variance),
+    requiredParams: picked.params,
+    requiredTopology: picked.topology,
+    requiredDataTypes: picked.dataTypes || ['relational_sql'],
+    requiredMinReasoning: picked.reasoning,
+    durationSeconds: picked.duration,
+    suspicionRisk: picked.risk,
+    loreDescription: language === 'en' ? picked.loreEn : picked.loreEs,
+    technicalObjective: language === 'en' ? picked.objEn : picked.objEs,
+    completed: false,
+    generatedByAI: true,
+    docsUrl: picked.docsUrl,
+    lastAttemptFailed: false,
+    failureCount: 0
+  };
+}
+
 // ==========================================
 // AI STRATEGIC ADVISOR & PROGRESSION MENTOR
 // ==========================================

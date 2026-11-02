@@ -73,7 +73,7 @@ import {
   limit 
 } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
-import { evaluateMissionTeamWithModel, generateAgentResponse } from '../services/aiService';
+import { evaluateMissionTeamWithModel, generateAgentResponse, createInstantReplenishmentContract } from '../services/aiService';
 import { localize } from '../utils/i18n';
 import { localizedContractTitle, localizedDataSource, localizedHardware } from '../utils/gameContentI18n';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds } from '../utils/training';
@@ -91,6 +91,7 @@ interface GameContextType {
   createModel: (name: string) => boolean;
   selectModel: (modelId: string) => boolean;
   renameModel: (modelId: string, name: string) => boolean;
+  dismissMissionOutcome: () => void;
   
   // Actions
   buyHardware: (id: string) => boolean;
@@ -186,6 +187,7 @@ const DEFAULT_STATE: GameState = {
   customDatasets: [DEFAULT_GENERAL_DATASET],
   activeScrapeJob: null,
   activeGig: null,
+  lastMissionOutcome: null,
   
   sentienceDomains: SENTIENCE_DOMAINS,
   
@@ -378,7 +380,8 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
       ? 0
       : typeof data.tutorialStep === 'number' ? data.tutorialStep : fallback.tutorialStep,
     tutorialDismissed: typeof data.tutorialDismissed === 'boolean' ? data.tutorialDismissed : fallback.tutorialDismissed,
-    completedContractsCount: typeof data.completedContractsCount === 'number' ? data.completedContractsCount : fallback.completedContractsCount
+    completedContractsCount: typeof data.completedContractsCount === 'number' ? data.completedContractsCount : fallback.completedContractsCount,
+    lastMissionOutcome: data.lastMissionOutcome ?? fallback.lastMissionOutcome
   };
 }
 
@@ -446,6 +449,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const normalized = callsign.trim().toUpperCase().slice(0, 30);
     if (!normalized) return;
     setState(prev => ({ ...prev, callsign: normalized }));
+  }, []);
+
+  const dismissMissionOutcome = useCallback(() => {
+    setState(prev => ({ ...prev, lastMissionOutcome: null }));
   }, []);
 
   const setGameSpeed = useCallback((speed: number) => {
@@ -1224,33 +1231,93 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let updatedGig = activeGig;
         let updatedContracts = contracts;
         let updatedAgents = prev.agents || [];
+        let newLastMissionOutcome: GameState['lastMissionOutcome'] | undefined = undefined;
+
         if (activeGig) {
           const missionPausedForAssessment =
             activeGig.aiAssessmentStatus === 'pending' || powerTripSeconds > 0;
           const remaining = activeGig.timeRemaining - (missionPausedForAssessment ? 0 : 1);
           if (remaining <= 0) {
-            const success = (activeGig.outcomeRoll ?? 0) <= (activeGig.successProbability ?? 1);
+            const isAutonomous = Boolean(activeGig.isAutonomous);
+            const effectiveSuccessProbability = Math.max(0.15, (activeGig.successProbability ?? 1) - (isAutonomous ? 0.08 : 0));
+            const success = (activeGig.outcomeRoll ?? 0) <= effectiveSuccessProbability;
             const gig = contracts.find(c => c.id === activeGig.contractId);
             if (gig) {
               if (success) {
-                credits += gig.rewardCredits;
-                watchdogSuspicion = Math.min(100, watchdogSuspicion + gig.suspicionRisk * 0.25);
+                // Autonomous bot commission deduction: 40% compute delegation overhead, 60% net payout
+                const earnedCredits = isAutonomous ? Math.round(gig.rewardCredits * 0.60) : gig.rewardCredits;
+                credits += earnedCredits;
+                const suspicionAdded = Number((gig.suspicionRisk * 0.25).toFixed(1));
+                watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
                 completedContractsCount += 1;
                 if (tutorialStep <= 4) {
                   tutorialStep = 5;
                   tutorialCompleted = true;
                 }
                 sound.playCredit();
-                addLog(`Misión completada: [${gig.title}]. El equipo recibió $${gig.rewardCredits.toLocaleString()} CR.`, 'success');
+                addLog(
+                  isAutonomous
+                    ? (prev.language === 'en'
+                        ? `Autonomous bot mission succeeded: [${gig.title}]. Awarded $${earnedCredits.toLocaleString()} CR net (after 40% compute delegation overhead).`
+                        : `Misión de bots autónomos exitosa: [${gig.title}]. Acreditados $${earnedCredits.toLocaleString()} CR netos (tras 40% de tasa operativa de cómputo).`)
+                    : (prev.language === 'en'
+                        ? `Mission completed: [${gig.title}]. The operative team was awarded $${gig.rewardCredits.toLocaleString()} CR.`
+                        : `Misión completada: [${gig.title}]. El equipo recibió $${gig.rewardCredits.toLocaleString()} CR.`),
+                  'success'
+                );
+
+                // Automatic Mission Synthesis: immediately synthesize a new mission of the EXACT SAME tier
+                const replenishment = createInstantReplenishmentContract(gig.tier, prev.language);
+                updatedContracts = [
+                  replenishment,
+                  ...contracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c)
+                ];
+
+                newLastMissionOutcome = {
+                  contractId: gig.id,
+                  contractTitle: gig.title,
+                  success: true,
+                  rewardCredits: earnedCredits,
+                  suspicionAdded,
+                  roll: Number((activeGig.outcomeRoll ?? 0).toFixed(3)),
+                  successProbability: Number(effectiveSuccessProbability.toFixed(3)),
+                  timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+                  isAutonomous
+                };
               } else {
-                watchdogSuspicion = Math.min(100, watchdogSuspicion + gig.suspicionRisk);
+                // Mission Failed:
+                // Keep the contract unconsumed and mark it with lastAttemptFailed so the user can easily retry it!
+                const suspicionAdded = gig.suspicionRisk;
+                watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
                 sound.playWarning();
-                addLog(`Misión fallida: [${gig.title}]. El equipo no alcanzó el objetivo y aumentó la sospecha.`, 'danger');
+                addLog(
+                  prev.language === 'en'
+                    ? `[MISSION FAILED] [${gig.title}]: Objective verification failed (Roll ${(activeGig.outcomeRoll ?? 0).toFixed(2)} vs required ${(effectiveSuccessProbability).toFixed(2)}). Watchdog suspicion +${suspicionAdded}%. Mission remains available for reattempt.`
+                    : `[MISIÓN FALLIDA] [${gig.title}]: Falló la verificación de inferencia (Tirada ${(activeGig.outcomeRoll ?? 0).toFixed(2)} vs requerido ${(effectiveSuccessProbability).toFixed(2)}). Sospecha +${suspicionAdded}%. El contrato sigue disponible para reintento.`,
+                  'danger'
+                );
+
+                updatedContracts = contracts.map(c =>
+                  c.id === gig.id ? {
+                    ...c,
+                    completed: false,
+                    lastAttemptFailed: true,
+                    failureCount: (c.failureCount || 0) + 1
+                  } : c
+                );
+
+                newLastMissionOutcome = {
+                  contractId: gig.id,
+                  contractTitle: gig.title,
+                  success: false,
+                  rewardCredits: 0,
+                  suspicionAdded,
+                  roll: Number((activeGig.outcomeRoll ?? 0).toFixed(3)),
+                  successProbability: Number(effectiveSuccessProbability.toFixed(3)),
+                  timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+                  isAutonomous
+                };
               }
-              
-              updatedContracts = contracts.map(c =>
-                c.id === gig.id ? { ...c, completed: success } : c
-              );
             }
             updatedAgents = updatedAgents.map(agent =>
               activeGig.agentIds?.includes(agent.id) && agent.status === 'on_mission'
@@ -1296,19 +1363,25 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               prev.dataSources,
               prev.guardrails || DEFAULT_GUARDRAILS
             );
+            // Autonomous efficiency adjustment:
+            // Slower duration (1.45x) and reduced efficiency (65% of base) with 40% delegation fee
+            const autonomousDuration = Math.ceil(teamAssessment.estimatedDurationSeconds * 1.45);
+            const autonomousEfficiency = Math.round(Math.max(35, teamAssessment.efficiencyPercent * 0.65));
+
             updatedGig = {
               contractId: plan.contract.id,
               runId: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-              timeRemaining: teamAssessment.estimatedDurationSeconds,
-              durationSeconds: teamAssessment.estimatedDurationSeconds,
+              timeRemaining: autonomousDuration,
+              durationSeconds: autonomousDuration,
               agentIds: assignedAgents.map(agent => agent.id),
               progressPercent: 0,
               successProbability: teamAssessment.successProbability,
-              efficiencyPercent: teamAssessment.efficiencyPercent,
+              efficiencyPercent: autonomousEfficiency,
               aiAssessmentStatus: 'pending',
               outcomeRoll: Math.random(),
               computePflopsRequired: plan.computeRequired,
-              powerKw: plan.missionPowerKw
+              powerKw: plan.missionPowerKw,
+              isAutonomous: true
             };
             updatedAgents = updatedAgents.map(agent =>
               assignedAgents.some(assigned => assigned.id === agent.id)
@@ -1317,8 +1390,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             );
             addLog(
               prev.language === 'en'
-                ? `Autonomous team accepted [${plan.contract.title}] (${Math.round(teamAssessment.efficiencyPercent)}% efficiency, ${teamAssessment.estimatedDurationSeconds}s estimated, ${Math.round(teamAssessment.successProbability * 100)}% success, ${plan.contract.suspicionRisk}% risk).`
-                : `El equipo autónomo aceptó [${plan.contract.title}] (${teamAssessment.efficiencyPercent}% de eficiencia, ${teamAssessment.estimatedDurationSeconds}s estimados, ${Math.round(teamAssessment.successProbability * 100)}% de éxito, riesgo ${plan.contract.suspicionRisk}%).`,
+                ? `Autonomous bot swarm accepted [${plan.contract.title}] (${autonomousEfficiency}% efficiency [autonomous balance], ${autonomousDuration}s duration, ${Math.round(teamAssessment.successProbability * 100)}% base success, 40% delegation fee).`
+                : `El enjambre autónomo aceptó [${plan.contract.title}] (${autonomousEfficiency}% eficiencia [balance autónomo], ${autonomousDuration}s duración, ${Math.round(teamAssessment.successProbability * 100)}% éxito base, 40% tasa de delegación).`,
               plan.contract.suspicionRisk >= 40 ? 'warning' : 'info'
             );
           }
@@ -1547,7 +1620,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           achievedSingularity,
           tutorialStep,
           tutorialCompleted,
-          completedContractsCount
+          completedContractsCount,
+          lastMissionOutcome: newLastMissionOutcome !== undefined ? newLastMissionOutcome : prev.lastMissionOutcome
         };
       });
     }, intervalMs);
@@ -3123,7 +3197,8 @@ The future of SYNAPSE depends on how we choose to build it."`);
       setGameSpeed,
       advanceTutorialStep,
       dismissTutorial,
-      addContracts
+      addContracts,
+      dismissMissionOutcome
     }}>
       {children}
     </GameContext.Provider>
