@@ -528,14 +528,26 @@ export const ArchitectureStudio: React.FC = () => {
             (() => {
               const unlocked = isOptionUnlocked('topology', top.id);
               return (
-            <button
+            <div
               key={top.id}
-              disabled={!unlocked}
-              onClick={() => handleTopologyChange(top.id as ModelTopology)}
-              className={`p-2 rounded text-left border transition-all disabled:cursor-not-allowed disabled:opacity-45 ${
-                current.topology === top.id
-                  ? 'bg-cyan-950/70 border-cyan-400 text-cyan-200 shadow-[0_0_10px_rgba(0,255,200,0.15)]'
-                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+              role="button"
+              tabIndex={unlocked ? 0 : -1}
+              aria-disabled={!unlocked}
+              onClick={() => {
+                if (unlocked) handleTopologyChange(top.id as ModelTopology);
+              }}
+              onKeyDown={(e) => {
+                if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  handleTopologyChange(top.id as ModelTopology);
+                }
+              }}
+              className={`p-2 rounded text-left border transition-all ${
+                !unlocked
+                  ? 'cursor-not-allowed opacity-45 bg-zinc-900/40 border-zinc-800 text-zinc-500'
+                  : current.topology === top.id
+                  ? 'cursor-pointer bg-cyan-950/70 border-cyan-400 text-cyan-200 shadow-[0_0_10px_rgba(0,255,200,0.15)]'
+                  : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
               <div className="font-bold text-xs flex items-center justify-between">
@@ -549,7 +561,7 @@ export const ArchitectureStudio: React.FC = () => {
                 </div>
               </div>
               <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{top.desc}</p>
-            </button>
+            </div>
               );
             })()
           ))}
@@ -644,14 +656,26 @@ export const ArchitectureStudio: React.FC = () => {
               (() => {
                 const unlocked = isOptionUnlocked('quantization', q.id);
                 return (
-              <button
+              <div
                 key={q.id}
-                disabled={!unlocked}
-                onClick={() => handleQuantizationChange(q.id as QuantizationType)}
-                className={`w-full text-left p-1.5 rounded border text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                  current.quantization === q.id
-                    ? 'bg-cyan-950/70 border-cyan-400 text-cyan-200'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                role="button"
+                tabIndex={unlocked ? 0 : -1}
+                aria-disabled={!unlocked}
+                onClick={() => {
+                  if (unlocked) handleQuantizationChange(q.id as QuantizationType);
+                }}
+                onKeyDown={(e) => {
+                  if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleQuantizationChange(q.id as QuantizationType);
+                  }
+                }}
+                className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
+                  !unlocked
+                    ? 'cursor-not-allowed opacity-40 bg-zinc-900/40 border-zinc-800 text-zinc-500'
+                    : current.quantization === q.id
+                    ? 'cursor-pointer bg-cyan-950/70 border-cyan-400 text-cyan-200'
+                    : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -662,7 +686,7 @@ export const ArchitectureStudio: React.FC = () => {
                   {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
                 </div>
                 <div className="text-[9px] text-zinc-500">{q.hint}</div>
-              </button>
+              </div>
                 );
               })()
             ))}
@@ -682,14 +706,26 @@ export const ArchitectureStudio: React.FC = () => {
               (() => {
                 const unlocked = isOptionUnlocked('attention', att.id);
                 return (
-              <button
+              <div
                 key={att.id}
-                disabled={!unlocked}
-                onClick={() => handleAttentionChange(att.id as AttentionType)}
-                className={`w-full text-left p-1.5 rounded border text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                  current.attention === att.id
-                    ? 'bg-purple-950/70 border-purple-400 text-purple-200'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                role="button"
+                tabIndex={unlocked ? 0 : -1}
+                aria-disabled={!unlocked}
+                onClick={() => {
+                  if (unlocked) handleAttentionChange(att.id as AttentionType);
+                }}
+                onKeyDown={(e) => {
+                  if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleAttentionChange(att.id as AttentionType);
+                  }
+                }}
+                className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
+                  !unlocked
+                    ? 'cursor-not-allowed opacity-40 bg-zinc-900/40 border-zinc-800 text-zinc-500'
+                    : current.attention === att.id
+                    ? 'cursor-pointer bg-purple-950/70 border-purple-400 text-purple-200'
+                    : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -700,7 +736,7 @@ export const ArchitectureStudio: React.FC = () => {
                   {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
                 </div>
                 <div className="text-[9px] text-zinc-500">{att.hint}</div>
-              </button>
+              </div>
                 );
               })()
             ))}
@@ -721,14 +757,26 @@ export const ArchitectureStudio: React.FC = () => {
               (() => {
                 const unlocked = isOptionUnlocked('lossFunction', loss.id);
                 return (
-              <button
+              <div
                 key={loss.id}
-                disabled={!unlocked}
-                onClick={() => handleLossChange(loss.id as LossFunction)}
-                className={`w-full text-left p-1.5 rounded border text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                  current.lossFunction === loss.id
-                    ? 'bg-emerald-950/70 border-emerald-400 text-emerald-200'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                role="button"
+                tabIndex={unlocked ? 0 : -1}
+                aria-disabled={!unlocked}
+                onClick={() => {
+                  if (unlocked) handleLossChange(loss.id as LossFunction);
+                }}
+                onKeyDown={(e) => {
+                  if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleLossChange(loss.id as LossFunction);
+                  }
+                }}
+                className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
+                  !unlocked
+                    ? 'cursor-not-allowed opacity-40 bg-zinc-900/40 border-zinc-800 text-zinc-500'
+                    : current.lossFunction === loss.id
+                    ? 'cursor-pointer bg-emerald-950/70 border-emerald-400 text-emerald-200'
+                    : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -739,7 +787,7 @@ export const ArchitectureStudio: React.FC = () => {
                   {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
                 </div>
                 <div className="text-[9px] text-zinc-500">{loss.hint}</div>
-              </button>
+              </div>
                 );
               })()
             ))}

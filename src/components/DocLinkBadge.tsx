@@ -34,11 +34,18 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
   return (
     <>
       {variant === 'badge' && (
-        <button
-          type="button"
+        <span
+          role="button"
+          tabIndex={0}
           onClick={handleClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleClick(e as unknown as React.MouseEvent);
+            }
+          }}
           title={isEs ? `Ver documentación real: ${doc.title}` : `View official docs: ${doc.title}`}
-          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono tracking-wider transition-all cursor-pointer border ${
+          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono tracking-wider transition-all cursor-pointer border select-none ${
             doc.type === 'official'
               ? 'bg-cyan-950/50 hover:bg-cyan-900/60 text-cyan-300 border-cyan-700/50 hover:border-cyan-400'
               : doc.type === 'research_paper'
@@ -49,7 +56,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
           <BookOpen className="w-2.5 h-2.5" />
           <span>DOCS</span>
           <ExternalLink className="w-2.5 h-2.5 opacity-70" />
-        </button>
+        </span>
       )}
 
       {variant === 'button' && (

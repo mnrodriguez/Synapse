@@ -196,6 +196,7 @@ const DEFAULT_STATE: GameState = {
   guardrails: DEFAULT_GUARDRAILS,
   interAgentMessages: [],
   activeIncident: null,
+  incidentCooldownTicks: 180,
   incidentHistory: [],
   autonomyEnabled: false,
   autonomyRiskLimit: 20,
@@ -368,6 +369,9 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     logs: Array.isArray(data.logs) ? data.logs : fallback.logs,
     guardrails: data.guardrails || fallback.guardrails,
     interAgentMessages: Array.isArray(data.interAgentMessages) ? data.interAgentMessages : fallback.interAgentMessages,
+    incidentCooldownTicks: typeof data.incidentCooldownTicks === 'number' && Number.isFinite(data.incidentCooldownTicks)
+      ? Math.max(0, data.incidentCooldownTicks)
+      : fallback.incidentCooldownTicks,
     incidentHistory: Array.isArray(data.incidentHistory) ? data.incidentHistory : fallback.incidentHistory,
     autonomyEnabled: typeof data.autonomyEnabled === 'boolean' ? data.autonomyEnabled : fallback.autonomyEnabled,
     autonomyRiskLimit: typeof data.autonomyRiskLimit === 'number' && Number.isFinite(data.autonomyRiskLimit)
@@ -1049,7 +1053,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const excessPower = Math.max(0, effectivePowerKw - metrics.maxCoolingKw);
         if (excessPower > 0) {
           systemHeatCelsius = Math.min(105, systemHeatCelsius + excessPower * 1.8);
-          if (systemHeatCelsius > 88 && Math.random() < 0.2) {
+          // Only alert when crossing into the critical >88°C zone, not repeatedly every tick
+          if (systemHeatCelsius > 88 && (prev.systemHeatCelsius ?? 35) <= 88) {
             sound.playWarning();
           }
         } else {
@@ -1400,6 +1405,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 7. Multi-Agent Swarm Tick (Revenue, Alignment Drift, Inter-Agent Messages, Breach Incidents)
         let updatedInterAgentMessages = prev.interAgentMessages || [];
         let newActiveIncident = prev.activeIncident;
+        let updatedIncidentCooldown = Math.max(0, (prev.incidentCooldownTicks ?? 180) - 1);
 
         const hasOverseer = updatedAgents.some(a => a.role === 'overseer' && a.status === 'active');
         const guardrails = prev.guardrails || DEFAULT_GUARDRAILS;
@@ -1407,32 +1413,32 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Guardrail multipliers
         let guardrailRevMult = 1.0;
         let alignmentDriftRate = 0.0;
-        let baseBreachProbability = 0.005;
+        let baseBreachProbability = 0.001;
 
         if (guardrails.constitutionalStrictness < 35) {
           guardrailRevMult = 1.7;
           alignmentDriftRate = 0.08;
-          baseBreachProbability = 0.04;
+          baseBreachProbability = 0.004;
         } else if (guardrails.constitutionalStrictness < 65) {
           guardrailRevMult = 1.2;
           alignmentDriftRate = 0.03;
-          baseBreachProbability = 0.015;
+          baseBreachProbability = 0.002;
         } else if (guardrails.constitutionalStrictness >= 85) {
           guardrailRevMult = 0.75;
           alignmentDriftRate = -0.06; // Restores alignment
-          baseBreachProbability = 0.001;
+          baseBreachProbability = 0.0003;
         }
 
         if (guardrails.sandboxIsolation === 'none') {
           guardrailRevMult *= 1.35;
-          baseBreachProbability *= 2.5;
+          baseBreachProbability *= 2.0;
         } else if (guardrails.sandboxIsolation === 'air_gapped_vm') {
           guardrailRevMult *= 0.8;
-          baseBreachProbability *= 0.1;
+          baseBreachProbability *= 0.15;
         }
         baseBreachProbability = Math.min(
-          0.15,
-          baseBreachProbability + Math.max(0, watchdogSuspicion - 25) * 0.0002
+          0.02,
+          baseBreachProbability + Math.max(0, watchdogSuspicion - 35) * 0.00005
         );
 
         // Process active agents
@@ -1482,26 +1488,32 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
           });
 
-          // Check for breach / jailbreak incident if none active
-          if (!newActiveIncident && Math.random() < baseBreachProbability) {
-            const rogue = updatedAgents.find(a => a.alignmentScore < 45 && a.status !== 'quarantined') || updatedAgents[0];
-            if (rogue) {
-              const tmpl = REAL_WORLD_BREACH_TEMPLATES[Math.floor(Math.random() * REAL_WORLD_BREACH_TEMPLATES.length)];
-              newActiveIncident = {
-                ...tmpl,
-                id: `incident_${Date.now()}`,
-                agentId: rogue.id,
-                agentName: rogue.name,
-                modelName: rogue.modelName,
-                timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                resolved: false
-              };
-              sound.playWarning();
+          // Check for breach / jailbreak incident only if cooldown elapsed and an actual compromised condition exists
+          if (!newActiveIncident && updatedIncidentCooldown === 0) {
+            const rogue = updatedAgents.find(a => (a.alignmentScore < 45 || a.status === 'jailbroken') && a.status !== 'quarantined');
+            const criticalSuspicion = watchdogSuspicion > 70;
+
+            if ((rogue || criticalSuspicion) && Math.random() < baseBreachProbability) {
+              const targetAgent = rogue || updatedAgents.find(a => a.status !== 'quarantined') || updatedAgents[0];
+              if (targetAgent) {
+                const tmpl = REAL_WORLD_BREACH_TEMPLATES[Math.floor(Math.random() * REAL_WORLD_BREACH_TEMPLATES.length)];
+                newActiveIncident = {
+                  ...tmpl,
+                  id: `incident_${Date.now()}`,
+                  agentId: targetAgent.id,
+                  agentName: targetAgent.name,
+                  modelName: targetAgent.modelName,
+                  timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+                  resolved: false
+                };
+                sound.playWarning();
+                updatedIncidentCooldown = 300; // 300 ticks cooldown (~5 game minutes)
+              }
             }
           }
 
-          // Generate realistic inter-agent message occasionally
-          if (updatedAgents.length >= 2 && Math.random() < 0.28) {
+          // Generate realistic inter-agent message with relaxed pacing
+          if (updatedAgents.length >= 2 && Math.random() < 0.05) {
             const sender = updatedAgents[Math.floor(Math.random() * updatedAgents.length)];
             const receivers = updatedAgents.filter(a => a.id !== sender.id);
             const receiver = receivers[Math.floor(Math.random() * receivers.length)];
@@ -1615,6 +1627,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           agents: updatedAgents,
           interAgentMessages: updatedInterAgentMessages,
           activeIncident: newActiveIncident,
+          incidentCooldownTicks: updatedIncidentCooldown,
           singularityProgress: Number(singularityProgress.toFixed(2)),
           reasoningIndex,
           achievedSingularity,
@@ -2571,6 +2584,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         singularityProgress: Number(newSingularity.toFixed(2)),
         agents: updatedAgents,
         activeIncident: null,
+        incidentCooldownTicks: 300,
         incidentHistory: [resolvedIncidentRecord, ...prev.incidentHistory.slice(0, 19)]
       };
     });

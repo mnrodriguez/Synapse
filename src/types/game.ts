@@ -273,6 +273,7 @@ export interface GameState {
   guardrails: GuardrailConfig;
   interAgentMessages: InterAgentMessage[];
   activeIncident: BreachIncident | null;
+  incidentCooldownTicks?: number;
   incidentHistory: BreachIncident[];
   autonomyEnabled: boolean;
   autonomyRiskLimit: number;
