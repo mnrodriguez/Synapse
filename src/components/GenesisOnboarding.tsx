@@ -41,9 +41,11 @@ export const GenesisOnboarding: React.FC = () => {
   const [callsign, setCallsign] = useState<string>('CIPHER-7');
   const [difficulty, setDifficulty] = useState<GameDifficulty>('beginner');
 
-  // Hardware selection
+  // Hardware selection (Mandatory 4-Part Rig)
   const [selectedGpu, setSelectedGpu] = useState<string>('gpu_gtx1060');
   const [selectedCooling, setSelectedCooling] = useState<string>('cool_air_basic');
+  const [selectedPower, setSelectedPower] = useState<string>('power_wall_socket');
+  const [selectedNetwork, setSelectedNetwork] = useState<string>('net_gigabit');
 
   // Data selection
   const [selectedData, setSelectedData] = useState<string>('data_relational_sql');
@@ -123,6 +125,40 @@ export const GenesisOnboarding: React.FC = () => {
     }
   ];
 
+  const starterPowerOptions = [
+    {
+      id: 'power_wall_socket',
+      name: 'Toma Eléctrica Domiciliaria (1.5 kW)',
+      price: 20,
+      capacity: '1.5 kW',
+      desc: 'Suministro eléctrico domiciliario. Imprescindible para alimentar GPU y ventiladores.'
+    },
+    {
+      id: 'power_solar_array',
+      name: 'Micro-Inversor Solar Residencial (3.0 kW)',
+      price: 55,
+      capacity: '3.0 kW',
+      desc: 'Paneles solares complementarios. Duplican la potencia sin riesgo de sobrecargar el circuito.'
+    }
+  ];
+
+  const starterNetworkOptions = [
+    {
+      id: 'net_gigabit',
+      name: 'Red Ethernet Gigabit Cat 6 (1 Gbps)',
+      price: 30,
+      bandwidth: '1 Gbps',
+      desc: 'Conexión a internet estándar de alta velocidad. Imprescindible para descargar datasets y comunicar agentes.'
+    },
+    {
+      id: 'net_fiber_10g',
+      name: 'Fibra Óptica Dedicada Punto a Punto (10 Gbps)',
+      price: 75,
+      bandwidth: '10 Gbps',
+      desc: 'Enlace simétrico de fibra óptica empresarial. Acelera la descarga masiva de datos y reduce latencia.'
+    }
+  ];
+
   const starterDataOptions = [
     {
       id: 'data_relational_sql',
@@ -193,7 +229,9 @@ export const GenesisOnboarding: React.FC = () => {
   // Calculate current costs
   const currentGpuObj = starterGpuOptions.find(g => g.id === selectedGpu) || starterGpuOptions[0];
   const currentCoolingObj = starterCoolingOptions.find(c => c.id === selectedCooling) || starterCoolingOptions[0];
-  const totalHardwareCost = currentGpuObj.price + currentCoolingObj.price;
+  const currentPowerObj = starterPowerOptions.find(p => p.id === selectedPower) || starterPowerOptions[0];
+  const currentNetworkObj = starterNetworkOptions.find(n => n.id === selectedNetwork) || starterNetworkOptions[0];
+  const totalHardwareCost = currentGpuObj.price + currentCoolingObj.price + currentPowerObj.price + currentNetworkObj.price;
   const remainingBudget = INITIAL_GRANT - totalHardwareCost;
 
   // Randomize callsign
@@ -243,6 +281,8 @@ export const GenesisOnboarding: React.FC = () => {
         callsign: callsign.trim() || 'CIPHER-7',
         starterGpuId: selectedGpu,
         starterCoolingId: selectedCooling,
+        starterPowerId: selectedPower,
+        starterNetworkId: selectedNetwork,
         starterDataId: selectedData,
         modelTopology,
         modelParams,
@@ -491,7 +531,7 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="pt-2">
                 <h3 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                   <Flame className="w-4 h-4 text-emerald-400" />
-                  {localize(state.language, '2. REFRIGERACIÓN BÁSICA PARA TU RIG:', '2. BASIC COOLING FOR YOUR RIG:')}
+                  {localize(state.language, '2. REFRIGERACIÓN BÁSICA (OBLIGATORIA PARA EVITAR INCENDIO TÉRMICO):', '2. BASIC COOLING (MANDATORY TO PREVENT THERMAL OVERHEAT):')}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                   {starterCoolingOptions.map(cool => {
@@ -518,6 +558,102 @@ export const GenesisOnboarding: React.FC = () => {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* 3. Power Grid Connection */}
+              <div className="pt-2">
+                <h3 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4 text-yellow-400" />
+                  {localize(state.language, '3. CONEXIÓN A RED ELÉCTRICA (OBLIGATORIA PARA ENCENDER EL CLÚSTER):', '3. POWER GRID CONNECTION (MANDATORY TO POWER ON CLUSTER):')}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                  {starterPowerOptions.map(pow => {
+                    const isSelected = selectedPower === pow.id;
+                    return (
+                      <button
+                        key={pow.id}
+                        type="button"
+                        onClick={() => { sound.playKeyClick(); setSelectedPower(pow.id); }}
+                        className={`p-2.5 rounded-lg border text-left transition-all ${
+                          isSelected
+                            ? 'bg-yellow-950/60 border-yellow-400 shadow-[0_0_12px_rgba(245,158,11,0.15)] text-yellow-100'
+                            : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-xs text-zinc-200">{pow.name}</h4>
+                          <span className="text-amber-300 font-bold text-xs">${pow.price} CR</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{pow.desc}</p>
+                        <span className="text-[10px] text-yellow-400 block mt-1.5 font-bold">
+                          {localize(state.language, 'Capacidad:', 'Power capacity:')} {pow.capacity}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 4. Network Interconnect */}
+              <div className="pt-2">
+                <h3 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
+                  <Network className="w-4 h-4 text-blue-400" />
+                  {localize(state.language, '4. INTERCONEXIÓN DE RED (OBLIGATORIA PARA DESCARGAR DATOS Y AGENTES):', '4. NETWORK INTERCONNECT (MANDATORY TO FETCH DATASETS & AGENTS):')}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                  {starterNetworkOptions.map(net => {
+                    const isSelected = selectedNetwork === net.id;
+                    return (
+                      <button
+                        key={net.id}
+                        type="button"
+                        onClick={() => { sound.playKeyClick(); setSelectedNetwork(net.id); }}
+                        className={`p-2.5 rounded-lg border text-left transition-all ${
+                          isSelected
+                            ? 'bg-blue-950/60 border-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.15)] text-blue-100'
+                            : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-xs text-zinc-200">{net.name}</h4>
+                          <span className="text-amber-300 font-bold text-xs">${net.price} CR</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{net.desc}</p>
+                        <span className="text-[10px] text-blue-400 block mt-1.5 font-bold">
+                          {localize(state.language, 'Ancho de banda:', 'Bandwidth:')} {net.bandwidth}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Mandatory 4-Part Rig Readiness Banner */}
+              <div className="p-3 bg-[#05080e] border border-cyan-800 rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span className="font-bold text-cyan-300 text-[11px]">
+                    {localize(state.language, 'ESTADO DEL RIG (4/4 COMPONENTES):', 'RIG STATUS (4/4 COMPONENTS):')}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedGpu ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
+                    1. GPU {selectedGpu ? '✓' : '✗'}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedCooling ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
+                    2. REFRIGERACIÓN {selectedCooling ? '✓' : '✗'}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedPower ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
+                    3. ENERGÍA {selectedPower ? '✓' : '✗'}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedNetwork ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
+                    4. RED {selectedNetwork ? '✓' : '✗'}
+                  </span>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[10px] text-zinc-400 block">{localize(state.language, 'PRESUPUESTO:', 'BUDGET:')}</span>
+                  <span className={`font-bold text-xs ${remainingBudget >= 0 ? 'text-amber-300' : 'text-red-400'}`}>
+                    ${remainingBudget} CR / ${INITIAL_GRANT} CR
+                  </span>
                 </div>
               </div>
             </div>

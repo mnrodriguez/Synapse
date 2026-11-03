@@ -84,7 +84,7 @@ export const TrainingMonitor: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between text-xs font-bold gap-2">
           <div className="flex items-center gap-2">
             <span className="text-cyan-300">
-              {localize(state.language, 'PROGRESO TOTAL:', 'TOTAL PROGRESS:')} {job.progressPercent}%
+              {localize(state.language, 'PROGRESO TOTAL:', 'TOTAL PROGRESS:')} {Math.floor(job.progressPercent)}%
             </span>
             {job.targetModelType === 'micro_model' ? (
               <span className="px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/60 text-purple-300 text-[10px] font-bold">

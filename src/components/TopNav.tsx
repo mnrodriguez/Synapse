@@ -226,7 +226,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
         <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${isPowerOverloaded ? 'bg-red-950/40 border-red-500 text-red-400 animate-pulse' : 'bg-zinc-900/80 border-zinc-700/60 text-zinc-300'}`} title={localize(state.language, 'Consumo eléctrico vs capacidad de red', 'Power draw vs grid capacity')}>
           <Zap className={`w-3.5 h-3.5 ${isPowerOverloaded ? 'text-red-400' : 'text-yellow-400'}`} />
           <span className="text-zinc-400 text-[10px]">POWER:</span>
-          <span>{state.activePowerKw} / {state.maxPowerKw} kW</span>
+          <span>{state.activePowerKw.toFixed(3)} / {state.maxPowerKw.toFixed(1)} kW</span>
         </div>
 
         {/* Core Temperature */}

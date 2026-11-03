@@ -289,13 +289,15 @@ export interface GameState {
   tutorialDismissed?: boolean;
   completedContractsCount: number;
 
-  // Game Difficulty, Loans & Defeat Mechanics
+  // Game Difficulty, Loans, Defeat & Progressive Unlocking
   difficulty: GameDifficulty;
   hasTakenEmergencyLoan: boolean;
   emergencyLoanAmount: number;
   trackingAgency: string;
   agencyAlertLevel: 'low' | 'elevated' | 'critical' | 'raid_imminent';
   gameOverReason: 'bankruptcy' | 'agency_seizure' | null;
+  unlockedTabs: string[];
+  unlockedAllTabs: boolean;
 
   // System logs
   logs: TerminalLog[];
@@ -407,6 +409,8 @@ export interface OnboardingConfig {
   callsign: string;
   starterGpuId: string;
   starterCoolingId: string;
+  starterPowerId: string;
+  starterNetworkId: string;
   starterDataId: string;
   modelTopology: ModelTopology;
   modelParams: number;

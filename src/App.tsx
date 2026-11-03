@@ -22,7 +22,8 @@ import { BreachModal } from './components/BreachModal';
 import { GameOverModal } from './components/GameOverModal';
 import { TutorialMissionBanner } from './components/TutorialMissionBanner';
 import { ProgressionRoadmap } from './components/ProgressionRoadmap';
-import { 
+import { AiSuggestionBanner } from './components/AiSuggestionBanner';
+import {
   Terminal as TermIcon, 
   Layers, 
   Network, 
@@ -35,7 +36,8 @@ import {
   Maximize2,
   ChevronDown,
   Bot,
-  Compass
+  Compass,
+  Lock
 } from 'lucide-react';
 import { sound } from './audio/soundManager';
 import { localize } from './utils/i18n';
@@ -60,7 +62,18 @@ const MainGameScreen: React.FC = () => {
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
+  const isTabUnlocked = (tabId: string) => {
+    if (state.unlockedAllTabs || state.difficulty === 'engineer') return true;
+    if (tabId === 'terminal') return true;
+    const unlocked = state.unlockedTabs || ['architecture', 'training'];
+    return unlocked.includes(tabId);
+  };
+
   const handleTabSelect = (tab: WorkspaceTab) => {
+    if (!isTabUnlocked(tab)) {
+      sound.playWarning();
+      return;
+    }
     sound.playNavSwitch();
     setActiveTab(tab);
   };
@@ -77,7 +90,7 @@ const MainGameScreen: React.FC = () => {
       label: localize(state.language, 'MONITOR', 'MONITOR'),
       icon: Activity, 
       pulse: !!state.activeTraining, 
-      badge: state.activeTraining ? `${state.activeTraining.progressPercent}%` : 'IDLE' 
+      badge: state.activeTraining ? `${Math.floor(state.activeTraining.progressPercent)}%` : 'IDLE'
     },
     { 
       id: 'agents', 
@@ -117,25 +130,37 @@ const MainGameScreen: React.FC = () => {
         onOpenAuth={() => setAuthOpen(true)}
       />
 
+      {/* Interactive AI Oracle Suggestions Banner for Beginner/Normal */}
+      <AiSuggestionBanner
+        activeTab={activeTab}
+        onNavigateTab={(tab) => handleTabSelect(tab as WorkspaceTab)}
+      />
+
       {/* Workspace Navigation Bar */}
       <nav className="w-full bg-[#080d16] border-b border-cyan-900/40 px-2 py-1.5 flex items-center justify-between gap-1 overflow-x-auto scrollbar-none z-10">
         <div className="flex items-center gap-1">
           {navItems.map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
+            const isUnlocked = isTabUnlocked(item.id);
             return (
               <button
                 key={item.id}
+                disabled={!isUnlocked}
                 onClick={() => handleTabSelect(item.id as WorkspaceTab)}
+                title={!isUnlocked ? (isEs ? 'Módulo bloqueado. Completa los hitos actuales para desbloquear.' : 'Module locked. Complete current milestones to unlock.') : undefined}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-bold transition-all relative ${
-                  isActive
-                    ? 'bg-cyan-950 border border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(0,255,200,0.2)]'
-                    : 'bg-zinc-900/50 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                  !isUnlocked
+                    ? 'opacity-40 bg-zinc-950 border border-zinc-900 text-zinc-600 cursor-not-allowed'
+                    : isActive
+                    ? 'bg-cyan-950 border border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(0,255,200,0.2)] cursor-pointer'
+                    : 'bg-zinc-900/50 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 cursor-pointer'
                 } ${item.showOnMobileOnly ? 'lg:hidden' : ''}`}
               >
                 <Icon className={`w-3.5 h-3.5 ${item.pulse ? 'text-red-400 animate-pulse' : item.glow ? 'text-purple-400' : ''}`} />
                 <span className="whitespace-nowrap">{item.label}</span>
-                {item.badge && (
+                {!isUnlocked && <Lock className="w-3 h-3 text-purple-400" />}
+                {isUnlocked && item.badge && (
                   <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${
                     item.badge === (isEs ? 'ALERTA' : 'ALERT')
                       ? 'bg-red-950 border border-red-500 text-red-300 font-bold animate-pulse'

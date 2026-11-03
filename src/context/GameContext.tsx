@@ -189,6 +189,8 @@ const DEFAULT_STATE: GameState = {
   trackingAgency: 'División Local de Delitos Informáticos',
   agencyAlertLevel: 'low',
   gameOverReason: null,
+  unlockedTabs: ['architecture', 'training'],
+  unlockedAllTabs: false,
 
   hardware: INITIAL_HARDWARE.map(h => ({ ...h, count: 0 })),
   dataSources: INITIAL_DATA_SOURCES.map(d => ({ ...d, unlocked: d.unlocked, level: d.unlocked ? 1 : 0 })),
@@ -312,6 +314,10 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
       : fallback.trackingAgency,
     agencyAlertLevel: data.agencyAlertLevel || 'low',
     gameOverReason: data.gameOverReason || null,
+    unlockedTabs: Array.isArray(data.unlockedTabs) && data.unlockedTabs.length > 0
+      ? data.unlockedTabs
+      : ['architecture', 'training'],
+    unlockedAllTabs: Boolean(data.unlockedAllTabs),
     currentModel,
     savedModels: Array.from(modelsById.values()),
     isDataScrapingUnlocked: typeof data.isDataScrapingUnlocked === 'boolean'
@@ -1655,6 +1661,58 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           );
         }
 
+        // 10. Progressive Workspace Tab Unlocking Check
+        let unlockedTabs = prev.unlockedTabs || ['architecture', 'training'];
+        if (!prev.unlockedAllTabs) {
+          const tabSet = new Set(unlockedTabs);
+
+          if ((prev.currentModel.reasoningScore >= 70 || prev.savedModels.some(m => m.reasoningScore >= 70)) && !tabSet.has('contracts')) {
+            tabSet.add('contracts');
+            addLog(
+              prev.language === 'es'
+                ? '¡NUEVO MÓDULO DESBLOQUEADO! Tablón de Contratos activo. Asigna tu modelo a misiones para generar créditos.'
+                : 'NEW MODULE UNLOCKED! Contract Board active. Take missions to earn credits.',
+              'success'
+            );
+          }
+
+          if ((prev.completedContractsCount > 0 || prev.contracts.some(c => c.completed)) && (!tabSet.has('hardware') || !tabSet.has('data'))) {
+            tabSet.add('hardware');
+            tabSet.add('data');
+            addLog(
+              prev.language === 'es'
+                ? '¡NUEVO MÓDULO DESBLOQUEADO! Hardware Rack y Motores de Datos activos. Expande tu clúster y despliega bases vectoriales.'
+                : 'NEW MODULE UNLOCKED! Hardware Rack and Data Engines active. Expand your cluster and deploy vector databases.',
+              'success'
+            );
+          }
+
+          const totalGpuCount = prev.hardware.filter(h => h.category === 'gpu').reduce((sum, h) => sum + h.count, 0);
+          if ((totalGpuCount > 1 || prev.credits >= 1000 || prev.researchTree.some(r => r.unlocked)) && (!tabSet.has('agents') || !tabSet.has('research'))) {
+            tabSet.add('agents');
+            tabSet.add('research');
+            addLog(
+              prev.language === 'es'
+                ? '¡NUEVO MÓDULO DESBLOQUEADO! Swarm de Agentes e I+D activos. Instancia agentes autónomos e investiga papers.'
+                : 'NEW MODULE UNLOCKED! Agent Swarm & R&D Papers active. Deploy autonomous agents and research papers.',
+              'success'
+            );
+          }
+
+          if (singularityProgress >= 10 && (!tabSet.has('roadmap') || !tabSet.has('singularity'))) {
+            tabSet.add('roadmap');
+            tabSet.add('singularity');
+            addLog(
+              prev.language === 'es'
+                ? '¡NUEVO MÓDULO DESBLOQUEADO! Hoja de Ruta y Portal de Singularidad activos.'
+                : 'NEW MODULE UNLOCKED! Roadmap & Singularity Portal active.',
+              'success'
+            );
+          }
+
+          unlockedTabs = Array.from(tabSet);
+        }
+
         return {
           ...prev,
           gameDay: nextDay,
@@ -1667,6 +1725,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           trackingAgency,
           agencyAlertLevel,
           gameOverReason,
+          unlockedTabs,
           researchTree: updatedResearchTree,
           credits: Math.round(credits),
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
@@ -3139,18 +3198,22 @@ The future of SYNAPSE depends on how we choose to build it."`);
     sound.playBreakthrough();
 
     const starterGpu = INITIAL_HARDWARE.find(h => h.id === config.starterGpuId) || INITIAL_HARDWARE[0];
-    const starterCooling = INITIAL_HARDWARE.find(h => h.id === config.starterCoolingId) || INITIAL_HARDWARE.find(h => h.id === 'cool_air_basic');
+    const starterCooling = INITIAL_HARDWARE.find(h => h.id === config.starterCoolingId) || INITIAL_HARDWARE.find(h => h.id === 'cool_air_basic')!;
+    const starterPower = INITIAL_HARDWARE.find(h => h.id === config.starterPowerId) || INITIAL_HARDWARE.find(h => h.id === 'power_wall_socket')!;
+    const starterNetwork = INITIAL_HARDWARE.find(h => h.id === config.starterNetworkId) || INITIAL_HARDWARE.find(h => h.id === 'net_gigabit')!;
 
     const initialBudget = 350;
-    const spent = (starterGpu.price || 150) + (starterCooling?.price || 40);
-    const remainingCredits = Math.max(50, initialBudget - spent);
+    const spent = (starterGpu.price || 150) + (starterCooling.price || 40) + (starterPower.price || 20) + (starterNetwork.price || 30);
+    const chosenDifficulty = config.difficulty || 'engineer';
+    const diffConfig = DIFFICULTY_CONFIGS[chosenDifficulty];
+    const initialCredits = Math.max(50, initialBudget - spent + diffConfig.initialCreditsBonus);
 
     // Update hardware counts
     const updatedHw = INITIAL_HARDWARE.map(h => {
       if (h.id === config.starterGpuId) return { ...h, count: 1 };
       if (h.id === config.starterCoolingId) return { ...h, count: 1 };
-      if (h.id === 'power_wall_socket') return { ...h, count: 1 };
-      if (h.id === 'net_gigabit') return { ...h, count: 1 };
+      if (h.id === (config.starterPowerId || 'power_wall_socket')) return { ...h, count: 1 };
+      if (h.id === (config.starterNetworkId || 'net_gigabit')) return { ...h, count: 1 };
       return { ...h, count: 0 };
     });
 
@@ -3193,12 +3256,19 @@ The future of SYNAPSE depends on how we choose to build it."`);
 
     const starterDataSource = updatedData.find(d => d.id === config.starterDataId);
     const currentLang = stateRef.current.language;
+    const initialTabs = chosenDifficulty === 'engineer'
+      ? ['architecture', 'data', 'hardware', 'contracts', 'research', 'training', 'agents', 'roadmap', 'singularity']
+      : ['architecture', 'training'];
+
     const genesisState: GameState = {
       ...DEFAULT_STATE,
       language: currentLang,
       callsign: config.callsign.toUpperCase().trim() || 'CIPHER-1',
-      credits: remainingCredits,
+      credits: initialCredits,
+      difficulty: chosenDifficulty,
       tutorialCompleted: true,
+      unlockedTabs: initialTabs,
+      unlockedAllTabs: chosenDifficulty === 'engineer',
       gameDay: 1,
       gameMonth: 1,
       gameYear: 2026,
