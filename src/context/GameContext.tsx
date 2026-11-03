@@ -3199,9 +3199,9 @@ The future of SYNAPSE depends on how we choose to build it."`);
     sound.playBreakthrough();
 
     const starterGpu = INITIAL_HARDWARE.find(h => h.id === config.starterGpuId) || INITIAL_HARDWARE[0];
-    const starterCooling = INITIAL_HARDWARE.find(h => h.id === config.starterCoolingId) || INITIAL_HARDWARE.find(h => h.id === 'cool_air_basic')!;
-    const starterPower = INITIAL_HARDWARE.find(h => h.id === config.starterPowerId) || INITIAL_HARDWARE.find(h => h.id === 'power_wall_socket')!;
-    const starterNetwork = INITIAL_HARDWARE.find(h => h.id === config.starterNetworkId) || INITIAL_HARDWARE.find(h => h.id === 'net_gigabit')!;
+    const starterCooling = INITIAL_HARDWARE.find(h => h.id === config.starterCoolingId) || INITIAL_HARDWARE.find(h => h.category === 'cooling') || INITIAL_HARDWARE[0];
+    const starterPower = INITIAL_HARDWARE.find(h => h.id === config.starterPowerId) || INITIAL_HARDWARE.find(h => h.category === 'power') || INITIAL_HARDWARE[0];
+    const starterNetwork = INITIAL_HARDWARE.find(h => h.id === config.starterNetworkId) || INITIAL_HARDWARE.find(h => h.category === 'network') || INITIAL_HARDWARE[0];
 
     const initialBudget = 350;
     const spent = (starterGpu.price || 150) + (starterCooling.price || 40) + (starterPower.price || 20) + (starterNetwork.price || 30);
