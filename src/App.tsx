@@ -19,6 +19,7 @@ import { AuthModal } from './components/AuthModal';
 import { HelpManual } from './components/HelpManual';
 import { AgentSandbox } from './components/AgentSandbox';
 import { BreachModal } from './components/BreachModal';
+import { GameOverModal } from './components/GameOverModal';
 import { TutorialMissionBanner } from './components/TutorialMissionBanner';
 import { ProgressionRoadmap } from './components/ProgressionRoadmap';
 import { 
@@ -204,6 +205,9 @@ const MainGameScreen: React.FC = () => {
 
       {/* Real-World AI Guardrail Breach Incident Popup */}
       <BreachModal />
+
+      {/* Game Over & Emergency Loan Modal */}
+      <GameOverModal />
 
       {/* Dialog Modals */}
       <HelpManual isOpen={manualOpen} onClose={() => setManualOpen(false)} />

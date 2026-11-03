@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { OnboardingConfig, ModelTopology, QuantizationType } from '../types/game';
+import { OnboardingConfig, ModelTopology, QuantizationType, GameDifficulty } from '../types/game';
 import { 
   Cpu, 
   Terminal as TermIcon, 
@@ -24,7 +24,8 @@ import {
   Activity,
   Shuffle,
   Languages,
-  Cloud
+  Cloud,
+  Sliders
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
@@ -34,10 +35,12 @@ export const GenesisOnboarding: React.FC = () => {
   const { completeTutorial, state, setLanguage } = useGame();
   const [authOpen, setAuthOpen] = useState(false);
   const en = state.language === 'en';
+  const isEs = state.language === 'es';
 
   const [step, setStep] = useState<number>(1);
   const [callsign, setCallsign] = useState<string>('CIPHER-7');
-  
+  const [difficulty, setDifficulty] = useState<GameDifficulty>('beginner');
+
   // Hardware selection
   const [selectedGpu, setSelectedGpu] = useState<string>('gpu_gtx1060');
   const [selectedCooling, setSelectedCooling] = useState<string>('cool_air_basic');
@@ -244,7 +247,8 @@ export const GenesisOnboarding: React.FC = () => {
         modelTopology,
         modelParams,
         modelQuantization: modelQuant,
-        modelName: modelName.trim() || `SYNAPSE-Proto-${(modelParams / 1_000_000).toFixed(0)}M`
+        modelName: modelName.trim() || `SYNAPSE-Proto-${(modelParams / 1_000_000).toFixed(0)}M`,
+        difficulty
       };
       completeTutorial(config);
     } catch (err) {
@@ -377,6 +381,60 @@ export const GenesisOnboarding: React.FC = () => {
                 <span className="text-[10px] text-zinc-500 block">
                   {localize(state.language, 'Este identificador será transmitido a los libros de órdenes de contratos y al ranking de la Singularidad en la nube.', 'This identifier appears on contract orders and the cloud singularity leaderboard.')}
                 </span>
+              </div>
+
+              {/* Difficulty Level Selection */}
+              <div className="space-y-2 pt-3 border-t border-cyan-950">
+                <label className="text-xs text-zinc-300 font-bold block flex items-center gap-1.5">
+                  <Sliders className="w-4 h-4 text-purple-400" />
+                  {localize(state.language, 'SELECCIONA EL NIVEL DE DIFICULTAD DE LA SIMULACIÓN:', 'SELECT SIMULATION DIFFICULTY LEVEL:')}
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {[
+                    {
+                      id: 'beginner',
+                      title: isEs ? 'Principiante (Aprendiz)' : 'Beginner (Novice)',
+                      desc: isEs ? 'Aprende cómo se entrena una IA con controles simplificados, tarjetas educativas y bonificación de fondos.' : 'Learn AI training fundamentals with simplified controls, guided cards, and reward bonus.',
+                      badge: '+25% RECOMPENSAS'
+                    },
+                    {
+                      id: 'normal',
+                      title: isEs ? 'Normal (Práctico)' : 'Normal (Practitioner)',
+                      desc: isEs ? 'Nivel intermedio con hiperparámetros esenciales (Cuantización, Temperatura, Top-P, RAG, LoRA).' : 'Intermediate level with essential hyperparameters (Quantization, Temp, Top-P, RAG, LoRA).',
+                      badge: 'BALANCEADO'
+                    },
+                    {
+                      id: 'engineer',
+                      title: isEs ? 'Ingeniero (Arquitecto)' : 'Engineer (Architect)',
+                      desc: isEs ? 'Simulación completa e irrestricta. Control total sobre pérdidas DPO/PPO, prompts y matriz de hardware.' : 'Full unconstrained simulation. Full control over loss functions, system prompts, and cluster hardware.',
+                      badge: 'EXPERIENCIA COMPLETA'
+                    }
+                  ].map(diffOption => {
+                    const isSelected = difficulty === diffOption.id;
+                    return (
+                      <div
+                        key={diffOption.id}
+                        onClick={() => { sound.playKeyClick(); setDifficulty(diffOption.id as GameDifficulty); }}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-purple-950/60 border-purple-400 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.25)]'
+                            : 'bg-[#05080e] border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1 mb-1">
+                            <span className="font-bold text-xs">{diffOption.title}</span>
+                            <span className={`text-[9px] px-1 py-0.2 rounded font-bold ${isSelected ? 'bg-purple-900 text-purple-200 border border-purple-500' : 'bg-zinc-900 text-zinc-500'}`}>
+                              {diffOption.badge}
+                            </span>
+                          </div>
+                          <p className="text-[10px] leading-relaxed text-zinc-400">{diffOption.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}

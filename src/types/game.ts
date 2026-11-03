@@ -289,9 +289,19 @@ export interface GameState {
   tutorialDismissed?: boolean;
   completedContractsCount: number;
 
+  // Game Difficulty, Loans & Defeat Mechanics
+  difficulty: GameDifficulty;
+  hasTakenEmergencyLoan: boolean;
+  emergencyLoanAmount: number;
+  trackingAgency: string;
+  agencyAlertLevel: 'low' | 'elevated' | 'critical' | 'raid_imminent';
+  gameOverReason: 'bankruptcy' | 'agency_seizure' | null;
+
   // System logs
   logs: TerminalLog[];
 }
+
+export type GameDifficulty = 'beginner' | 'normal' | 'engineer';
 
 export interface MissionOutcome {
   contractId: string;
@@ -402,6 +412,7 @@ export interface OnboardingConfig {
   modelParams: number;
   modelQuantization: QuantizationType;
   modelName: string;
+  difficulty?: GameDifficulty;
 }
 
 export interface OperativeLeaderboard {

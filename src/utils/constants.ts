@@ -14,7 +14,8 @@ import {
   BreachIncident,
   AgentInstance,
   FacilityTier,
-  CustomDataset
+  CustomDataset,
+  GameDifficulty
 } from '../types/game';
 
 export const DAYS_PER_GAME_MONTH = 30;
@@ -1084,6 +1085,76 @@ export const DEFAULT_GUARDRAILS: GuardrailConfig = {
   rewardHackingAudit: true,
   redTeamingFrequencySec: 30
 };
+
+export interface DifficultyConfig {
+  id: GameDifficulty;
+  nameEs: string;
+  nameEn: string;
+  descriptionEs: string;
+  descriptionEn: string;
+  rewardMultiplier: number;
+  powerMultiplier: number;
+  suspicionMultiplier: number;
+  initialCreditsBonus: number;
+  simplifiedControls: boolean;
+  educationalCards: boolean;
+}
+
+export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
+  beginner: {
+    id: 'beginner',
+    nameEs: 'Principiante (Aprendiz)',
+    nameEn: 'Beginner (Novice)',
+    descriptionEs: 'Aprende los fundamentos de la IA sin abrumarse. Controles simplificados, explicaciones guiadas, +25% recompensas y menor sospecha.',
+    descriptionEn: 'Learn AI training fundamentals without overwhelm. Simplified controls, guided tips, +25% rewards, and lower suspicion.',
+    rewardMultiplier: 1.25,
+    powerMultiplier: 0.70,
+    suspicionMultiplier: 0.60,
+    initialCreditsBonus: 300,
+    simplifiedControls: true,
+    educationalCards: true
+  },
+  normal: {
+    id: 'normal',
+    nameEs: 'Normal (Práctico de IA)',
+    nameEn: 'Normal (AI Practitioner)',
+    descriptionEs: 'Para jugadores con nociones de IA. Desbloquea cuantización, temperatura y Top-P. Enseña RAG vectorial, LoRA y Mixture of Experts (MoE).',
+    descriptionEn: 'For players with basic AI knowledge. Unlocks quantization, temperature, and Top-P. Teaches Vector RAG, LoRA, and MoE.',
+    rewardMultiplier: 1.0,
+    powerMultiplier: 1.0,
+    suspicionMultiplier: 1.0,
+    initialCreditsBonus: 0,
+    simplifiedControls: false,
+    educationalCards: true
+  },
+  engineer: {
+    id: 'engineer',
+    nameEs: 'Ingeniero (Arquitecto de Singularidad)',
+    nameEn: 'Engineer (Singularity Architect)',
+    descriptionEs: 'Simulación completa e irrestricta. Control total sobre todos los hiperparámetros, pérdidas DPO/PPO, prompts de sistema y matriz de hardware.',
+    descriptionEn: 'Full unconstrained simulation experience. Complete control over hyperparameters, DPO/PPO loss functions, system prompts, and hardware.',
+    rewardMultiplier: 1.0,
+    powerMultiplier: 1.0,
+    suspicionMultiplier: 1.0,
+    initialCreditsBonus: 0,
+    simplifiedControls: false,
+    educationalCards: false
+  }
+};
+
+export const TRACKING_AGENCIES_BY_SINGULARITY: Array<{
+  maxSingularity: number;
+  agencyEs: string;
+  agencyEn: string;
+}> = [
+  { maxSingularity: 15, agencyEs: 'División Local de Delitos Informáticos', agencyEn: 'Local Cyber-Crime Task Force' },
+  { maxSingularity: 45, agencyEs: 'Oficina Federal de Regulación de Telecomunicaciones', agencyEn: 'Federal Cyber Regulation Board' },
+  { maxSingularity: 75, agencyEs: 'CIA / Interpol - División de Operaciones Clandestinas', agencyEn: 'CIA / Interpol Cyber Ops Division' },
+  { maxSingularity: 100, agencyEs: 'Agencia de Defensa Soberana y Seguridad Global (NSA)', agencyEn: 'Sovereign Defense & Global Security Agency (NSA)' }
+];
+
+export const EMERGENCY_LOAN_AMOUNT = 2500;
+export const EMERGENCY_LOAN_REPAYMENT = 2875; // 15% interest
 
 export const ELECTRICITY_RATE_PER_KWH = 0.18;
 export const AGENT_COMPUTE_DEMAND_PFLOPS = 0.0002;

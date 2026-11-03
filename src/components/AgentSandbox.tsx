@@ -318,7 +318,7 @@ export const AgentSandbox: React.FC = () => {
             <button
               onClick={() => { sound.playKeyClick(); setIsDeployModalOpen(true); }}
               disabled={state.credits < 75}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded border font-bold text-xs transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded border font-bold text-xs transition-colors cursor-pointer ${
                 state.credits >= 75
                   ? 'bg-cyan-950 border-cyan-400 hover:bg-cyan-900 text-cyan-200 shadow-[0_0_10px_rgba(0,255,200,0.2)]'
                   : 'bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed'
@@ -329,6 +329,23 @@ export const AgentSandbox: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Educational Banner for Non-Engineer Modes */}
+        {state.difficulty !== 'engineer' && (
+          <div className="mt-3 p-2.5 bg-cyan-950/30 border border-cyan-500/40 rounded-lg space-y-1 text-cyan-200">
+            <div className="flex items-center gap-2 font-bold text-xs text-cyan-300">
+              <Bot className="w-4 h-4 text-cyan-400" />
+              <span>{localize(state.language, 'GUÍA EDUCATIVA // ¿CÓMO FUNCIONA UN ENJAMBRE DE AGENTES?', 'EDUCATIONAL GUIDE // HOW AGENT SWARMS WORK')}</span>
+            </div>
+            <p className="text-[11px] text-zinc-300 leading-relaxed">
+              {localize(
+                state.language,
+                'Un Agente es una instancia autónoma de un modelo de IA. Cada agente tiene una especialidad (Investigador, Analista de Mercado, Supervisor de Seguridad) y genera ingresos pasivos en tiempo real. Mantén un Supervisor de Seguridad desplegado para prevenir la degradación de alineamiento.',
+                'An Agent is an autonomous instance of an AI model. Each agent has a specialized role (Researcher, Market Analyst, Safety Overseer) and earns passive income. Deploy a Safety Overseer to stabilize swarm alignment.'
+              )}
+            </p>
+          </div>
+        )}
 
         {/* Live Gauges Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3">

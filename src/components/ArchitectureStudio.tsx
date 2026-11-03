@@ -310,6 +310,33 @@ export const ArchitectureStudio: React.FC = () => {
         </div>
       </section>
 
+      {/* Educational Guidance Card for Beginner & Normal Modes */}
+      {state.difficulty !== 'engineer' && (
+        <section className="p-3 bg-purple-950/30 border border-purple-500/50 rounded-lg space-y-1.5 font-mono text-purple-200">
+          <div className="flex items-center gap-2 font-bold text-xs text-purple-300">
+            <Sparkles className="w-4 h-4 text-purple-400" />
+            <span>
+              {localize(state.language, 'GUÍA EDUCATIVA // ¿CÓMO SE ENTRENA Y CONFIGURA UN MODELO DE IA?', 'EDUCATIONAL GUIDE // HOW TO DESIGN & TRAIN AN AI MODEL')}
+            </span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-zinc-300">
+            {localize(
+              state.language,
+              'Entrenar una IA consiste en procesar millones de palabras (tokens) de un dataset para ajustar sus conexiones neuronales (parámetros). Cuantos más parámetros tiene el modelo, mayor es su capacidad de razonamiento (IQ), pero exigirá más memoria VRAM en tus GPUs y más refrigeración.',
+              'Training an AI means processing millions of dataset tokens to refine its neural weights (parameters). Models with more parameters achieve higher reasoning IQ, but require more GPU VRAM and active cooling capacity.'
+            )}
+          </p>
+          <div className="flex flex-wrap gap-2 text-[10px] pt-1 text-purple-300 font-bold">
+            <span className="px-2 py-0.5 rounded bg-purple-900/60 border border-purple-500/40">
+              💡 {localize(state.language, `Dificultad ${state.difficulty.toUpperCase()}: Micro-parámetros optimizados automáticamente`, `Difficulty ${state.difficulty.toUpperCase()}: Micro-parameters automatically optimized`)}
+            </span>
+            <span className="px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/40 text-cyan-300">
+              ⚡ {localize(state.language, 'Recompensas de misiones ajustadas', 'Mission rewards adjusted')}
+            </span>
+          </div>
+        </section>
+      )}
+
       {/* Model Spec Card */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-[#09111c] border border-cyan-900/50 p-2.5 rounded text-xs">
         <div>

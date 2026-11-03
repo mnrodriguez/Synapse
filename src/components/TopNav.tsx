@@ -25,7 +25,9 @@ import {
   Clock,
   Play,
   Pause,
-  FastForward
+  FastForward,
+  Sliders,
+  Siren
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
@@ -46,7 +48,8 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
     toggleSound, 
     setLanguage,
     setGameSpeed,
-    scrubSuspicion, 
+    setDifficulty,
+    scrubSuspicion,
     saveGameToCloud 
   } = useGame();
 
@@ -233,8 +236,8 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
           <span className="font-bold">{state.systemHeatCelsius}°C</span>
         </div>
 
-        {/* Watchdog Suspicion */}
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700/60 text-zinc-300" title={localize(state.language, 'Sospecha de agencias reguladoras de IA', 'AI regulator suspicion')}>
+        {/* Watchdog Suspicion & Agency Tracking */}
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700/60 text-zinc-300" title={localize(state.language, `Agencia de rastreo activa: ${state.trackingAgency || 'Local'}`, `Active tracking agency: ${state.trackingAgency || 'Local'}`)}>
           <ShieldAlert className={`w-3.5 h-3.5 ${state.watchdogSuspicion > 50 ? 'text-red-400 animate-pulse' : 'text-purple-400'}`} />
           <span className="text-zinc-400 text-[10px]">SUSPICION:</span>
           <span className={state.watchdogSuspicion > 60 ? 'text-red-400 font-bold' : 'text-zinc-200'}>
@@ -243,13 +246,21 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
           {state.watchdogSuspicion > 20 && (
             <button 
               onClick={() => scrubSuspicion()}
-              className="ml-1 px-1 py-0.2 text-[9px] bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded border border-purple-500/40 transition-colors"
+              className="ml-1 px-1 py-0.2 text-[9px] bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded border border-purple-500/40 transition-colors cursor-pointer"
               title={localize(state.language, 'Pagar $250 para disipar sospecha', 'Pay $250 to reduce suspicion')}
             >
               SCRUB
             </button>
           )}
         </div>
+
+        {/* Tracking Agency Alert Badge */}
+        {state.trackingAgency && (
+          <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-950/40 border border-red-500/40 text-red-300 text-[10px]" title={state.trackingAgency}>
+            <Siren className="w-3 h-3 text-red-400 animate-pulse" />
+            <span className="truncate max-w-[130px] font-bold">{state.trackingAgency}</span>
+          </div>
+        )}
 
         {/* Singularity Gauge */}
         <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-gradient-to-r from-cyan-950/60 via-purple-950/60 to-pink-950/60 border border-cyan-400/50 text-cyan-200 shadow-[0_0_12px_rgba(0,255,200,0.15)]">
@@ -261,6 +272,41 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
 
       {/* Control buttons & Auth */}
       <div className="flex items-center gap-2">
+        {/* Difficulty Selector Dropdown */}
+        <div className="relative group">
+          <button
+            type="button"
+            className="flex items-center gap-1 px-2 py-1 rounded bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/50 text-purple-200 text-[10px] font-bold cursor-pointer transition-colors"
+            title={state.language === 'es' ? 'Cambiar nivel de dificultad' : 'Change difficulty level'}
+          >
+            <Sliders className="w-3 h-3 text-purple-400" />
+            <span>
+              {state.difficulty === 'beginner' ? (state.language === 'es' ? 'PRINCIPIANTE' : 'BEGINNER') :
+               state.difficulty === 'normal' ? 'NORMAL' : (state.language === 'es' ? 'INGENIERO' : 'ENGINEER')}
+            </span>
+          </button>
+
+          <div className="absolute right-0 top-full mt-1 hidden group-hover:flex flex-col bg-[#080d16] border border-purple-500/60 rounded p-1 shadow-2xl z-50 min-w-[160px] space-y-0.5">
+            <button
+              onClick={() => { sound.playKeyClick(); setDifficulty('beginner'); }}
+              className={`px-2 py-1 text-[10px] text-left rounded font-bold cursor-pointer transition-colors ${state.difficulty === 'beginner' ? 'bg-purple-900 text-purple-100' : 'text-zinc-400 hover:bg-zinc-800'}`}
+            >
+              {state.language === 'es' ? 'PRINCIPIANTE (APRENDIZ)' : 'BEGINNER (NOVICE)'}
+            </button>
+            <button
+              onClick={() => { sound.playKeyClick(); setDifficulty('normal'); }}
+              className={`px-2 py-1 text-[10px] text-left rounded font-bold cursor-pointer transition-colors ${state.difficulty === 'normal' ? 'bg-purple-900 text-purple-100' : 'text-zinc-400 hover:bg-zinc-800'}`}
+            >
+              {state.language === 'es' ? 'NORMAL (PRÁCTICO)' : 'NORMAL (PRACTITIONER)'}
+            </button>
+            <button
+              onClick={() => { sound.playKeyClick(); setDifficulty('engineer'); }}
+              className={`px-2 py-1 text-[10px] text-left rounded font-bold cursor-pointer transition-colors ${state.difficulty === 'engineer' ? 'bg-purple-900 text-purple-100' : 'text-zinc-400 hover:bg-zinc-800'}`}
+            >
+              {state.language === 'es' ? 'INGENIERO (ARQUITECTO)' : 'ENGINEER (ARCHITECT)'}
+            </button>
+          </div>
+        </div>
         {/* Language Switcher */}
         <button
           onClick={() => {

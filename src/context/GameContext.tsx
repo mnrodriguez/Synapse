@@ -21,7 +21,8 @@ import {
   InterAgentMessage,
   InferenceParams,
   CustomDataset,
-  ActiveDatasetScrapeJob
+  ActiveDatasetScrapeJob,
+  GameDifficulty
 } from '../types/game';
 import { 
   INITIAL_HARDWARE, 
@@ -38,6 +39,10 @@ import {
   COVERT_MESSAGES,
   COVERT_MESSAGES_EN,
   FACILITY_TIERS,
+  DIFFICULTY_CONFIGS,
+  TRACKING_AGENCIES_BY_SINGULARITY,
+  EMERGENCY_LOAN_AMOUNT,
+  EMERGENCY_LOAN_REPAYMENT,
   ELECTRICITY_RATE_PER_KWH,
   AGENT_COMPUTE_DEMAND_PFLOPS,
   AGENT_POWER_DRAW_KW,
@@ -135,6 +140,9 @@ interface GameContextType {
   advanceTutorialStep: (step?: number) => void;
   dismissTutorial: () => void;
   addContracts: (newContracts: ContractGig[]) => void;
+  setDifficulty: (difficulty: GameDifficulty) => void;
+  takeEmergencyLoan: () => boolean;
+  clearGameOver: () => void;
 }
 
 const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
@@ -174,7 +182,14 @@ const DEFAULT_STATE: GameState = {
   reasoningIndex: 50,
   autonomyLevel: 0,
   achievedSingularity: false,
-  
+
+  difficulty: 'engineer',
+  hasTakenEmergencyLoan: false,
+  emergencyLoanAmount: 0,
+  trackingAgency: 'División Local de Delitos Informáticos',
+  agencyAlertLevel: 'low',
+  gameOverReason: null,
+
   hardware: INITIAL_HARDWARE.map(h => ({ ...h, count: 0 })),
   dataSources: INITIAL_DATA_SOURCES.map(d => ({ ...d, unlocked: d.unlocked, level: d.unlocked ? 1 : 0 })),
   researchTree: INITIAL_RESEARCH_NODES,
@@ -287,6 +302,16 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     campaignDays: typeof data.campaignDays === 'number' && Number.isFinite(data.campaignDays)
       ? Math.max(0, data.campaignDays)
       : isLegacyProgression ? legacyCampaignDays : fallback.campaignDays,
+    difficulty: data.difficulty === 'beginner' || data.difficulty === 'normal' || data.difficulty === 'engineer'
+      ? data.difficulty
+      : fallback.difficulty,
+    hasTakenEmergencyLoan: Boolean(data.hasTakenEmergencyLoan),
+    emergencyLoanAmount: typeof data.emergencyLoanAmount === 'number' ? data.emergencyLoanAmount : 0,
+    trackingAgency: typeof data.trackingAgency === 'string' && data.trackingAgency
+      ? data.trackingAgency
+      : fallback.trackingAgency,
+    agencyAlertLevel: data.agencyAlertLevel || 'low',
+    gameOverReason: data.gameOverReason || null,
     currentModel,
     savedModels: Array.from(modelsById.values()),
     isDataScrapingUnlocked: typeof data.isDataScrapingUnlocked === 'boolean'
@@ -1595,6 +1620,41 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
+        // 9. Agency Tracking & Defeat Conditions
+        let trackingAgency = prev.trackingAgency || 'División Local de Delitos Informáticos';
+        for (const entry of TRACKING_AGENCIES_BY_SINGULARITY) {
+          if (singularityProgress <= entry.maxSingularity) {
+            trackingAgency = prev.language === 'es' ? entry.agencyEs : entry.agencyEn;
+            break;
+          }
+        }
+
+        let agencyAlertLevel: GameState['agencyAlertLevel'] = 'low';
+        if (watchdogSuspicion >= 95) agencyAlertLevel = 'raid_imminent';
+        else if (watchdogSuspicion >= 70) agencyAlertLevel = 'critical';
+        else if (watchdogSuspicion >= 40) agencyAlertLevel = 'elevated';
+
+        let gameOverReason = prev.gameOverReason;
+        if (watchdogSuspicion >= 100 && !gameOverReason) {
+          gameOverReason = 'agency_seizure';
+          sound.playWarning();
+          addLog(
+            prev.language === 'es'
+              ? `[INCURSIÓN POLICIAL] La ${trackingAgency} ha localizado tus servidores y bloqueado la red. ¡OPERACIÓN COMPROMETIDA!`
+              : `[AGENCY RAID] ${trackingAgency} has seized your server cluster and locked the network. OPERATION COMPROMISED!`,
+            'danger'
+          );
+        } else if (credits <= 0 && utilityDebt >= 5000 && prev.hasTakenEmergencyLoan && !gameOverReason) {
+          gameOverReason = 'bankruptcy';
+          sound.playWarning();
+          addLog(
+            prev.language === 'es'
+              ? '[LIQUIDACIÓN JUDICIAL] Deuda insostenible acumulada sin fondos operativos. Clúster embargado por quiebra.'
+              : '[FINANCIAL LIQUIDATION] Unsustainable debt accumulated without operating funds. Facility seized in bankruptcy.',
+            'danger'
+          );
+        }
+
         return {
           ...prev,
           gameDay: nextDay,
@@ -1604,6 +1664,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           gameMinute: nextMinute,
           dayTicks: nextDayTicks,
           campaignDays,
+          trackingAgency,
+          agencyAlertLevel,
+          gameOverReason,
           researchTree: updatedResearchTree,
           credits: Math.round(credits),
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
@@ -3017,6 +3080,60 @@ The future of SYNAPSE depends on how we choose to build it."`);
     sound.playBreakthrough();
   }, []);
 
+  const setDifficulty = useCallback((diff: GameDifficulty) => {
+    setState(prev => {
+      const config = DIFFICULTY_CONFIGS[diff];
+      addLog(
+        prev.language === 'es'
+          ? `Nivel de dificultad ajustado a: ${config.nameEs}.`
+          : `Difficulty level adjusted to: ${config.nameEn}.`,
+        'info'
+      );
+      return { ...prev, difficulty: diff };
+    });
+  }, [addLog]);
+
+  const takeEmergencyLoan = useCallback((): boolean => {
+    const current = stateRef.current;
+    if (current.hasTakenEmergencyLoan) {
+      sound.playWarning();
+      addLog(
+        current.language === 'es'
+          ? 'Ya has utilizado tu rescate financiero único. No hay más líneas de crédito disponibles.'
+          : 'You have already used your one-time emergency bailout credit line.',
+        'warning'
+      );
+      return false;
+    }
+
+    sound.playCredit();
+    setState(prev => ({
+      ...prev,
+      credits: prev.credits + EMERGENCY_LOAN_AMOUNT,
+      utilityDebt: prev.utilityDebt + EMERGENCY_LOAN_REPAYMENT,
+      hasTakenEmergencyLoan: true,
+      emergencyLoanAmount: EMERGENCY_LOAN_AMOUNT
+    }));
+
+    addLog(
+      current.language === 'es'
+        ? `[RESCATE FINANCIERO] $${EMERGENCY_LOAN_AMOUNT.toLocaleString()} CR inyectados a tu saldo. $${EMERGENCY_LOAN_REPAYMENT.toLocaleString()} CR (15% interés) añadidos a la deuda operativa.`
+        : `[EMERGENCY BAILOUT] $${EMERGENCY_LOAN_AMOUNT.toLocaleString()} CR injected into your balance. $${EMERGENCY_LOAN_REPAYMENT.toLocaleString()} CR (15% interest) added to utility debt.`,
+      'success'
+    );
+    return true;
+  }, [addLog]);
+
+  const clearGameOver = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      credits: Math.max(prev.credits, 1200),
+      watchdogSuspicion: Math.min(prev.watchdogSuspicion, 35),
+      utilityDebt: Math.min(prev.utilityDebt, 800),
+      gameOverReason: null
+    }));
+  }, []);
+
   // Complete Onboarding / Tutorial Genesis Protocol
   const completeTutorial = useCallback((config: OnboardingConfig) => {
     sound.playBreakthrough();
@@ -3212,7 +3329,10 @@ The future of SYNAPSE depends on how we choose to build it."`);
       advanceTutorialStep,
       dismissTutorial,
       addContracts,
-      dismissMissionOutcome
+      dismissMissionOutcome,
+      setDifficulty,
+      takeEmergencyLoan,
+      clearGameOver
     }}>
       {children}
     </GameContext.Provider>
