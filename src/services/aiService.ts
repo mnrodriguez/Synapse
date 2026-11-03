@@ -248,6 +248,8 @@ export async function evaluateMissionTeamWithModel(
   const baseline = evaluateMissionTeam(mission, agents, models, dataSources, guardrails);
   const fallback: ModelMissionAssessment = {
     ...baseline,
+    summary: baseline.summary || (language === 'en' ? 'AI evaluation complete.' : 'Evaluación IA completada.'),
+    agentTasks: baseline.agentTasks || {},
     provider: 'ai-decision-model'
   };
 
