@@ -1158,114 +1158,134 @@ export const AgentSandbox: React.FC = () => {
                     <Sliders className="w-3.5 h-3.5 text-cyan-400" />
                     <span>{t(state.language, 'inference_hyperparams')}</span>
                   </div>
-                  <span className="text-[10px] text-zinc-400 font-mono">{localize(state.language, 'MATRIZ DE MUESTREO', 'SAMPLING MATRIX')}</span>
+                  <span className="text-[10px] text-purple-400 font-bold font-mono">
+                    {state.difficulty === 'beginner' ? (state.language === 'es' ? 'AUTOMATIZADO' : 'AUTOMATED') : 'SAMPLING MATRIX'}
+                  </span>
                 </div>
 
-                <p className="text-[10px] text-zinc-400">
-                  {t(state.language, 'hyperparams_desc')}
-                </p>
-
-                {/* Temperature Slider */}
-                <div>
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-zinc-300 font-bold flex items-center gap-1.5 flex-wrap">
-                      <span>{t(state.language, 'param_temperature')}:</span>
-                      <DocLinkBadge doc={INFERENCE_DOCS.temperature} language={state.language} />
-                      <span className="text-cyan-300 font-mono font-bold">{temperature.toFixed(2)}</span>
-                    </span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold border ${
-                      temperature < 0.35
-                        ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
-                        : temperature > 0.95
-                        ? 'bg-red-950 border-red-500 text-red-300 animate-pulse'
-                        : 'bg-cyan-950 border-cyan-500 text-cyan-300'
-                    }`}>
-                      {temperature < 0.35 
-                        ? (state.language === 'es' ? 'Determinista / Seguro' : 'Deterministic / Safe')
-                        : temperature > 0.95
-                        ? (state.language === 'es' ? 'Creativo / Volátil (+Rendimiento, +Riesgo)' : 'Creative / Volatile (+Yield, +Risk)')
-                        : (state.language === 'es' ? 'Equilibrado' : 'Balanced')}
-                    </span>
+                {state.difficulty === 'beginner' ? (
+                  <div className="p-2.5 rounded bg-purple-950/30 border border-purple-500/40 text-[10px] space-y-1.5 font-mono">
+                    <div className="font-bold text-purple-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      <span>{localize(state.language, 'MUESTREO AUTOMÁTICO EN MODO PRINCIPIANTE', 'AUTOMATED SAMPLING IN BEGINNER MODE')}</span>
+                    </div>
+                    <p className="text-zinc-300 leading-snug">
+                      {localize(
+                        state.language,
+                        'Los parámetros de inferencia (Temperatura = 0.70, Top-P = 0.90, Top-K = 40) han sido configurados automáticamente con valores óptimos para garantizar estabilidad.',
+                        'Inference parameters (Temperature = 0.70, Top-P = 0.90, Top-K = 40) are automatically set to stable, recommended defaults for the selected role.'
+                      )}
+                    </p>
                   </div>
-                  <input
-                    type="range"
-                    min="0.0"
-                    max="2.0"
-                    step="0.05"
-                    value={temperature}
-                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                    className="w-full accent-cyan-400 cursor-pointer"
-                  />
-                  <p className="text-[9px] text-zinc-500 mt-0.5">
-                    {t(state.language, 'param_temperature_desc')}
-                  </p>
-                </div>
+                ) : (
+                  <>
+                    <p className="text-[10px] text-zinc-400">
+                      {t(state.language, 'hyperparams_desc')}
+                    </p>
 
-                {/* Dual Column: Top-P & Top-K */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-800/80">
-                  {/* Top-P */}
-                  <div>
-                    <div className="flex justify-between items-center text-xs mb-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-zinc-300 font-bold">{t(state.language, 'param_top_p')}:</span>
-                        <DocLinkBadge doc={INFERENCE_DOCS.top_p} language={state.language} />
+                    {/* Temperature Slider */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-zinc-300 font-bold flex items-center gap-1.5 flex-wrap">
+                          <span>{t(state.language, 'param_temperature')}:</span>
+                          <DocLinkBadge doc={INFERENCE_DOCS.temperature} language={state.language} />
+                          <span className="text-cyan-300 font-mono font-bold">{temperature.toFixed(2)}</span>
+                        </span>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold border ${
+                          temperature < 0.35
+                            ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
+                            : temperature > 0.95
+                            ? 'bg-red-950 border-red-500 text-red-300 animate-pulse'
+                            : 'bg-cyan-950 border-cyan-500 text-cyan-300'
+                        }`}>
+                          {temperature < 0.35
+                            ? (state.language === 'es' ? 'Determinista / Seguro' : 'Deterministic / Safe')
+                            : temperature > 0.95
+                            ? (state.language === 'es' ? 'Creativo / Volátil (+Rendimiento, +Riesgo)' : 'Creative / Volatile (+Yield, +Risk)')
+                            : (state.language === 'es' ? 'Equilibrado' : 'Balanced')}
+                        </span>
                       </div>
-                      <span className="text-purple-300 font-mono font-bold">{topP.toFixed(2)}</span>
+                      <input
+                        type="range"
+                        min="0.0"
+                        max="2.0"
+                        step="0.05"
+                        value={temperature}
+                        onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                        className="w-full accent-cyan-400 cursor-pointer"
+                      />
+                      <p className="text-[9px] text-zinc-500 mt-0.5">
+                        {t(state.language, 'param_temperature_desc')}
+                      </p>
                     </div>
-                    <input
-                      type="range"
-                      min="0.10"
-                      max="1.00"
-                      step="0.05"
-                      value={topP}
-                      onChange={(e) => setTopP(parseFloat(e.target.value))}
-                      className="w-full accent-purple-400 cursor-pointer"
-                    />
-                    <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_top_p_desc')}</p>
-                  </div>
 
-                  {/* Top-K */}
-                  <div>
-                    <div className="flex justify-between items-center text-xs mb-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-zinc-300 font-bold">{t(state.language, 'param_top_k')}:</span>
-                        <DocLinkBadge doc={INFERENCE_DOCS.top_k} language={state.language} />
+                    {/* Dual Column: Top-P & Top-K */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-800/80">
+                      {/* Top-P */}
+                      <div>
+                        <div className="flex justify-between items-center text-xs mb-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-zinc-300 font-bold">{t(state.language, 'param_top_p')}:</span>
+                            <DocLinkBadge doc={INFERENCE_DOCS.top_p} language={state.language} />
+                          </div>
+                          <span className="text-purple-300 font-mono font-bold">{topP.toFixed(2)}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0.10"
+                          max="1.00"
+                          step="0.05"
+                          value={topP}
+                          onChange={(e) => setTopP(parseFloat(e.target.value))}
+                          className="w-full accent-purple-400 cursor-pointer"
+                        />
+                        <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_top_p_desc')}</p>
                       </div>
-                      <span className="text-yellow-300 font-mono font-bold">{topK} tokens</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="1"
-                      max="100"
-                      step="1"
-                      value={topK}
-                      onChange={(e) => setTopK(parseInt(e.target.value))}
-                      className="w-full accent-yellow-400 cursor-pointer"
-                    />
-                    <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_top_k_desc')}</p>
-                  </div>
-                </div>
 
-                {/* Repetition Penalty */}
-                <div className="pt-2 border-t border-zinc-800/80">
-                  <div className="flex justify-between items-center text-xs mb-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-zinc-300 font-bold">{t(state.language, 'param_repetition_penalty')}:</span>
-                      <DocLinkBadge doc={INFERENCE_DOCS.repetition_penalty} language={state.language} />
+                      {/* Top-K */}
+                      <div>
+                        <div className="flex justify-between items-center text-xs mb-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-zinc-300 font-bold">{t(state.language, 'param_top_k')}:</span>
+                            <DocLinkBadge doc={INFERENCE_DOCS.top_k} language={state.language} />
+                          </div>
+                          <span className="text-yellow-300 font-mono font-bold">{topK} tokens</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="1"
+                          max="100"
+                          step="1"
+                          value={topK}
+                          onChange={(e) => setTopK(parseInt(e.target.value))}
+                          className="w-full accent-yellow-400 cursor-pointer"
+                        />
+                        <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_top_k_desc')}</p>
+                      </div>
                     </div>
-                    <span className="text-emerald-300 font-mono font-bold">{repetitionPenalty.toFixed(2)}x</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1.00"
-                    max="2.00"
-                    step="0.05"
-                    value={repetitionPenalty}
-                    onChange={(e) => setRepetitionPenalty(parseFloat(e.target.value))}
-                    className="w-full accent-emerald-400 cursor-pointer"
-                  />
-                  <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_repetition_penalty_desc')}</p>
-                </div>
+
+                    {/* Repetition Penalty */}
+                    <div className="pt-2 border-t border-zinc-800/80">
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-zinc-300 font-bold">{t(state.language, 'param_repetition_penalty')}:</span>
+                          <DocLinkBadge doc={INFERENCE_DOCS.repetition_penalty} language={state.language} />
+                        </div>
+                        <span className="text-emerald-300 font-mono font-bold">{repetitionPenalty.toFixed(2)}x</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1.00"
+                        max="2.00"
+                        step="0.05"
+                        value={repetitionPenalty}
+                        onChange={(e) => setRepetitionPenalty(parseFloat(e.target.value))}
+                        className="w-full accent-emerald-400 cursor-pointer"
+                      />
+                      <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_repetition_penalty_desc')}</p>
+                    </div>
+                  </>
+                )}
 
                 {/* Root System Prompt */}
                 <div className="pt-2 border-t border-zinc-800/80">

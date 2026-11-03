@@ -697,7 +697,7 @@ export const DataPipelineManager: React.FC = () => {
                               <span className="text-zinc-200 font-bold">{ds.tokensCount}M tok</span>
                             </div>
                             <div>
-                              <span className="text-zinc-500 block text-[9px]">PUREZA</span>
+                              <span className="text-zinc-500 block text-[9px]">{localize(state.language, 'PUREZA', 'PURITY')}</span>
                               <span className="text-emerald-400 font-bold">{ds.qualityScore}%</span>
                             </div>
                             <div>

@@ -496,7 +496,7 @@ export const ArchitectureStudio: React.FC = () => {
                     {isGeneral ? 'GENERAL T1' : `SPECIALIST T${dataset.tier}`}
                   </span>
                   <span>{dataset.tokensCount}M tok</span>
-                  <span>{dataset.qualityScore}% pureza</span>
+                  <span>{dataset.qualityScore}% {localize(state.language, 'pureza', 'purity')}</span>
                 </div>
                 <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2 leading-tight">
                   {dataset.description}

@@ -3259,7 +3259,7 @@ The future of SYNAPSE depends on how we choose to build it."`);
     const currentLang = stateRef.current.language;
     const initialTabs = chosenDifficulty === 'engineer'
       ? ['architecture', 'data', 'hardware', 'contracts', 'research', 'training', 'agents', 'roadmap', 'singularity']
-      : ['architecture', 'training'];
+      : ['architecture', 'training', 'contracts'];
 
     const genesisState: GameState = {
       ...DEFAULT_STATE,
@@ -3267,7 +3267,8 @@ The future of SYNAPSE depends on how we choose to build it."`);
       callsign: config.callsign.toUpperCase().trim() || 'CIPHER-1',
       credits: initialCredits,
       difficulty: chosenDifficulty,
-      tutorialCompleted: true,
+      tutorialCompleted: false, // Stays active for Stage 5: First Contract Mission
+      tutorialStep: 4, // Stage 5: Solve First Mission
       unlockedTabs: initialTabs,
       unlockedAllTabs: chosenDifficulty === 'engineer',
       gameDay: 1,
