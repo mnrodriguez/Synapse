@@ -970,10 +970,6 @@ export const GenesisOnboarding: React.FC = () => {
                   : 'bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed opacity-40'
               }`}
             >
-              <Sparkles className="w-4 h-4" />
-              <span>{localize(state.language, 'CONECTAR AL BUCLE NEURAL', 'LAUNCH SYNAPSE NODE')}</span>
-            </button>
-            >
               <CheckCircle2 className="w-4 h-4" />
               <span>{localize(state.language, 'INGRESAR A SYNAPSE OS (COMENZAR SIMULACIÓN)', 'ENTER SYNAPSE OS (START SIMULATION)')}</span>
             </button>
