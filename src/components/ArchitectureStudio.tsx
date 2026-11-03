@@ -179,7 +179,13 @@ export const ArchitectureStudio: React.FC = () => {
     systemPrompt: 'You are an autonomous machine intelligence.'
   };
 
-  const paramPresets = [
+  const isBeginner = state.difficulty === 'beginner';
+
+  const paramPresets = isBeginner ? [
+    { label: '14M (Proto)', value: 14_000_000 },
+    { label: '70M (Compact)', value: 70_000_000 },
+    { label: '500M (Standard)', value: 500_000_000 }
+  ] : [
     { label: '14M', value: 14_000_000 },
     { label: '70M', value: 70_000_000 },
     { label: '500M', value: 500_000_000 },
@@ -191,7 +197,7 @@ export const ArchitectureStudio: React.FC = () => {
     { label: '1T', value: 1_000_000_000_000 }
   ];
 
-  const contextPresets = [2048, 4096, 8192, 32768, 128000, 1000000];
+  const contextPresets = isBeginner ? [2048, 4096] : [2048, 4096, 8192, 32768, 128000, 1000000];
 
   return (
     <div className="flex flex-col h-full bg-[#070b12] border border-cyan-900/40 rounded-lg p-3 overflow-y-auto space-y-4 font-mono scrollbar-thin scrollbar-thumb-cyan-950">
@@ -668,159 +674,188 @@ export const ArchitectureStudio: React.FC = () => {
       </div>
 
       {/* Section 3: Quantization & Attention & Loss */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* Quantization */}
-        <div className="space-y-1.5">
-          <label className="text-xs text-zinc-400 font-bold">{t(state.language, 'quantization')}</label>
-          <div className="space-y-1">
-            {[
-              { id: 'fp32', label: 'FP32 Full (4 bytes/param)', hint: localize(state.language, 'Precisión pura, máxima VRAM', 'Full precision; maximum VRAM') },
-              { id: 'bf16', label: 'BF16 Standard (2 bytes/param)', hint: localize(state.language, 'Rango dinámico de bfloat16', 'bfloat16 dynamic range') },
-              { id: 'int8', label: 'INT8 Quantized (1 byte/param)', hint: localize(state.language, 'Ideal para GPUs GTX / RTX', 'Suitable for GTX / RTX GPUs') },
-              { id: 'fp4', label: 'FP4 Blackwell (0.5 byte/param)', hint: localize(state.language, 'Ultra-comprimido para 70B+', 'Ultra-compressed for 70B+') },
-              { id: 'ternary_1bit', label: 'BitNet 1.58-bit Ternary', hint: localize(state.language, 'Solo {-1, 0, +1}, mínimo consumo', 'Only {-1, 0, +1}; minimal memory use') }
-            ].map(q => (
-              (() => {
-                const unlocked = isOptionUnlocked('quantization', q.id);
-                return (
-              <div
-                key={q.id}
-                role="button"
-                tabIndex={unlocked ? 0 : -1}
-                aria-disabled={!unlocked}
-                onClick={() => {
-                  if (unlocked) handleQuantizationChange(q.id as QuantizationType);
-                }}
-                onKeyDown={(e) => {
-                  if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
-                    e.preventDefault();
-                    handleQuantizationChange(q.id as QuantizationType);
-                  }
-                }}
-                className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
-                  !unlocked
-                    ? 'cursor-not-allowed opacity-40 bg-zinc-900/40 border-zinc-800 text-zinc-500'
-                    : current.quantization === q.id
-                    ? 'cursor-pointer bg-cyan-950/70 border-cyan-400 text-cyan-200'
-                    : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold">{q.label}</div>
-                  {QUANTIZATION_DOCS[q.id] && (
-                    <DocLinkBadge doc={QUANTIZATION_DOCS[q.id]} language={state.language} />
-                  )}
-                  {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
-                </div>
-                <div className="text-[9px] text-zinc-500">{q.hint}</div>
-              </div>
-                );
-              })()
-            ))}
+      {isBeginner ? (
+        <div className="p-3 rounded bg-[#080d16] border border-purple-900/50 text-xs space-y-2 font-mono">
+          <div className="font-bold text-purple-300 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <span>{localize(state.language, 'HIPERPARÁMETROS AUTOMATIZADOS (MODO PRINCIPIANTE)', 'AUTOMATED HYPERPARAMETERS (BEGINNER MODE)')}</span>
+          </div>
+          <p className="text-[10px] text-zinc-400">
+            {localize(state.language, 'En modo Principiante, la precisión matemática, la atención y la función de pérdida se configuran automáticamente con valores óptimos para garantizar estabilidad.', 'In Beginner mode, quantization, attention mechanism, and loss function are automatically set to stable, optimal defaults.')}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] pt-1">
+            <div className="p-2 rounded bg-zinc-950 border border-zinc-800">
+              <span className="text-zinc-500 block font-bold">{localize(state.language, 'CUANTIZACIÓN:', 'QUANTIZATION:')}</span>
+              <span className="font-bold text-cyan-300">INT8 Quantized (1 byte/param)</span>
+              <span className="text-zinc-500 block text-[9px] mt-0.5">{localize(state.language, 'Balance ideal de memoria VRAM', 'Ideal VRAM balance')}</span>
+            </div>
+            <div className="p-2 rounded bg-zinc-950 border border-zinc-800">
+              <span className="text-zinc-500 block font-bold">{localize(state.language, 'ATENCIÓN:', 'ATTENTION:')}</span>
+              <span className="font-bold text-purple-300">Standard MHA / FlashAttention</span>
+              <span className="text-zinc-500 block text-[9px] mt-0.5">{localize(state.language, 'Procesamiento de contexto estable', 'Stable context processing')}</span>
+            </div>
+            <div className="p-2 rounded bg-zinc-950 border border-zinc-800">
+              <span className="text-zinc-500 block font-bold">{localize(state.language, 'FUNCIÓN DE PÉRDIDA:', 'LOSS FUNCTION:')}</span>
+              <span className="font-bold text-yellow-300">Cross-Entropy Loss</span>
+              <span className="text-zinc-500 block text-[9px] mt-0.5">{localize(state.language, 'Convergencia rápida y predecible', 'Predictable fast convergence')}</span>
+            </div>
           </div>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Quantization */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-zinc-400 font-bold">{t(state.language, 'quantization')}</label>
+            <div className="space-y-1">
+              {[
+                { id: 'fp32', label: 'FP32 Full (4 bytes/param)', hint: localize(state.language, 'Precisión pura, máxima VRAM', 'Full precision; maximum VRAM') },
+                { id: 'bf16', label: 'BF16 Standard (2 bytes/param)', hint: localize(state.language, 'Rango dinámico de bfloat16', 'bfloat16 dynamic range') },
+                { id: 'int8', label: 'INT8 Quantized (1 byte/param)', hint: localize(state.language, 'Ideal para GPUs GTX / RTX', 'Suitable for GTX / RTX GPUs') },
+                { id: 'fp4', label: 'FP4 Blackwell (0.5 byte/param)', hint: localize(state.language, 'Ultra-comprimido para 70B+', 'Ultra-compressed for 70B+') },
+                { id: 'ternary_1bit', label: 'BitNet 1.58-bit Ternary', hint: localize(state.language, 'Solo {-1, 0, +1}, mínimo consumo', 'Only {-1, 0, +1}; minimal memory use') }
+              ].map(q => (
+                (() => {
+                  const unlocked = isOptionUnlocked('quantization', q.id);
+                  return (
+                <div
+                  key={q.id}
+                  role="button"
+                  tabIndex={unlocked ? 0 : -1}
+                  aria-disabled={!unlocked}
+                  onClick={() => {
+                    if (unlocked) handleQuantizationChange(q.id as QuantizationType);
+                  }}
+                  onKeyDown={(e) => {
+                    if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      handleQuantizationChange(q.id as QuantizationType);
+                    }
+                  }}
+                  className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
+                    !unlocked
+                      ? 'cursor-not-allowed opacity-40 bg-zinc-900/40 border-zinc-800 text-zinc-500'
+                      : current.quantization === q.id
+                      ? 'cursor-pointer bg-cyan-950/70 border-cyan-400 text-cyan-200'
+                      : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold">{q.label}</div>
+                    {QUANTIZATION_DOCS[q.id] && (
+                      <DocLinkBadge doc={QUANTIZATION_DOCS[q.id]} language={state.language} />
+                    )}
+                    {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
+                  </div>
+                  <div className="text-[9px] text-zinc-500">{q.hint}</div>
+                </div>
+                  );
+                })()
+              ))}
+            </div>
+          </div>
 
-        {/* Attention Mechanism */}
-        <div className="space-y-1.5">
-          <label className="text-xs text-zinc-400 font-bold">{localize(state.language, 'MECANISMO DE ATENCIÓN', 'ATTENTION MECHANISM')}</label>
-          <div className="space-y-1">
-            {[
-              { id: 'standard_mha', label: 'Multi-Head Attention (MHA)', hint: localize(state.language, 'Atención tradicional dot-product', 'Traditional dot-product attention') },
-              { id: 'grouped_query_gqa', label: 'Grouped-Query (GQA)', hint: localize(state.language, 'Reduce tamaño de KV cache a 1/8', 'Reduces KV-cache size to 1/8') },
-              { id: 'flash_attention_3', label: 'FlashAttention-3', hint: localize(state.language, 'Tiling en SRAM, velocidad x2', 'SRAM tiling; up to 2x speed') },
-              { id: 'linear_attention', label: 'Linear Attention', hint: localize(state.language, 'Kernelización de baja complejidad', 'Low-complexity kernelization') }
-            ].map(att => (
-              (() => {
-                const unlocked = isOptionUnlocked('attention', att.id);
-                return (
-              <div
-                key={att.id}
-                role="button"
-                tabIndex={unlocked ? 0 : -1}
-                aria-disabled={!unlocked}
-                onClick={() => {
-                  if (unlocked) handleAttentionChange(att.id as AttentionType);
-                }}
-                onKeyDown={(e) => {
-                  if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
-                    e.preventDefault();
-                    handleAttentionChange(att.id as AttentionType);
-                  }
-                }}
-                className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
-                  !unlocked
-                    ? 'cursor-not-allowed opacity-40 bg-zinc-900/40 border-zinc-800 text-zinc-500'
-                    : current.attention === att.id
-                    ? 'cursor-pointer bg-purple-950/70 border-purple-400 text-purple-200'
-                    : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold">{att.label}</div>
-                  {ATTENTION_DOCS[att.id] && (
-                    <DocLinkBadge doc={ATTENTION_DOCS[att.id]} language={state.language} />
-                  )}
-                  {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
+          {/* Attention Mechanism */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-zinc-400 font-bold">{localize(state.language, 'MECANISMO DE ATENCIÓN', 'ATTENTION MECHANISM')}</label>
+            <div className="space-y-1">
+              {[
+                { id: 'standard_mha', label: 'Multi-Head Attention (MHA)', hint: localize(state.language, 'Atención tradicional dot-product', 'Traditional dot-product attention') },
+                { id: 'grouped_query_gqa', label: 'Grouped-Query (GQA)', hint: localize(state.language, 'Reduce tamaño de KV cache a 1/8', 'Reduces KV-cache size to 1/8') },
+                { id: 'flash_attention_3', label: 'FlashAttention-3', hint: localize(state.language, 'Tiling en SRAM, velocidad x2', 'SRAM tiling; up to 2x speed') },
+                { id: 'linear_attention', label: 'Linear Attention', hint: localize(state.language, 'Kernelización de baja complejidad', 'Low-complexity kernelization') }
+              ].map(att => (
+                (() => {
+                  const unlocked = isOptionUnlocked('attention', att.id);
+                  return (
+                <div
+                  key={att.id}
+                  role="button"
+                  tabIndex={unlocked ? 0 : -1}
+                  aria-disabled={!unlocked}
+                  onClick={() => {
+                    if (unlocked) handleAttentionChange(att.id as AttentionType);
+                  }}
+                  onKeyDown={(e) => {
+                    if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      handleAttentionChange(att.id as AttentionType);
+                    }
+                  }}
+                  className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
+                    !unlocked
+                      ? 'cursor-not-allowed opacity-40 bg-zinc-900/40 border-zinc-800 text-zinc-500'
+                      : current.attention === att.id
+                      ? 'cursor-pointer bg-purple-950/70 border-purple-400 text-purple-200'
+                      : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold">{att.label}</div>
+                    {ATTENTION_DOCS[att.id] && (
+                      <DocLinkBadge doc={ATTENTION_DOCS[att.id]} language={state.language} />
+                    )}
+                    {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
+                  </div>
+                  <div className="text-[9px] text-zinc-500">{att.hint}</div>
                 </div>
-                <div className="text-[9px] text-zinc-500">{att.hint}</div>
-              </div>
-                );
-              })()
-            ))}
+                  );
+                })()
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Loss & Alignment Objective */}
-        <div className="space-y-1.5">
-          <label className="text-xs text-zinc-400 font-bold">{localize(state.language, 'FUNCIÓN DE PÉRDIDA Y ALINEACIÓN', 'LOSS & ALIGNMENT OBJECTIVE')}</label>
-          <div className="space-y-1">
-            {[
-              { id: 'cross_entropy', label: 'Cross-Entropy Pretraining', hint: localize(state.language, 'Predicción del siguiente token estándar', 'Standard next-token prediction') },
-              { id: 'dpo', label: 'Direct Preference Optimization (DPO)', hint: localize(state.language, 'Alineación analítica sin modelo de recompensa', 'Analytical alignment without a reward model') },
-              { id: 'ppo_rlhf', label: 'PPO / Reinforcement Learning', hint: localize(state.language, 'Optimización de política con retroalimentación', 'Policy optimization with feedback') },
-              { id: 'contrastive_infonce', label: 'Contrastive InfoNCE', hint: localize(state.language, 'Representaciones latentes conjuntas', 'Joint latent representations') },
-              { id: 'energy_based', label: 'Energy-Based Objective', hint: localize(state.language, 'Minimización de energía libre del sistema', 'System free-energy minimization') }
-            ].map(loss => (
-              (() => {
-                const unlocked = isOptionUnlocked('lossFunction', loss.id);
-                return (
-              <div
-                key={loss.id}
-                role="button"
-                tabIndex={unlocked ? 0 : -1}
-                aria-disabled={!unlocked}
-                onClick={() => {
-                  if (unlocked) handleLossChange(loss.id as LossFunction);
-                }}
-                onKeyDown={(e) => {
-                  if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
-                    e.preventDefault();
-                    handleLossChange(loss.id as LossFunction);
-                  }
-                }}
-                className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
-                  !unlocked
-                    ? 'cursor-not-allowed opacity-40 bg-zinc-900/40 border-zinc-800 text-zinc-500'
-                    : current.lossFunction === loss.id
-                    ? 'cursor-pointer bg-emerald-950/70 border-emerald-400 text-emerald-200'
-                    : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold">{loss.label}</div>
-                  {LOSS_DOCS[loss.id] && (
-                    <DocLinkBadge doc={LOSS_DOCS[loss.id]} language={state.language} />
-                  )}
-                  {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
+          {/* Loss & Alignment Objective */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-zinc-400 font-bold">{localize(state.language, 'FUNCIÓN DE PÉRDIDA Y ALINEACIÓN', 'LOSS & ALIGNMENT OBJECTIVE')}</label>
+            <div className="space-y-1">
+              {[
+                { id: 'cross_entropy', label: 'Cross-Entropy Pretraining', hint: localize(state.language, 'Predicción del siguiente token estándar', 'Standard next-token prediction') },
+                { id: 'dpo', label: 'Direct Preference Optimization (DPO)', hint: localize(state.language, 'Alineación analítica sin modelo de recompensa', 'Analytical alignment without a reward model') },
+                { id: 'ppo_rlhf', label: 'PPO / Reinforcement Learning', hint: localize(state.language, 'Optimización de política con retroalimentación', 'Policy optimization with feedback') },
+                { id: 'contrastive_infonce', label: 'Contrastive InfoNCE', hint: localize(state.language, 'Representaciones latentes conjuntas', 'Joint latent representations') },
+                { id: 'energy_based', label: 'Energy-Based Objective', hint: localize(state.language, 'Minimización de energía libre del sistema', 'System free-energy minimization') }
+              ].map(loss => (
+                (() => {
+                  const unlocked = isOptionUnlocked('lossFunction', loss.id);
+                  return (
+                <div
+                  key={loss.id}
+                  role="button"
+                  tabIndex={unlocked ? 0 : -1}
+                  aria-disabled={!unlocked}
+                  onClick={() => {
+                    if (unlocked) handleLossChange(loss.id as LossFunction);
+                  }}
+                  onKeyDown={(e) => {
+                    if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      handleLossChange(loss.id as LossFunction);
+                    }
+                  }}
+                  className={`w-full text-left p-1.5 rounded border text-xs transition-colors ${
+                    !unlocked
+                      ? 'cursor-not-allowed opacity-40 bg-zinc-900/40 border-zinc-800 text-zinc-500'
+                      : current.lossFunction === loss.id
+                      ? 'cursor-pointer bg-emerald-950/70 border-emerald-400 text-emerald-200'
+                      : 'cursor-pointer bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold">{loss.label}</div>
+                    {LOSS_DOCS[loss.id] && (
+                      <DocLinkBadge doc={LOSS_DOCS[loss.id]} language={state.language} />
+                    )}
+                    {!unlocked && <Lock className="h-3 w-3 text-zinc-500" />}
+                  </div>
+                  <div className="text-[9px] text-zinc-500">{loss.hint}</div>
                 </div>
-                <div className="text-[9px] text-zinc-500">{loss.hint}</div>
-              </div>
-                );
-              })()
-            ))}
+                  );
+                })()
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Section 4: Connected Data Pipelines (User requested: Graph, Vector, SQL) */}
       <div className="space-y-1.5 bg-[#080e18] border border-cyan-900/40 p-3 rounded">

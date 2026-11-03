@@ -23,11 +23,13 @@ const hardwareEnglish: Record<string, HardwareCopy> = {
   cool_liquid_loop: { name: 'Closed-Loop Liquid Cooling', description: 'A closed liquid-cooling circuit for systems with higher thermal loads.' },
   cool_immersion_dielectric: { name: 'Two-Phase Dielectric Immersion Tank', description: 'Immersion cooling for dense clusters, with additional infrastructure and maintenance costs.' },
   cool_cryogenic_helium: { name: '4-Kelvin Liquid Helium Cooling', description: 'Fictional cryogenic cooling with very high capacity and substantial operating requirements.' },
-  power_wall_socket: { name: 'Residential Power Outlet (15A - 110/220V)', description: 'A standard household supply for a small starter system.' },
+  power_wall_socket: { name: 'Residential Power Outlet (15A - 1.5 kW)', description: 'Standard household power supply. Mandatory to power your GPU and cooling fans.' },
+  power_solar_array: { name: 'Residential Solar Micro-Inverter (3.0 kW)', description: 'Auxiliary solar panels. Doubles your power capacity without overloading household circuit breakers.' },
   power_industrial_3phase: { name: 'Industrial Three-Phase Service (400V)', description: 'A high-capacity electrical connection for larger compute installations.' },
   power_gas_turbine: { name: 'Dedicated 250kW Natural Gas Turbine', description: 'On-site generation for installations that exceed standard utility capacity.' },
   power_smr_nuclear: { name: 'Modular Molten-Salt Nuclear Reactor (SMR)', description: 'Fictional modular generation for a large-scale facility.' },
-  net_gigabit: { name: 'Gigabit Ethernet Cat 6 (1 Gbps)', description: 'A basic wired network link for a small cluster.' },
+  net_gigabit: { name: 'Gigabit Ethernet Cat 6 (1 Gbps)', description: 'High-speed standard internet connection. Mandatory to fetch training datasets and communicate agents.' },
+  net_fiber_10g: { name: 'Dedicated Point-to-Point Fiber (10 Gbps)', description: 'Symmetrical enterprise fiber optic link. Accelerates massive data streaming and reduces latency.' },
   net_infiniband_ndr: { name: 'InfiniBand Quantum-2 NDR (400 Gbps RoCE)', description: 'A high-bandwidth interconnect for multi-accelerator workloads.' },
   net_quantum_bus: { name: 'Entangled Quantum Link Bus (Terabits/s)', description: 'Fictional ultra-high-bandwidth interconnect for late-game infrastructure.' }
 };

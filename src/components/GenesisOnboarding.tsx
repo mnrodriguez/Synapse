@@ -675,16 +675,25 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="space-y-2.5">
                 {starterDataOptions.map(ds => {
                   const Icon = ds.icon;
-                  const isSelected = selectedData === ds.id;
+                  const isUnlocked = ds.id === 'data_relational_sql';
+                  const isSelected = selectedData === ds.id && isUnlocked;
                   return (
                     <button
                       key={ds.id}
                       type="button"
-                      onClick={() => { sound.playKeyClick(); setSelectedData(ds.id); }}
+                      disabled={!isUnlocked}
+                      onClick={() => {
+                        if (isUnlocked) {
+                          sound.playKeyClick();
+                          setSelectedData(ds.id);
+                        }
+                      }}
                       className={`w-full p-3 rounded-lg border text-left transition-all flex items-start gap-3 ${
-                        isSelected
-                          ? 'bg-cyan-950/70 border-cyan-400 shadow-[0_0_15px_rgba(0,255,200,0.15)] text-cyan-100'
-                          : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                        !isUnlocked
+                          ? 'bg-zinc-950/80 border-zinc-900 text-zinc-600 opacity-60 cursor-not-allowed'
+                          : isSelected
+                          ? 'bg-cyan-950/70 border-cyan-400 shadow-[0_0_15px_rgba(0,255,200,0.15)] text-cyan-100 cursor-pointer'
+                          : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700 cursor-pointer'
                       }`}
                     >
                       <div className="p-2 rounded bg-zinc-900 border border-zinc-700 mt-0.5">
@@ -693,12 +702,22 @@ export const GenesisOnboarding: React.FC = () => {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h4 className="font-bold text-xs text-zinc-100">{en ? dataEnglishCopy[ds.id]?.name ?? ds.name : ds.name}</h4>
-                          {isSelected && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
+                          {isSelected ? (
+                            <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                          ) : !isUnlocked ? (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-purple-950/80 border border-purple-500/40 text-purple-300 font-bold rounded">
+                              🔒 {isEs ? 'Bloqueado al inicio' : 'Locked at start'}
+                            </span>
+                          ) : null}
                         </div>
                         <p className="text-xs text-zinc-300 mt-1">{en ? dataEnglishCopy[ds.id]?.desc ?? ds.desc : ds.desc}</p>
                         <div className="p-1.5 mt-2 bg-[#05080e] border border-cyan-950 rounded text-[10px] space-y-0.5">
                           <span className="text-purple-300 font-bold block">{en ? dataEnglishCopy[ds.id]?.bonus ?? ds.bonus : ds.bonus}</span>
-                          <span className="text-zinc-500 block">{en ? dataEnglishCopy[ds.id]?.lore ?? ds.lore : ds.lore}</span>
+                          <span className="text-zinc-500 block">
+                            {!isUnlocked
+                              ? (isEs ? 'Se desbloquea más adelante en la pestaña Motores de Datos tras entrenar tu modelo.' : 'Unlocks later in Data Engines tab after training your model.')
+                              : (en ? dataEnglishCopy[ds.id]?.lore ?? ds.lore : ds.lore)}
+                          </span>
                         </div>
                       </div>
                     </button>

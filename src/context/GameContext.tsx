@@ -2100,6 +2100,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sound.playCommandExecute();
     setState(prev => ({
       ...prev,
+      gameSpeed: prev.gameSpeed === 0 ? 1 : prev.gameSpeed,
       tutorialStep: (prev.tutorialStep ?? 0) <= 1 ? 2 : prev.tutorialStep,
       activeTraining: job,
       currentModel: {
