@@ -20,6 +20,7 @@ import { HelpManual } from './components/HelpManual';
 import { AgentSandbox } from './components/AgentSandbox';
 import { BreachModal } from './components/BreachModal';
 import { GameOverModal } from './components/GameOverModal';
+import { GenesisOnboarding } from './components/GenesisOnboarding';
 import { TutorialMissionBanner } from './components/TutorialMissionBanner';
 import { ProgressionRoadmap } from './components/ProgressionRoadmap';
 import { AiSuggestionBanner } from './components/AiSuggestionBanner';
@@ -227,6 +228,9 @@ const MainGameScreen: React.FC = () => {
           </aside>
         )}
       </main>
+
+      {/* Onboarding Genesis Protocol Screen */}
+      {!state.tutorialCompleted && <GenesisOnboarding />}
 
       {/* Real-World AI Guardrail Breach Incident Popup */}
       <BreachModal />
