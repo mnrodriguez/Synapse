@@ -205,6 +205,26 @@ export const GenesisOnboarding: React.FC = () => {
       desc: 'High-flow cooling with direct copper contact for more powerful setups.'
     }
   };
+  const powerEnglishCopy: Record<string, { name: string; desc: string }> = {
+    power_wall_socket: {
+      name: 'Residential Power Outlet (15A - 1.5 kW)',
+      desc: 'Standard household power supply. Mandatory to power your GPU and cooling fans.'
+    },
+    power_solar_array: {
+      name: 'Residential Solar Micro-Inverter (3.0 kW)',
+      desc: 'Auxiliary solar panels. Doubles your power capacity without grid overload.'
+    }
+  };
+  const networkEnglishCopy: Record<string, { name: string; desc: string }> = {
+    net_gigabit: {
+      name: 'Gigabit Ethernet Cat 6 (1 Gbps)',
+      desc: 'High-speed standard internet connection. Mandatory to fetch training datasets and communicate agents.'
+    },
+    net_fiber_10g: {
+      name: 'Dedicated Point-to-Point Fiber (10 Gbps)',
+      desc: 'Symmetrical enterprise fiber optic link. Accelerates massive data streaming and reduces latency.'
+    }
+  };
   const dataEnglishCopy: Record<string, { name: string; desc: string; bonus: string; lore: string }> = {
     data_relational_sql: {
       name: 'SQL Relational Database & Tabular Records',
@@ -582,10 +602,10 @@ export const GenesisOnboarding: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs text-zinc-200">{pow.name}</h4>
+                          <h4 className="font-bold text-xs text-zinc-200">{en ? powerEnglishCopy[pow.id]?.name ?? pow.name : pow.name}</h4>
                           <span className="text-amber-300 font-bold text-xs">${pow.price} CR</span>
                         </div>
-                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{pow.desc}</p>
+                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{en ? powerEnglishCopy[pow.id]?.desc ?? pow.desc : pow.desc}</p>
                         <span className="text-[10px] text-yellow-400 block mt-1.5 font-bold">
                           {localize(state.language, 'Capacidad:', 'Power capacity:')} {pow.capacity}
                         </span>
@@ -616,10 +636,10 @@ export const GenesisOnboarding: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs text-zinc-200">{net.name}</h4>
+                          <h4 className="font-bold text-xs text-zinc-200">{en ? networkEnglishCopy[net.id]?.name ?? net.name : net.name}</h4>
                           <span className="text-amber-300 font-bold text-xs">${net.price} CR</span>
                         </div>
-                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{net.desc}</p>
+                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{en ? networkEnglishCopy[net.id]?.desc ?? net.desc : net.desc}</p>
                         <span className="text-[10px] text-blue-400 block mt-1.5 font-bold">
                           {localize(state.language, 'Ancho de banda:', 'Bandwidth:')} {net.bandwidth}
                         </span>
@@ -942,7 +962,17 @@ export const GenesisOnboarding: React.FC = () => {
             <button
               type="button"
               onClick={handleFinishOnboarding}
-              className="px-5 py-2.5 rounded-lg text-xs font-black flex items-center gap-2 transition-all bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-zinc-950 shadow-[0_0_20px_rgba(0,255,200,0.5)] cursor-pointer hover:scale-[1.02] active:scale-95 animate-pulse"
+              disabled={!simComplete}
+              title={!simComplete ? (isEs ? 'Ejecuta el entrenamiento génesis arriba primero para desbloquear' : 'Run genesis training above first to unlock') : undefined}
+              className={`px-5 py-2.5 rounded-lg text-xs font-black flex items-center gap-2 transition-all ${
+                simComplete
+                  ? 'bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-zinc-950 shadow-[0_0_20px_rgba(0,255,200,0.5)] cursor-pointer hover:scale-[1.02] active:scale-95 animate-pulse'
+                  : 'bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed opacity-40'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>{localize(state.language, 'CONECTAR AL BUCLE NEURAL', 'LAUNCH SYNAPSE NODE')}</span>
+            </button>
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>{localize(state.language, 'INGRESAR A SYNAPSE OS (COMENZAR SIMULACIÓN)', 'ENTER SYNAPSE OS (START SIMULATION)')}</span>
