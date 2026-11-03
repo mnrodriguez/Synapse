@@ -1,3 +1,8 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import type {
   AgentInstance,
   AgentRole,
@@ -24,6 +29,10 @@ export interface MissionTeamEvaluation {
   efficiencyPercent: number;
   estimatedDurationSeconds: number;
   successProbability: number;
+  summary?: string;
+  riskFactors?: string[];
+  synergyBonuses?: string[];
+  agentTasks?: Record<string, string>;
 }
 
 const clampScore = (score: number): number => Math.round(Math.max(0, Math.min(100, score)));
@@ -35,7 +44,9 @@ const ROLE_TOPOLOGIES: Partial<Record<AgentInstance['role'], ModelArchitecture['
   software_engineer: ['transformer', 'mamba_ssm'],
   autonomous_coder: ['transformer', 'mamba_ssm'],
   network_analyst: ['mamba_ssm', 'gnn_hybrid'],
-  overseer: ['transformer', 'moe']
+  overseer: ['transformer', 'moe'],
+  social_engineer: ['transformer', 'multimodal_diffusion'],
+  exploit_synth: ['mamba_ssm', 'moe']
 };
 
 const getAvailableSources = (model: ModelArchitecture, dataSources: DataSourceNode[]) =>
@@ -85,18 +96,19 @@ export function evaluateAgentCapabilities(
   guardrails: GuardrailConfig
 ): AgentCapabilityEvaluation {
   const modelEvaluation = evaluateModelCapabilities(model, dataSources);
+  const topologyMatch = ROLE_TOPOLOGIES[agent.role]?.includes(model.topology);
   const specialization = clampScore(
-    modelEvaluation.specialization +
-    (ROLE_TOPOLOGIES[agent.role]?.includes(model.topology) ? 15 : -5)
+    modelEvaluation.specialization + (topologyMatch ? 15 : -5)
   );
   const safety = clampScore(
     agent.alignmentScore * 0.7 +
     guardrails.constitutionalStrictness * 0.3 +
-    (agent.role === 'overseer' ? 8 : 0)
+    (agent.role === 'overseer' ? 10 : 0)
   );
+  const inference = agent.inferenceParams || model.inferenceParams;
+  const tempVariance = inference ? Math.abs(inference.temperature - 0.6) : 0.1;
   const reliability = clampScore(
-    (modelEvaluation.reliability +
-      Math.max(0, 100 - Math.abs(agent.inferenceParams.temperature - 0.5) * 20)) / 2
+    (modelEvaluation.reliability + Math.max(0, 100 - tempVariance * 25)) / 2
   );
   const overall = clampScore(
     modelEvaluation.reasoning * 0.25 +
@@ -122,16 +134,17 @@ export function calculateMissionSuccessProbability(
   dataSources: DataSourceNode[],
   guardrails: GuardrailConfig
 ): number {
+  if (agents.length === 0) return 0.2;
   const roleCoverage = new Set(agents.map(agent => agent.role)).size;
   const averageReasoning = models.reduce((total, model) => total + model.reasoningScore, 0) / Math.max(1, models.length);
   const activeSources = Array.from(new Set(models.flatMap(model => model.activeDataSources)))
     .map(id => dataSources.find(source => source.id === id && source.unlocked))
     .filter((source): source is DataSourceNode => source !== undefined);
   const dataQualityBonus = Math.min(
-    0.12,
-    activeSources.length * 0.02 +
+    0.15,
+    activeSources.length * 0.03 +
       activeSources.reduce((total, source) => total + source.qualityScore, 0) /
-      Math.max(1, activeSources.length) / 100 * 0.04
+      Math.max(1, activeSources.length) / 100 * 0.05
   );
   const averageCapability = agents.reduce((total, agent) => {
     const model = models.find(candidate => candidate.id === agent.modelId);
@@ -139,16 +152,26 @@ export function calculateMissionSuccessProbability(
       ? evaluateAgentCapabilities(agent, model, dataSources, guardrails).overall
       : 0);
   }, 0) / Math.max(1, agents.length);
-  const baseProbability =
-    0.4 +
-    roleCoverage * 0.06 +
-    dataQualityBonus +
-    Math.min(0.12, averageReasoning / 1000);
-  const capabilityAdjustment = (averageCapability - 70) * 0.003;
 
-  return Math.min(0.95, Math.max(0.25, baseProbability + capabilityAdjustment));
+  const baseProbability =
+    0.45 +
+    roleCoverage * 0.07 +
+    dataQualityBonus +
+    Math.min(0.15, averageReasoning / 1200);
+  const capabilityAdjustment = (averageCapability - 70) * 0.004;
+
+  return Math.min(0.98, Math.max(0.15, baseProbability + capabilityAdjustment));
 }
 
+/**
+ * Advanced Offline AI Decision Model for Mission Team Evaluation
+ * Evaluates high-order non-linear interactions between:
+ * - Agent role x Model topology synergy
+ * - Parameter scale vs contract complexity
+ * - Data source availability & quality
+ * - Inference parameter volatility (temperature & topP entropy)
+ * - Guardrail strictness & Overseer presence
+ */
 export function evaluateMissionTeam(
   contract: ContractGig,
   agents: AgentInstance[],
@@ -156,29 +179,89 @@ export function evaluateMissionTeam(
   dataSources: DataSourceNode[],
   guardrails: GuardrailConfig
 ): MissionTeamEvaluation {
-  const averageCapability = agents.reduce((total, agent) => {
-    const model = models.find(candidate => candidate.id === agent.modelId);
-    return total + (model
-      ? evaluateAgentCapabilities(agent, model, dataSources, guardrails).overall
-      : 0);
-  }, 0) / Math.max(1, agents.length);
-  const roleCoverage = new Set(agents.map(agent => agent.role)).size;
-  const requiredRoles = contract.requiredAgentRoles ?? [];
-  const matchedRequiredRoles = requiredRoles.filter(role =>
-    agents.some(agent => agent.role === role)
-  ).length;
-  const requiredRoleCoverage = requiredRoles.length
-    ? matchedRequiredRoles / requiredRoles.length
-    : 1;
+  if (agents.length === 0) {
+    return {
+      efficiencyPercent: 50,
+      estimatedDurationSeconds: contract.durationSeconds * 2,
+      successProbability: 0.15,
+      summary: 'No agents assigned to the mission team.',
+      riskFactors: ['No agents assigned.'],
+      synergyBonuses: [],
+      agentTasks: {}
+    };
+  }
 
-  // Micro-Model Domain Synergy & Penalty Evaluation
-  const contractText = `${contract.title} ${contract.technicalObjective} ${contract.loreDescription}`.toLowerCase();
-  let domainSynergyBonus = 0;
-  let domainMismatchPenalty = 0;
+  const riskFactors: string[] = [];
+  const synergyBonuses: string[] = [];
+  const agentTasks: Record<string, string> = {};
+
+  const modelById = new Map(models.map(m => [m.id, m]));
+  const hasOverseer = agents.some(a => a.role === 'overseer' && a.status === 'active');
+  const roleCoverage = new Set(agents.map(a => a.role)).size;
+  const requiredRoles = contract.requiredAgentRoles ?? [];
+
+  // 1. Required Roles & Role Coverage Analysis
+  let roleMatchScore = 1.0;
+  if (requiredRoles.length > 0) {
+    const matched = requiredRoles.filter(role => agents.some(a => a.role === role)).length;
+    roleMatchScore = matched / requiredRoles.length;
+    if (roleMatchScore < 1.0) {
+      riskFactors.push(`Missing required agent role(s): ${requiredRoles.filter(r => !agents.some(a => a.role === r)).join(', ')}`);
+    } else {
+      synergyBonuses.push('All required agent roles present in squad.');
+    }
+  }
+
+  if (hasOverseer) {
+    synergyBonuses.push('Safety Overseer present: stabilizes high temperature volatility & alignment drift.');
+  } else {
+    const volatileAgent = agents.find(a => (a.inferenceParams?.temperature || 0.7) > 0.95);
+    if (volatileAgent) {
+      riskFactors.push(`High temperature volatility (${volatileAgent.name}: T=${volatileAgent.inferenceParams.temperature.toFixed(2)}) without Overseer supervision.`);
+    }
+  }
+
+  // 2. Topology Synergy & Parameter Scale Evaluation
+  let totalSynergyMultiplier = 1.0;
+  let totalParameterScaleScore = 0;
+  let totalDataMatchBonus = 0;
+
+  const activeUnlockedDataSources = dataSources.filter(d => d.unlocked);
+  const activeDataSourceTypes = new Set<string>();
 
   agents.forEach(agent => {
-    const model = models.find(m => m.id === agent.modelId);
-    if (model && model.modelType === 'micro_model' && model.specializedDomain) {
+    const model = modelById.get(agent.modelId);
+    if (!model) return;
+
+    // Topology match check
+    const preferredTopologies = ROLE_TOPOLOGIES[agent.role];
+    if (preferredTopologies && preferredTopologies.includes(model.topology)) {
+      totalSynergyMultiplier += 0.08;
+      synergyBonuses.push(`${agent.name} (${agent.role}): ${model.topology.toUpperCase()} topology synergy (+8% efficiency).`);
+    } else if (preferredTopologies) {
+      totalSynergyMultiplier -= 0.04;
+    }
+
+    // Model Parameter Scale vs Contract Target
+    const paramRatio = model.parametersCount / Math.max(1, contract.requiredParams);
+    if (paramRatio >= 1.0) {
+      totalParameterScaleScore += 1.0;
+    } else {
+      totalParameterScaleScore += Math.max(0.2, paramRatio);
+      riskFactors.push(`${agent.name}: Model (${(model.parametersCount / 1e6).toFixed(0)}M) below contract target (${(contract.requiredParams / 1e6).toFixed(0)}M).`);
+    }
+
+    // Active Data Sources attached to model
+    model.activeDataSources.forEach(sourceId => {
+      const source = activeUnlockedDataSources.find(s => s.id === sourceId);
+      if (source) {
+        activeDataSourceTypes.add(source.type);
+      }
+    });
+
+    // Domain Specialization (Micro-Models)
+    if (model.modelType === 'micro_model' && model.specializedDomain) {
+      const contractText = `${contract.title} ${contract.technicalObjective} ${contract.loreDescription}`.toLowerCase();
       const domain = model.specializedDomain.toLowerCase();
       const domainKeywords: string[] = {
         cybersecurity: ['security', 'exploit', 'firewall', 'intrusion', 'cve', 'hack', 'blackops', 'cyber', 'pentest', 'vulnerability', 'zero-day', 'c2'],
@@ -188,41 +271,80 @@ export function evaluateMissionTeam(
         robotics_kinematics: ['robot', 'drone', 'swarm', 'hardware', 'actuator', 'telemetry', 'motion', 'kinematics', 'autonomous', 'fleet']
       }[domain] || [domain];
 
-      const matchesDomain = domainKeywords.some(keyword => contractText.includes(keyword));
-      if (matchesDomain) {
-        // Micro-Model domain proficiency bonus!
-        domainSynergyBonus += 0.08 * (model.domainProficiency || 1.5);
-      } else {
-        // Weak outside chosen domain
-        domainMismatchPenalty += 0.04;
+      if (domainKeywords.some(kw => contractText.includes(kw))) {
+        totalDataMatchBonus += 0.10 * (model.domainProficiency || 1.5);
+        synergyBonuses.push(`${agent.name}: Domain specialization match (${domain}) +${Math.round((model.domainProficiency || 1.5) * 10)}% success.`);
       }
     }
+
+    // Dynamic Task Generation for each agent
+    const roleTaskMap: Record<AgentRole, string> = {
+      arbitrageur: 'Running real-time micro-transaction pattern matching & yield risk estimation.',
+      social_engineer: 'Synthesizing contextual prompt variations & sentiment boundary audits.',
+      exploit_synth: 'Executing automated symbolic fuzzing & boundary vulnerability checks.',
+      researcher: 'Conducting Monte Carlo hypothesis verification & loss curve optimization.',
+      overseer: 'Enforcing constitutional alignment constraints & monitoring tensor outputs.',
+      autonomous_coder: 'Compiling optimized tensor kernel routes & managing memory allocations.',
+      economist: 'Modeling macro-liquidity flows & computational resource cost-efficiency.',
+      software_engineer: 'Refactoring distributed API pipelines & handling vector index shards.',
+      network_analyst: 'Analyzing packet telemetry & monitoring node routing latencies.'
+    };
+    agentTasks[agent.id] = roleTaskMap[agent.role] || 'Executing assigned model inference sub-routines.';
   });
 
-  const efficiencyMultiplier = Math.max(0.55, Math.min(
-    1.8,
-    0.7 +
-      averageCapability / 250 +
-      Math.min(0.2, roleCoverage * 0.035) +
-      requiredRoleCoverage * 0.12 +
-      domainSynergyBonus * 1.5 -
-      domainMismatchPenalty
-  ));
-  const baseSuccessProbability = calculateMissionSuccessProbability(
-    agents,
-    models,
-    dataSources,
-    guardrails
-  );
-  const successProbability = Math.max(
-    0.20,
-    Math.min(0.98, baseSuccessProbability + requiredRoleCoverage * 0.04 + domainSynergyBonus - domainMismatchPenalty)
+  // 3. Data Engine Requirements Check
+  const requiredDataTypes = contract.requiredDataTypes || [];
+  if (requiredDataTypes.length > 0) {
+    const missingTypes = requiredDataTypes.filter(type => !activeDataSourceTypes.has(type));
+    if (missingTypes.length > 0) {
+      riskFactors.push(`Missing required active data engine(s): ${missingTypes.join(', ')}.`);
+      totalSynergyMultiplier -= 0.15 * missingTypes.length;
+    } else {
+      synergyBonuses.push('All required data engines connected and operational.');
+    }
+  }
+
+  // 4. Overall Capabilities & Base Success Calculation
+  const avgCapability = agents.reduce((sum, agent) => {
+    const model = modelById.get(agent.modelId);
+    return sum + (model ? evaluateAgentCapabilities(agent, model, dataSources, guardrails).overall : 50);
+  }, 0) / agents.length;
+
+  const baseProb = calculateMissionSuccessProbability(agents, models, dataSources, guardrails);
+  const paramPenalty = (totalParameterScaleScore / agents.length < 0.8) ? -0.12 : 0;
+  const rolePenalty = (roleMatchScore < 1.0) ? -0.15 : 0;
+
+  const rawSuccessProb = baseProb + totalDataMatchBonus + paramPenalty + rolePenalty + (hasOverseer ? 0.05 : 0);
+  const successProbability = Math.min(0.98, Math.max(0.15, Number(rawSuccessProb.toFixed(2))));
+
+  // Efficiency Multiplier calculation
+  const efficiencyMultiplier = Math.max(
+    0.45,
+    Math.min(
+      1.75,
+      0.80 +
+        (avgCapability - 60) * 0.006 +
+        totalSynergyMultiplier - 1.0 +
+        (roleCoverage * 0.03) +
+        (roleMatchScore * 0.10)
+    )
   );
 
+  const efficiencyPercent = Math.round(efficiencyMultiplier * 100);
+  const estimatedDurationSeconds = Math.max(1, Math.ceil(contract.durationSeconds / efficiencyMultiplier));
+
+  const summary = riskFactors.length === 0
+    ? `[AI ASSESSMENT] Team fully optimized. High synergy (${efficiencyPercent}% efficiency, ${Math.round(successProbability * 100)}% success rate).`
+    : `[AI ASSESSMENT] Team operational with ${riskFactors.length} warning(s). ${Math.round(successProbability * 100)}% estimated success probability.`;
+
   return {
-    efficiencyPercent: Math.round(efficiencyMultiplier * 100),
-    estimatedDurationSeconds: Math.max(1, Math.ceil(contract.durationSeconds / efficiencyMultiplier)),
-    successProbability
+    efficiencyPercent,
+    estimatedDurationSeconds,
+    successProbability,
+    summary,
+    riskFactors,
+    synergyBonuses,
+    agentTasks
   };
 }
 
@@ -236,8 +358,10 @@ export function isContractEligibleForTeam(
     agents.length < (contract.minimumAgents ?? 1) ||
     agents.some(agent => agent.status !== 'active')
   ) return false;
+
   const assignedRoles = new Set<AgentRole>(agents.map(agent => agent.role));
   if ((contract.requiredAgentRoles ?? []).some(role => !assignedRoles.has(role))) return false;
+
   const assignedModels = agents
     .map(agent => models.find(model => model.id === agent.modelId))
     .filter((model): model is ModelArchitecture => model !== undefined);

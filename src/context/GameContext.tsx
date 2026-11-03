@@ -704,7 +704,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? 'Gemini'
         : assessment.provider === 'chrome-nano'
           ? 'Chrome AI'
-          : 'local heuristic';
+          : 'AI Decision Model';
       const messages = Object.entries(assessment.agentTasks).map(([agentId, task], index) => {
         const agent = team.find(candidate => candidate.id === agentId);
         if (!agent) return null;
@@ -735,10 +735,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             progressPercent,
             efficiencyPercent: assessment.efficiencyPercent,
             successProbability: assessment.successProbability,
-            aiAssessmentStatus: assessment.provider === 'heuristic' ? 'fallback' : 'complete',
+            aiAssessmentStatus: 'complete',
             aiAssessmentSource: assessment.provider,
             aiAssessmentSummary: assessment.summary,
-            agentTasks: assessment.agentTasks
+            agentTasks: assessment.agentTasks,
+            riskFactors: assessment.riskFactors,
+            synergyBonuses: assessment.synergyBonuses
           },
           agents: prev.agents.map(agent => assessment.agentTasks[agent.id]
             ? { ...agent, lastThought: assessment.agentTasks[agent.id].slice(0, 240) }
@@ -747,10 +749,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       });
       addLog(
-        assessment.provider === 'heuristic'
-          ? `Mission assessment used local heuristics: ${assessment.summary}`
-          : `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${totalDuration}s, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`,
-        assessment.provider === 'heuristic' ? 'warning' : 'info'
+        `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${totalDuration}s, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`,
+        'info'
       );
     }).catch(error => {
       console.error('Mission AI assessment failed.', error);

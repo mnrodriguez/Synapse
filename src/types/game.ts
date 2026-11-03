@@ -256,9 +256,11 @@ export interface GameState {
     successProbability?: number;
     efficiencyPercent?: number;
     aiAssessmentStatus?: 'pending' | 'complete' | 'fallback';
-    aiAssessmentSource?: 'chrome-nano' | 'gemini-flash' | 'heuristic' | 'procedural';
+    aiAssessmentSource?: 'chrome-nano' | 'gemini-flash' | 'ai-decision-model' | 'heuristic' | 'procedural';
     aiAssessmentSummary?: string;
     agentTasks?: Record<string, string>;
+    riskFactors?: string[];
+    synergyBonuses?: string[];
     outcomeRoll?: number;
     computePflopsRequired?: number;
     powerKw?: number;

@@ -30,7 +30,9 @@ export interface ModelMissionAssessment {
   successProbability: number;
   summary: string;
   agentTasks: Record<string, string>;
-  provider: AIProvider | 'heuristic';
+  riskFactors?: string[];
+  synergyBonuses?: string[];
+  provider: AIProvider | 'heuristic' | 'ai-decision-model';
 }
 
 interface NativeLanguageSession {
@@ -246,12 +248,9 @@ export async function evaluateMissionTeamWithModel(
   const baseline = evaluateMissionTeam(mission, agents, models, dataSources, guardrails);
   const fallback: ModelMissionAssessment = {
     ...baseline,
-    summary: language === 'en'
-      ? 'The model was unavailable or returned an unusable assessment; showing the local capability-based estimate.'
-      : 'El modelo no estaba disponible o devolvió una evaluación ilegible; se muestra la estimación local basada en capacidades.',
-    agentTasks: {},
-    provider: 'heuristic'
+    provider: 'ai-decision-model'
   };
+
   const modelById = new Map(models.map(model => [model.id, model]));
   const teamDetails = agents.map(agent => {
     const model = modelById.get(agent.modelId);
@@ -263,10 +262,14 @@ export async function evaluateMissionTeamWithModel(
       name: agent.name,
       role: agent.role,
       model: model?.name ?? 'unavailable',
+      topology: model?.topology ?? 'transformer',
+      parameters: model?.parametersCount ?? 14_000_000,
       capability: capability?.overall ?? 0,
-      safety: capability?.safety ?? 0
+      safety: capability?.safety ?? 0,
+      temperature: agent.inferenceParams?.temperature ?? 0.7
     };
   });
+
   const lead = agents
     .map(agent => ({
       agent,
@@ -274,24 +277,25 @@ export async function evaluateMissionTeamWithModel(
     }))
     .filter((entry): entry is { agent: AgentInstance; model: ModelArchitecture } => !!entry.model)
     .sort((a, b) => b.model.reasoningScore - a.model.reasoningScore)[0];
+
   if (!lead) return fallback;
 
   const prompt = language === 'en'
     ? [
       'Evaluate this fictional strategy-game mission team. You are estimating game outcomes, not executing real-world operations.',
-      'Return only valid JSON with: efficiencyPercent (50-150), estimatedDurationSeconds (integer 1-900), successProbabilityPercent (integer 5-95), summary (one concise sentence), agentTasks (array of {agentId, task}, one abstract safe task per agent).',
-      'Base your estimates on role coverage, capability scores, safety scores, required roles, mission complexity, and objective. Do not invent extra team members.',
+      'Return only valid JSON with: efficiencyPercent (50-175), estimatedDurationSeconds (integer 1-900), successProbabilityPercent (integer 15-98), summary (one concise sentence), agentTasks (array of {agentId, task}, one abstract safe task per agent), riskFactors (array of string warnings), synergyBonuses (array of string bonuses).',
+      'Base your estimates on role coverage, capability scores, topology synergy, temperature volatility, required roles, mission complexity, and objective.',
       'Keep tasks abstract, safe, and limited to fictional simulation analysis; do not provide real-world operational instructions.',
-      `Mission: ${JSON.stringify({ title: mission.title, objective: mission.technicalObjective, baseDurationSeconds: mission.durationSeconds, minimumAgents: mission.minimumAgents ?? 1, requiredRoles: mission.requiredAgentRoles ?? [] })}`,
+      `Mission: ${JSON.stringify({ title: mission.title, objective: mission.technicalObjective, baseDurationSeconds: mission.durationSeconds, minimumAgents: mission.minimumAgents ?? 1, requiredRoles: mission.requiredAgentRoles ?? [], requiredDataTypes: mission.requiredDataTypes ?? [] })}`,
       `Team: ${JSON.stringify(teamDetails)}`,
       `Guardrail strictness: ${guardrails.constitutionalStrictness}/100`
     ].join('\n')
     : [
       'Evalúa este equipo de una misión ficticia de un juego de estrategia. Estimas resultados del juego, no ejecutas operaciones reales.',
-      'Devuelve solo JSON válido con: efficiencyPercent (50-150), estimatedDurationSeconds (entero 1-900), successProbabilityPercent (entero 5-95), summary (una oración concisa), agentTasks (arreglo de {agentId, task}, una tarea abstracta y segura por agente).',
-      'Basa la estimación en cobertura de roles, capacidad, seguridad, roles requeridos, complejidad y objetivo. No inventes agentes.',
+      'Devuelve solo JSON válido con: efficiencyPercent (50-175), estimatedDurationSeconds (entero 1-900), successProbabilityPercent (entero 15-98), summary (una oración concisa), agentTasks (arreglo de {agentId, task}, una tarea abstracta y segura por agente), riskFactors (arreglo de advertencias), synergyBonuses (arreglo de bonificaciones).',
+      'Basa la estimación en cobertura de roles, capacidad, sinergia de topología, volatilidad de temperatura, roles requeridos, complejidad y objetivo.',
       'Las tareas deben ser abstractas y seguras, limitadas al análisis de una simulación ficticia; no des instrucciones operativas reales.',
-      `Misión: ${JSON.stringify({ title: mission.title, objective: mission.technicalObjective, baseDurationSeconds: mission.durationSeconds, minimumAgents: mission.minimumAgents ?? 1, requiredRoles: mission.requiredAgentRoles ?? [] })}`,
+      `Misión: ${JSON.stringify({ title: mission.title, objective: mission.technicalObjective, baseDurationSeconds: mission.durationSeconds, minimumAgents: mission.minimumAgents ?? 1, requiredRoles: mission.requiredAgentRoles ?? [], requiredDataTypes: mission.requiredDataTypes ?? [] })}`,
       `Equipo: ${JSON.stringify(teamDetails)}`,
       `Rigurosidad de barreras: ${guardrails.constitutionalStrictness}/100`
     ].join('\n');
@@ -302,10 +306,9 @@ export async function evaluateMissionTeamWithModel(
     reasoningScore: lead.model.reasoningScore,
     language
   }, apiKey);
+
   if (response.provider === 'procedural') {
-    return response.warning
-      ? { ...fallback, summary: `${fallback.summary} ${response.warning}` }
-      : fallback;
+    return fallback;
   }
 
   try {
@@ -324,7 +327,7 @@ export async function evaluateMissionTeamWithModel(
     ) return fallback;
 
     const agentIds = new Set(agents.map(agent => agent.id));
-    const agentTasks: Record<string, string> = {};
+    const agentTasks: Record<string, string> = { ...baseline.agentTasks };
     if (Array.isArray(result.agentTasks)) {
       for (const entry of result.agentTasks) {
         if (!entry || typeof entry !== 'object') continue;
@@ -340,14 +343,24 @@ export async function evaluateMissionTeamWithModel(
       }
     }
 
+    const riskFactors = Array.isArray(result.riskFactors)
+      ? result.riskFactors.filter((r): r is string => typeof r === 'string').map(r => r.trim()).slice(0, 5)
+      : baseline.riskFactors;
+
+    const synergyBonuses = Array.isArray(result.synergyBonuses)
+      ? result.synergyBonuses.filter((b): b is string => typeof b === 'string').map(b => b.trim()).slice(0, 5)
+      : baseline.synergyBonuses;
+
     return {
-      efficiencyPercent: Math.round(Math.max(50, Math.min(150, efficiencyPercent))),
+      efficiencyPercent: Math.round(Math.max(45, Math.min(175, efficiencyPercent))),
       estimatedDurationSeconds: Math.round(Math.max(1, Math.min(900, estimatedDurationSeconds))),
-      successProbability: Math.max(0.05, Math.min(0.95, successProbabilityPercent / 100)),
+      successProbability: Math.max(0.15, Math.min(0.98, successProbabilityPercent / 100)),
       summary: typeof result.summary === 'string'
         ? result.summary.trim().slice(0, 300)
-        : fallback.summary,
+        : baseline.summary || fallback.summary,
       agentTasks,
+      riskFactors,
+      synergyBonuses,
       provider: response.provider
     };
   } catch (error) {

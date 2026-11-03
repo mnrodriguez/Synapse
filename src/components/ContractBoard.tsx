@@ -602,15 +602,59 @@ export const ContractBoard: React.FC = () => {
                 </div>
 
                 {teamAssessment && (
-                  <div className="mt-2 rounded border border-purple-800/60 bg-purple-950/20 px-2 py-1.5 text-[10px] text-purple-200">
-                    <div className="mb-1 font-bold tracking-wide">
-                      {state.language === 'es' ? 'EVALUACIÓN IA DEL EQUIPO' : 'AI TEAM ASSESSMENT'}
+                  <div className="mt-2 rounded border border-purple-800/60 bg-[#0c0916] p-2 text-[10px] text-purple-200 space-y-1">
+                    <div className="font-bold tracking-wide flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-purple-300">
+                        <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
+                        {state.language === 'es' ? 'EVALUACIÓN IA DEL EQUIPO' : 'AI TEAM ASSESSMENT'}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                        teamAssessment.successProbability >= 0.85 ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/50' :
+                        teamAssessment.successProbability >= 0.60 ? 'bg-amber-950 text-amber-300 border border-amber-500/50' :
+                        'bg-red-950 text-red-300 border border-red-500/50 animate-pulse'
+                      }`}>
+                        {Math.round(teamAssessment.successProbability * 100)}% {state.language === 'es' ? 'ÉXITO' : 'SUCCESS'}
+                      </span>
                     </div>
-                    <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-zinc-300">
-                      <span>{state.language === 'es' ? 'Eficiencia' : 'Efficiency'}: {teamAssessment.efficiencyPercent}%</span>
-                      <span>{state.language === 'es' ? 'Tiempo estimado' : 'Estimated time'}: {teamAssessment.estimatedDurationSeconds}s</span>
-                      <span>{state.language === 'es' ? 'Éxito' : 'Success'}: {Math.round(teamAssessment.successProbability * 100)}%</span>
+
+                    <div className="grid grid-cols-2 gap-2 text-zinc-300 pt-1 border-t border-purple-900/40 text-[10px]">
+                      <div>
+                        <span className="text-zinc-500">{state.language === 'es' ? 'Eficiencia:' : 'Efficiency:'} </span>
+                        <span className="font-bold text-cyan-300">{teamAssessment.efficiencyPercent}%</span>
+                      </div>
+                      <div>
+                        <span className="text-zinc-500">{state.language === 'es' ? 'Tiempo est.:' : 'Est. Duration:'} </span>
+                        <span className="font-bold text-zinc-200">{teamAssessment.estimatedDurationSeconds}s</span>
+                      </div>
                     </div>
+
+                    {teamAssessment.synergyBonuses && teamAssessment.synergyBonuses.length > 0 && (
+                      <div className="space-y-0.5 text-[9px] text-emerald-300 pt-1">
+                        {teamAssessment.synergyBonuses.map((bonus, idx) => (
+                          <div key={idx} className="flex items-start gap-1">
+                            <span className="text-emerald-400">✓</span>
+                            <span>{bonus}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {teamAssessment.riskFactors && teamAssessment.riskFactors.length > 0 && (
+                      <div className="space-y-0.5 text-[9px] text-amber-300 pt-1">
+                        {teamAssessment.riskFactors.map((risk, idx) => (
+                          <div key={idx} className="flex items-start gap-1">
+                            <span className="text-amber-400">⚠️</span>
+                            <span>{risk}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {teamAssessment.summary && (
+                      <p className="text-[9px] text-zinc-400 italic pt-1 border-t border-purple-900/30">
+                        {teamAssessment.summary}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
