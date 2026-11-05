@@ -114,8 +114,8 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'agents',
       title: isEs ? 'Fase 4: Desplegar tu Primer Agente' : 'Stage 4: Deploy Your First Agent',
       desc: isEs 
-        ? 'Ve a SWARM AGENTES y despliega un agente autónomo (ej. Arbitrageur o Researcher) conectado a tu modelo entrenado.'
-        : 'Open AGENT SWARM and deploy your first autonomous agent (e.g. Arbitrageur or Researcher) bound to your trained model.',
+        ? 'Ve a SWARM AGENTES y despliega un agente autónomo (ej. Trader o Researcher) conectado a tu modelo entrenado.'
+        : 'Open AGENT SWARM and deploy your first autonomous agent (e.g. Trader or Researcher) bound to your trained model.',
       icon: Bot,
       buttonText: isEs ? 'IR A SWARM' : 'GO TO SWARM',
       isCompleted: hasAgent || step > 3

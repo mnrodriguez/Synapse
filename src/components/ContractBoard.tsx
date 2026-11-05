@@ -34,15 +34,15 @@ import { generateDynamicContracts } from '../services/aiService';
 import { evaluateMissionTeam, isContractEligibleForTeam } from '../utils/missionEvaluation';
 
 const AGENT_ROLE_LABELS: Record<AgentRole, { en: string; es: string }> = {
-  arbitrageur: { en: 'Market analyst', es: 'Analista de mercado' },
-  social_engineer: { en: 'Social research analyst', es: 'Analista social' },
-  exploit_synth: { en: 'Simulation tester', es: 'Evaluador de simulación' },
-  researcher: { en: 'Researcher', es: 'Investigador' },
-  overseer: { en: 'Safety overseer', es: 'Supervisor de seguridad' },
-  autonomous_coder: { en: 'Compute optimizer', es: 'Optimizador de cómputo' },
-  economist: { en: 'Economist', es: 'Economista' },
-  software_engineer: { en: 'Software engineer', es: 'Ingeniero de software' },
-  network_analyst: { en: 'Network analyst', es: 'Analista de redes' }
+  arbitrageur: { en: 'Financial Trader', es: 'Trader Financiero' },
+  social_engineer: { en: 'Social Auditor', es: 'Auditor Social' },
+  exploit_synth: { en: 'Security Simulator', es: 'Simulador de Seguridad' },
+  researcher: { en: 'Architecture Researcher', es: 'Investigador' },
+  overseer: { en: 'Safety Overseer', es: 'Supervisor de Seguridad' },
+  autonomous_coder: { en: 'Compute Optimizer', es: 'Optimizador de Cómputo' },
+  economist: { en: 'Resource Economist', es: 'Economista' },
+  software_engineer: { en: 'Software Engineer', es: 'Ingeniero de Software' },
+  network_analyst: { en: 'Network Analyst', es: 'Analista de Redes' }
 };
 
 export const ContractBoard: React.FC = () => {

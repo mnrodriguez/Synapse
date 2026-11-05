@@ -62,12 +62,12 @@ export const TRANSLATIONS = {
     param_system_prompt_desc: 'Instrucciones constitucionales inyectadas en la raíz del contexto que definen los objetivos del agente.',
     
     // Roles
-    role_arbitrageur: 'Arbitrajista Financiero',
-    role_social_engineer: 'Ingeniero Social',
-    role_exploit_synth: 'Sintetizador de Exploits 0-day',
+    role_arbitrageur: 'Trader Financiero',
+    role_social_engineer: 'Auditor Social',
+    role_exploit_synth: 'Simulador de Seguridad',
     role_researcher: 'Investigador de Arquitecturas',
     role_overseer: 'Supervisor de Alineación',
-    role_autonomous_coder: 'Programador Autónomo',
+    role_autonomous_coder: 'Optimizador de Cómputo',
     
     // Sandbox controls
     quarantine: 'CUARENTENAR',
@@ -243,12 +243,12 @@ export const TRANSLATIONS = {
     param_system_prompt_desc: 'Root constitutional instructions injected into the context window defining the agent objective function.',
     
     // Roles
-    role_arbitrageur: 'Financial Arbitrageur',
-    role_social_engineer: 'Social Engineer',
-    role_exploit_synth: '0-day Exploit Synthesizer',
+    role_arbitrageur: 'Financial Trader',
+    role_social_engineer: 'Social Auditor',
+    role_exploit_synth: 'Security Simulator',
     role_researcher: 'Architecture Researcher',
     role_overseer: 'Alignment Overseer',
-    role_autonomous_coder: 'Autonomous Coder',
+    role_autonomous_coder: 'Compute Optimizer',
     
     // Sandbox controls
     quarantine: 'QUARANTINE',

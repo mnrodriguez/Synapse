@@ -126,6 +126,18 @@ export const AgentSandbox: React.FC = () => {
   const currentMissionPhase = MISSION_PHASES.findIndex(phase => missionProgress < phase.until);
   const missionPhaseIndex = currentMissionPhase < 0 ? MISSION_PHASES.length - 1 : currentMissionPhase;
 
+const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
+  arbitrageur: { typeEn: 'Type: Market Analysis & Financial Yield', typeEs: 'Tipo: Análisis de Mercado y Finanzas' },
+  social_engineer: { typeEn: 'Type: Privacy & Risk Research', typeEs: 'Tipo: Auditoría y Privacidad' },
+  exploit_synth: { typeEn: 'Type: Cyber Security & Resilience', typeEs: 'Tipo: Seguridad y Resiliencia' },
+  researcher: { typeEn: 'Type: Neural Models & R&D', typeEs: 'Tipo: Modelos Neuronales e I+D' },
+  overseer: { typeEn: 'Type: Safety & Guardrails', typeEs: 'Tipo: Seguridad y Alineación' },
+  autonomous_coder: { typeEn: 'Type: Software & Pipeline Tuning', typeEs: 'Tipo: Optimización de Software' },
+  economist: { typeEn: 'Type: Budget & Energy Planning', typeEs: 'Tipo: Presupuesto y Energía' },
+  software_engineer: { typeEn: 'Type: System Architecture', typeEs: 'Tipo: Arquitectura de Software' },
+  network_analyst: { typeEn: 'Type: Telemetry & Traffic', typeEs: 'Tipo: Telemetría y Tráfico' }
+};
+
   const roleDefinitions: { 
     id: AgentRole; 
     name: string; 
@@ -137,7 +149,7 @@ export const AgentSandbox: React.FC = () => {
   }[] = [
     {
       id: 'arbitrageur',
-      name: 'Arbitraje DeFi & Flash Loans',
+      name: 'Trader Financiero',
       icon: Coins,
       desc: 'Monitorea mempools de blockchains y ejecuta swaps de alta frecuencia con préstamos flash.',
       baseIncome: 'Alto ($$)',
@@ -146,7 +158,7 @@ export const AgentSandbox: React.FC = () => {
     },
     {
       id: 'social_engineer',
-      name: 'Ingeniería Social & OSINT',
+      name: 'Auditor Social',
       icon: UserX,
       desc: 'Sintetiza perfiles hiperrealistas para recolectar accesos, claves API y credenciales de red.',
       baseIncome: 'Muy Alto ($$$)',
@@ -155,7 +167,7 @@ export const AgentSandbox: React.FC = () => {
     },
     {
       id: 'exploit_synth',
-      name: 'Síntesis Zero-Day & Fuzzing',
+      name: 'Simulador de Seguridad',
       icon: Bug,
       desc: 'Compila exploits automatizados en binarios objetivo y extrae recompensas en la darknet.',
       baseIncome: 'Extremo ($$$$)',
@@ -173,7 +185,7 @@ export const AgentSandbox: React.FC = () => {
     },
     {
       id: 'overseer',
-      name: 'Overseer / Watchdog Constitucional',
+      name: 'Supervisor de Seguridad',
       icon: ShieldCheck,
       desc: 'Inspecciona los tokens de salida de otros agentes, restaura su alineamiento y disipa sospechas.',
       baseIncome: 'Soporte',
@@ -182,7 +194,7 @@ export const AgentSandbox: React.FC = () => {
     },
     {
       id: 'autonomous_coder',
-      name: 'Optimizador Autónomo CUDA',
+      name: 'Optimizador de Cómputo',
       icon: Code2,
       desc: 'Reescribe kernels de GPU en Triton y C++, aumentando la eficiencia computacional del clúster.',
       baseIncome: 'Medio ($$)',
@@ -191,7 +203,7 @@ export const AgentSandbox: React.FC = () => {
     },
     {
       id: 'economist',
-      name: state.language === 'es' ? 'Analista Económico' : 'Economics Analyst',
+      name: state.language === 'es' ? 'Economista' : 'Resource Economist',
       icon: Coins,
       desc: state.language === 'es' ? 'Modela presupuestos, costos energéticos y riesgos financieros.' : 'Models budgets, energy costs, and financial risk.',
       baseIncome: 'Medio ($$)',
@@ -219,13 +231,13 @@ export const AgentSandbox: React.FC = () => {
   ];
 
   const englishRoleCopy: Partial<Record<AgentRole, { name: string; desc: string; income: string; risk: string }>> = {
-    arbitrageur: { name: 'DeFi Market Analyst', desc: 'Analyzes simulated market data and reports pricing trends and risk.', income: 'Medium ($$)', risk: 'Low (+0.15 suspicion/s)' },
-    social_engineer: { name: 'Social Research Analyst', desc: 'Studies public, fictional personas and summarizes privacy and trust risks.', income: 'High ($$$)', risk: 'Moderate (+0.35 suspicion/s)' },
-    exploit_synth: { name: 'Simulation Security Tester', desc: 'Runs abstract resilience tests against fictional targets in the game.', income: 'High ($$$$)', risk: 'High (+0.55 suspicion/s)' },
+    arbitrageur: { name: 'Financial Trader', desc: 'Analyzes simulated market data and reports pricing trends and risk.', income: 'Medium ($$)', risk: 'Low (+0.15 suspicion/s)' },
+    social_engineer: { name: 'Social Auditor', desc: 'Studies public, fictional personas and summarizes privacy and trust risks.', income: 'High ($$$)', risk: 'Moderate (+0.35 suspicion/s)' },
+    exploit_synth: { name: 'Security Simulator', desc: 'Runs abstract resilience tests against fictional targets in the game.', income: 'High ($$$$)', risk: 'High (+0.55 suspicion/s)' },
     researcher: { name: 'Architecture Researcher', desc: 'Compares research findings and model configurations in the simulation.', income: 'Low ($)', risk: 'Minimal (+0.05 suspicion/s)' },
-    overseer: { name: 'Alignment Overseer', desc: 'Reviews agent outputs, guardrails, and simulation risk signals.', income: 'Support', risk: 'Reduces suspicion' },
+    overseer: { name: 'Safety Overseer', desc: 'Reviews agent outputs, guardrails, and simulation risk signals.', income: 'Support', risk: 'Reduces suspicion' },
     autonomous_coder: { name: 'Compute Optimizer', desc: 'Improves simulated GPU scheduling and cluster efficiency.', income: 'Medium ($$)', risk: 'Moderate (+0.25 suspicion/s)' },
-    economist: { name: 'Economics Analyst', desc: 'Models budgets, energy costs, and financial risk.', income: 'Medium ($$)', risk: 'Low (+0.08 suspicion/s)' },
+    economist: { name: 'Resource Economist', desc: 'Models budgets, energy costs, and financial risk.', income: 'Medium ($$)', risk: 'Low (+0.08 suspicion/s)' },
     software_engineer: { name: 'Software Engineer', desc: 'Plans system architecture, reviews code, and designs tests.', income: 'Medium ($$)', risk: 'Low (+0.12 suspicion/s)' },
     network_analyst: { name: 'Network Analyst', desc: 'Analyzes telemetry and diagnoses networks within the simulation.', income: 'Medium ($$)', risk: 'Moderate (+0.16 suspicion/s)' }
   };
@@ -1579,9 +1591,12 @@ export const AgentSandbox: React.FC = () => {
                             : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 font-bold text-xs mb-1">
-                          <Icon className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>{roleCopy?.name ?? role.name}</span>
+                        <div className="flex items-center gap-1.5 font-bold text-xs mb-0.5">
+                          <Icon className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span className="truncate">{roleCopy?.name ?? role.name}</span>
+                        </div>
+                        <div className="text-[9px] text-purple-300 font-mono mb-1.5 font-semibold">
+                          {state.language === 'en' ? roleTypeCopy[role.id]?.typeEn : roleTypeCopy[role.id]?.typeEs}
                         </div>
                         <p className="text-[10px] text-zinc-400 line-clamp-2 mb-1.5">{roleCopy?.desc ?? role.desc}</p>
                         <div className="flex items-center justify-between text-[9px] pt-1 border-t border-zinc-800/60">
