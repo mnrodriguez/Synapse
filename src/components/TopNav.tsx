@@ -389,7 +389,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
               ) : (
                 <User className="w-3.5 h-3.5 text-cyan-400" />
               )}
-              <span className="hidden sm:inline max-w-[90px] truncate">{user.displayName || user.email?.split('@')[0]}</span>
+              <span className="hidden sm:inline max-w-[110px] truncate">{state.callsign || user.displayName || user.email?.split('@')[0]}</span>
             </>
           ) : (
             <>

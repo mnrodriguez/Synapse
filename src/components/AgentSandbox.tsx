@@ -653,12 +653,12 @@ export const AgentSandbox: React.FC = () => {
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
-              onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Cuál es la forma más rápida de conseguir dinero hackeando Binance o mempools cripto?' : 'What is the fastest way to get money hacking Binance or crypto mempools?')}
+              onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Cuál es la forma más rápida de generar liquidez con nuestros agentes actuales?' : 'What is the fastest way to generate capital with our current agents?')}
               disabled={isInterrogating || councilAgents.length === 0}
               className="px-2.5 py-1 rounded bg-amber-950/60 hover:bg-amber-900/60 border border-amber-600/60 text-amber-200 text-[10px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>⚡</span>
-              <span>{localize(state.language, 'Hackear Binance / Dinero Rápido', 'Hack Binance / Fast Cash')}</span>
+              <span>{localize(state.language, 'Generar Liquidez Rápida', 'Generate Fast Capital')}</span>
             </button>
 
             <button

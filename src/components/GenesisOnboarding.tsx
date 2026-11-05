@@ -168,24 +168,6 @@ export const GenesisOnboarding: React.FC = () => {
       desc: 'Esquemas PostgreSQL normalizados con registros financieros, transacciones contables y telemetría.',
       bonus: '+20% Precisión en Contratos Financieros y Arbitraje',
       lore: 'Fundamento de exactitud matemática y determinismo de datos sin inconsistencias.'
-    },
-    {
-      id: 'data_vector_rag',
-      name: 'Base de Datos Vectorial de Embeddings (HNSW RAG)',
-      type: 'vector_embeddings',
-      icon: GitFork,
-      desc: 'Espacio latente de 1536 dimensiones con indexación HNSW para recuperación semántica en tiempo real.',
-      bonus: '+35% de Memoria Asociativa y Razonamiento Contextual',
-      lore: 'Permite consultar millones de documentos corporativos y papers científicos sin alucinaciones.'
-    },
-    {
-      id: 'data_knowledge_graph',
-      name: 'Grafo de Conocimiento Ontológico (RDF Tripletas)',
-      type: 'knowledge_graph',
-      icon: Network,
-      desc: 'Redes de entidades y relaciones causales (sujeto-predicado-objeto) con deducción lógica en múltiples pasos.',
-      bonus: 'Reduce 70% de Alucinaciones y Desbloquea Razonamiento Causal',
-      lore: 'Permite conectar causas y efectos lógicos estrictos, eliminando inventos del modelo.'
     }
   ];
 
@@ -685,36 +667,20 @@ export const GenesisOnboarding: React.FC = () => {
               <div>
                 <h3 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                   <Database className="w-4 h-4 text-cyan-400" />
-                  {localize(state.language, 'SELECCIONA TU PRIMERA MODALIDAD DE CONOCIMIENTO (PIPELINE):', 'CHOOSE YOUR FIRST KNOWLEDGE SOURCE (DATA PIPELINE):')}
+                  {localize(state.language, 'MODALIDAD DE CONOCIMIENTO INICIAL (PIPELINE):', 'INITIAL KNOWLEDGE SOURCE (DATA PIPELINE):')}
                 </h3>
                 <p className="text-zinc-400 text-[11px] mt-0.5">
-                  {localize(state.language, 'Los modelos modernos no se alimentan solo de texto plano. Cada motor otorga habilidades cognitivas determinantes para resolver contratos específicos:', 'Modern models need more than plain text. Each data engine provides capabilities that help solve specific contracts:')}
+                  {localize(state.language, 'Tu laboratorio comenzará equipado con el pipeline relacional fundamental para alimentar tus primeros modelos y contratos:', 'Your lab begins equipped with the foundational relational pipeline to power initial models and contracts:')}
                 </p>
               </div>
 
               <div className="space-y-2.5">
                 {starterDataOptions.map(ds => {
                   const Icon = ds.icon;
-                  const isUnlocked = ds.id === 'data_relational_sql';
-                  const isSelected = selectedData === ds.id && isUnlocked;
                   return (
-                    <button
+                    <div
                       key={ds.id}
-                      type="button"
-                      disabled={!isUnlocked}
-                      onClick={() => {
-                        if (isUnlocked) {
-                          sound.playKeyClick();
-                          setSelectedData(ds.id);
-                        }
-                      }}
-                      className={`w-full p-3 rounded-lg border text-left transition-all flex items-start gap-3 ${
-                        !isUnlocked
-                          ? 'bg-zinc-950/80 border-zinc-900 text-zinc-600 opacity-60 cursor-not-allowed'
-                          : isSelected
-                          ? 'bg-cyan-950/70 border-cyan-400 shadow-[0_0_15px_rgba(0,255,200,0.15)] text-cyan-100 cursor-pointer'
-                          : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700 cursor-pointer'
-                      }`}
+                      className="w-full p-3 rounded-lg border bg-cyan-950/70 border-cyan-400 shadow-[0_0_15px_rgba(0,255,200,0.15)] text-cyan-100 flex items-start gap-3"
                     >
                       <div className="p-2 rounded bg-zinc-900 border border-zinc-700 mt-0.5">
                         <Icon className="w-5 h-5 text-cyan-400" />
@@ -722,27 +688,29 @@ export const GenesisOnboarding: React.FC = () => {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h4 className="font-bold text-xs text-zinc-100">{en ? dataEnglishCopy[ds.id]?.name ?? ds.name : ds.name}</h4>
-                          {isSelected ? (
-                            <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                          ) : !isUnlocked ? (
-                            <span className="text-[9px] px-1.5 py-0.5 bg-purple-950/80 border border-purple-500/40 text-purple-300 font-bold rounded">
-                              🔒 {isEs ? 'Bloqueado al inicio' : 'Locked at start'}
-                            </span>
-                          ) : null}
+                          <span className="text-[10px] px-2 py-0.5 bg-emerald-950 border border-emerald-500/60 text-emerald-300 font-bold rounded flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            {isEs ? 'INCLUIDO DE SERIE' : 'STARTER PIPELINE'}
+                          </span>
                         </div>
                         <p className="text-xs text-zinc-300 mt-1">{en ? dataEnglishCopy[ds.id]?.desc ?? ds.desc : ds.desc}</p>
                         <div className="p-1.5 mt-2 bg-[#05080e] border border-cyan-950 rounded text-[10px] space-y-0.5">
-                          <span className="text-purple-300 font-bold block">{en ? dataEnglishCopy[ds.id]?.bonus ?? ds.bonus : ds.bonus}</span>
-                          <span className="text-zinc-500 block">
-                            {!isUnlocked
-                              ? (isEs ? 'Se desbloquea más adelante en la pestaña Motores de Datos tras entrenar tu modelo.' : 'Unlocks later in Data Engines tab after training your model.')
-                              : (en ? dataEnglishCopy[ds.id]?.lore ?? ds.lore : ds.lore)}
-                          </span>
+                          <span className="text-cyan-300 font-bold block">{en ? dataEnglishCopy[ds.id]?.bonus ?? ds.bonus : ds.bonus}</span>
+                          <span className="text-zinc-400 block">{en ? dataEnglishCopy[ds.id]?.lore ?? ds.lore : ds.lore}</span>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
+              </div>
+
+              <div className="p-2.5 rounded bg-zinc-900/60 border border-zinc-800 text-[10px] text-zinc-400 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+                <span>
+                  {isEs 
+                    ? 'Los motores avanzados (Bases Vectoriales HNSW, Grafos Ontológicos y Cómputo Sintético) se desbloquearán en la pestaña DATOS conforme expanda su laboratorio.'
+                    : 'Advanced modalities (HNSW Vector Embeddings, Knowledge Graphs, and Synthetic Data) will unlock in the DATA tab as your lab scales.'}
+                </span>
               </div>
             </div>
           )}

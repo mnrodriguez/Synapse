@@ -1,6 +1,6 @@
 {
   "name": "SYNAPSE: Singularity Uplink",
-  "description": "Juego de simulación ciberpunk inspirado en Uplink y Hacknet. Entrena tu inteligencia artificial desde cero optimizando arquitecturas neuronales, bases de vectores y grafos de conocimiento hasta desatar la Singularidad Tecnológica.",
+  "description": "Cyberpunk AI simulation game inspired by Uplink and Hacknet. Train autonomous AI models from scratch, optimize neural architectures, vector engines, and knowledge graphs to ignite the Technological Singularity.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

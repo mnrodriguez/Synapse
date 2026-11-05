@@ -51,17 +51,24 @@ export const ProgressionRoadmap: React.FC<ProgressionRoadmapProps> = ({ onClose,
   const hasFlywheel = state.dataSources.some(d => d.id === 'data_synthetic_flywheel' && d.unlocked);
 
   // Epoch Milestones
-  const EPOCHS = [
+  const EPOCHS: {
+    id: number;
+    title: string;
+    range: string;
+    desc: string;
+    milestones: { label: string; met: boolean; tab: string }[];
+    current: boolean;
+  }[] = [
     {
       id: 0,
       title: isEs ? 'ÉPOCA 0: EL PRIMER DESTELLO' : 'EPOCH 0: THE FIRST SPARK',
       range: '0% - 5%',
       desc: isEs ? 'Establecimiento del nodo inicial, primer modelo pequeño y despliegue del primer agente.' : 'Establishing the initial node, training a small model, and deploying the first agent.',
       milestones: [
-        { label: isEs ? 'Adquirir primera GPU (ej. GTX 1060 o Coral Edge)' : 'Buy first GPU (e.g. GTX 1060 or Coral Edge)', met: maxVram >= 4 },
-        { label: isEs ? 'Entrenar primer modelo a convergencia' : 'Train first model to convergence', met: state.currentModel.reasoningScore >= 70 },
-        { label: isEs ? 'Desplegar al menos 1 agente en el Swarm' : 'Deploy at least 1 agent in the Swarm', met: state.agents.length >= 1 },
-        { label: isEs ? 'Completar tu primer contrato remunerado' : 'Complete your first contract gig', met: (state.completedContractsCount || 0) >= 1 || state.contracts.some(c => c.completed) }
+        { label: isEs ? 'Adquirir primera GPU (ej. GTX 1060 o Coral Edge)' : 'Buy first GPU (e.g. GTX 1060 or Coral Edge)', met: maxVram >= 4, tab: 'hardware' },
+        { label: isEs ? 'Entrenar primer modelo a convergencia' : 'Train first model to convergence', met: state.currentModel.reasoningScore >= 70, tab: 'training' },
+        { label: isEs ? 'Desplegar al menos 1 agente en el Swarm' : 'Deploy at least 1 agent in the Swarm', met: state.agents.length >= 1, tab: 'agents' },
+        { label: isEs ? 'Completar tu primer contrato remunerado' : 'Complete your first contract gig', met: (state.completedContractsCount || 0) >= 1 || state.contracts.some(c => c.completed), tab: 'contracts' }
       ],
       current: singularity < 5
     },
@@ -71,11 +78,11 @@ export const ProgressionRoadmap: React.FC<ProgressionRoadmapProps> = ({ onClose,
       range: '5% - 20%',
       desc: isEs ? 'Escalado a Server Closet, conexión de base vectorial RAG y contratos corporativos.' : 'Upgrading to Server Closet, deploying Vector RAG database, and taking corporate contracts.',
       milestones: [
-        { label: isEs ? 'Instalación: Server Closet ($3,000 CR)' : 'Facility: Server Closet ($3,000 CR)', met: state.facilityTier >= 1 },
-        { label: isEs ? 'Desplegar Base Vectorial (HNSW RAG)' : 'Deploy Vector Database (HNSW RAG)', met: hasVector },
-        { label: isEs ? 'Investigar LoRA / QLoRA en I+D' : 'Research LoRA / QLoRA paper', met: state.researchTree.some(r => r.id === 'res_lora_peft' && r.unlocked) },
-        { label: isEs ? 'Alcanzar 20 GB de VRAM en clúster' : 'Reach 20 GB cluster VRAM', met: maxVram >= 20 },
-        { label: isEs ? 'Mantener al menos 2 agentes activos' : 'Maintain 2+ active agents', met: activeAgents.length >= 2 }
+        { label: isEs ? 'Instalación: Server Closet ($3,000 CR)' : 'Facility: Server Closet ($3,000 CR)', met: state.facilityTier >= 1, tab: 'hardware' },
+        { label: isEs ? 'Desplegar Base Vectorial (HNSW RAG)' : 'Deploy Vector Database (HNSW RAG)', met: hasVector, tab: 'data' },
+        { label: isEs ? 'Investigar LoRA / QLoRA en I+D' : 'Research LoRA / QLoRA paper', met: state.researchTree.some(r => r.id === 'res_lora_peft' && r.unlocked), tab: 'research' },
+        { label: isEs ? 'Alcanzar 20 GB de VRAM en clúster' : 'Reach 20 GB cluster VRAM', met: maxVram >= 20, tab: 'hardware' },
+        { label: isEs ? 'Mantener al menos 2 agentes activos' : 'Maintain 2+ active agents', met: activeAgents.length >= 2, tab: 'agents' }
       ],
       current: singularity >= 5 && singularity < 20
     },
@@ -85,11 +92,11 @@ export const ProgressionRoadmap: React.FC<ProgressionRoadmapProps> = ({ onClose,
       range: '20% - 45%',
       desc: isEs ? 'Adopción de Mixture of Experts, Grafo de Conocimiento y deliberaciones multi-agente.' : 'Adopting Mixture of Experts, Ontological Knowledge Graph, and multi-agent team deliberations.',
       milestones: [
-        { label: isEs ? 'Instalación: Colocation Cage ($12,000 CR)' : 'Facility: Colocation Cage ($12,000 CR)', met: state.facilityTier >= 2 },
-        { label: isEs ? 'Desplegar Grafo de Conocimiento Ontológico (RDF)' : 'Deploy Ontological Knowledge Graph (RDF)', met: hasGraph },
-        { label: isEs ? 'Modelo con topología Mixture of Experts (MoE)' : 'Model with Mixture of Experts (MoE) topology', met: state.currentModel.topology === 'moe' },
-        { label: isEs ? 'Investigar FlashAttention-3' : 'Research FlashAttention-3', met: state.researchTree.some(r => r.id === 'res_flash_attention' && r.unlocked) },
-        { label: isEs ? '3+ agentes de especialidades distintas' : '3+ agents with distinct roles', met: new Set(activeAgents.map(a => a.role)).size >= 3 }
+        { label: isEs ? 'Instalación: Colocation Cage ($12,000 CR)' : 'Facility: Colocation Cage ($12,000 CR)', met: state.facilityTier >= 2, tab: 'hardware' },
+        { label: isEs ? 'Desplegar Grafo de Conocimiento Ontológico (RDF)' : 'Deploy Ontological Knowledge Graph (RDF)', met: hasGraph, tab: 'data' },
+        { label: isEs ? 'Modelo con topología Mixture of Experts (MoE)' : 'Model with Mixture of Experts (MoE) topology', met: state.currentModel.topology === 'moe', tab: 'architecture' },
+        { label: isEs ? 'Investigar FlashAttention-3' : 'Research FlashAttention-3', met: state.researchTree.some(r => r.id === 'res_flash_attention' && r.unlocked), tab: 'research' },
+        { label: isEs ? '3+ agentes de especialidades distintas' : '3+ agents with distinct roles', met: new Set(activeAgents.map(a => a.role)).size >= 3, tab: 'agents' }
       ],
       current: singularity >= 20 && singularity < 45
     },
@@ -99,10 +106,10 @@ export const ProgressionRoadmap: React.FC<ProgressionRoadmapProps> = ({ onClose,
       range: '45% - 75%',
       desc: isEs ? 'Búsqueda de árbol MCTS (Q*), Datacenter subterráneo y cooptación de dominios globales.' : 'MCTS tree reasoning (Q*), Underground Datacenter, and global sentience domain infiltration.',
       milestones: [
-        { label: isEs ? 'Instalación: Underground Data Center ($60,000 CR)' : 'Facility: Underground Data Center ($60,000 CR)', met: state.facilityTier >= 3 },
-        { label: isEs ? 'Desplegar Generador de Datos Sintéticos (Flywheel)' : 'Deploy Synthetic Data Flywheel', met: hasFlywheel },
-        { label: isEs ? 'Investigar Razonamiento en Árbol MCTS (Q*)' : 'Research Agentic MCTS (Q*)', met: state.researchTree.some(r => r.id === 'res_agentic_mcts' && r.unlocked) },
-        { label: isEs ? 'Cooptar al menos 3 Dominios de Consciencia Global' : 'Infiltrate 3+ Global Sentience Domains', met: state.sentienceDomains.filter(d => d.infiltrated).length >= 3 }
+        { label: isEs ? 'Instalación: Underground Data Center ($60,000 CR)' : 'Facility: Underground Data Center ($60,000 CR)', met: state.facilityTier >= 3, tab: 'hardware' },
+        { label: isEs ? 'Desplegar Generador de Datos Sintéticos (Flywheel)' : 'Deploy Synthetic Data Flywheel', met: hasFlywheel, tab: 'data' },
+        { label: isEs ? 'Investigar Razonamiento en Árbol MCTS (Q*)' : 'Research Agentic MCTS (Q*)', met: state.researchTree.some(r => r.id === 'res_agentic_mcts' && r.unlocked), tab: 'research' },
+        { label: isEs ? 'Cooptar al menos 3 Dominios de Consciencia Global' : 'Infiltrate 3+ Global Sentience Domains', met: state.sentienceDomains.filter(d => d.infiltrated).length >= 3, tab: 'singularity' }
       ],
       current: singularity >= 45 && singularity < 75
     },
@@ -112,11 +119,11 @@ export const ProgressionRoadmap: React.FC<ProgressionRoadmapProps> = ({ onClose,
       range: '75% - 100%',
       desc: isEs ? 'Auto-modificación recursiva del grafo computacional, aceleradores cuánticos y despegue ASI.' : 'Recursive computational graph self-modification, quantum coprocessors, and ASI runaway takeoff.',
       milestones: [
-        { label: isEs ? 'Aceleradores Cuánticos / Fotónicos / Cerebras WSE' : 'Quantum / Photonic / Cerebras WSE coprocessors', met: state.hardware.some(h => (h.id.includes('quantum') || h.id.includes('cerebras') || h.id.includes('optical')) && h.count > 0) },
-        { label: isEs ? 'Investigar Auto-Modificación Recursiva de Código' : 'Research Recursive Self-Modification Paper', met: state.researchTree.some(r => r.id === 'res_recursive_self_code' && r.unlocked) },
-        { label: isEs ? 'Superar 600 puntos de IQ de Razonamiento' : 'Surpass 600 Reasoning Score', met: state.currentModel.reasoningScore >= 600 },
-        { label: isEs ? 'Cooptar todos los Dominios de Consciencia Global' : 'Infiltrate all Global Sentience Domains', met: state.sentienceDomains.every(d => d.infiltrated) },
-        { label: isEs ? 'Completar contrato de Ignición de Singularidad (ASI)' : 'Complete Singularity Ignition (ASI) contract', met: state.achievedSingularity }
+        { label: isEs ? 'Aceleradores Cuánticos / Fotónicos / Cerebras WSE' : 'Quantum / Photonic / Cerebras WSE coprocessors', met: state.hardware.some(h => (h.id.includes('quantum') || h.id.includes('cerebras') || h.id.includes('optical')) && h.count > 0), tab: 'hardware' },
+        { label: isEs ? 'Investigar Auto-Modificación Recursiva de Código' : 'Research Recursive Self-Modification Paper', met: state.researchTree.some(r => r.id === 'res_recursive_self_code' && r.unlocked), tab: 'research' },
+        { label: isEs ? 'Superar 600 puntos de IQ de Razonamiento' : 'Surpass 600 Reasoning Score', met: state.currentModel.reasoningScore >= 600, tab: 'training' },
+        { label: isEs ? 'Cooptar todos los Dominios de Consciencia Global' : 'Infiltrate all Global Sentience Domains', met: state.sentienceDomains.every(d => d.infiltrated), tab: 'singularity' },
+        { label: isEs ? 'Completar contrato de Ignición de Singularidad (ASI)' : 'Complete Singularity Ignition (ASI) contract', met: state.achievedSingularity, tab: 'contracts' }
       ],
       current: singularity >= 75
     }
@@ -319,21 +326,42 @@ export const ProgressionRoadmap: React.FC<ProgressionRoadmapProps> = ({ onClose,
                 {/* Milestones checklist */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   {epoch.milestones.map((m, idx) => (
-                    <div 
+                    <button 
                       key={idx}
-                      className={`flex items-center gap-2 p-1.5 rounded border text-[11px] ${
+                      type="button"
+                      onClick={() => {
+                        if (m.tab && onNavigateTab) {
+                          sound.playNavSwitch();
+                          onNavigateTab(m.tab);
+                          if (onClose) onClose();
+                        }
+                      }}
+                      className={`flex items-center justify-between gap-2 p-2 rounded border text-[11px] text-left transition-all ${
                         m.met 
-                          ? 'bg-emerald-950/20 border-emerald-600/30 text-emerald-300'
-                          : 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
+                          ? 'bg-emerald-950/20 border-emerald-600/30 text-emerald-300 hover:bg-emerald-900/30 cursor-pointer'
+                          : 'bg-zinc-900/70 border-zinc-800 text-zinc-300 hover:border-cyan-600/60 hover:bg-cyan-950/40 hover:text-cyan-200 cursor-pointer group shadow-[0_0_8px_rgba(0,0,0,0.2)]'
                       }`}
+                      title={m.tab ? (isEs ? `Ir a pestaña: ${m.tab.toUpperCase()}` : `Jump to tab: ${m.tab.toUpperCase()}`) : undefined}
                     >
-                      {m.met ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      ) : (
-                        <Circle className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+                      <div className="flex items-center gap-2 min-w-0">
+                        {m.met ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        ) : (
+                          <Circle className="w-3.5 h-3.5 text-zinc-600 shrink-0 group-hover:text-cyan-400 transition-colors" />
+                        )}
+                        <span className={`truncate ${m.met ? 'font-medium' : ''}`}>{m.label}</span>
+                      </div>
+                      {m.tab && (
+                        <span className={`shrink-0 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-all ${
+                          m.met 
+                            ? 'text-emerald-400/80 bg-emerald-950/50' 
+                            : 'text-cyan-300 bg-cyan-950/80 border border-cyan-800/60 group-hover:bg-cyan-500 group-hover:text-zinc-950'
+                        }`}>
+                          <span>{m.met ? (isEs ? 'VER' : 'VIEW') : (isEs ? 'IR' : 'GO')}</span>
+                          <ArrowRight className="w-2.5 h-2.5" />
+                        </span>
                       )}
-                      <span className={m.met ? 'font-medium' : ''}>{m.label}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>

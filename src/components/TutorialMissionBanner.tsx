@@ -53,6 +53,12 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       addLog(isEs 
         ? 'Protocolo Génesis [1/5]: Rig inicial completo: GPU, refrigeración, fuente de alimentación y red instaladas.'
         : 'Genesis Protocol [1/5]: Starter rig complete: GPU, cooling, power supply, and network installed.', 'success');
+    } else if (step === 2 && state.savedModels.some(m => m.reasoningScore >= 65)) {
+      sound.playBreakthrough();
+      advanceTutorialStep(3);
+      addLog(isEs
+        ? 'Protocolo Génesis [3/5]: Entrenamiento completado con éxito. Despliega tu primer agente.'
+        : 'Genesis Protocol [3/5]: Training completed successfully. Deploy your first agent.', 'success');
     } else if (step === 3 && hasAgent) {
       sound.playBreakthrough();
       advanceTutorialStep(4);
@@ -67,7 +73,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
         ? 'PROTOCOLO GÉNESIS COMPLETADO: Primera misión comercial ejecutada con éxito. ¡+250 CR otorgados!'
         : 'GENESIS PROTOCOL COMPLETE: First commercial gig executed successfully. +250 CR rewarded!', 'success');
     }
-  }, [hasStarterHardware, hasAgent, hasFinishedContract, step, advanceTutorialStep, addLog, isEs]);
+  }, [hasStarterHardware, hasAgent, hasFinishedContract, step, state.savedModels, advanceTutorialStep, addLog, isEs]);
 
   const stepsData = [
     {

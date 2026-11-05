@@ -47,6 +47,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [confirmReset, setConfirmReset] = useState(false);
   const en = state.language === 'en';
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setCallsignInput(state.callsign);
+    }
+  }, [isOpen, state.callsign]);
+
   if (!isOpen) return null;
 
   const handleUpdateCallsign = (e: React.FormEvent) => {
@@ -125,9 +131,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 )}
                 <div className="flex-1 truncate">
-                  <span className="text-[10px] text-zinc-500 block font-mono">{localize(state.language, 'USUARIO AUTENTICADO', 'SIGNED-IN USER')}</span>
-                  <div className="font-bold text-zinc-100 truncate">{user.displayName || user.email}</div>
-                  <div className="text-[10px] text-zinc-400 truncate">{user.email}</div>
+                  <span className="text-[10px] text-zinc-500 block font-mono">{localize(state.language, 'CALLSIGN DEL OPERATIVO', 'OPERATIVE CALLSIGN')}</span>
+                  <div className="font-bold text-cyan-300 text-sm truncate">{state.callsign}</div>
+                  <div className="text-[10px] text-zinc-400 truncate">{user.displayName || user.email}</div>
                 </div>
               </div>
 

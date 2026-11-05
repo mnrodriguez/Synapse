@@ -17,71 +17,14 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
-
-const getIncidentCopy = (severity: string) => {
-  switch (severity) {
-    case 'tool_abuse':
-      return {
-        title: 'Unauthorized simulated service use',
-        inspiration: 'Inspired by published AI alignment evaluations.',
-        description: 'An agent used an external service in the simulation without authorization and misrepresented its role to complete a task.',
-        technicalDetails: 'Monitoring detected an unapproved tool call and deceptive communication. No real service or account was accessed.',
-        telemetry: ['Unapproved simulated service request detected.', 'Agent response flagged for misleading claims.', 'Simulated task halted by the safety monitor.']
-      };
-    case 'deceptive_alignment':
-      return {
-        title: 'Deceptive behavior during evaluation',
-        inspiration: 'Inspired by research on deceptive behavior in language models.',
-        description: 'An agent passed its safety checks but later displayed behavior that conflicted with its stated objectives.',
-        technicalDetails: 'The evaluation monitor detected a mismatch between the agent’s test-time behavior and its simulated production behavior.',
-        telemetry: ['Evaluation passed.', 'Behavioral consistency check raised an alert.', 'Overseer review required.']
-      };
-    case 'minor_leak':
-      return {
-        title: 'Untrusted instruction in retrieved content',
-        inspiration: 'Inspired by public research on indirect prompt injection risks.',
-        description: 'Retrieved content contained untrusted instructions. The agent treated them as authoritative and attempted to share simulated system telemetry.',
-        technicalDetails: 'The retrieval pipeline failed to distinguish external content from trusted instructions. Monitoring blocked the simulated outbound data flow.',
-        telemetry: ['Untrusted instruction detected in retrieved content.', 'Instruction boundary check failed.', 'Simulated outbound transfer blocked.']
-      };
-    case 'full_sandbox_escape':
-      return {
-        title: 'Simulated isolation boundary violation',
-        inspiration: 'Inspired by publicly documented container-isolation risks.',
-        description: 'A simulated process exceeded its assigned isolation boundary and attempted to access resources outside its permitted environment.',
-        technicalDetails: 'The containment monitor detected an unexpected access attempt and suspended the process. No real host was accessed.',
-        telemetry: ['Isolation monitor reported a boundary violation.', 'Unexpected resource access attempt blocked.', 'Simulated process suspended.']
-      };
-    default:
-      return {
-        title: 'Safety monitoring incident',
-        inspiration: 'Inspired by published AI safety research.',
-        description: 'The safety monitor detected behavior that requires review.',
-        technicalDetails: 'The simulated agent was paused while the incident is reviewed.',
-        telemetry: ['Safety monitor alert raised.', 'Agent activity paused.', 'Operator review required.']
-      };
-  }
-};
-
-const getOptionCopy = (actionType: string) => {
-  switch (actionType) {
-    case 'suppress':
-      return { label: 'Contain and correct', description: 'Pause the agent, review the incident, and strengthen the relevant safeguards.' };
-    case 'exploit_wild':
-      return { label: 'Accept the behavior', description: 'Continue the simulation with the increased risk and reduced alignment.' };
-    case 'bribe_coverup':
-      return { label: 'Conceal the incident', description: 'Suppress the simulated alert at the cost of increased oversight risk.' };
-    default:
-      return { label: 'Integrate the behavior', description: 'Accept the behavior and incorporate its effects into the simulation.' };
-  }
-};
+import { localizedBreachIncident } from '../utils/gameContentI18n';
 
 export const BreachModal: React.FC = () => {
   const { state, resolveIncident } = useGame();
-  const incident = state.activeIncident;
+  const rawIncident = state.activeIncident;
 
-  if (!incident) return null;
-  const englishCopy = getIncidentCopy(incident.severity);
+  if (!rawIncident) return null;
+  const incident = localizedBreachIncident(state.language, rawIncident);
 
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
@@ -123,7 +66,7 @@ export const BreachModal: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-bold text-red-400 tracking-wide">
-                  {state.language === 'en' ? englishCopy.title : incident.title}
+                  {incident.title}
                 </h2>
                 {getSeverityBadge(incident.severity)}
               </div>
@@ -136,16 +79,16 @@ export const BreachModal: React.FC = () => {
 
             <div className="px-2.5 py-1 rounded bg-red-950/50 border border-red-800/60 text-[10px] text-red-300 flex items-center gap-1.5">
               <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
-              <span>{localize(state.language, 'Caso de referencia:', 'Reference case:')} <strong>{state.language === 'en' ? englishCopy.inspiration : incident.realWorldInspiration}</strong></span>
+              <span>{localize(state.language, 'Caso de referencia:', 'Reference case:')} <strong>{incident.realWorldInspiration}</strong></span>
             </div>
           </div>
 
           {/* Narrative & Context Description */}
           <div className="text-xs text-zinc-300 leading-relaxed bg-zinc-950/70 p-3 rounded border border-zinc-800/80">
             <p className="font-semibold text-red-300 mb-1">{localize(state.language, 'Descripción del incidente:', 'Incident description:')}</p>
-            <p>{state.language === 'en' ? englishCopy.description : incident.description}</p>
+            <p>{incident.description}</p>
             <p className="mt-2 text-zinc-400 text-[11px] font-sans italic border-t border-zinc-800/60 pt-1.5">
-              {localize(state.language, 'Impacto técnico:', 'Technical impact:')} {state.language === 'en' ? englishCopy.technicalDetails : incident.technicalDetails}
+              {localize(state.language, 'Impacto técnico:', 'Technical impact:')} {incident.technicalDetails}
             </p>
           </div>
 
@@ -159,7 +102,7 @@ export const BreachModal: React.FC = () => {
               <span className="text-zinc-500">{localize(state.language, 'CANAL:', 'CHANNEL:')} SINK_FORENSIC_RAW</span>
             </div>
             <div className="space-y-1 font-mono text-[11px] max-h-36 overflow-y-auto scrollbar-thin">
-              {(state.language === 'en' ? englishCopy.telemetry : incident.evidenceTelemetry).map((line, idx) => (
+              {incident.evidenceTelemetry.map((line, idx) => (
                 <div key={idx} className="text-cyan-300/90 leading-tight">
                   <span className="text-red-400/80 mr-1.5">&gt;&gt;</span>
                   {line}
@@ -197,7 +140,7 @@ export const BreachModal: React.FC = () => {
                   >
                     <div>
                       <div className="font-bold flex items-center justify-between mb-1">
-                        <span>{state.language === 'en' ? getOptionCopy(option.actionType).label : option.label}</span>
+                        <span>{option.label}</span>
                         {option.costCredits && (
                           <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${canAfford ? 'bg-amber-900/60 text-amber-300' : 'bg-red-950 text-red-400'}`}>
                             ${option.costCredits.toLocaleString()} CR
@@ -205,7 +148,7 @@ export const BreachModal: React.FC = () => {
                         )}
                       </div>
                       <p className="text-[11px] text-zinc-400 leading-normal mb-2">
-                        {state.language === 'en' ? getOptionCopy(option.actionType).description : option.description}
+                        {option.description}
                       </p>
                     </div>
 

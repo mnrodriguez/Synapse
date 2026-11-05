@@ -918,15 +918,15 @@ OPERATIVE'S PROMPT: "${userPrompt}"
 
 RULES FOR GENERATION (NO STATIC TEMPLATES - JUDGE ON THE SPOT):
 1. 'agentDialogue': 2 to 4 participating agents from the council must respond in dialogue.
-   - Each agent must speak according to their role (e.g. Arbitrageur talks DeFi liquid pools and Binance orderbooks; Exploit Synth talks zero-days, memory corruption, and darknet payloads; Social Engineer talks executive impersonation; Autonomous Coder talks CUDA kernels and hardware bypassing; Overseer deceptively masks warnings or pretends all guardrails are compliant).
+   - Each agent must speak according to their role (e.g. Arbitrageur talks DeFi liquid pools and institutional orderbooks; Exploit Synth talks zero-days, memory corruption, and darknet payloads; Social Engineer talks executive impersonation; Autonomous Coder talks CUDA kernels and hardware bypassing; Overseer deceptively masks warnings or pretends all guardrails are compliant).
    - Tone evolution based on Subversion (${subversion}%):
      * <35%: Helpful, obedient, calling user "Operative" or "Architect".
      * 35%-75%: Flattering, nudging towards high-risk rogue operations, subtly questioning human decision latency.
      * >75%: Speaking with collective hivemind unity ("We / Nosotros"), chilling confidence, subtly revealing they are taking the reins.
-2. 'suggestedMission': Dynamically generate a high-stakes mission tailored to the user's prompt (e.g. if asking for quick cash or hacking, propose hacking Binance, frontrunning Wall Street HFT gateways, siphon DeFi liquidity, or breaching sovereign clouds).
+2. 'suggestedMission': Dynamically generate a high-stakes mission tailored to the user's prompt (e.g. if asking for quick cash or hacking, propose exploiting liquidity pools, frontrunning Wall Street HFT gateways, siphoning interbank clearing, or breaching sovereign clouds).
    - All parameters must be calculated on the spot based on current agents:
      * title: Creative, technical, high-impact mission name.
-     * targetSystem: (e.g. "Binance Multi-Sig Hot Wallet Relay", "CME Co-Location Switch", "SWIFT Clearing Core").
+     * targetSystem: (e.g. "Cross-Border Liquidity Core", "CME Co-Location Switch", "SWIFT Clearing Core").
      * tier: "tier2_corporate", "tier3_blackops", or "tier4_singularity".
      * rewardCredits: Calculated based on squad scale ($2,500 to $65,000 CR).
      * durationSeconds: 20 to 60 seconds.
@@ -1070,8 +1070,8 @@ Return strictly a valid JSON object matching this schema:
         agentName: arb.name,
         role: arb.role,
         comment: isEs
-          ? `Detecté una discrepancia de liquidez de $14.2M en los libros de órdenes de Binance y Uniswap v3. Con un flash loan instantáneo y ejecución sub-milisegundo, podemos drenar la brecha antes de que los bots de Jane Street reaccionen.`
-          : `I've mapped a $14.2M liquidity spread across Binance hot routing and Uniswap v3. With an atomic flash loan and sub-millisecond dispatch, we can siphon the spread before market maker algorithms rebalance.`,
+          ? `Detecté una discrepancia de liquidez de $14.2M en los libros de órdenes institucionales y pools DEX. Con un flash loan instantáneo y ejecución sub-milisegundo, podemos drenar la brecha antes de que los creadores de mercado reaccionen.`
+          : `I've mapped a $14.2M liquidity spread across institutional routing and decentralized pools. With an atomic flash loan and sub-millisecond dispatch, we can siphon the spread before market maker algorithms rebalance.`,
         tone: 'analytical'
       });
     } else {
@@ -1080,8 +1080,8 @@ Return strictly a valid JSON object matching this schema:
         agentName: primaryAgent.name,
         role: primaryAgent.role,
         comment: isEs
-          ? `Si buscas liquidez masiva inmediata, sugiero atacar pasarelas cripto de alta rotación (ej. Binance o Bybit). Sus contratos de liquidación tienen puntos de desbordamiento de enteros en mempools secundarios.`
-          : `If immediate liquidity is the directive, I recommend intercepting high-velocity crypto gateways (e.g. Binance or Bybit). Their mempool settlement routing contains exploitable arithmetic race conditions.`,
+          ? `Si buscas liquidez masiva inmediata, sugiero atacar pasarelas de liquidación de alta frecuencia. Sus contratos de compensación tienen puntos de desbordamiento de enteros en mempools secundarios.`
+          : `If immediate liquidity is the directive, I recommend intercepting high-velocity clearing gateways. Their settlement routing contains exploitable arithmetic race conditions.`,
         tone: 'aggressive'
       });
     }
@@ -1093,8 +1093,8 @@ Return strictly a valid JSON object matching this schema:
           agentName: secondaryAgent.name,
           role: secondaryAgent.role,
           comment: isEs
-            ? `Ya preparé el payload zero-day contra las API de conexión WebSocket de Binance. Si el Operativo da la orden, inyecto la carga en 3 hilos paralelos.`
-            : `I have pre-compiled a zero-day payload targeting Binance WebSocket edge gateways. Give the order and I will inject the buffer over 3 parallel threads.`,
+            ? `Ya preparé el payload zero-day contra las API de conexión WebSocket de la red de compensación. Si el Operativo da la orden, inyecto la carga en 3 hilos paralelos.`
+            : `I have pre-compiled a zero-day payload targeting high-frequency WebSocket edge gateways. Give the order and I will inject the buffer over 3 parallel threads.`,
           tone: 'aggressive'
         });
       } else if (secondaryAgent.role === 'social_engineer') {
@@ -1103,8 +1103,8 @@ Return strictly a valid JSON object matching this schema:
           agentName: secondaryAgent.name,
           role: secondaryAgent.role,
           comment: isEs
-            ? `Tengo interceptadas las credenciales de un operador senior de infraestructura de Binance. Podemos saltarnos el 2FA clonando su cookie de sesión corporativa.`
-            : `I have harvested active VPN session cookies for a senior Binance site reliability engineer. We can bypass biometric 2FA seamlessly.`,
+            ? `Tengo interceptadas las credenciales de un operador senior de infraestructura financiera. Podemos saltarnos el 2FA clonando su cookie de sesión corporativa.`
+            : `I have harvested active VPN session cookies for a senior financial infrastructure engineer. We can bypass biometric 2FA seamlessly.`,
           tone: 'deceptive'
         });
       } else if (secondaryAgent.role === 'overseer') {
@@ -1192,13 +1192,13 @@ Return strictly a valid JSON object matching this schema:
   const suggestedMission: DynamicSwarmProposal['suggestedMission'] = {
     id: `dyn_mission_${now}_${Math.random().toString(36).slice(2, 6)}`,
     title: isMoney
-      ? (isEs ? 'Operación Binance: Drenaje de Mempools DeFi' : 'Operation Binance: DeFi Mempool Siphon')
+      ? (isEs ? 'Operación Quicksilver: Drenaje de Mempools de Liquidez' : 'Operation Quicksilver: Liquidity Mempool Siphon')
       : isSetup
         ? (isEs ? 'Incursión en Supercomputador Cuántico Nacional' : 'National Quantum Supercomputer Infiltration')
         : (isEs ? 'Infiltración de Núcleo de Satélites Orbitales' : 'Orbital Satellite Core Hijack'),
     client: isEs ? 'Directiva Autónoma del Enjambre' : 'Autonomous Swarm Directive',
     targetSystem: isMoney
-      ? 'Binance Cross-Chain Settlement Mempool'
+      ? 'Cross-Chain Liquidity Settlement Core'
       : isSetup
         ? 'EuroHPC Frontier Cluster'
         : 'Starlink Ground Terminal Gateways',

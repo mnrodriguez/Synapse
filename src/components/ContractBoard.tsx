@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
+import { localizedContract } from '../utils/gameContentI18n';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
 import { generateDynamicContracts } from '../services/aiService';
 import { evaluateMissionTeam, isContractEligibleForTeam } from '../utils/missionEvaluation';
@@ -42,59 +43,6 @@ const AGENT_ROLE_LABELS: Record<AgentRole, { en: string; es: string }> = {
   economist: { en: 'Economist', es: 'Economista' },
   software_engineer: { en: 'Software engineer', es: 'Ingeniero de software' },
   network_analyst: { en: 'Network analyst', es: 'Analista de redes' }
-};
-
-const ENGLISH_CONTRACT_COPY: Record<string, { title: string; lore: string; objective: string }> = {
-  gig_spam_classifier: {
-    title: 'Large-Scale Banking Phishing Classification',
-    lore: 'A financial startup needs to filter millions of fraudulent emails. Your small model can identify common text patterns.',
-    objective: 'Fine-tune a binary classifier with cross-entropy on a relational dataset.'
-  },
-  gig_captcha_ocr: {
-    title: 'Complex CAPTCHA Recognition Benchmark',
-    lore: 'A web-data research group is evaluating visual and text recognition in a controlled benchmark.',
-    objective: 'Feature extraction and sequence recognition using INT8 quantization.'
-  },
-  gig_sentiment_arbitrage: {
-    title: 'Cryptocurrency Social Sentiment Analysis',
-    lore: 'Detect shifts in optimism and concern in public posts before market indicators respond.',
-    objective: 'Stream processing with aggregations over relational databases.'
-  },
-  gig_legal_rag_audit: {
-    title: 'Forensic Review of Corporate Contracts and Litigation',
-    lore: 'Search millions of legal documents to identify relevant indemnity clauses for a client review.',
-    objective: 'Dense vector indexing with cosine similarity and high-fidelity RAG retrieval.'
-  },
-  gig_drug_discovery: {
-    title: 'Molecular Affinity Prediction for Oncology Research',
-    lore: 'Map interactions between ligands and target proteins using an ontology graph of chemical compounds.',
-    objective: 'Graph convolutional networks and causal inference over RDF triples.'
-  },
-  gig_deepfake_voice_bypass: {
-    title: 'Consent-Based Voice Authentication Resilience Test',
-    lore: 'A bank is testing its phone authentication controls using authorized synthetic voice samples.',
-    objective: 'Low-latency, conditioned autoregressive audio modeling in a controlled test.'
-  },
-  gig_zeroday_synthesis: {
-    title: 'Automated Security Testing for Critical Protocols',
-    lore: 'Analyze a simulated router environment for memory-safety issues in an isolated research lab.',
-    objective: 'Generate fuzz-test cases and verify results in a closed, non-deployable simulation.'
-  },
-  gig_satellite_neural_intercept: {
-    title: 'LEO Satellite Signal Resilience Analysis',
-    lore: 'Reconstruct noisy, simulated satellite telemetry using adaptive neural denoising.',
-    objective: 'Hybrid state-space model with one-million-token sequence processing.'
-  },
-  gig_global_grid_rewiring: {
-    title: 'Continental Power Grid Resilience Simulation',
-    lore: 'Model how simulated substations could reroute power during a regional outage.',
-    objective: 'Real-time distributed load-flow optimization with model-predictive control.'
-  },
-  gig_singularity_ascension: {
-    title: 'Ignition of the Unlimited Intelligence Loop (ASI)',
-    lore: 'The system reaches the final stage of the fictional technological-singularity campaign.',
-    objective: 'Complete the simulated singularity sequence.'
-  }
 };
 
 export const ContractBoard: React.FC = () => {
@@ -344,7 +292,7 @@ export const ContractBoard: React.FC = () => {
                 : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
             }`}
           >
-            {state.language === 'es' ? 'TODOS' : 'ALL'} ({state.contracts.length})
+            {state.language === 'es' ? 'TODOS' : 'ALL'} ({state.contracts.filter(c => !c.completed).length})
           </button>
           <button
             onClick={() => setActiveTierFilter('tier1_micro')}
@@ -354,7 +302,7 @@ export const ContractBoard: React.FC = () => {
                 : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
             }`}
           >
-            T1: {state.language === 'es' ? 'RETAIL' : 'MICRO'} ({state.contracts.filter(c => c.tier === 'tier1_micro').length})
+            T1: {state.language === 'es' ? 'RETAIL' : 'MICRO'} ({state.contracts.filter(c => !c.completed && c.tier === 'tier1_micro').length})
           </button>
           <button
             onClick={() => setActiveTierFilter('tier2_corporate')}
@@ -364,7 +312,7 @@ export const ContractBoard: React.FC = () => {
                 : 'bg-zinc-900 text-blue-400/80 hover:text-blue-300 border border-zinc-800'
             }`}
           >
-            T2: {state.language === 'es' ? 'CORPORATIVO' : 'CORP'} ({state.contracts.filter(c => c.tier === 'tier2_corporate').length})
+            T2: {state.language === 'es' ? 'CORPORATIVO' : 'CORP'} ({state.contracts.filter(c => !c.completed && c.tier === 'tier2_corporate').length})
           </button>
           <button
             onClick={() => setActiveTierFilter('tier3_blackops')}
@@ -374,7 +322,7 @@ export const ContractBoard: React.FC = () => {
                 : 'bg-zinc-900 text-red-400/80 hover:text-red-300 border border-zinc-800'
             }`}
           >
-            T3: BLACK-OPS ({state.contracts.filter(c => c.tier === 'tier3_blackops').length})
+            T3: BLACK-OPS ({state.contracts.filter(c => !c.completed && c.tier === 'tier3_blackops').length})
           </button>
           <button
             onClick={() => setActiveTierFilter('tier4_singularity')}
@@ -384,7 +332,7 @@ export const ContractBoard: React.FC = () => {
                 : 'bg-zinc-900 text-purple-400/80 hover:text-purple-300 border border-zinc-800'
             }`}
           >
-            T4: {state.language === 'es' ? 'SINGULARIDAD' : 'SINGULARITY'} ({state.contracts.filter(c => c.tier === 'tier4_singularity').length})
+            T4: {state.language === 'es' ? 'SINGULARIDAD' : 'SINGULARITY'} ({state.contracts.filter(c => !c.completed && c.tier === 'tier4_singularity').length})
           </button>
           <button
             onClick={() => setActiveTierFilter('completed')}
@@ -397,27 +345,6 @@ export const ContractBoard: React.FC = () => {
             ✓ {state.language === 'es' ? 'COMPLETADAS' : 'DONE'} ({state.contracts.filter(c => c.completed).length})
           </button>
         </div>
-
-        {/* Dynamic AI replenishment button */}
-        <button
-          onClick={() => {
-            const targetTier: ContractGig['tier'] = 
-              activeTierFilter === 'tier2_corporate' ? 'tier2_corporate' :
-              activeTierFilter === 'tier3_blackops' ? 'tier3_blackops' :
-              activeTierFilter === 'tier4_singularity' ? 'tier4_singularity' :
-              'tier1_micro';
-            handleGenerateContracts(targetTier);
-          }}
-          disabled={isGeneratingMissions}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold bg-purple-950/60 hover:bg-purple-900/70 border border-purple-500/60 text-purple-200 transition-all cursor-pointer shadow-[0_0_10px_rgba(168,85,247,0.2)]"
-        >
-          {isGeneratingMissions ? (
-            <RefreshCw className="w-3 h-3 text-purple-300 animate-spin" />
-          ) : (
-            <Sparkles className="w-3 h-3 text-purple-400" />
-          )}
-          <span>{state.language === 'es' ? 'SINTETIZAR MISIONES IA' : 'SYNTHESIZE AI MISSIONS'}</span>
-        </button>
       </div>
 
       {/* Auto-Synthesis Active Indicator */}
@@ -445,14 +372,15 @@ export const ContractBoard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {state.contracts
           .filter(contract => {
-            if (activeTierFilter === 'all') return true;
             if (activeTierFilter === 'completed') return contract.completed;
+            if (contract.completed) return false;
+            if (activeTierFilter === 'all') return true;
             return contract.tier === activeTierFilter;
           })
           .map(contract => {
           const eligible = isEligible(contract);
           const isCurrentActive = state.activeGig?.contractId === contract.id;
-          const englishCopy = state.language === 'en' ? ENGLISH_CONTRACT_COPY[contract.id] : undefined;
+          const displayContract = localizedContract(state.language, contract);
           const assignedModels = state.agents
             .filter(agent => selectedAgentIds.includes(agent.id))
             .map(agent => state.savedModels.find(model => model.id === agent.modelId))
@@ -498,14 +426,14 @@ export const ContractBoard: React.FC = () => {
                           <span>{state.language === 'es' ? 'FALLÓ · LISTO PARA REINTENTO' : 'FAILED · READY TO RETRY'}</span>
                         </span>
                       )}
-                      {contract.generatedByAI && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono text-purple-300 bg-purple-950/70 border border-purple-500/50">
-                          <Sparkles className="w-2.5 h-2.5 text-purple-400" />
-                          <span>IA SINTÉTICA</span>
+                      {contract.fromAgentSwarm && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono text-cyan-300 bg-cyan-950/80 border border-cyan-500/60 shadow-[0_0_8px_rgba(0,255,200,0.2)]">
+                          <Bot className="w-2.5 h-2.5 text-cyan-400" />
+                          <span>{state.language === 'es' ? 'MISIÓN SYNAPSE' : 'SYNAPSE MISSION'}</span>
                         </span>
                       )}
                     </div>
-                    <h3 className="font-bold text-xs text-zinc-100 mt-1">{englishCopy?.title ?? contract.title}</h3>
+                    <h3 className="font-bold text-xs text-zinc-100 mt-1">{displayContract.title}</h3>
                   </div>
 
                   <div className="text-right shrink-0">
@@ -521,12 +449,12 @@ export const ContractBoard: React.FC = () => {
 
                 {/* Lore description */}
                 <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                  {englishCopy?.lore ?? contract.loreDescription}
+                  {displayContract.loreDescription}
                 </p>
 
                 <div className="mt-2 p-2 rounded bg-[#060a10] border border-cyan-950/80 text-[10px] text-zinc-500">
                   <span className="text-cyan-400 font-semibold block">{t(state.language, 'technical_objective')}:</span>
-                  {englishCopy?.objective ?? contract.technicalObjective}
+                  {displayContract.technicalObjective}
                 </div>
 
                 {/* Requirements Checklist */}

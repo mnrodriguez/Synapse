@@ -136,6 +136,7 @@ export interface ContractGig {
   technicalObjective: string;
   completed: boolean;
   generatedByAI?: boolean;
+  fromAgentSwarm?: boolean;
   docsUrl?: string;
   lastAttemptFailed?: boolean;
   failureCount?: number;
