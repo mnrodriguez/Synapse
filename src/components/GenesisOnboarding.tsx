@@ -728,9 +728,32 @@ export const GenesisOnboarding: React.FC = () => {
                 </p>
               </div>
 
-              {/* Model Name */}
+          {/* STEP 4: First Model Architecture (Automated for beginners) */}
+          {step === 4 && (
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-cyan-400" />
+                    {localize(state.language, 'ARQUITECTURA DEL MODELO (CALIBRACIÓN AUTOMATIZADA):', 'FIRST MODEL ARCHITECTURE (AUTOMATED CALIBRATION):')}
+                  </h3>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/60 text-emerald-300 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    {localize(state.language, 'AUTOMATIZADO PARA PRINCIPIANTES', 'AUTOMATED FOR BEGINNERS')}
+                  </span>
+                </div>
+                <p className="text-zinc-400 text-[11px] mt-1 leading-snug">
+                  {localize(
+                    state.language,
+                    'Para garantizar una experiencia sin errores de memoria (OOM) ni sobrecalentamiento, la topología, los parámetros y la cuantización de pesos se configuran automáticamente calibrados para tu hardware inicial:',
+                    'To ensure seamless training without Out-Of-Memory (OOM) errors or overheating, the neural topology, parameter scale, and weight quantization are automatically calibrated for your starter hardware:'
+                  )}
+                </p>
+              </div>
+
+              {/* Model Name Input */}
               <div className="space-y-1">
-                <label className="text-[11px] text-zinc-400 block font-bold">{localize(state.language, 'NOMBRE DE LA RED:', 'MODEL NAME:')}</label>
+                <label className="text-[11px] text-zinc-400 block font-bold">{localize(state.language, 'NOMBRE DE LA RED NEURONAL:', 'MODEL NAME:')}</label>
                 <input
                   type="text"
                   value={modelName}
@@ -739,83 +762,121 @@ export const GenesisOnboarding: React.FC = () => {
                 />
               </div>
 
-              {/* Topology */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-zinc-400 block font-bold">{localize(state.language, 'TOPOLOGÍA NEURONAL:', 'MODEL TOPOLOGY:')}</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {[
-                    { id: 'transformer', name: 'Transformer (Decoder)', desc: localize(state.language, 'Auto-atención densa estándar. Robusta y fiable.', 'Standard dense self-attention. Robust and reliable.') },
-                    { id: 'mamba_ssm', name: 'State Space (Mamba)', desc: localize(state.language, 'Procesamiento lineal O(n). Mínimo uso de memoria en secuencias largas.', 'Linear-time O(n) processing with low memory use on long sequences.') },
-                    { id: 'moe', name: localize(state.language, 'Sparse MoE (4 Expertos)', 'Sparse MoE (4 Experts)'), desc: localize(state.language, 'Enrutamiento dinámico. Más capacidad con bajo costo por token.', 'Dynamic routing. Greater capacity at a lower cost per token.') }
-                  ].map(t => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => { sound.playKeyClick(); setModelTopology(t.id as ModelTopology); }}
-                      className={`p-2.5 rounded border text-left transition-colors ${
-                        modelTopology === t.id
-                          ? 'bg-cyan-950/80 border-cyan-400 text-cyan-200'
-                          : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-300'
-                      }`}
-                    >
-                      <div className="font-bold text-xs">{t.name}</div>
-                      <div className="text-[10px] text-zinc-500 mt-1">{t.desc}</div>
-                    </button>
-                  ))}
+              {/* Automated Configuration Cards */}
+              <div className="space-y-2.5">
+                {/* 1. Topology */}
+                <div className="p-3 rounded-lg border bg-cyan-950/40 border-cyan-500/60 flex items-start gap-3">
+                  <div className="p-2 rounded bg-zinc-900 border border-zinc-700 mt-0.5 shrink-0">
+                    <Cpu className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="font-bold text-xs text-cyan-200">
+                        {localize(state.language, 'Topología: Transformer Autoregresivo (Decoder-Only)', 'Topology: Autoregressive Transformer (Decoder-Only)')}
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-700 font-bold">
+                        {localize(state.language, 'INICIAL ESTÁNDAR ✓', 'STARTER STANDARD ✓')}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-300 mt-1 leading-snug">
+                      {localize(
+                        state.language,
+                        'Mecanismo de auto-atención densa con enmascaramiento causal. Es el estándar de la industria: estable, determinista y de convergencia rápida garantizada.',
+                        'Dense self-attention mechanism with causal masking. The battle-tested industry standard: reliable, deterministic, and fast converging.'
+                      )}
+                    </p>
+                    <div className="mt-1.5 text-[10px] text-zinc-500 flex items-center gap-1">
+                      <span>🔒</span>
+                      <span>
+                        {localize(
+                          state.language,
+                          'Topologías avanzadas (State Space Mamba, Mixture-of-Experts MoE, Grafos GNN) se investigan más adelante en I+D.',
+                          'Advanced architectures (State Space Mamba, Mixture-of-Experts MoE, Graph Hybrids) unlock later via Research papers.'
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Parameters */}
+                <div className="p-3 rounded-lg border bg-yellow-950/30 border-yellow-500/50 flex items-start gap-3">
+                  <div className="p-2 rounded bg-zinc-900 border border-zinc-700 mt-0.5 shrink-0">
+                    <Sliders className="w-4 h-4 text-yellow-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="font-bold text-xs text-yellow-200">
+                        {localize(state.language, 'Escala de Parámetros: 14 Millones (14M / 0.014B)', 'Parameter Scale: 14 Million (14M / 0.014B)')}
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-yellow-950 text-yellow-300 border border-yellow-700 font-bold">
+                        {localize(state.language, 'CALIBRADO AUTOMÁTICO ✓', 'AUTO-CALIBRATED ✓')}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-300 mt-1 leading-snug">
+                      {localize(
+                        state.language,
+                        'Calibrado óptimamente para la memoria VRAM y ancho de banda de tu GPU inicial. Permite completar épocas de entrenamiento en segundos.',
+                        'Optimally calibrated to fit comfortably in your starter GPU VRAM with zero risk of Out-Of-Memory (OOM) errors.'
+                      )}
+                    </p>
+                    <div className="mt-1.5 text-[10px] text-zinc-500 flex items-center gap-1">
+                      <span>🔒</span>
+                      <span>
+                        {localize(
+                          state.language,
+                          'Escalas mayores (70M, 1B, 7B, 70B, 405B) se desbloquean ampliando la VRAM en la pestaña HARDWARE.',
+                          'Billion-parameter scales (70M, 1B, 7B, 70B, 405B) unlock as you scale cluster VRAM in the HARDWARE tab.'
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Quantization */}
+                <div className="p-3 rounded-lg border bg-purple-950/30 border-purple-500/50 flex items-start gap-3">
+                  <div className="p-2 rounded bg-zinc-900 border border-zinc-700 mt-0.5 shrink-0">
+                    <Database className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="font-bold text-xs text-purple-200">
+                        {localize(state.language, 'Precisión de Pesos: INT8 Cuantizado (1 Byte / Peso)', 'Weight Precision: INT8 Quantized (1 Byte / Weight)')}
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-700 font-bold">
+                        {localize(state.language, 'OPTIMIZADO AUTOMÁTICO ✓', 'AUTO-OPTIMIZED ✓')}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-300 mt-1 leading-snug">
+                      {localize(
+                        state.language,
+                        'Cuantización por tensores enteros de 8 bits. Reduce el uso de memoria a la mitad manteniendo más del 99% de la precisión de razonamiento.',
+                        '8-bit integer tensor quantization. Halves memory requirements while retaining 99%+ of full-precision reasoning accuracy.'
+                      )}
+                    </p>
+                    <div className="mt-1.5 text-[10px] text-zinc-500 flex items-center gap-1">
+                      <span>🔒</span>
+                      <span>
+                        {localize(
+                          state.language,
+                          'Precisión media BF16, cuantización extrema FP4 y tensores ternarios de 1-bit se investigan en la pestaña ARQUITECTURA.',
+                          'Half precision BF16, extreme FP4, and 1-bit ternary quantization unlock in the ARCHITECTURE studio.'
+                        )}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Parameter Size */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-zinc-400 block font-bold">{localize(state.language, 'ESCALA DE PARÁMETROS INICIAL:', 'INITIAL PARAMETER SCALE:')}</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { val: 7_000_000, label: localize(state.language, '7M Parámetros', '7M Parameters'), note: localize(state.language, 'Ultraligero, converge en segundos.', 'Very lightweight; converges in seconds.') },
-                    { val: 14_000_000, label: localize(state.language, '14M Parámetros', '14M Parameters'), note: localize(state.language, 'Recomendado. Buen balance inicial.', 'Recommended. A good starting balance.') },
-                    { val: 28_000_000, label: localize(state.language, '28M Parámetros', '28M Parameters'), note: localize(state.language, 'Mayor razonamiento, exige más VRAM.', 'More reasoning capacity; requires more VRAM.') }
-                  ].map(p => (
-                    <button
-                      key={p.val}
-                      type="button"
-                      onClick={() => { sound.playKeyClick(); setModelParams(p.val); }}
-                      className={`p-2.5 rounded border text-left transition-colors ${
-                        modelParams === p.val
-                          ? 'bg-yellow-950/70 border-yellow-400 text-yellow-300'
-                          : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-300'
-                      }`}
-                    >
-                      <div className="font-bold text-xs">{p.label}</div>
-                      <div className="text-[10px] text-zinc-500 mt-1">{p.note}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quantization */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-zinc-400 block font-bold">{localize(state.language, 'CUANTIZACIÓN DE PESOS:', 'WEIGHT QUANTIZATION:')}</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { sound.playKeyClick(); setModelQuant('int8'); }}
-                    className={`p-2.5 rounded border text-left ${
-                      modelQuant === 'int8' ? 'bg-cyan-950 border-cyan-400 text-cyan-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400'
-                    }`}
-                  >
-                    <div className="font-bold text-xs">{localize(state.language, 'INT8 Cuantizado (Recomendado)', 'INT8 Quantized (Recommended)')}</div>
-                    <div className="text-[10px] text-zinc-500">{localize(state.language, '1 byte por peso. Cabe holgadamente en tu GPU.', '1 byte per weight. Fits easily in your GPU memory.')}</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { sound.playKeyClick(); setModelQuant('bf16'); }}
-                    className={`p-2.5 rounded border text-left ${
-                      modelQuant === 'bf16' ? 'bg-purple-950 border-purple-400 text-purple-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400'
-                    }`}
-                  >
-                    <div className="font-bold text-xs">{localize(state.language, 'BF16 Precisión Media', 'BF16 Half Precision')}</div>
-                    <div className="text-[10px] text-zinc-500">{localize(state.language, '2 bytes por peso. Mayor fidelidad de gradiente.', '2 bytes per weight. Greater gradient fidelity.')}</div>
-                  </button>
-                </div>
+              {/* Ready summary banner */}
+              <div className="p-2.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-[10px] text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>
+                  {localize(
+                    state.language,
+                    'ARQUITECTURA LISTA: Haz clic en SIGUIENTE para ejecutar la corrida de inicialización y calibrar los tensores.',
+                    'ARCHITECTURE READY: Click NEXT to execute the genesis initialization run and calibrate the neural tensors.'
+                  )}
+                </span>
               </div>
             </div>
           )}
