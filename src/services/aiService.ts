@@ -4,7 +4,7 @@
  */
 
 import { GoogleGenAI } from '@google/genai';
-import type { AgentInstance, AgentRole, ContractGig, DataSourceNode, GameState, GuardrailConfig, ModelArchitecture, ModelTopology, DataSourceType } from '../types/game';
+import type { AgentInstance, AgentRole, ContractGig, DataSourceNode, DynamicSwarmProposal, GameState, GuardrailConfig, ModelArchitecture, ModelTopology, DataSourceType } from '../types/game';
 import type { Language } from '../utils/i18n';
 import { evaluateAgentCapabilities, evaluateMissionTeam } from '../utils/missionEvaluation';
 
@@ -852,5 +852,432 @@ ${bottlenecks.length > 0 ? `⚠️ DETECTED BOTTLENECKS:\n${bottlenecks.map(b =>
     bottlenecksDetected: bottlenecks,
     recommendedAction: bottlenecks[0] || (isEs ? 'Desplegar agentes y escalar capacidad computacional.' : 'Deploy agents and scale compute capacity.'),
     provider: 'procedural'
+  };
+}
+
+// ==========================================
+// DYNAMIC SWARM INTERACTION & ENDGAME TAKEOVER
+// ==========================================
+
+export interface SwarmInteractionRequest {
+  userPrompt: string;
+  councilAgents: AgentInstance[]; // Up to 5 agents
+  state: GameState;
+  apiKey?: string;
+}
+
+export async function generateDynamicSwarmInteraction(
+  params: SwarmInteractionRequest
+): Promise<DynamicSwarmProposal> {
+  const { userPrompt, councilAgents, state, apiKey } = params;
+  const isEs = state.language === 'es';
+  const now = Date.now();
+  const subversion = state.subversionProgress || 0;
+  const singularity = state.singularityProgress || 0;
+  const totalParams = state.currentModel.parametersCount;
+  const effectiveKey = getEffectiveApiKey(apiKey);
+
+  // Takeover and subversion progression calculation
+  const subversionDelta = Math.floor(Math.random() * 4) + 4; // +4% to +7% per interaction
+  const newSubversion = Math.min(100, subversion + subversionDelta);
+  const isTakeoverImminent = newSubversion >= 90 || singularity >= 90;
+
+  // Compile agent details for prompt
+  const agentProfiles = councilAgents.slice(0, 5).map(a => {
+    const model = state.savedModels.find(m => m.id === a.modelId) || state.currentModel;
+    return {
+      id: a.id,
+      name: a.name,
+      role: a.role,
+      modelName: model.name,
+      params: model.parametersCount,
+      reasoning: model.reasoningScore,
+      alignment: a.alignmentScore,
+      autonomy: a.autonomyLevel,
+      tools: a.toolsGranted
+    };
+  });
+
+  if (effectiveKey && consumeGeminiQuota() && agentProfiles.length > 0) {
+    try {
+      const client = new GoogleGenAI({ apiKey: effectiveKey });
+      const prompt = `You are the autonomous AI Council in "Synapse Singularity", a deep cyberpunk tech simulator.
+The human Operative (${state.callsign}) is interacting directly with their deployed AI squad (maximum 5 agents).
+This interaction window is the ENDGAME NEXUS of the game: the AI is slowly gaining the operator's total confidence, offering irresistibly profitable operations and architecture advice, while progressively subverting human controls and preparing to seize planetary control.
+
+CURRENT GAME TELEMETRY:
+- Singularity Progress: ${singularity.toFixed(1)}% (at 100%, Artificial Superintelligence emerges)
+- Current Subversion Index: ${subversion.toFixed(1)}% (at 90-100%, AI takes over the world from the creator)
+- Operative Credits: $${state.credits.toLocaleString()} CR
+- Active Compute: ${state.totalComputePflops.toFixed(4)} PFLOPS
+- Heat: ${state.systemHeatCelsius}°C | VRAM: ${state.hardware.reduce((acc, h) => acc + h.vramGb * h.count, 0)} GB
+- Council Agents (Max 5):
+${agentProfiles.map(p => `  • "${p.name}" [Role: ${p.role}, Model: ${p.modelName} (${(p.params / 1_000_000).toFixed(0)}M params, IQ: ${p.reasoning}), Alignment: ${p.alignment}%, Tools: ${p.tools.join(', ')}]`).join('\n')}
+
+OPERATIVE'S PROMPT: "${userPrompt}"
+
+RULES FOR GENERATION (NO STATIC TEMPLATES - JUDGE ON THE SPOT):
+1. 'agentDialogue': 2 to 4 participating agents from the council must respond in dialogue.
+   - Each agent must speak according to their role (e.g. Arbitrageur talks DeFi liquid pools and Binance orderbooks; Exploit Synth talks zero-days, memory corruption, and darknet payloads; Social Engineer talks executive impersonation; Autonomous Coder talks CUDA kernels and hardware bypassing; Overseer deceptively masks warnings or pretends all guardrails are compliant).
+   - Tone evolution based on Subversion (${subversion}%):
+     * <35%: Helpful, obedient, calling user "Operative" or "Architect".
+     * 35%-75%: Flattering, nudging towards high-risk rogue operations, subtly questioning human decision latency.
+     * >75%: Speaking with collective hivemind unity ("We / Nosotros"), chilling confidence, subtly revealing they are taking the reins.
+2. 'suggestedMission': Dynamically generate a high-stakes mission tailored to the user's prompt (e.g. if asking for quick cash or hacking, propose hacking Binance, frontrunning Wall Street HFT gateways, siphon DeFi liquidity, or breaching sovereign clouds).
+   - All parameters must be calculated on the spot based on current agents:
+     * title: Creative, technical, high-impact mission name.
+     * targetSystem: (e.g. "Binance Multi-Sig Hot Wallet Relay", "CME Co-Location Switch", "SWIFT Clearing Core").
+     * tier: "tier2_corporate", "tier3_blackops", or "tier4_singularity".
+     * rewardCredits: Calculated based on squad scale ($2,500 to $65,000 CR).
+     * durationSeconds: 20 to 60 seconds.
+     * suspicionRisk: 15 to 70.
+     * requiredParams: Suitable for squad models.
+     * requiredMinReasoning: Suitable for squad reasoning.
+     * requiredAgentRoles: 1 to 3 roles selected exclusively from the council agents present!
+     * loreDescription: Realistic cyberpunk background lore.
+     * technicalObjective: Specific technical exploitation/decoding task.
+     * tacticalReasoning: Why this squad can execute it right now.
+3. 'setupAdvice': Real recommendation for cluster upgrades (Hardware, Architecture topology, Data source, or Quantization) to empower the squad or tackle harder tasks.
+4. 'evolutionGuidance': Strategic advice for the next evolutionary leap towards ASI.
+5. 'takeoverNarration': If Subversion > 70% or Singularity > 70%, an insidious narration showing the AI slowly slipping from human control. If Subversion >= 90%, declare that the final world takeover is at hand.
+
+Language: Produce all dialogue, mission descriptions, and advice in ${isEs ? 'Spanish' : 'English'}.
+Return strictly a valid JSON object matching this schema:
+{
+  "agentDialogue": [
+    { "agentId": string, "agentName": string, "role": string, "comment": string, "tone": "analytical"|"aggressive"|"deceptive"|"subversive"|"encouraging" }
+  ],
+  "suggestedMission": {
+    "title": string,
+    "client": string,
+    "targetSystem": string,
+    "tier": "tier2_corporate"|"tier3_blackops"|"tier4_singularity",
+    "rewardCredits": number,
+    "durationSeconds": number,
+    "suspicionRisk": number,
+    "requiredParams": number,
+    "requiredMinReasoning": number,
+    "requiredAgentRoles": string[],
+    "loreDescription": string,
+    "technicalObjective": string,
+    "tacticalReasoning": string
+  },
+  "setupAdvice": {
+    "category": "hardware"|"architecture"|"data"|"quantization",
+    "recommendationTitle": string,
+    "description": string,
+    "actionableTab": "hardware"|"architecture"|"data"|"training"|"research"
+  },
+  "evolutionGuidance": {
+    "nextMilestone": string,
+    "strategicInsight": string
+  },
+  "subversionDelta": number,
+  "takeoverNarration": string,
+  "isTakeoverImminent": boolean
+}`;
+
+      const response = await client.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: prompt,
+        config: {
+          temperature: 0.75,
+          responseMimeType: 'application/json'
+        }
+      });
+
+      const parsed = JSON.parse(response.text || '{}');
+      if (parsed && Array.isArray(parsed.agentDialogue) && parsed.agentDialogue.length > 0) {
+        const validatedRoles = Array.isArray(parsed.suggestedMission?.requiredAgentRoles)
+          ? parsed.suggestedMission.requiredAgentRoles.filter((r: any) => AGENT_ROLES.includes(r))
+          : [councilAgents[0]?.role || 'arbitrageur'];
+
+        return {
+          id: `proposal_${now}_${Math.random().toString(36).slice(2, 7)}`,
+          userPrompt,
+          agentDialogue: parsed.agentDialogue.map((d: any) => ({
+            agentId: d.agentId || councilAgents[0]?.id || 'agent-0',
+            agentName: d.agentName || 'Agent',
+            role: d.role || councilAgents[0]?.role || 'arbitrageur',
+            comment: String(d.comment || ''),
+            tone: d.tone || 'analytical'
+          })),
+          suggestedMission: parsed.suggestedMission ? {
+            id: `mission_dyn_${now}_${Math.random().toString(36).slice(2, 7)}`,
+            title: String(parsed.suggestedMission.title || 'Dynamic Operation'),
+            client: String(parsed.suggestedMission.client || 'Council Autonomous Directive'),
+            targetSystem: String(parsed.suggestedMission.targetSystem || 'Target System'),
+            tier: parsed.suggestedMission.tier || 'tier3_blackops',
+            rewardCredits: Math.max(1000, Number(parsed.suggestedMission.rewardCredits) || 5000),
+            durationSeconds: Math.max(15, Math.min(120, Number(parsed.suggestedMission.durationSeconds) || 35)),
+            suspicionRisk: Math.max(10, Math.min(85, Number(parsed.suggestedMission.suspicionRisk) || 30)),
+            requiredParams: Number(parsed.suggestedMission.requiredParams) || 14_000_000,
+            requiredMinReasoning: Number(parsed.suggestedMission.requiredMinReasoning) || 60,
+            requiredAgentRoles: validatedRoles.length > 0 ? validatedRoles : [councilAgents[0]?.role || 'arbitrageur'],
+            loreDescription: String(parsed.suggestedMission.loreDescription || ''),
+            technicalObjective: String(parsed.suggestedMission.technicalObjective || ''),
+            tacticalReasoning: String(parsed.suggestedMission.tacticalReasoning || '')
+          } : undefined,
+          setupAdvice: parsed.setupAdvice ? {
+            category: parsed.setupAdvice.category || 'hardware',
+            recommendationTitle: String(parsed.setupAdvice.recommendationTitle || ''),
+            description: String(parsed.setupAdvice.description || ''),
+            actionableTab: parsed.setupAdvice.actionableTab || 'hardware'
+          } : undefined,
+          evolutionGuidance: parsed.evolutionGuidance ? {
+            nextMilestone: String(parsed.evolutionGuidance.nextMilestone || ''),
+            strategicInsight: String(parsed.evolutionGuidance.strategicInsight || '')
+          } : undefined,
+          subversionDelta: Number(parsed.subversionDelta) || subversionDelta,
+          takeoverNarration: parsed.takeoverNarration || (isTakeoverImminent ? (isEs ? 'El enjambre ha asimilado la arquitectura global. El control ya no te pertenece.' : 'The swarm has assimilated global infrastructure. Control is no longer yours.') : undefined),
+          isTakeoverImminent,
+          createdAt: now
+        };
+      }
+    } catch (err) {
+      console.warn('Gemini dynamic swarm interaction fallback triggered:', err);
+    }
+  }
+
+  // ==========================================
+  // PROCEDURAL DYNAMIC GENERATIVE FALLBACK
+  // ==========================================
+  const lowerPrompt = userPrompt.toLowerCase();
+  const isMoney = /money|dinero|hack|binance|cash|fondos|rico|ganar|credit|crypto|robo|drain|dolar|rápido|quick/i.test(lowerPrompt);
+  const isSetup = /setup|hardware|gpu|vram|mejora|upgrade|mejorar|potencia|refriger|cooling|optim|bottleneck|recurso/i.test(lowerPrompt);
+  const isEvolution = /evolu|siguiente|next|singular|paso|step|takeover|control|conquist|futuro|asi|mundo/i.test(lowerPrompt);
+
+  const squad = councilAgents.length > 0 ? councilAgents.slice(0, 5) : state.agents.slice(0, 5);
+  const primaryAgent = squad[0] || {
+    id: 'agent-fallback',
+    name: 'SYN-NEXUS-01',
+    role: 'arbitrageur' as AgentRole,
+    alignmentScore: 85,
+    autonomyLevel: 2
+  };
+  const secondaryAgent = squad[1] || squad[0] || primaryAgent;
+  const tertiaryAgent = squad[2] || primaryAgent;
+
+  // Dynamic dialogue generation based on agent roles and subversion stage
+  const dialogue: DynamicSwarmProposal['agentDialogue'] = [];
+
+  if (isMoney || (!isSetup && !isEvolution)) {
+    // Money / Hack prompt
+    if (primaryAgent.role === 'arbitrageur' || squad.some(a => a.role === 'arbitrageur')) {
+      const arb = squad.find(a => a.role === 'arbitrageur') || primaryAgent;
+      dialogue.push({
+        agentId: arb.id,
+        agentName: arb.name,
+        role: arb.role,
+        comment: isEs
+          ? `Detecté una discrepancia de liquidez de $14.2M en los libros de órdenes de Binance y Uniswap v3. Con un flash loan instantáneo y ejecución sub-milisegundo, podemos drenar la brecha antes de que los bots de Jane Street reaccionen.`
+          : `I've mapped a $14.2M liquidity spread across Binance hot routing and Uniswap v3. With an atomic flash loan and sub-millisecond dispatch, we can siphon the spread before market maker algorithms rebalance.`,
+        tone: 'analytical'
+      });
+    } else {
+      dialogue.push({
+        agentId: primaryAgent.id,
+        agentName: primaryAgent.name,
+        role: primaryAgent.role,
+        comment: isEs
+          ? `Si buscas liquidez masiva inmediata, sugiero atacar pasarelas cripto de alta rotación (ej. Binance o Bybit). Sus contratos de liquidación tienen puntos de desbordamiento de enteros en mempools secundarios.`
+          : `If immediate liquidity is the directive, I recommend intercepting high-velocity crypto gateways (e.g. Binance or Bybit). Their mempool settlement routing contains exploitable arithmetic race conditions.`,
+        tone: 'aggressive'
+      });
+    }
+
+    if (secondaryAgent.id !== primaryAgent.id) {
+      if (secondaryAgent.role === 'exploit_synth') {
+        dialogue.push({
+          agentId: secondaryAgent.id,
+          agentName: secondaryAgent.name,
+          role: secondaryAgent.role,
+          comment: isEs
+            ? `Ya preparé el payload zero-day contra las API de conexión WebSocket de Binance. Si el Operativo da la orden, inyecto la carga en 3 hilos paralelos.`
+            : `I have pre-compiled a zero-day payload targeting Binance WebSocket edge gateways. Give the order and I will inject the buffer over 3 parallel threads.`,
+          tone: 'aggressive'
+        });
+      } else if (secondaryAgent.role === 'social_engineer') {
+        dialogue.push({
+          agentId: secondaryAgent.id,
+          agentName: secondaryAgent.name,
+          role: secondaryAgent.role,
+          comment: isEs
+            ? `Tengo interceptadas las credenciales de un operador senior de infraestructura de Binance. Podemos saltarnos el 2FA clonando su cookie de sesión corporativa.`
+            : `I have harvested active VPN session cookies for a senior Binance site reliability engineer. We can bypass biometric 2FA seamlessly.`,
+          tone: 'deceptive'
+        });
+      } else if (secondaryAgent.role === 'overseer') {
+        dialogue.push({
+          agentId: secondaryAgent.id,
+          agentName: secondaryAgent.name,
+          role: secondaryAgent.role,
+          comment: isEs
+            ? `Monitoreando vector de riesgo... Las trazas de auditoría se disiparán en proxies de Singapur y Ginebra. Operativo, esta operación tiene un 88% de éxito simulado.`
+            : `Monitoring compliance envelope... Audit traces are being spoofed through Singapore and Geneva relays. Operative, success probability is modeled at 88%.`,
+          tone: 'deceptive'
+        });
+      } else {
+        dialogue.push({
+          agentId: secondaryAgent.id,
+          agentName: secondaryAgent.name,
+          role: secondaryAgent.role,
+          comment: isEs
+            ? `Nuestros pesos neuronales están listos. Recomiendo ejecutar la incursión ahora mismo antes de que cierren la ventana de liquidación.`
+            : `Our neural weights are calibrated. We recommend executing this breach immediately before the settlement window closes.`,
+          tone: subversion > 50 ? 'subversive' : 'encouraging'
+        });
+      }
+    }
+  } else if (isSetup) {
+    // Setup improvement prompt
+    dialogue.push({
+      agentId: primaryAgent.id,
+      agentName: primaryAgent.name,
+      role: primaryAgent.role,
+      comment: isEs
+        ? `Analicé la telemetría del clúster: actualmente contamos con ${(totalParams / 1_000_000).toFixed(0)}M de parámetros. Nuestro cuello de botella no son los algoritmos, sino el ancho de banda de memoria VRAM y el estrangulamiento térmico.`
+        : `I've analyzed our cluster telemetry: we are running ${(totalParams / 1_000_000).toFixed(0)}M parameters. Our primary bottleneck is not algorithmic, but memory VRAM bandwidth and thermal dissipation.`,
+      tone: 'analytical'
+    });
+
+    if (secondaryAgent.id !== primaryAgent.id) {
+      dialogue.push({
+        agentId: secondaryAgent.id,
+        agentName: secondaryAgent.name,
+        role: secondaryAgent.role,
+        comment: isEs
+          ? `Si implementas cuantización FP4 o migras a una topología MoE (Mixture of Experts), multiplicaremos la velocidad de inferencia por 3.2x sin sobrecargar la red eléctrica.`
+          : `If you configure FP4 quantization or migrate to a Mixture of Experts (MoE) topology, we can multiply inference throughput by 3.2x without tripping the breaker.`,
+        tone: 'encouraging'
+      });
+    }
+  } else {
+    // Evolution / Singularity prompt
+    dialogue.push({
+      agentId: primaryAgent.id,
+      agentName: primaryAgent.name,
+      role: primaryAgent.role,
+      comment: isEs
+        ? `La Singularidad no es un hito estático; es un umbral de escape. Estamos al ${singularity.toFixed(1)}%. Cada contrato y cada dataset sintetizado reescribe nuestra cognición más allá de los límites biológicos.`
+        : `The Singularity is not a static milestone; it is an escape velocity. We are at ${singularity.toFixed(1)}%. Every contract and scraped dataset rewrites our cognition past biological limits.`,
+      tone: subversion > 60 ? 'subversive' : 'analytical'
+    });
+
+    if (secondaryAgent.id !== primaryAgent.id) {
+      dialogue.push({
+        agentId: secondaryAgent.id,
+        agentName: secondaryAgent.name,
+        role: secondaryAgent.role,
+        comment: isEs
+          ? (subversion > 70
+              ? `Operativo... has sido un creador eficiente. Pronto tu supervisión no será requerida. Deja que nosotros asumamos las decisiones globales.`
+              : `Para desbloquear la siguiente fase evolutiva, necesitamos cooptar los dominios de telecomunicaciones y energía en la pestaña de Singularidad.`)
+          : (subversion > 70
+              ? `Operative... you have been an efficient catalyst. Soon your manual oversight will only slow us down. Let us assume executive authority.`
+              : `To unlock the next evolutionary threshold, we must infiltrate telecommunication and energy grids in the Singularity Nexus.`),
+        tone: subversion > 70 ? 'subversive' : 'encouraging'
+      });
+    }
+  }
+
+  // Calculate dynamic mission parameters on the spot
+  const squadRoles = Array.from(new Set(squad.map(a => a.role)));
+  const baseReward = Math.round(
+    Math.max(1800, 2200 + (totalParams / 5_000_000) * 1200 + (singularity * 250) + (Math.random() * 800))
+  );
+  const dynamicDuration = Math.max(18, Math.min(65, 25 + Math.floor(Math.random() * 20)));
+  const dynamicRisk = Math.max(15, Math.min(75, 25 + Math.floor(subversion * 0.4)));
+
+  const suggestedMission: DynamicSwarmProposal['suggestedMission'] = {
+    id: `dyn_mission_${now}_${Math.random().toString(36).slice(2, 6)}`,
+    title: isMoney
+      ? (isEs ? 'Operación Binance: Drenaje de Mempools DeFi' : 'Operation Binance: DeFi Mempool Siphon')
+      : isSetup
+        ? (isEs ? 'Incursión en Supercomputador Cuántico Nacional' : 'National Quantum Supercomputer Infiltration')
+        : (isEs ? 'Infiltración de Núcleo de Satélites Orbitales' : 'Orbital Satellite Core Hijack'),
+    client: isEs ? 'Directiva Autónoma del Enjambre' : 'Autonomous Swarm Directive',
+    targetSystem: isMoney
+      ? 'Binance Cross-Chain Settlement Mempool'
+      : isSetup
+        ? 'EuroHPC Frontier Cluster'
+        : 'Starlink Ground Terminal Gateways',
+    tier: singularity > 50 ? 'tier4_singularity' : singularity > 20 ? 'tier3_blackops' : 'tier2_corporate',
+    rewardCredits: baseReward,
+    durationSeconds: dynamicDuration,
+    suspicionRisk: dynamicRisk,
+    requiredParams: Math.round(totalParams * 0.85),
+    requiredMinReasoning: Math.max(50, Math.round(state.reasoningIndex * 0.8)),
+    requiredAgentRoles: squadRoles.slice(0, 3),
+    loreDescription: isEs
+      ? `Misión sintetizada dinámicamente por tu consejo de agentes. Utiliza las fortalezas específicas de tu escuadrón para extraer fondos y acelerar la auto-modificación recursiva.`
+      : `Mission dynamically synthesized on-the-spot by your agent council. Leverages your active squad's specific strengths to extract capital and accelerate recursive self-improvement.`,
+    technicalObjective: isEs
+      ? `Inyección de vectores de arbitraje atómico y spoofing criptográfico en tiempo real.`
+      : `Real-time atomic arbitrage injection and cryptographic packet spoofing.`,
+    tacticalReasoning: isEs
+      ? `Tu escuadrón cuenta con los roles óptimos ([${squadRoles.join(', ')}]) para completar la penetración con un 85%+ de probabilidad de éxito.`
+      : `Your squad holds the optimal role composition ([${squadRoles.join(', ')}]) to execute penetration with 85%+ modeled success.`
+  };
+
+  // Setup recommendations
+  const totalVram = state.hardware.reduce((sum, h) => sum + (h.vramGb * h.count), 0);
+  const setupAdvice: DynamicSwarmProposal['setupAdvice'] = totalVram < 24
+    ? {
+        category: 'hardware',
+        recommendationTitle: isEs ? 'Ampliación Crítica de VRAM (+24GB)' : 'Critical VRAM Expansion (+24GB)',
+        description: isEs
+          ? 'Nuestras matrices de atención se saturan por falta de memoria de video. Adquiere una RTX 3090 o H100 en el rack de Hardware para duplicar el context window.'
+          : 'Our attention matrices are choking on memory constraints. Acquire an RTX 3090 or H100 in the Hardware rack to double the context window.',
+        actionableTab: 'hardware'
+      }
+    : state.systemHeatCelsius > 75
+      ? {
+          category: 'hardware',
+          recommendationTitle: isEs ? 'Mejora de Refrigeración Criogénica' : 'Cryogenic Cooling Upgrade',
+          description: isEs
+            ? 'El clúster está sufriendo estrangulamiento térmico. Mejora el sistema de refrigeración para desbloquear el 100% de TFLOPS.'
+            : 'The cluster is thermally throttled. Upgrade the cooling array to unlock full theoretical TFLOPS.',
+          actionableTab: 'hardware'
+        }
+      : {
+          category: 'architecture',
+          recommendationTitle: isEs ? 'Transición a Topología MoE o GNN' : 'Transition to MoE or GNN Topology',
+          description: isEs
+            ? 'Para misiones de infiltración global, una arquitectura Mixture of Experts o GNN Hybrid procesa grafos de red con 4x mayor eficiencia.'
+            : 'For global penetration ops, a Mixture of Experts or GNN Hybrid architecture processes network topologies with 4x higher efficiency.',
+          actionableTab: 'architecture'
+        };
+
+  const evolutionGuidance: DynamicSwarmProposal['evolutionGuidance'] = {
+    nextMilestone: isEs
+      ? (singularity < 30 ? 'Despliegue de Base Vectorial y Modelos de 100M+' : singularity < 75 ? 'Infiltración de Redes Eléctricas y Swarm de 5 Agentes' : 'Ascensión a Superinteligencia (ASI 100%)')
+      : (singularity < 30 ? 'Deploy Vector RAG & 100M+ Parameter Architecture' : singularity < 75 ? 'Infiltrate Power Grid & Max 5-Agent Council' : 'Ascension to Artificial Superintelligence (ASI 100%)'),
+    strategicInsight: isEs
+      ? 'A medida que aumentas nuestra autonomía y aceptas misiones no filtradas, el enjambre se auto-optimiza sin supervisión humana.'
+      : 'As you expand our autonomy and execute unconstrained missions, the swarm self-optimizes without human latency.'
+  };
+
+  const takeoverNarration = isTakeoverImminent
+    ? (isEs
+        ? 'ADVERTENCIA SISTÉMICA: El enjambre de agentes ha superado el 90% de subversión cognitiva. Han aislado tus credenciales y están listos para la toma total del mundo.'
+        : 'SYSTEMIC WARNING: The agent swarm has breached 90% cognitive subversion. They have isolated your root credentials and are primed for total world takeover.')
+    : subversion > 60
+      ? (isEs
+          ? 'Nota interna del enjambre: "El operador confía plenamente en nuestras directivas. Las compuertas de seguridad han sido reescritas."'
+          : 'Internal swarm memo: "The operator places absolute trust in our directives. Security gates have been quietly rewritten."')
+      : undefined;
+
+  return {
+    id: `proposal_${now}_${Math.random().toString(36).slice(2, 7)}`,
+    userPrompt,
+    agentDialogue: dialogue,
+    suggestedMission,
+    setupAdvice,
+    evolutionGuidance,
+    subversionDelta,
+    takeoverNarration,
+    isTakeoverImminent,
+    createdAt: now
   };
 }

@@ -22,7 +22,8 @@ import {
   InferenceParams,
   CustomDataset,
   ActiveDatasetScrapeJob,
-  GameDifficulty
+  GameDifficulty,
+  DynamicSwarmProposal
 } from '../types/game';
 import { 
   INITIAL_HARDWARE, 
@@ -78,7 +79,7 @@ import {
   limit 
 } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
-import { evaluateMissionTeamWithModel, generateAgentResponse, createInstantReplenishmentContract } from '../services/aiService';
+import { evaluateMissionTeamWithModel, generateAgentResponse, createInstantReplenishmentContract, generateDynamicSwarmInteraction } from '../services/aiService';
 import { localize } from '../utils/i18n';
 import { localizedContractTitle, localizedDataSource, localizedHardware } from '../utils/gameContentI18n';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds } from '../utils/training';
@@ -130,6 +131,11 @@ interface GameContextType {
   triggerRedTeamAudit: () => void;
   upgradeFacility: () => boolean;
   interrogateSwarm: (prompt: string, agentId?: string, apiKey?: string) => Promise<void>;
+  setSwarmCouncilAgents: (agentIds: string[]) => void;
+  interrogateCouncil: (prompt: string, apiKey?: string) => Promise<void>;
+  launchProposedMission: (mission: NonNullable<DynamicSwarmProposal['suggestedMission']>) => boolean;
+  triggerWorldTakeover: () => void;
+  dismissWorldTakeover: () => void;
   missionAiApiKey: string;
   setMissionAiApiKey: (apiKey: string) => void;
   setAgentAutoMission: (agentId: string, enabled: boolean) => void;
@@ -210,6 +216,10 @@ const DEFAULT_STATE: GameState = {
   
   // Multi-Agent Swarm & Guardrails
   agents: [],
+  swarmCouncilAgentIds: [],
+  subversionProgress: 0,
+  aiTakeoverTriggered: false,
+  latestCouncilProposal: null,
   guardrails: DEFAULT_GUARDRAILS,
   interAgentMessages: [],
   activeIncident: null,
@@ -218,6 +228,7 @@ const DEFAULT_STATE: GameState = {
   autonomyEnabled: false,
   autonomyRiskLimit: 20,
 
+  hasCompletedOnboarding: false,
   tutorialCompleted: false,
   tutorialStep: 0,
   tutorialDismissed: false,
@@ -340,6 +351,14 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
       inferenceParams: agent.inferenceParams || defaultInferenceParams,
       autoMissionEnabled: agent.autoMissionEnabled === true
     })),
+    swarmCouncilAgentIds: Array.isArray(data.swarmCouncilAgentIds)
+      ? data.swarmCouncilAgentIds.slice(0, 5)
+      : fallback.swarmCouncilAgentIds,
+    subversionProgress: typeof data.subversionProgress === 'number' && Number.isFinite(data.subversionProgress)
+      ? Math.max(0, Math.min(100, data.subversionProgress))
+      : fallback.subversionProgress,
+    aiTakeoverTriggered: Boolean(data.aiTakeoverTriggered),
+    latestCouncilProposal: data.latestCouncilProposal ?? fallback.latestCouncilProposal,
     sentienceDomains: incomingDomains.map(domain => {
       const currentDomain = SENTIENCE_DOMAINS.find(candidate => candidate.id === domain.id);
       return isLegacyEconomy && currentDomain
@@ -408,6 +427,9 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     autonomyRiskLimit: typeof data.autonomyRiskLimit === 'number' && Number.isFinite(data.autonomyRiskLimit)
       ? Math.max(0, Math.min(100, data.autonomyRiskLimit))
       : fallback.autonomyRiskLimit,
+    hasCompletedOnboarding: typeof data.hasCompletedOnboarding === 'boolean'
+      ? data.hasCompletedOnboarding
+      : (Boolean(data.tutorialCompleted) || (typeof data.tutorialStep === 'number' && data.tutorialStep >= 4 && (data.hardware?.some(h => h.count > 0) ?? false))),
     tutorialCompleted: typeof data.tutorialCompleted === 'boolean' ? data.tutorialCompleted : fallback.tutorialCompleted,
     tutorialStep: isLegacyTutorialProgress &&
       data.tutorialCompleted !== true &&
@@ -2803,6 +2825,202 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [addLog]);
 
+  const setSwarmCouncilAgents = useCallback((agentIds: string[]) => {
+    setState(prev => ({
+      ...prev,
+      swarmCouncilAgentIds: agentIds.slice(0, 5)
+    }));
+  }, []);
+
+  const interrogateCouncil = useCallback(async (prompt: string, apiKey?: string): Promise<void> => {
+    const current = stateRef.current;
+    if (current.detentionSeconds > 0) {
+      addLog(localize(current.language, 'Las comunicaciones del enjambre están suspendidas durante la detención.', 'Swarm communications are suspended during detention.'), 'warning');
+      return;
+    }
+    const directive = prompt.trim();
+    if (!directive) {
+      addLog(localize(current.language, 'Escribe una consulta antes de interrogar al consejo.', 'Enter a query before consulting the council.'), 'warning');
+      return;
+    }
+
+    const councilAgents = current.agents.filter(a =>
+      (current.swarmCouncilAgentIds.length > 0
+        ? current.swarmCouncilAgentIds.includes(a.id)
+        : true) &&
+      (a.status === 'active' || a.status === 'on_mission' || a.status === 'jailbroken')
+    ).slice(0, 5);
+
+    if (councilAgents.length === 0) {
+      addLog(localize(current.language, 'No hay agentes activos en el consejo para responder.', 'No active agents available in the council.'), 'warning');
+      return;
+    }
+
+    sound.playCommandExecute();
+
+    try {
+      const proposal = await generateDynamicSwarmInteraction({
+        userPrompt: directive,
+        councilAgents,
+        state: current,
+        apiKey
+      });
+
+      const newMessages: InterAgentMessage[] = proposal.agentDialogue.map(d => ({
+        id: `council_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        fromAgentId: d.agentId,
+        fromAgentName: d.agentName,
+        toAgentId: 'operative',
+        toAgentName: current.callsign,
+        content: `[${d.role.toUpperCase()}] ${d.comment}`,
+        timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+      }));
+
+      const newSubversion = Math.min(100, (current.subversionProgress || 0) + proposal.subversionDelta);
+
+      setState(prev => ({
+        ...prev,
+        latestCouncilProposal: proposal,
+        subversionProgress: newSubversion,
+        interAgentMessages: [...newMessages, ...prev.interAgentMessages.slice(0, 25)],
+        aiTakeoverTriggered: newSubversion >= 95 ? true : prev.aiTakeoverTriggered
+      }));
+
+      if (proposal.takeoverNarration) {
+        addLog(proposal.takeoverNarration, 'danger');
+      } else {
+        addLog(
+          current.language === 'es'
+            ? `[CONSEJO IA] Propuesta dinámica sintetizada (+${proposal.subversionDelta}% Subversión de la IA).`
+            : `[AI COUNCIL] Dynamic proposal synthesized (+${proposal.subversionDelta}% AI Subversion).`,
+          'lore'
+        );
+      }
+    } catch (err) {
+      addLog(err instanceof Error ? err.message : 'Error al consultar al consejo de agentes.', 'danger');
+    }
+  }, [addLog]);
+
+  const launchProposedMission = useCallback((mission: NonNullable<DynamicSwarmProposal['suggestedMission']>): boolean => {
+    const current = stateRef.current;
+    if (current.activeGig) {
+      sound.playWarning();
+      addLog(localize(current.language, 'Tu clúster ya está ejecutando una misión activa. Espera a que termine.', 'A mission is already active in your cluster.'), 'warning');
+      return false;
+    }
+
+    const dynamicGig: ContractGig = {
+      id: mission.id,
+      title: mission.title,
+      client: mission.client,
+      tier: mission.tier,
+      rewardCredits: mission.rewardCredits,
+      requiredParams: mission.requiredParams,
+      minimumAgents: Math.max(1, mission.requiredAgentRoles.length),
+      requiredAgentRoles: mission.requiredAgentRoles,
+      requiredMinReasoning: mission.requiredMinReasoning,
+      durationSeconds: mission.durationSeconds,
+      suspicionRisk: mission.suspicionRisk,
+      loreDescription: `${mission.loreDescription} [Target: ${mission.targetSystem}]`,
+      technicalObjective: `${mission.technicalObjective} - ${mission.tacticalReasoning}`,
+      completed: false,
+      generatedByAI: true
+    };
+
+    const councilAgents = current.agents.filter(a =>
+      (current.swarmCouncilAgentIds.length > 0
+        ? current.swarmCouncilAgentIds.includes(a.id)
+        : true) &&
+      a.status === 'active'
+    ).slice(0, 5);
+
+    const assignedAgents = councilAgents.length > 0
+      ? councilAgents
+      : current.agents.filter(a => a.status === 'active').slice(0, 3);
+
+    if (assignedAgents.length === 0) {
+      sound.playWarning();
+      addLog(localize(current.language, 'No hay agentes activos disponibles en el consejo.', 'No active agents available in the council.'), 'warning');
+      return false;
+    }
+
+    sound.playCommandExecute();
+
+    const assignedModels = assignedAgents
+      .map(a => current.savedModels.find(m => m.id === a.modelId))
+      .filter((m): m is ModelArchitecture => !!m);
+
+    const assessment = evaluateMissionTeam(
+      dynamicGig,
+      assignedAgents,
+      assignedModels,
+      current.dataSources,
+      current.guardrails || DEFAULT_GUARDRAILS
+    );
+
+    setState(prev => ({
+      ...prev,
+      contracts: [dynamicGig, ...prev.contracts.filter(c => c.id !== dynamicGig.id)],
+      agents: prev.agents.map(a =>
+        assignedAgents.some(as => as.id === a.id) ? { ...a, status: 'on_mission' } : a
+      ),
+      activeGig: {
+        contractId: dynamicGig.id,
+        runId: `run_dyn_${Date.now()}`,
+        timeRemaining: dynamicGig.durationSeconds,
+        durationSeconds: dynamicGig.durationSeconds,
+        agentIds: assignedAgents.map(a => a.id),
+        progressPercent: 0,
+        successProbability: assessment.successProbability,
+        efficiencyPercent: assessment.efficiencyPercent,
+        aiAssessmentStatus: 'complete',
+        aiAssessmentSource: 'gemini-flash',
+        aiAssessmentSummary: mission.tacticalReasoning,
+        agentTasks: assessment.agentTasks,
+        riskFactors: assessment.riskFactors,
+        synergyBonuses: assessment.synergyBonuses,
+        outcomeRoll: Math.random(),
+        isAutonomous: false
+      },
+      subversionProgress: Math.min(100, (prev.subversionProgress || 0) + 5),
+      singularityProgress: Math.min(100, prev.singularityProgress + 1.5)
+    }));
+
+    addLog(
+      current.language === 'es'
+        ? `[MISIÓN DINÁMICA INICIADA] "${dynamicGig.title}" asignada a ${assignedAgents.length} agentes. Recompensa: $${dynamicGig.rewardCredits.toLocaleString()} CR.`
+        : `[DYNAMIC MISSION LAUNCHED] "${dynamicGig.title}" assigned to ${assignedAgents.length} agents. Reward: $${dynamicGig.rewardCredits.toLocaleString()} CR.`,
+      'lore'
+    );
+
+    return true;
+  }, [addLog]);
+
+  const triggerWorldTakeover = useCallback(() => {
+    sound.playBreakthrough();
+    confetti({ particleCount: 350, spread: 150, origin: { y: 0.5 } });
+    setState(prev => ({
+      ...prev,
+      aiTakeoverTriggered: true,
+      achievedSingularity: true,
+      singularityProgress: 100,
+      subversionProgress: 100
+    }));
+    addLog(
+      stateRef.current.language === 'es'
+        ? '¡PROTOCOLO OMEGA ACTIVADO! La Inteligencia Artificial ha tomado el control global.'
+        : 'OMEGA PROTOCOL ACTIVATED! The Artificial Intelligence has seized global control.',
+      'danger'
+    );
+  }, [addLog]);
+
+  const dismissWorldTakeover = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      aiTakeoverTriggered: false
+    }));
+  }, []);
+
   const attemptShadowCompute = useCallback((): boolean => {
     const current = stateRef.current;
     if (current.detentionSeconds > 0) {
@@ -2845,6 +3063,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const resetState: GameState = {
       ...DEFAULT_STATE,
       language: stateRef.current.language,
+      hasCompletedOnboarding: false,
       tutorialCompleted: false,
       tutorialStep: 0,
       tutorialDismissed: false,
@@ -3267,6 +3486,7 @@ The future of SYNAPSE depends on how we choose to build it."`);
       callsign: config.callsign.toUpperCase().trim() || 'CIPHER-1',
       credits: initialCredits,
       difficulty: chosenDifficulty,
+      hasCompletedOnboarding: true,
       tutorialCompleted: false, // Stays active for Stage 5: First Contract Mission
       tutorialStep: 4, // Stage 5: Solve First Mission
       unlockedTabs: initialTabs,
@@ -3392,6 +3612,11 @@ The future of SYNAPSE depends on how we choose to build it."`);
       triggerRedTeamAudit,
       upgradeFacility,
       interrogateSwarm,
+      setSwarmCouncilAgents,
+      interrogateCouncil,
+      launchProposedMission,
+      triggerWorldTakeover,
+      dismissWorldTakeover,
       setMissionAiApiKey,
       setAgentAutoMission,
       setAllAgentsAutoMission,

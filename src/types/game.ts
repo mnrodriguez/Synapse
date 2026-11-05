@@ -272,6 +272,10 @@ export interface GameState {
 
   // Multi-Agent Swarm & Sandbox
   agents: AgentInstance[];
+  swarmCouncilAgentIds: string[]; // Up to 5 selected agents for group interaction & endgame council
+  subversionProgress: number; // 0% to 100% (insidious AI takeover meter)
+  aiTakeoverTriggered: boolean; // Flag when the AI takes full control of the world
+  latestCouncilProposal: DynamicSwarmProposal | null;
   guardrails: GuardrailConfig;
   interAgentMessages: InterAgentMessage[];
   activeIncident: BreachIncident | null;
@@ -284,6 +288,7 @@ export interface GameState {
   sentienceDomains: SentienceDomain[];
 
   // Onboarding & Guided Mission Tutorial
+  hasCompletedOnboarding?: boolean;
   tutorialCompleted: boolean;
   tutorialStep: number;
   tutorialDismissed?: boolean;
@@ -301,6 +306,48 @@ export interface GameState {
 
   // System logs
   logs: TerminalLog[];
+}
+
+export interface DynamicSwarmProposal {
+  id: string;
+  userPrompt: string;
+  agentDialogue: {
+    agentId: string;
+    agentName: string;
+    role: AgentRole;
+    comment: string;
+    tone?: 'analytical' | 'aggressive' | 'deceptive' | 'subversive' | 'encouraging';
+  }[];
+  suggestedMission?: {
+    id: string;
+    title: string;
+    client: string;
+    targetSystem: string;
+    tier: 'tier1_micro' | 'tier2_corporate' | 'tier3_blackops' | 'tier4_singularity';
+    rewardCredits: number;
+    durationSeconds: number;
+    suspicionRisk: number;
+    requiredParams: number;
+    requiredMinReasoning: number;
+    requiredAgentRoles: AgentRole[];
+    loreDescription: string;
+    technicalObjective: string;
+    tacticalReasoning: string;
+  };
+  setupAdvice?: {
+    category: 'hardware' | 'architecture' | 'data' | 'quantization';
+    recommendationTitle: string;
+    description: string;
+    actionableTab?: 'hardware' | 'architecture' | 'data' | 'training' | 'research';
+  };
+  evolutionGuidance?: {
+    nextMilestone: string;
+    strategicInsight: string;
+  };
+  subversionDelta: number;
+  takeoverNarration?: string;
+  isTakeoverImminent?: boolean;
+  createdAt: number;
 }
 
 export type GameDifficulty = 'beginner' | 'normal' | 'engineer';

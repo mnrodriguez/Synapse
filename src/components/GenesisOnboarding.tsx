@@ -935,12 +935,12 @@ export const GenesisOnboarding: React.FC = () => {
         </div>
 
         {/* Footer Navigation */}
-        <div className="p-3.5 bg-[#0a111a] border-t border-cyan-900/60 flex items-center justify-between">
+        <div className="p-3.5 bg-[#0a111a] border-t border-cyan-900/60 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5">
           {step > 1 ? (
             <button
               type="button"
               onClick={() => { sound.playNavSwitch(); setStep(step - 1); }}
-              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs flex items-center gap-1.5 transition-colors"
+              className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs flex items-center gap-1.5 transition-colors cursor-pointer touch-manipulation"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>{localize(state.language, 'ANTERIOR', 'BACK')}</span>
@@ -953,15 +953,15 @@ export const GenesisOnboarding: React.FC = () => {
             <button
               type="button"
               onClick={() => { sound.playNavSwitch(); setStep(step + 1); }}
-              className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded text-xs flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,255,200,0.3)] transition-all cursor-pointer"
+              className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold rounded text-xs flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,255,200,0.3)] transition-all cursor-pointer touch-manipulation ml-auto sm:ml-0"
             >
               <span>{localize(state.language, 'SIGUIENTE', 'NEXT')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto justify-end">
               {!simComplete && (
-                <span className="text-[10px] text-amber-400 font-mono animate-pulse hidden sm:inline">
+                <span className="text-[10px] text-amber-400 font-mono animate-pulse">
                   {isEs ? '👈 Primero ejecuta "INICIAR ENTRENAMIENTO GÉNESIS" arriba' : '👈 Click "START GENESIS TRAINING" above first'}
                 </span>
               )}
@@ -970,14 +970,14 @@ export const GenesisOnboarding: React.FC = () => {
                 onClick={handleFinishOnboarding}
                 disabled={!simComplete}
                 title={!simComplete ? (isEs ? 'Ejecuta el entrenamiento génesis arriba primero para desbloquear' : 'Run genesis training above first to unlock') : undefined}
-                className={`px-5 py-2.5 rounded-lg text-xs font-black flex items-center gap-2 transition-all ${
+                className={`w-full sm:w-auto justify-center px-4 sm:px-5 py-2.5 rounded-lg text-xs font-black flex items-center gap-2 transition-all touch-manipulation ${
                   simComplete
                     ? 'bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-zinc-950 shadow-[0_0_20px_rgba(0,255,200,0.5)] cursor-pointer hover:scale-[1.02] active:scale-95 animate-pulse'
                     : 'bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed opacity-40 pointer-events-none'
                 }`}
               >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{localize(state.language, 'INGRESAR A SYNAPSE OS (COMENZAR SIMULACIÓN)', 'ENTER SYNAPSE OS (START SIMULATION)')}</span>
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span className="text-center">{localize(state.language, 'INGRESAR A SYNAPSE OS (COMENZAR SIMULACIÓN)', 'ENTER SYNAPSE OS (START SIMULATION)')}</span>
               </button>
             </div>
           )}

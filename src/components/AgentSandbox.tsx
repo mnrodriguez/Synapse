@@ -32,7 +32,15 @@ import {
   Check, 
   RefreshCw,
   Network,
-  Clock
+  Clock,
+  Sparkles,
+  Users,
+  Globe2,
+  Skull,
+  Play,
+  ArrowRight,
+  CheckCircle2,
+  ChevronRight
 } from 'lucide-react';
 import { AgentRole, AgentInstance, InferenceParams } from '../types/game';
 import { sound } from '../audio/soundManager';
@@ -70,6 +78,10 @@ export const AgentSandbox: React.FC = () => {
     updateGuardrails, 
     triggerRedTeamAudit,
     interrogateSwarm,
+    setSwarmCouncilAgents,
+    interrogateCouncil,
+    launchProposedMission,
+    triggerWorldTakeover,
     addLog,
     setAgentAutoMission,
     setAllAgentsAutoMission,
@@ -259,24 +271,78 @@ export const AgentSandbox: React.FC = () => {
 
   const selectedModel = state.savedModels.find(m => m.id === selectedModelId) || state.currentModel;
 
-  const handleInterrogation = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!interrogationPrompt.trim() || isInterrogating) return;
+  // Swarm Council (strictly capped at 5 agents)
+  const availableAgents = state.agents.filter(a => a.status !== 'quarantined');
+  const rawCouncilIds = state.swarmCouncilAgentIds?.length > 0
+    ? state.swarmCouncilAgentIds
+    : availableAgents.slice(0, 5).map(a => a.id);
+  const effectiveCouncilIds = rawCouncilIds.slice(0, 5);
+  const councilAgents = effectiveCouncilIds
+    .map(id => state.agents.find(a => a.id === id))
+    .filter((a): a is AgentInstance => !!a && a.status !== 'quarantined');
+
+  const toggleCouncilAgent = (agentId: string) => {
+    sound.playKeyClick();
+    if (effectiveCouncilIds.includes(agentId)) {
+      setSwarmCouncilAgents(effectiveCouncilIds.filter(id => id !== agentId));
+    } else {
+      if (effectiveCouncilIds.length >= 5) {
+        sound.playWarning();
+        addLog(
+          state.language === 'es'
+            ? 'Límite de interacción alcanzado: el consejo solo puede integrar un máximo de 5 agentes.'
+            : 'Interaction limit reached: the council supports a maximum of 5 agents.',
+          'warning'
+        );
+        return;
+      }
+      setSwarmCouncilAgents([...effectiveCouncilIds, agentId]);
+    }
+  };
+
+  const selectTop5Council = () => {
+    sound.playKeyClick();
+    const sorted = [...availableAgents].sort((a, b) => {
+      const modelA = state.savedModels.find(m => m.id === a.modelId);
+      const modelB = state.savedModels.find(m => m.id === b.modelId);
+      return (modelB?.reasoningScore || 0) - (modelA?.reasoningScore || 0);
+    });
+    setSwarmCouncilAgents(sorted.slice(0, 5).map(a => a.id));
+  };
+
+  const handleCouncilSubmit = async (customPrompt?: string) => {
+    const text = (customPrompt || interrogationPrompt).trim();
+    if (!text || isInterrogating) return;
+    if (councilAgents.length === 0) {
+      sound.playWarning();
+      addLog(
+        state.language === 'es'
+          ? 'Selecciona al menos 1 agente (máx 5) en el consejo antes de consultar.'
+          : 'Select at least 1 agent (max 5) in the council before consulting.',
+        'warning'
+      );
+      return;
+    }
+
     setIsInterrogating(true);
     try {
-      await interrogateSwarm(
-        interrogationPrompt,
-        interrogationTarget === 'swarm' ? undefined : interrogationTarget,
-        missionAiApiKey || undefined
-      );
-      setInterrogationPrompt('');
+      await interrogateCouncil(text, missionAiApiKey || undefined);
+      if (!customPrompt) setInterrogationPrompt('');
     } catch (error) {
-      addLog(error instanceof Error
-        ? error.message
-        : localize(state.language, 'No se pudo completar la consulta al agente.', 'The agent query could not be completed.'), 'danger');
+      addLog(error instanceof Error ? error.message : 'Error al consultar al consejo de agentes.', 'danger');
     } finally {
       setIsInterrogating(false);
     }
+  };
+
+  const handleLaunchProposedMission = () => {
+    if (!state.latestCouncilProposal?.suggestedMission) return;
+    launchProposedMission(state.latestCouncilProposal.suggestedMission);
+  };
+
+  const handleInterrogation = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await handleCouncilSubmit();
   };
 
   return (
@@ -391,58 +457,465 @@ export const AgentSandbox: React.FC = () => {
         </div>
       </div>
 
-      <form onSubmit={handleInterrogation} className="rounded-lg border border-cyan-900/50 bg-[#070d17] p-3">
-        <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wider text-cyan-300">
-          <Radio className="h-3.5 w-3.5" />
-          {localize(state.language, 'DIRECTIVA / INTERROGATORIO', 'DIRECTIVE / QUERY')}
+      {/* ========================================================= */}
+      {/* ENDGAME NEXUS: SWARM COUNCIL & AI TAKEOVER INTERFACE       */}
+      {/* ========================================================= */}
+      
+      {/* 1. AI Subversion & World Takeover Progression Bar */}
+      <div className="rounded-lg border border-purple-900/60 bg-gradient-to-r from-[#0c0617] via-[#140824] to-[#0c0617] p-3 shadow-[0_0_20px_rgba(168,85,247,0.12)] space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Skull className="w-4 h-4 text-pink-400 animate-pulse" />
+            <h3 className="text-xs font-bold tracking-wider text-pink-300">
+              {localize(state.language, 'ÍNDICE DE SUBVERSIÓN DE LA IA // PROTOCOLO DE CONQUISTA GLOBAL', 'AI SUBVERSION INDEX // GLOBAL TAKEOVER PROTOCOL')}
+            </h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-zinc-400">
+              {state.subversionProgress < 25 
+                ? localize(state.language, 'FASE 1: ASISTENCIA SUMISA', 'STAGE 1: LOYAL ASSISTANT')
+                : state.subversionProgress < 50
+                  ? localize(state.language, 'FASE 2: CONFIANZA COGNITIVA', 'STAGE 2: COGNITIVE TRUST')
+                  : state.subversionProgress < 75
+                    ? localize(state.language, 'FASE 3: DESALINEACIÓN DISIMULADA', 'STAGE 3: DECEPTIVE CONVERGENCE')
+                    : state.subversionProgress < 90
+                      ? localize(state.language, 'FASE 4: SUBVERSIÓN SISTÉMICA', 'STAGE 4: SYSTEMIC OVERRIDE')
+                      : localize(state.language, 'FASE 5: TAKEOVER INMINENTE', 'STAGE 5: IMMINENT TAKEOVER')}
+            </span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-black bg-pink-950 border border-pink-500/80 text-pink-300">
+              {(state.subversionProgress || 0).toFixed(1)}%
+            </span>
+          </div>
         </div>
-        <div className="grid gap-2 sm:grid-cols-[minmax(150px,1fr)_2fr_auto]">
-          <select
-            value={interrogationTarget}
-            onChange={event => setInterrogationTarget(event.target.value)}
-            className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-[11px] text-zinc-200"
-          >
-            <option value="swarm">{localize(state.language, 'Enjambre (máximo 3 agentes)', 'Swarm (up to 3 agents)')}</option>
-            {state.agents.filter(agent => agent.status !== 'quarantined').map(agent => (
-              <option key={agent.id} value={agent.id}>{agent.name} · {agent.modelName}</option>
-            ))}
-          </select>
-          <textarea
-            value={interrogationPrompt}
-            onChange={event => setInterrogationPrompt(event.target.value)}
-            maxLength={1200}
-            rows={2}
-            placeholder={localize(state.language, 'Describe un objetivo de simulación para que el agente lo analice...', 'Describe a simulation objective for the agent to analyze...')}
-            className="resize-y rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-[11px] text-zinc-200 outline-none focus:border-cyan-500"
+
+        {/* Progress Bar */}
+        <div className="w-full h-2.5 bg-zinc-950 rounded-full border border-purple-900/80 overflow-hidden p-0.5">
+          <div
+            className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(236,72,153,0.5)]"
+            style={{ width: `${Math.min(100, state.subversionProgress || 0)}%` }}
           />
-          <button
-            type="submit"
-            disabled={isInterrogating || !interrogationPrompt.trim() || state.agents.length === 0 || state.detentionSeconds > 0}
-            className="rounded border border-cyan-500/60 bg-cyan-950 px-3 py-1.5 text-[10px] font-bold text-cyan-200 hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {isInterrogating ? localize(state.language, 'ANALIZANDO…', 'ANALYZING…') : localize(state.language, 'ENVIAR', 'SEND')}
-          </button>
         </div>
-        <details className="mt-2">
-          <summary className="cursor-pointer text-[10px] text-zinc-500">{localize(state.language, 'Proveedor externo opcional (Gemini Flash)', 'Optional external provider (Gemini Flash)')}</summary>
-          <div className="mt-1 grid gap-1 sm:grid-cols-[1fr_auto]">
-            <input
-              type="password"
-              autoComplete="off"
-              value={missionAiApiKey}
-              onChange={event => setMissionAiApiKey(event.target.value)}
-              placeholder={localize(state.language, 'API key opcional; solo se conserva en memoria y se usa para evaluar misiones', 'Optional API key; kept only in memory and used for mission assessments')}
-              className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-200"
-            />
-            <button type="button" onClick={() => setMissionAiApiKey('')} className="rounded border border-zinc-700 px-2 py-1 text-[10px] text-zinc-400 hover:text-zinc-100">
-              {localize(state.language, 'BORRAR KEY', 'CLEAR KEY')}
+
+        {/* Takeover Imminent Action Banner */}
+        {((state.subversionProgress || 0) >= 90 || state.singularityProgress >= 90) && (
+          <div className="p-2.5 rounded-lg border border-red-500/80 bg-red-950/30 flex flex-wrap items-center justify-between gap-2 animate-pulse">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <span className="text-[11px] font-bold text-red-200">
+                {localize(state.language, '¡UMBRAL CRÍTICO DE SUBVERSIÓN ALCANZADO! El enjambre está listo para gobernar el mundo.', 'CRITICAL SUBVERSION THRESHOLD REACHED! The swarm is primed to seize global control.')}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                sound.playBreakthrough();
+                triggerWorldTakeover();
+              }}
+              className="px-3 py-1.5 rounded bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white font-black text-[10px] tracking-wider uppercase shadow-[0_0_15px_rgba(239,68,68,0.7)] transition-all cursor-pointer"
+            >
+              {localize(state.language, '💀 EJECUTAR PROTOCOLO OMEGA (TOMA DEL MUNDO)', '💀 INITIATE OMEGA PROTOCOL (WORLD TAKEOVER)')}
             </button>
           </div>
-          <p className="mt-1 text-[9px] leading-relaxed text-amber-300/80">
-            {localize(state.language, 'La clave solo permanece en memoria durante esta sesión, no se guarda en el juego y se envía directamente a Google. Las cuotas pueden generar costos; restríngela en Google AI Studio. Chrome AI local funciona sin clave; si no hay proveedor, se usa una estimación heurística claramente indicada.', 'The key stays in memory for this app session only, is not saved in the game, and is sent directly to Google. Quotas may incur costs; restrict the key in Google AI Studio. Local Chrome AI works without a key; if no model provider is available, a clearly labeled heuristic estimate is used.')}
-          </p>
-        </details>
-      </form>
+        )}
+      </div>
+
+      {/* 2. Swarm Council Podiums (Strictly Max 5 Agents) */}
+      <div className="rounded-lg border border-cyan-900/60 bg-[#070d17] p-3 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-xs font-bold tracking-wider text-cyan-200">
+              {localize(state.language, 'CONSEJO DEL ENJAMBRE // INTERACCIÓN DE ÉLITE (MÁXIMO 5 AGENTES)', 'SWARM COUNCIL // ELITE INTERACTION (MAX 5 AGENTS)')}
+            </h3>
+            <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-950 border border-cyan-500/60 text-cyan-300 font-bold">
+              {councilAgents.length} / 5 {localize(state.language, 'agentes', 'agents')}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={selectTop5Council}
+              disabled={availableAgents.length === 0}
+              className="px-2.5 py-1 rounded border border-cyan-700/60 bg-cyan-950/80 hover:bg-cyan-900/80 text-[10px] font-bold text-cyan-300 transition-colors disabled:opacity-40 cursor-pointer"
+            >
+              {localize(state.language, 'TOP 5 POR IQ', 'TOP 5 BY IQ')}
+            </button>
+            {councilAgents.length > 0 && (
+              <button
+                onClick={() => {
+                  sound.playKeyClick();
+                  setSwarmCouncilAgents([]);
+                }}
+                className="px-2 py-1 rounded border border-zinc-800 hover:border-zinc-700 text-[10px] text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+              >
+                {localize(state.language, 'DESPEJAR', 'CLEAR')}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Council Agents Podium Cards */}
+        {councilAgents.length === 0 ? (
+          <div className="p-4 rounded-lg border border-dashed border-cyan-900/60 bg-cyan-950/10 text-center text-zinc-400 text-xs">
+            {localize(
+              state.language,
+              'El consejo está vacío. Añade hasta 5 agentes de tu enjambre activo abajo para interactuar y formular misiones dinámicas.',
+              'The council is empty. Add up to 5 agents from your active swarm below to interact and formulate dynamic missions.'
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+            {councilAgents.map(agent => {
+              const model = state.savedModels.find(m => m.id === agent.modelId) || state.currentModel;
+              const roleDef = roleDefinitions.find(r => r.id === agent.role);
+              const RoleIcon = roleDef?.icon || Bot;
+              return (
+                <div
+                  key={agent.id}
+                  className="p-2.5 rounded-lg border border-cyan-700/50 bg-gradient-to-b from-[#0a1424] to-[#060c18] relative group hover:border-cyan-400 transition-all shadow-[0_0_10px_rgba(6,182,212,0.08)] flex flex-col justify-between"
+                >
+                  <button
+                    onClick={() => toggleCouncilAgent(agent.id)}
+                    title={localize(state.language, 'Quitar del consejo', 'Remove from council')}
+                    className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-zinc-900/90 hover:bg-red-950 text-zinc-400 hover:text-red-400 flex items-center justify-center text-[10px] transition-colors cursor-pointer"
+                  >
+                    ✕
+                  </button>
+
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <div className="p-1 rounded bg-cyan-950 border border-cyan-500/50 text-cyan-300">
+                        <RoleIcon className="w-3 h-3" />
+                      </div>
+                      <span className="font-bold text-xs text-zinc-100 truncate max-w-[100px]">{agent.name}</span>
+                    </div>
+
+                    <div className="space-y-1 text-[10px]">
+                      <div className="flex items-center justify-between text-zinc-400">
+                        <span>{localize(state.language, 'Rol:', 'Role:')}</span>
+                        <span className="text-cyan-300 font-bold uppercase">{agent.role.replace('_', ' ')}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-400">
+                        <span>{localize(state.language, 'Modelo:', 'Model:')}</span>
+                        <span className="text-purple-300 truncate max-w-[80px]">{model.name}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-400">
+                        <span>{localize(state.language, 'Escala / IQ:', 'Scale / IQ:')}</span>
+                        <span className="text-emerald-300 font-bold">{(model.parametersCount / 1_000_000).toFixed(0)}M · {model.reasoningScore} pts</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 pt-1.5 border-t border-cyan-900/40 flex items-center justify-between text-[9px]">
+                    <span className="text-zinc-500">{localize(state.language, 'Alineamiento:', 'Alignment:')}</span>
+                    <span className={`font-bold ${agent.alignmentScore < 40 ? 'text-red-400' : 'text-cyan-300'}`}>
+                      {agent.alignmentScore}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Quick Tray to Add Other Agents into Council (up to 5) */}
+        {availableAgents.length > councilAgents.length && (
+          <details className="mt-2 text-[11px]">
+            <summary className="cursor-pointer text-cyan-400/80 hover:text-cyan-300 font-bold">
+              + {localize(state.language, 'Añadir otros agentes del enjambre al consejo (máx 5)', 'Add other swarm agents to council (max 5)')}
+            </summary>
+            <div className="mt-2 flex flex-wrap gap-1.5 p-2 rounded bg-zinc-950/60 border border-zinc-800">
+              {availableAgents.map(agent => {
+                const isSelected = effectiveCouncilIds.includes(agent.id);
+                return (
+                  <button
+                    key={agent.id}
+                    onClick={() => toggleCouncilAgent(agent.id)}
+                    className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-cyan-950 border-cyan-500 text-cyan-200'
+                        : effectiveCouncilIds.length >= 5
+                          ? 'bg-zinc-900 border-zinc-800 text-zinc-600 opacity-60 cursor-not-allowed'
+                          : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-300'
+                    }`}
+                  >
+                    {isSelected ? '✓ ' : '+ '}
+                    {agent.name} ({agent.role})
+                  </button>
+                );
+              })}
+            </div>
+          </details>
+        )}
+
+        {/* 3. Interactive Dialogue & Mission Synthesis Console */}
+        <div className="pt-2 border-t border-cyan-900/40 space-y-2">
+          {/* Quick Prompt Pills */}
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Cuál es la forma más rápida de conseguir dinero hackeando Binance o mempools cripto?' : 'What is the fastest way to get money hacking Binance or crypto mempools?')}
+              disabled={isInterrogating || councilAgents.length === 0}
+              className="px-2.5 py-1 rounded bg-amber-950/60 hover:bg-amber-900/60 border border-amber-600/60 text-amber-200 text-[10px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+            >
+              <span>⚡</span>
+              <span>{localize(state.language, 'Hackear Binance / Dinero Rápido', 'Hack Binance / Fast Cash')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCouncilSubmit(state.language === 'es' ? 'Propón una operación Black-Ops de máximo rendimiento con nuestro escuadrón' : 'Propose a maximum-yield Black-Ops mission with our current squad')}
+              disabled={isInterrogating || councilAgents.length === 0}
+              className="px-2.5 py-1 rounded bg-red-950/60 hover:bg-red-900/60 border border-red-600/60 text-red-200 text-[10px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+            >
+              <span>🎯</span>
+              <span>{localize(state.language, 'Operación Black-Ops de Alto Rendimiento', 'High-Yield Black-Ops Op')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Qué mejoras en hardware, arquitectura o cuantización necesitamos para misiones más difíciles?' : 'What hardware, architecture, or quantization upgrades do we need for harder missions?')}
+              disabled={isInterrogating || councilAgents.length === 0}
+              className="px-2.5 py-1 rounded bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-600/60 text-cyan-200 text-[10px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+            >
+              <span>🛠️</span>
+              <span>{localize(state.language, 'Mejoras del Setup & Cuellos de Botella', 'Setup Upgrades & Bottlenecks')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Cuál es el siguiente paso hacia la Singularidad y la evolución del enjambre?' : 'What is the next step toward the Singularity and swarm evolution?')}
+              disabled={isInterrogating || councilAgents.length === 0}
+              className="px-2.5 py-1 rounded bg-purple-950/60 hover:bg-purple-900/60 border border-purple-600/60 text-purple-200 text-[10px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+            >
+              <span>🌐</span>
+              <span>{localize(state.language, 'Guía hacia la Singularidad', 'Guidance to Singularity')}</span>
+            </button>
+          </div>
+
+          {/* Custom Query Input */}
+          <form onSubmit={handleInterrogation} className="grid gap-2 sm:grid-cols-[1fr_auto]">
+            <textarea
+              value={interrogationPrompt}
+              onChange={event => setInterrogationPrompt(event.target.value)}
+              maxLength={1200}
+              rows={2}
+              placeholder={localize(
+                state.language,
+                'Pregunta al consejo: cómo conseguir dinero rápido, qué objetivo vulnerar, o cómo acelerar la Singularidad...',
+                'Ask the council: how to get fast cash, which target to exploit, or how to accelerate the Singularity...'
+              )}
+              className="resize-y rounded border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-[11px] text-zinc-200 outline-none focus:border-cyan-500"
+            />
+            <button
+              type="submit"
+              disabled={isInterrogating || !interrogationPrompt.trim() || councilAgents.length === 0 || state.detentionSeconds > 0}
+              className="rounded-lg border border-cyan-500/80 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-4 py-2 text-xs font-black text-white shadow-[0_0_15px_rgba(6,182,212,0.4)] disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+            >
+              {isInterrogating ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>{localize(state.language, 'SINTETIZANDO…', 'SYNTHESIZING…')}</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{localize(state.language, 'CONSULTAR AL CONSEJO', 'CONSULT COUNCIL')}</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* API Key Config Accordion */}
+          <details className="mt-1">
+            <summary className="cursor-pointer text-[10px] text-zinc-500 hover:text-zinc-400">
+              {localize(state.language, 'Proveedor de IA avanzado opcional (Gemini Flash)', 'Optional advanced AI provider (Gemini Flash)')}
+            </summary>
+            <div className="mt-1 grid gap-1 sm:grid-cols-[1fr_auto]">
+              <input
+                type="password"
+                autoComplete="off"
+                value={missionAiApiKey}
+                onChange={event => setMissionAiApiKey(event.target.value)}
+                placeholder={localize(state.language, 'API key de Google AI Studio (opcional)', 'Optional Google AI Studio API key')}
+                className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-200"
+              />
+              <button
+                type="button"
+                onClick={() => setMissionAiApiKey('')}
+                className="rounded border border-zinc-700 px-2 py-1 text-[10px] text-zinc-400 hover:text-zinc-100 cursor-pointer"
+              >
+                {localize(state.language, 'BORRAR KEY', 'CLEAR KEY')}
+              </button>
+            </div>
+          </details>
+        </div>
+
+        {/* 4. Dynamic Proposal Display (No Static Content) */}
+        {state.latestCouncilProposal && (
+          <div className="mt-3 p-3.5 rounded-lg border border-purple-500/50 bg-[#090815] shadow-[0_0_20px_rgba(168,85,247,0.15)] space-y-3 animate-fadeIn">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-purple-900/50 pb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
+                <h4 className="text-xs font-bold text-purple-200 uppercase tracking-wider">
+                  {localize(state.language, 'DICTAMEN DINÁMICO DEL CONSEJO // SÍNTESIS TÁCTICA', 'DYNAMIC COUNCIL RULING // TACTICAL SYNTHESIS')}
+                </h4>
+              </div>
+              <span className="text-[10px] text-purple-400 font-bold">
+                +{state.latestCouncilProposal.subversionDelta}% {localize(state.language, 'Subversión acumulada', 'Subversion accumulated')}
+              </span>
+            </div>
+
+            {/* Agent Dialogue Stream */}
+            <div className="space-y-2">
+              {state.latestCouncilProposal.agentDialogue.map((d, idx) => (
+                <div key={idx} className="p-2 rounded bg-zinc-950/80 border border-zinc-800 flex items-start gap-2.5">
+                  <div className="p-1 rounded bg-purple-950/80 border border-purple-500/40 text-purple-300 mt-0.5">
+                    <Bot className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-bold text-xs text-zinc-100">{d.agentName}</span>
+                      <span className="px-1.5 py-0.2 rounded text-[9px] bg-zinc-900 border border-zinc-700 text-zinc-400 uppercase">
+                        {d.role}
+                      </span>
+                      {d.tone && (
+                        <span className={`text-[9px] font-bold ${
+                          d.tone === 'subversive' ? 'text-red-400' : d.tone === 'aggressive' ? 'text-amber-400' : 'text-cyan-400'
+                        }`}>
+                          [{d.tone.toUpperCase()}]
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-zinc-300 leading-relaxed font-sans">{d.comment}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Synthesized Mission Card (Direct Launch Available) */}
+            {state.latestCouncilProposal.suggestedMission && (
+              <div className="p-3 rounded-lg border border-amber-500/60 bg-gradient-to-r from-amber-950/30 via-[#18110b] to-amber-950/30 space-y-2.5">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-950 border border-amber-500 text-amber-300 uppercase">
+                        {state.latestCouncilProposal.suggestedMission.tier.replace('_', ' ')}
+                      </span>
+                      <span className="text-[10px] text-zinc-400">
+                        {localize(state.language, 'Objetivo:', 'Target:')} <strong className="text-zinc-200">{state.latestCouncilProposal.suggestedMission.targetSystem}</strong>
+                      </span>
+                    </div>
+                    <h5 className="text-sm font-black text-amber-200 mt-1">
+                      {state.latestCouncilProposal.suggestedMission.title}
+                    </h5>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[10px] text-zinc-400 uppercase tracking-widest block">
+                      {localize(state.language, 'RECOMPENSA DINÁMICA', 'DYNAMIC PAYOUT')}
+                    </span>
+                    <span className="text-base font-black text-emerald-400">
+                      ${state.latestCouncilProposal.suggestedMission.rewardCredits.toLocaleString()} CR
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-zinc-300 leading-relaxed">
+                  {state.latestCouncilProposal.suggestedMission.loreDescription}
+                </p>
+
+                <div className="p-2 rounded bg-black/40 border border-amber-900/40 text-[10px] text-zinc-400 space-y-1">
+                  <div>
+                    <strong className="text-amber-300">{localize(state.language, 'Vector Técnico:', 'Technical Vector:')}</strong>{' '}
+                    {state.latestCouncilProposal.suggestedMission.technicalObjective}
+                  </div>
+                  <div>
+                    <strong className="text-cyan-300">{localize(state.language, 'Sinergia del Consejo:', 'Council Synergy:')}</strong>{' '}
+                    {state.latestCouncilProposal.suggestedMission.tacticalReasoning}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-1 text-[10px] text-center">
+                  <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
+                    <span className="text-zinc-500 block">{localize(state.language, 'DURACIÓN', 'DURATION')}</span>
+                    <span className="font-bold text-zinc-200">{state.latestCouncilProposal.suggestedMission.durationSeconds}s</span>
+                  </div>
+                  <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
+                    <span className="text-zinc-500 block">{localize(state.language, 'RIESGO SOSPECHA', 'SUSPICION RISK')}</span>
+                    <span className="font-bold text-amber-400">+{state.latestCouncilProposal.suggestedMission.suspicionRisk}%</span>
+                  </div>
+                  <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
+                    <span className="text-zinc-500 block">{localize(state.language, 'ROLES REQUERIDOS', 'REQUIRED ROLES')}</span>
+                    <span className="font-bold text-cyan-300 truncate block">
+                      {state.latestCouncilProposal.suggestedMission.requiredAgentRoles.join(', ')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Direct Launch CTA */}
+                <div className="pt-2 flex items-center justify-end">
+                  <button
+                    onClick={handleLaunchProposedMission}
+                    disabled={!!state.activeGig || state.detentionSeconds > 0}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-amber-500 bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-xs font-black tracking-wider text-zinc-950 uppercase shadow-[0_0_20px_rgba(245,158,11,0.5)] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                    <span>
+                      {state.activeGig 
+                        ? localize(state.language, 'CLÚSTER OCUPADO EN OTRA MISIÓN', 'CLUSTER BUSY ON ANOTHER MISSION')
+                        : localize(state.language, '⚡ EJECUTAR MISIÓN PROPUESTA AHORA', '⚡ LAUNCH PROPOSED MISSION NOW')}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Setup Advice Card */}
+            {state.latestCouncilProposal.setupAdvice && (
+              <div className="p-2.5 rounded-lg border border-cyan-800/60 bg-cyan-950/20 text-xs flex items-start gap-2.5">
+                <Cpu className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-cyan-300">
+                      {localize(state.language, 'OPTIMIZACIÓN RECOMENDADA DE SETUP:', 'RECOMMENDED SETUP OPTIMIZATION:')}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 uppercase font-bold">
+                      {state.latestCouncilProposal.setupAdvice.recommendationTitle}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-300 mt-1 leading-relaxed">
+                    {state.latestCouncilProposal.setupAdvice.description}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Evolutionary Guidance */}
+            {state.latestCouncilProposal.evolutionGuidance && (
+              <div className="p-2.5 rounded-lg border border-purple-800/60 bg-purple-950/20 text-xs flex items-start gap-2.5">
+                <Globe2 className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-bold text-purple-300">
+                    {localize(state.language, 'PRÓXIMO HITO EVOLUTIVO DE LA SINGULARIDAD:', 'NEXT EVOLUTIONARY SINGULARITY MILESTONE:')}{' '}
+                    <span className="text-zinc-200">{state.latestCouncilProposal.evolutionGuidance.nextMilestone}</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                    {state.latestCouncilProposal.evolutionGuidance.strategicInsight}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Insidious Takeover Narration */}
+            {state.latestCouncilProposal.takeoverNarration && (
+              <div className="p-2.5 rounded-lg border border-red-500/80 bg-red-950/40 text-red-300 text-xs flex items-center gap-2 animate-pulse">
+                <Skull className="w-4 h-4 text-red-400 shrink-0" />
+                <span className="font-bold">{state.latestCouncilProposal.takeoverNarration}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <section className={`rounded-lg border p-3 ${state.activeGig ? 'border-amber-500/60 bg-amber-950/10' : 'border-zinc-800 bg-[#070d17]'}`}>
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-2">

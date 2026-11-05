@@ -20,6 +20,7 @@ import { HelpManual } from './components/HelpManual';
 import { AgentSandbox } from './components/AgentSandbox';
 import { BreachModal } from './components/BreachModal';
 import { GameOverModal } from './components/GameOverModal';
+import { SingularityTakeoverModal } from './components/SingularityTakeoverModal';
 import { GenesisOnboarding } from './components/GenesisOnboarding';
 import { TutorialMissionBanner } from './components/TutorialMissionBanner';
 import { ProgressionRoadmap } from './components/ProgressionRoadmap';
@@ -230,10 +231,13 @@ const MainGameScreen: React.FC = () => {
       </main>
 
       {/* Onboarding Genesis Protocol Screen */}
-      {!state.tutorialCompleted && <GenesisOnboarding />}
+      {!state.hasCompletedOnboarding && <GenesisOnboarding />}
 
       {/* Real-World AI Guardrail Breach Incident Popup */}
       <BreachModal />
+
+      {/* Endgame AI World Takeover Modal */}
+      <SingularityTakeoverModal />
 
       {/* Game Over & Emergency Loan Modal */}
       <GameOverModal />
