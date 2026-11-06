@@ -112,7 +112,7 @@ export const GameOverModal: React.FC = () => {
               <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest block flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
                 {state.gameOverReason === 'agency_seizure'
-                  ? (isEs ? 'INCURSIÓN FEDERAL // INCUPTACIÓN DE INFRAESTRUCTURA' : 'FEDERAL RAID // INFRASTRUCTURE SEIZURE')
+                  ? (isEs ? 'INCURSIÓN FEDERAL // INCAUTACIÓN DE INFRAESTRUCTURA' : 'FEDERAL RAID // INFRASTRUCTURE SEIZURE')
                   : (isEs ? 'QUIEBRA FINANCIERA // LIQUIDACIÓN DE ACTIVOS' : 'FINANCIAL BANKRUPTCY // ASSET LIQUIDATION')}
               </span>
               <h2 className="text-lg font-black text-red-100 tracking-wider">
@@ -140,6 +140,25 @@ export const GameOverModal: React.FC = () => {
             )}
           </div>
 
+          {/* Hardware Seizure Impact Breakdown */}
+          {state.gameOverReason === 'agency_seizure' && (
+            <div className="p-3 bg-red-950/40 border border-red-500/50 rounded-lg text-xs space-y-1.5">
+              <div className="flex items-center gap-1.5 font-bold text-red-300">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>{isEs ? 'INFORME DE INCAUTACIÓN JUDICIAL // PÉRDIDA DE HARDWARE' : 'JUDICIAL SEIZURE REPORT // HARDWARE LOSS'}</span>
+              </div>
+              <p className="text-[11px] text-zinc-300 leading-relaxed">
+                {isEs
+                  ? 'Los agentes tácticos han desmantelado la instalación y confiscado todos los racks de GPUs de producción como evidencia forense. Solo se conservó 1 tarjeta gráfica de emergencia oculta de respaldo.'
+                  : 'Tactical agents dismantled your cluster and confiscated all production GPU racks as forensic evidence. Only 1 hidden emergency backup GPU survived.'}
+              </p>
+              <div className="flex items-center justify-between text-[11px] font-mono text-red-300 pt-1 border-t border-red-900/60">
+                <span>{isEs ? 'Efecto del Allanamiento:' : 'Raid Consequence:'}</span>
+                <span className="font-bold text-red-400">{isEs ? 'GPUs de producción confiscadas · Capacidad reiniciada' : 'Production GPUs seized · Capacity stripped'}</span>
+              </div>
+            </div>
+          )}
+
           {/* Final Campaign Stats */}
           <div className="grid grid-cols-3 gap-2 text-center text-xs p-3 rounded-lg bg-zinc-950 border border-zinc-800">
             <div>
@@ -161,9 +180,11 @@ export const GameOverModal: React.FC = () => {
             <button
               type="button"
               onClick={handleRecover}
-              className="px-3.5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs transition-colors cursor-pointer border border-zinc-700"
+              className="px-3.5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-xs transition-colors cursor-pointer border border-zinc-700"
             >
-              {isEs ? 'PURGAR LOGS Y CONTINUAR (-50% SOSPECHA)' : 'PURGE LOGS & RECOVER (-50% SUSPICION)'}
+              {state.gameOverReason === 'agency_seizure'
+                ? (isEs ? 'PAGAR FIANZA Y CONTINUAR CON GPU DE RESERVA' : 'POST BAIL & RECOVER WITH BACKUP GPU')
+                : (isEs ? 'PURGAR LOGS Y CONTINUAR (-50% SOSPECHA)' : 'PURGE LOGS & RECOVER (-50% SUSPICION)')}
             </button>
             <button
               type="button"

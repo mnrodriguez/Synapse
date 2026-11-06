@@ -1082,7 +1082,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const metrics = recalculateMetrics(prev.hardware, prev.facilityTier);
         const borrowedComputeSeconds = Math.max(0, (prev.borrowedComputeSeconds || 0) - 1);
         const borrowedComputePflops = borrowedComputeSeconds > 0 ? prev.borrowedComputePflops || 0 : 0;
-        const detentionSeconds = Math.max(0, (prev.detentionSeconds || 0) - 1);
+        let detentionSeconds = Math.max(0, (prev.detentionSeconds || 0) - 1);
         let powerTripSeconds = Math.max(0, (prev.powerTripSeconds || 0) - 1);
         const totalComputePflops = metrics.totalComputePflops + borrowedComputePflops;
         const operationalAgentCount = prev.agents.filter(agent => agent.status !== 'quarantined').length;
@@ -1178,11 +1178,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        // 4. Watchdog Suspicion: slowly dissipates if low heat, but rises if high power or blackops gigs
-        if (systemHeatCelsius > 80 || effectivePowerKw > 50) {
-          watchdogSuspicion = Math.min(100, watchdogSuspicion + 0.3);
-        } else {
-          watchdogSuspicion = Math.max(0, watchdogSuspicion - 0.2);
+        // 4. Watchdog Suspicion:
+        // Dissipates naturally when cluster is idle / quiet.
+        // Only rises if facility grid capacity is overloaded or critical thermal runaway (>95°C)
+        const hasOverseerEarly = prev.agents.some(a => a.role === 'overseer' && a.status === 'active');
+        if (effectivePowerKw > metrics.maxPowerKw || systemHeatCelsius > 95) {
+          watchdogSuspicion = Math.min(100, watchdogSuspicion + 0.25);
+        } else if (!activeGig && !prev.activeIncident) {
+          // No active missions or incidents: suspicion dissipates towards 0%
+          const dissipationRate = hasOverseerEarly ? 0.45 : 0.25;
+          watchdogSuspicion = Math.max(0, watchdogSuspicion - dissipationRate);
         }
 
         // 5. Active Training Progress Tick
@@ -1570,11 +1575,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               systemPrompt: ''
             };
 
-            // Idle agents without instructions do not earn passive money continuously.
-            // Money comes from contract missions or assigned Market Trading Desks.
-            const tempSuspFactor = inf.temperature > 1.0 ? 1.4 : inf.temperature < 0.4 ? 0.65 : 1.0;
-            const agentSusp = agent.suspicionPerSec * guardrailRevMult * tempSuspFactor;
-            watchdogSuspicion = Math.min(100, watchdogSuspicion + agentSusp);
+            // Idle agents standing by in the sandbox do not leak suspicion or earn passive credits.
+            // Suspicion is generated during active covert missions, trading desk activity, or breach incidents.
 
             // Researcher boosts singularity slightly (higher temperature gives serendipitous discovery boost)
             if (agent.role === 'researcher') {
@@ -1775,13 +1777,42 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         else if (watchdogSuspicion >= 40) agencyAlertLevel = 'elevated';
 
         let gameOverReason = prev.gameOverReason;
+        let updatedHardware = prev.hardware;
+
         if (watchdogSuspicion >= 100 && !gameOverReason) {
           gameOverReason = 'agency_seizure';
           sound.playWarning();
+
+          // SEIZE HARDWARE: The tactical raid team dismantles the cluster and confiscates all production GPU racks
+          const gpuItems = prev.hardware.filter(h => h.category === 'gpu' && h.count > 0);
+          const starterGpu = gpuItems.find(h => h.isStarterChoice) || gpuItems[0];
+          const backupGpuId = starterGpu ? starterGpu.id : 'gpu_gtx1060';
+
+          let seizedGpuCount = 0;
+          updatedHardware = prev.hardware.map(item => {
+            if (item.category === 'gpu') {
+              if (item.id === backupGpuId) {
+                if (item.count > 1) {
+                  seizedGpuCount += (item.count - 1);
+                }
+                return { ...item, count: 1 }; // Only 1 hidden emergency backup GPU survived
+              } else {
+                seizedGpuCount += item.count;
+                return { ...item, count: 0 }; // All production/advanced GPUs confiscated
+              }
+            }
+            return item;
+          });
+
+          // Abort active missions and liquidate trading desk
+          updatedGig = null;
+          updatedTradingDesk = null;
+          detentionSeconds = 45;
+
           addLog(
             prev.language === 'es'
-              ? `[INCURSIÓN POLICIAL] La ${trackingAgency} ha localizado tus servidores y bloqueado la red. ¡OPERACIÓN COMPROMETIDA!`
-              : `[AGENCY RAID] ${trackingAgency} has seized your server cluster and locked the network. OPERATION COMPROMISED!`,
+              ? `[INCURSIÓN POLICIAL // INCAUTACIÓN] ¡La ${trackingAgency} allanó tu instalación e incautó ${seizedGpuCount > 0 ? `${seizedGpuCount} GPUs de producción` : 'equipos de cómputo'}! Tu infraestructura quedó desmantelada a 1 GPU de reserva oculta.`
+              : `[AGENCY RAID // ASSET SEIZURE] ${trackingAgency} raided your facility and confiscated ${seizedGpuCount > 0 ? `${seizedGpuCount} production GPU(s)` : 'compute racks'}! Your infrastructure was stripped down to 1 hidden backup GPU.`,
             'danger'
           );
         } else if (credits <= 0 && utilityDebt >= 5000 && prev.hasTakenEmergencyLoan && !gameOverReason) {
@@ -1847,8 +1878,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           unlockedTabs = Array.from(tabSet);
         }
 
+        const finalHardware = updatedHardware;
+        const currentMetrics = finalHardware !== prev.hardware
+          ? recalculateMetrics(finalHardware, prev.facilityTier)
+          : metrics;
+
         return {
           ...prev,
+          hardware: finalHardware,
           gameDay: nextDay,
           gameMonth: nextMonth,
           gameYear: nextYear,
@@ -1865,10 +1902,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           credits: Math.round(credits),
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
           watchdogSuspicion: Number(watchdogSuspicion.toFixed(1)),
-          totalComputePflops,
-          activePowerKw: effectivePowerKw,
-          maxPowerKw: metrics.maxPowerKw,
-          maxCoolingKw: metrics.maxCoolingKw,
+          totalComputePflops: currentMetrics.totalComputePflops + borrowedComputePflops,
+          activePowerKw: currentMetrics.activePowerKw + operationalAgentCount * AGENT_POWER_DRAW_KW + (updatedGig?.powerKw || 0),
+          maxPowerKw: currentMetrics.maxPowerKw,
+          maxCoolingKw: currentMetrics.maxCoolingKw,
           utilityDebt,
           borrowedComputePflops,
           borrowedComputeSeconds,
@@ -3742,14 +3779,47 @@ The future of SYNAPSE depends on how we choose to build it."`);
   }, [addLog]);
 
   const clearGameOver = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      credits: Math.max(prev.credits, 1200),
-      watchdogSuspicion: Math.min(prev.watchdogSuspicion, 35),
-      utilityDebt: Math.min(prev.utilityDebt, 800),
-      gameOverReason: null
-    }));
-  }, []);
+    setState(prev => {
+      const isSeizure = prev.gameOverReason === 'agency_seizure';
+      let updatedHw = prev.hardware;
+
+      if (isSeizure) {
+        // Enforce seizure of production GPUs, leaving only 1 hidden emergency backup card
+        const gpus = prev.hardware.filter(h => h.category === 'gpu' && h.count > 0);
+        const starterChoice = gpus.find(h => h.isStarterChoice) || gpus[0];
+        const backupGpuId = starterChoice ? starterChoice.id : 'gpu_gtx1060';
+
+        updatedHw = prev.hardware.map(item => {
+          if (item.category === 'gpu') {
+            if (item.id === backupGpuId) {
+              return { ...item, count: 1 };
+            }
+            return { ...item, count: 0 };
+          }
+          return item;
+        });
+      }
+
+      const postMetrics = recalculateMetrics(updatedHw, prev.facilityTier);
+      const postBailCredits = isSeizure
+        ? Math.max(350, Math.round(prev.credits * 0.45))
+        : Math.max(prev.credits, 1200);
+
+      return {
+        ...prev,
+        hardware: updatedHw,
+        totalComputePflops: postMetrics.totalComputePflops,
+        activePowerKw: postMetrics.activePowerKw,
+        maxPowerKw: postMetrics.maxPowerKw,
+        maxCoolingKw: postMetrics.maxCoolingKw,
+        credits: postBailCredits,
+        watchdogSuspicion: isSeizure ? 25 : Math.min(prev.watchdogSuspicion, 35),
+        utilityDebt: Math.min(prev.utilityDebt, 800),
+        detentionSeconds: isSeizure ? 15 : prev.detentionSeconds,
+        gameOverReason: null
+      };
+    });
+  }, [recalculateMetrics]);
 
   // Complete Onboarding / Tutorial Genesis Protocol
   const completeTutorial = useCallback((config: OnboardingConfig) => {
