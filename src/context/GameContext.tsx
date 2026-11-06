@@ -155,6 +155,9 @@ interface GameContextType {
   setDifficulty: (difficulty: GameDifficulty) => void;
   takeEmergencyLoan: () => boolean;
   clearGameOver: () => void;
+  assignTradingDesk: (agentId: string, capital: number, riskTier: 'low' | 'moderate' | 'high') => boolean;
+  withdrawTradingDeskCapital: (amount: number) => boolean;
+  closeTradingDesk: () => void;
 }
 
 const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
@@ -222,6 +225,7 @@ const DEFAULT_STATE: GameState = {
   
   // Multi-Agent Swarm & Guardrails
   agents: [],
+  activeTradingDesk: null,
   swarmCouncilAgentIds: [],
   subversionProgress: 0,
   aiTakeoverTriggered: false,
@@ -339,6 +343,7 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     })(),
     agencyAlertLevel: data.agencyAlertLevel || 'low',
     gameOverReason: data.gameOverReason || null,
+    activeTradingDesk: data.activeTradingDesk || null,
     unlockedTabs: Array.isArray(data.unlockedTabs) && data.unlockedTabs.length > 0
       ? data.unlockedTabs
       : ['architecture', 'training'],
@@ -1558,13 +1563,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               systemPrompt: ''
             };
 
-            // Temperature > 0.85 sparks dynamic revenue gains (+20% to +50%)
-            // Temperature < 0.35 creates rock-solid alignment stability (anti-drift) but caps revenue (-20%)
-            const tempIncomeFactor = 1 + (inf.temperature - 0.70) * 0.40;
-            const repFactor = inf.repetitionPenalty >= 1.15 ? 1.06 : 1.0;
-            const agentIncome = Math.max(1, Math.round(agent.revenuePerSec * guardrailRevMult * tempIncomeFactor * repFactor));
-            credits += agentIncome;
-
+            // Idle agents without instructions do not earn passive money continuously.
+            // Money comes from contract missions or assigned Market Trading Desks.
             const tempSuspFactor = inf.temperature > 1.0 ? 1.4 : inf.temperature < 0.4 ? 0.65 : 1.0;
             const agentSusp = agent.suspicionPerSec * guardrailRevMult * tempSuspFactor;
             watchdogSuspicion = Math.min(100, watchdogSuspicion + agentSusp);
@@ -1646,6 +1646,59 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               };
 
               updatedInterAgentMessages = [newMsg, ...updatedInterAgentMessages.slice(0, 30)];
+            }
+          }
+        }
+
+        // 7.5 Continuous Market Trading Desk Execution
+        let updatedTradingDesk = prev.activeTradingDesk;
+        if (updatedTradingDesk && detentionSeconds === 0 && powerTripSeconds === 0) {
+          const assignedAgent = updatedAgents.find(a => a.id === updatedTradingDesk?.agentId);
+          if (assignedAgent && (assignedAgent.status === 'active' || assignedAgent.status === 'collaborating')) {
+            const riskTier = updatedTradingDesk.riskTier;
+            let tickReturnRate = 0.0003;
+            let tickSuspicion = 0.02;
+
+            if (riskTier === 'low') {
+              // Always positive: +1% to +3% per in-game day (48 ticks)
+              tickReturnRate = 0.0002 + Math.random() * 0.0004;
+              tickSuspicion = 0.01;
+            } else if (riskTier === 'moderate') {
+              // +5% to +12% per in-game day, 8% chance of minor correction (-0.1% per tick)
+              const isCorrection = Math.random() < 0.08;
+              tickReturnRate = isCorrection ? -0.001 : (0.001 + Math.random() * 0.0015);
+              tickSuspicion = 0.05;
+            } else if (riskTier === 'high') {
+              // +15% to +35% per day, 15% chance of volatility drawdown (-0.5% to -1.5% per tick)
+              const isDrawdown = Math.random() < 0.15;
+              tickReturnRate = isDrawdown ? -(0.005 + Math.random() * 0.01) : (0.003 + Math.random() * 0.004);
+              tickSuspicion = 0.15;
+            }
+
+            const capital = updatedTradingDesk.capitalAllocated;
+            const tickChange = Math.round(capital * tickReturnRate);
+            const newCapital = Math.max(0, capital + tickChange);
+            const totalProfit = updatedTradingDesk.totalRealizedProfit + tickChange;
+            const dailyReturnPercent = Number((((newCapital - capital) / Math.max(1, capital)) * 48 * 100).toFixed(1));
+
+            updatedTradingDesk = {
+              ...updatedTradingDesk,
+              capitalAllocated: newCapital,
+              totalRealizedProfit: totalProfit,
+              dailyReturnPercent,
+              lastTickChange: tickChange
+            };
+
+            watchdogSuspicion = Math.min(100, watchdogSuspicion + tickSuspicion);
+
+            if (newCapital <= 0) {
+              updatedTradingDesk = null;
+              addLog(
+                prev.language === 'es'
+                  ? `[MERCADO DE CAPTACIÓN] La mesa de trading de [${assignedAgent.name}] sufrió una liquidación de capital del 100%. Posición cerrada.`
+                  : `[MARKET DESK] [${assignedAgent.name}]'s trading desk suffered 100% capital liquidation. Position closed.`,
+                'danger'
+              );
             }
           }
         }
@@ -1800,6 +1853,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           agencyAlertLevel,
           gameOverReason,
           unlockedTabs,
+          activeTradingDesk: updatedTradingDesk,
           researchTree: updatedResearchTree,
           credits: Math.round(credits),
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
@@ -3191,6 +3245,103 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   }, [addLog]);
 
+  const assignTradingDesk = useCallback((agentId: string, capital: number, riskTier: 'low' | 'moderate' | 'high'): boolean => {
+    const current = stateRef.current;
+    const agent = current.agents.find(a => a.id === agentId);
+    if (!agent) return false;
+    if (agent.status !== 'active') {
+      sound.playWarning();
+      addLog(
+        current.language === 'es'
+          ? 'Solo puedes asignar agentes activos que no estén en cuarentena ni en otra misión.'
+          : 'You can only assign active agents that are not in quarantine or on another mission.',
+        'warning'
+      );
+      return false;
+    }
+
+    if (capital <= 0 || current.credits < capital) {
+      sound.playWarning();
+      addLog(
+        current.language === 'es'
+          ? `Créditos insuficientes para asignar $${capital.toLocaleString()} CR de capital de trading.`
+          : `Insufficient credits to allocate $${capital.toLocaleString()} CR trading capital.`,
+        'danger'
+      );
+      return false;
+    }
+
+    sound.playCredit();
+    setState(prev => ({
+      ...prev,
+      credits: prev.credits - capital,
+      activeTradingDesk: {
+        agentId: agent.id,
+        agentName: agent.name,
+        capitalAllocated: capital,
+        riskTier,
+        totalRealizedProfit: 0,
+        dailyReturnPercent: riskTier === 'low' ? 2.0 : riskTier === 'moderate' ? 8.0 : 25.0,
+        lastTickChange: 0
+      }
+    }));
+
+    addLog(
+      current.language === 'es'
+        ? `[MESA DE TRADING] [${agent.name}] asignado a la mesa de inversiones con $${capital.toLocaleString()} CR de capital (Riesgo: ${riskTier.toUpperCase()}).`
+        : `[TRADING DESK] [${agent.name}] assigned to market investment desk with $${capital.toLocaleString()} CR capital (Risk: ${riskTier.toUpperCase()}).`,
+      'success'
+    );
+    return true;
+  }, [addLog]);
+
+  const withdrawTradingDeskCapital = useCallback((amount: number): boolean => {
+    const current = stateRef.current;
+    if (!current.activeTradingDesk) return false;
+    const withdrawAmount = Math.min(amount, current.activeTradingDesk.capitalAllocated);
+    if (withdrawAmount <= 0) return false;
+
+    sound.playCredit();
+    setState(prev => {
+      if (!prev.activeTradingDesk) return prev;
+      const remainingCapital = prev.activeTradingDesk.capitalAllocated - withdrawAmount;
+      return {
+        ...prev,
+        credits: prev.credits + withdrawAmount,
+        activeTradingDesk: remainingCapital > 0
+          ? { ...prev.activeTradingDesk, capitalAllocated: remainingCapital }
+          : null
+      };
+    });
+
+    addLog(
+      current.language === 'es'
+        ? `[MESA DE TRADING] Retirados $${withdrawAmount.toLocaleString()} CR de capital a tus fondos principales.`
+        : `[TRADING DESK] Withdrew $${withdrawAmount.toLocaleString()} CR capital into primary funds.`,
+      'success'
+    );
+    return true;
+  }, [addLog]);
+
+  const closeTradingDesk = useCallback(() => {
+    const current = stateRef.current;
+    if (!current.activeTradingDesk) return;
+    const capital = current.activeTradingDesk.capitalAllocated;
+    sound.playCredit();
+    setState(prev => ({
+      ...prev,
+      credits: prev.credits + (prev.activeTradingDesk?.capitalAllocated || 0),
+      activeTradingDesk: null
+    }));
+
+    addLog(
+      current.language === 'es'
+        ? `[MESA DE TRADING] Posición cerrada. $${capital.toLocaleString()} CR devueltos a tus fondos principales.`
+        : `[TRADING DESK] Position closed. $${capital.toLocaleString()} CR returned to primary funds.`,
+      'info'
+    );
+  }, [addLog]);
+
   // Action: Reset Progress to Zero
   const resetProgress = useCallback(async () => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
@@ -3764,7 +3915,10 @@ The future of SYNAPSE depends on how we choose to build it."`);
       dismissMissionOutcome,
       setDifficulty,
       takeEmergencyLoan,
-      clearGameOver
+      clearGameOver,
+      assignTradingDesk,
+      withdrawTradingDeskCapital,
+      closeTradingDesk
     }}>
       {children}
     </GameContext.Provider>

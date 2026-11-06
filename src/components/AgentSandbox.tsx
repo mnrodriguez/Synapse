@@ -86,7 +86,10 @@ export const AgentSandbox: React.FC = () => {
     setAgentAutoMission,
     setAllAgentsAutoMission,
     updateAutonomySettings,
-    setMissionAiApiKey
+    setMissionAiApiKey,
+    assignTradingDesk,
+    withdrawTradingDeskCapital,
+    closeTradingDesk
   } = useGame();
 
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
@@ -96,6 +99,12 @@ export const AgentSandbox: React.FC = () => {
   );
   const [agentName, setAgentName] = useState<string>('');
   const [grantedTools, setGrantedTools] = useState<string[]>(['web_search', 'crypto_rpc']);
+
+  // Trading Desk States
+  const [tradingAgentId, setTradingAgentId] = useState<string>('');
+  const [tradingCapitalInput, setTradingCapitalInput] = useState<number>(500);
+  const [tradingRiskTier, setTradingRiskTier] = useState<'low' | 'moderate' | 'high'>('moderate');
+  const [tradingWithdrawInput, setTradingWithdrawInput] = useState<number>(100);
 
   // Inference & Sampling Hyperparameters
   const [temperature, setTemperature] = useState<number>(0.70);
@@ -925,6 +934,154 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 <span className="font-bold">{state.latestCouncilProposal.takeoverNarration}</span>
               </div>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* CONTINUOUS MARKET TRADING DESK PANEL */}
+      <div className="bg-[#070d17] border border-cyan-800/60 rounded-lg p-3 space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-cyan-900/50">
+          <div className="flex items-center gap-2">
+            <Coins className="w-4 h-4 text-emerald-400" />
+            <h3 className="font-bold text-xs text-cyan-200">
+              {localize(state.language, 'MESA DE INVERSIÓN Y TRADING CONTINUO', 'CONTINUOUS MARKET TRADING DESK')}
+            </h3>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-bold font-mono">
+            {state.activeTradingDesk ? (state.language === 'es' ? 'OPERATIVO ✓' : 'ACTIVE ✓') : (state.language === 'es' ? 'DISPONIBLE' : 'STANDBY')}
+          </span>
+        </div>
+
+        {state.activeTradingDesk ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 p-3 rounded-lg bg-[#040810] border border-emerald-500/40 font-mono">
+              <div>
+                <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'AGENTE ASIGNADO', 'ASSIGNED AGENT')}</span>
+                <span className="text-cyan-300 font-bold text-xs flex items-center gap-1">
+                  <Bot className="w-3.5 h-3.5 text-cyan-400" />
+                  {state.activeTradingDesk.agentName}
+                </span>
+              </div>
+              <div>
+                <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'CAPITAL ASIGNADO', 'ALLOCATED CAPITAL')}</span>
+                <span className="text-emerald-400 font-bold text-sm">${state.activeTradingDesk.capitalAllocated.toLocaleString()} CR</span>
+              </div>
+              <div>
+                <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'ESTRATEGIA / RIESGO', 'STRATEGY / RISK')}</span>
+                <span className={`font-bold text-xs ${
+                  state.activeTradingDesk.riskTier === 'low' ? 'text-emerald-300' : state.activeTradingDesk.riskTier === 'moderate' ? 'text-yellow-300' : 'text-red-400 animate-pulse'
+                }`}>
+                  {state.activeTradingDesk.riskTier === 'low' ? (state.language === 'es' ? 'Bajo Riesgo (Bonos / Índice)' : 'Low Risk (Index / Debt)') :
+                   state.activeTradingDesk.riskTier === 'moderate' ? (state.language === 'es' ? 'Riesgo Medio (Equities / Tech)' : 'Moderate (Tech Options)') :
+                   (state.language === 'es' ? 'Alto Riesgo (Crypto & Flash Arbitrage)' : 'High Risk (Crypto Arbitrage)')}
+                </span>
+              </div>
+              <div>
+                <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'BENEFICIO TOTAL REALIZADO', 'TOTAL REALIZED PROFIT')}</span>
+                <span className={`font-bold text-xs ${state.activeTradingDesk.totalRealizedProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {state.activeTradingDesk.totalRealizedProfit >= 0 ? '+' : ''}${state.activeTradingDesk.totalRealizedProfit.toLocaleString()} CR
+                </span>
+              </div>
+            </div>
+
+            {/* Trading Controls */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded bg-zinc-900/60 border border-zinc-800">
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="50"
+                  max={state.activeTradingDesk.capitalAllocated}
+                  value={tradingWithdrawInput}
+                  onChange={(e) => setTradingWithdrawInput(Math.max(10, Number(e.target.value)))}
+                  className="w-24 bg-black border border-zinc-700 rounded px-2 py-1 text-xs text-emerald-300 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => withdrawTradingDeskCapital(tradingWithdrawInput)}
+                  className="px-3 py-1 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/60 text-emerald-200 text-xs font-bold rounded cursor-pointer transition-colors"
+                >
+                  {localize(state.language, 'Retirar Capital ($ CR)', 'Withdraw Capital ($ CR)')}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeTradingDesk}
+                className="px-3 py-1 bg-red-950/80 hover:bg-red-900 border border-red-500/60 text-red-200 text-xs font-bold rounded cursor-pointer transition-colors"
+              >
+                {localize(state.language, 'Cerrar Mesa & Liquidad Capital', 'Recall Agent & Close Desk')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 bg-[#040810] border border-zinc-800 rounded-lg space-y-3">
+            <p className="text-zinc-400 text-xs leading-snug">
+              {localize(
+                state.language,
+                'Asigna un agente activo (ej. Trader Financiero o Economista) a la mesa de inversión continua. Define un capital inicial y una estrategia de riesgo para generar rendimientos constantes.',
+                'Assign an active agent (e.g. Financial Trader or Resource Economist) to the continuous market desk. Allocate starting capital and a risk strategy to generate continuous yield.'
+              )}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Agent selector */}
+              <div>
+                <label className="text-[10px] text-zinc-400 font-bold block mb-1">{localize(state.language, 'Agente Asignado:', 'Assigned Agent:')}</label>
+                <select
+                  value={tradingAgentId}
+                  onChange={(e) => setTradingAgentId(e.target.value)}
+                  className="w-full bg-black border border-cyan-800 rounded px-2.5 py-1.5 text-xs text-cyan-200 outline-none"
+                >
+                  <option value="">-- {localize(state.language, 'Seleccionar Agente', 'Select Agent')} --</option>
+                  {state.agents.filter(a => a.status === 'active').map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} ({state.language === 'en' ? (englishRoleCopy[a.role]?.name ?? a.role) : (roleDefinitions.find(r => r.id === a.role)?.name ?? a.role)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Capital input */}
+              <div>
+                <label className="text-[10px] text-zinc-400 font-bold block mb-1">{localize(state.language, 'Capital Invertido ($ CR):', 'Allocated Capital ($ CR):')}</label>
+                <input
+                  type="number"
+                  min="100"
+                  max={state.credits}
+                  step="100"
+                  value={tradingCapitalInput}
+                  onChange={(e) => setTradingCapitalInput(Math.max(50, Number(e.target.value)))}
+                  className="w-full bg-black border border-emerald-800 rounded px-2.5 py-1.5 text-xs text-emerald-300 font-mono outline-none"
+                />
+              </div>
+
+              {/* Risk strategy selector */}
+              <div>
+                <label className="text-[10px] text-zinc-400 font-bold block mb-1">{localize(state.language, 'Estrategia de Riesgo:', 'Risk Strategy:')}</label>
+                <select
+                  value={tradingRiskTier}
+                  onChange={(e) => setTradingRiskTier(e.target.value as any)}
+                  className="w-full bg-black border border-purple-800 rounded px-2.5 py-1.5 text-xs text-purple-200 outline-none"
+                >
+                  <option value="low">{localize(state.language, 'Bajo Riesgo (+1-3%/día, Ganancia Segura)', 'Low Risk (+1-3%/day, Safe Yield)')}</option>
+                  <option value="moderate">{localize(state.language, 'Riesgo Medio (+5-12%/día, Correcciones Menores)', 'Moderate Risk (+5-12%/day, Minor Dip Risk)')}</option>
+                  <option value="high">{localize(state.language, 'Alto Riesgo (+15-35%/día, Alta Volatilidad)', 'High Risk (+15-35%/day, High Volatility)')}</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={!tradingAgentId || tradingCapitalInput > state.credits || state.agents.length === 0}
+              onClick={() => {
+                if (tradingAgentId) {
+                  assignTradingDesk(tradingAgentId, tradingCapitalInput, tradingRiskTier);
+                }
+              }}
+              className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-zinc-950 font-bold text-xs rounded shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              🚀 {localize(state.language, 'DESPLEGAR MESA DE TRADING CONTINUO', 'DEPLOY CONTINUOUS MARKET DESK')}
+            </button>
           </div>
         )}
       </div>

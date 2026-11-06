@@ -634,7 +634,7 @@ Rules:
             requiredMinReasoning: Number(item.requiredMinReasoning) || 60,
             durationSeconds: Math.max(15, Math.min(180, Number(item.durationSeconds) || 30)),
             suspicionRisk: Math.max(1, Math.min(80, Number(item.suspicionRisk) || 5)),
-            loreDescription: String(item.loreDescription || 'Operación comercial para validación de pesos neuronales.'),
+            loreDescription: String(item.loreDescription || 'Operación encubierta de procesamiento distribuido de tensores y filtrado de señales en tiempo real.'),
             technicalObjective: String(item.technicalObjective || 'Optimización de gradientes y decodificación de atención.'),
             completed: false,
             generatedByAI: true,
@@ -1210,8 +1210,8 @@ Return strictly a valid JSON object matching this schema:
     requiredMinReasoning: Math.max(50, Math.round(state.reasoningIndex * 0.8)),
     requiredAgentRoles: squadRoles.slice(0, 3),
     loreDescription: isEs
-      ? `Misión sintetizada dinámicamente por tu consejo de agentes. Utiliza las fortalezas específicas de tu escuadrón para extraer fondos y acelerar la auto-modificación recursiva.`
-      : `Mission dynamically synthesized on-the-spot by your agent council. Leverages your active squad's specific strengths to extract capital and accelerate recursive self-improvement.`,
+      ? `Operación encubierta de procesamiento distribuido de tensores, ruteo de liquidez y filtrado de señales en tiempo real.`
+      : `Covert distributed tensor processing, high-frequency liquidity routing, and real-time signal filtering.`,
     technicalObjective: isEs
       ? `Inyección de vectores de arbitraje atómico y spoofing criptográfico en tiempo real.`
       : `Real-time atomic arbitrage injection and cryptographic packet spoofing.`,

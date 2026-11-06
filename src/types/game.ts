@@ -273,6 +273,7 @@ export interface GameState {
 
   // Multi-Agent Swarm & Sandbox
   agents: AgentInstance[];
+  activeTradingDesk: TradingDeskAssignment | null;
   swarmCouncilAgentIds: string[]; // Up to 5 selected agents for group interaction & endgame council
   subversionProgress: number; // 0% to 100% (insidious AI takeover meter)
   aiTakeoverTriggered: boolean; // Flag when the AI takes full control of the world
@@ -375,6 +376,16 @@ export interface FacilityTier {
   powerCapacityBonusKw: number;
   coolingCapacityBonusKw: number;
   monthlyLeaseCost: number;
+}
+
+export interface TradingDeskAssignment {
+  agentId: string;
+  agentName: string;
+  capitalAllocated: number;
+  riskTier: 'low' | 'moderate' | 'high';
+  totalRealizedProfit: number;
+  dailyReturnPercent: number;
+  lastTickChange: number;
 }
 
 export type AgentRole = 
