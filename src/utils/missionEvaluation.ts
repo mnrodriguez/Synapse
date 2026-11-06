@@ -11,7 +11,7 @@ import type {
   GuardrailConfig,
   ModelArchitecture
 } from '../types/game';
-import { AGENT_COMPUTE_DEMAND_PFLOPS } from './constants';
+import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from './constants';
 
 export interface ModelCapabilityEvaluation {
   reasoning: number;
@@ -206,7 +206,7 @@ export function evaluateMissionTeam(
     const matched = requiredRoles.filter(role => agents.some(a => a.role === role)).length;
     roleMatchScore = matched / requiredRoles.length;
     if (roleMatchScore < 1.0) {
-      riskFactors.push(`Missing required agent role(s): ${requiredRoles.filter(r => !agents.some(a => a.role === r)).join(', ')}`);
+      riskFactors.push(`Missing required agent role(s): ${requiredRoles.filter(r => !agents.some(a => a.role === r)).map(r => getRoleSimpleName(r)).join(', ')}`);
     } else {
       synergyBonuses.push('All required agent roles present in squad.');
     }
@@ -237,7 +237,7 @@ export function evaluateMissionTeam(
     const preferredTopologies = ROLE_TOPOLOGIES[agent.role];
     if (preferredTopologies && preferredTopologies.includes(model.topology)) {
       totalSynergyMultiplier += 0.08;
-      synergyBonuses.push(`${agent.name} (${agent.role}): ${model.topology.toUpperCase()} topology synergy (+8% efficiency).`);
+      synergyBonuses.push(`${agent.name} (${getRoleSimpleName(agent.role)}): ${model.topology.toUpperCase()} topology synergy (+8% efficiency).`);
     } else if (preferredTopologies) {
       totalSynergyMultiplier -= 0.04;
     }

@@ -29,21 +29,9 @@ import {
 import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
 import { localizedContract } from '../utils/gameContentI18n';
-import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
+import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from '../utils/constants';
 import { generateDynamicContracts } from '../services/aiService';
 import { evaluateMissionTeam, isContractEligibleForTeam } from '../utils/missionEvaluation';
-
-const AGENT_ROLE_LABELS: Record<AgentRole, { en: string; es: string }> = {
-  arbitrageur: { en: 'Financial Trader', es: 'Trader Financiero' },
-  social_engineer: { en: 'Social Auditor', es: 'Auditor Social' },
-  exploit_synth: { en: 'Security Simulator', es: 'Simulador de Seguridad' },
-  researcher: { en: 'Architecture Researcher', es: 'Investigador' },
-  overseer: { en: 'Safety Overseer', es: 'Supervisor de Seguridad' },
-  autonomous_coder: { en: 'Compute Optimizer', es: 'Optimizador de Cómputo' },
-  economist: { en: 'Resource Economist', es: 'Economista' },
-  software_engineer: { en: 'Software Engineer', es: 'Ingeniero de Software' },
-  network_analyst: { en: 'Network Analyst', es: 'Analista de Redes' }
-};
 
 export const ContractBoard: React.FC = () => {
   const { state, acceptContract, addLog, addContracts, dismissMissionOutcome } = useGame();
@@ -488,7 +476,7 @@ export const ContractBoard: React.FC = () => {
                           const isAssigned = selectedAgents.some(agent => agent.role === role);
                           return (
                             <span key={role} className={`ml-1 ${isAssigned ? 'text-emerald-400' : 'text-amber-300'}`}>
-                              {AGENT_ROLE_LABELS[role][state.language]}{isAssigned ? ' ✓' : ' ·'}
+                              {getRoleSimpleName(role, state.language)}{isAssigned ? ' ✓' : ' ·'}
                             </span>
                           );
                         })}

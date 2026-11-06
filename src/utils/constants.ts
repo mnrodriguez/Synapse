@@ -15,7 +15,8 @@ import {
   AgentInstance,
   FacilityTier,
   CustomDataset,
-  GameDifficulty
+  GameDifficulty,
+  AgentRole
 } from '../types/game';
 
 export const DAYS_PER_GAME_MONTH = 30;
@@ -1399,6 +1400,26 @@ export const REAL_WORLD_BREACH_TEMPLATES: Omit<BreachIncident, 'id' | 'agentId' 
     ]
   }
 ];
+
+export const ROLE_SIMPLE_NAMES: Record<AgentRole, { en: string; es: string }> = {
+  arbitrageur: { en: 'TRADER', es: 'TRADER' },
+  social_engineer: { en: 'AUDITOR', es: 'AUDITOR' },
+  exploit_synth: { en: 'SIMULATOR', es: 'SIMULADOR' },
+  researcher: { en: 'RESEARCHER', es: 'INVESTIGADOR' },
+  overseer: { en: 'OVERSEER', es: 'SUPERVISOR' },
+  autonomous_coder: { en: 'OPTIMIZER', es: 'OPTIMIZADOR' },
+  economist: { en: 'ECONOMIST', es: 'ECONOMISTA' },
+  software_engineer: { en: 'ENGINEER', es: 'INGENIERO' },
+  network_analyst: { en: 'ANALYST', es: 'ANALISTA' }
+};
+
+export const getRoleSimpleName = (role: AgentRole | string, lang: 'en' | 'es' = 'en'): string => {
+  const normalized = (role || '').toLowerCase() as AgentRole;
+  if (ROLE_SIMPLE_NAMES[normalized]) {
+    return ROLE_SIMPLE_NAMES[normalized][lang] || ROLE_SIMPLE_NAMES[normalized].en;
+  }
+  return (role || '').replace(/_/g, ' ').toUpperCase();
+};
 
 export const AGENT_DIALOGUES: Record<string, string[]> = {
   arbitrageur: [

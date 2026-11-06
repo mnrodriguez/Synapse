@@ -1343,6 +1343,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let updatedGig = activeGig;
         let updatedContracts = contracts;
         let updatedAgents = prev.agents || [];
+        let updatedSubversion = prev.subversionProgress || 0;
         let newLastMissionOutcome: GameState['lastMissionOutcome'] | undefined = undefined;
 
         if (activeGig) {
@@ -1379,12 +1380,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   'success'
                 );
 
-                // Automatic Mission Synthesis: immediately synthesize a new mission of the EXACT SAME tier
-                const replenishment = createInstantReplenishmentContract(gig.tier, prev.language);
-                updatedContracts = [
-                  replenishment,
-                  ...contracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c)
-                ];
+                // Automatic Mission Synthesis: regular contracts replenish, but Swarm Council side contracts do NOT automatically replenish!
+                if (!gig.fromAgentSwarm) {
+                  const replenishment = createInstantReplenishmentContract(gig.tier, prev.language);
+                  updatedContracts = [
+                    replenishment,
+                    ...contracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c)
+                  ];
+                } else {
+                  updatedContracts = contracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c);
+                  // Successful covert swarm mission advances insidious subversion by +1.5%
+                  updatedSubversion = Math.min(100, updatedSubversion + 1.5);
+                }
 
                 newLastMissionOutcome = {
                   contractId: gig.id,
@@ -1879,6 +1886,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           activeIncident: newActiveIncident,
           incidentCooldownTicks: updatedIncidentCooldown,
           singularityProgress: Number(singularityProgress.toFixed(2)),
+          subversionProgress: Number(updatedSubversion.toFixed(2)),
           reasoningIndex,
           achievedSingularity,
           tutorialStep,
@@ -3075,10 +3083,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (proposal.takeoverNarration) {
         addLog(proposal.takeoverNarration, 'danger');
       } else {
+        const deltaInfo = proposal.subversionDelta > 0
+          ? (current.language === 'es' ? ` (+${proposal.subversionDelta}% Subversión de la IA)` : ` (+${proposal.subversionDelta}% AI Subversion)`)
+          : '';
         addLog(
           current.language === 'es'
-            ? `[CONSEJO IA] Propuesta dinámica sintetizada (+${proposal.subversionDelta}% Subversión de la IA)${dynamicContract ? ` · Misión "${dynamicContract.title}" agregada al Tablero de Contratos.` : '.'}`
-            : `[AI COUNCIL] Dynamic proposal synthesized (+${proposal.subversionDelta}% AI Subversion)${dynamicContract ? ` · Mission "${dynamicContract.title}" added to Contract Board.` : '.'}`,
+            ? `[CONSEJO IA] Propuesta dinámica sintetizada${deltaInfo}${dynamicContract ? ` · Misión "${dynamicContract.title}" agregada al Tablero de Contratos.` : '.'}`
+            : `[AI COUNCIL] Dynamic proposal synthesized${deltaInfo}${dynamicContract ? ` · Mission "${dynamicContract.title}" added to Contract Board.` : '.'}`,
           'lore'
         );
       }
@@ -3137,6 +3148,48 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .map(a => current.savedModels.find(m => m.id === a.modelId))
       .filter((m): m is ModelArchitecture => !!m);
 
+    // Validate that the assigned council team meets parameters, reasoning, and role prerequisites
+    const maxAssignedParams = assignedModels.length > 0 ? Math.max(...assignedModels.map(m => m.parametersCount)) : 0;
+    const maxAssignedReasoning = assignedModels.length > 0 ? Math.max(...assignedModels.map(m => m.reasoningScore)) : 0;
+    const assignedRoles = new Set(assignedAgents.map(a => a.role));
+    const missingRoles = (dynamicGig.requiredAgentRoles || []).filter(role => !assignedRoles.has(role));
+
+    if (maxAssignedParams < dynamicGig.requiredParams || maxAssignedReasoning < (dynamicGig.requiredMinReasoning || 0) || missingRoles.length > 0) {
+      sound.playWarning();
+      // Ensure the mission remains registered in the Contracts board as pending so the player can complete it later
+      setState(prev => ({
+        ...prev,
+        contracts: [dynamicGig, ...prev.contracts.filter(c => c.id !== dynamicGig.id)]
+      }));
+
+      const missingDetails: string[] = [];
+      if (maxAssignedParams < dynamicGig.requiredParams) {
+        missingDetails.push(current.language === 'es'
+          ? `Parámetros: ${(dynamicGig.requiredParams / 1_000_000).toFixed(0)}M (tienes ${(maxAssignedParams / 1_000_000).toFixed(0)}M)`
+          : `Params: ${(dynamicGig.requiredParams / 1_000_000).toFixed(0)}M (have ${(maxAssignedParams / 1_000_000).toFixed(0)}M)`);
+      }
+      if (maxAssignedReasoning < (dynamicGig.requiredMinReasoning || 0)) {
+        missingDetails.push(current.language === 'es'
+          ? `Razonamiento IQ: ${dynamicGig.requiredMinReasoning} pts (tienes ${maxAssignedReasoning} pts)`
+          : `Reasoning IQ: ${dynamicGig.requiredMinReasoning} pts (have ${maxAssignedReasoning} pts)`);
+      }
+      if (missingRoles.length > 0) {
+        missingDetails.push(current.language === 'es'
+          ? `Roles faltantes: ${missingRoles.join(', ')}`
+          : `Missing roles: ${missingRoles.join(', ')}`);
+      }
+
+      addLog(
+        current.language === 'es'
+          ? `[CONSEJO] Requisitos no alcanzados para "${dynamicGig.title}" (${missingDetails.join(' | ')}). La misión queda registrada en Contratos. Mejora tus modelos o asigna los roles necesarios.`
+          : `[COUNCIL] Prerequisites not met for "${dynamicGig.title}" (${missingDetails.join(' | ')}). Mission registered in Contracts. Upgrade models or assign required roles.`,
+        'warning'
+      );
+      return false;
+    }
+
+    sound.playCommandExecute();
+
     const assessment = evaluateMissionTeam(
       dynamicGig,
       assignedAgents,
@@ -3169,7 +3222,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         outcomeRoll: Math.random(),
         isAutonomous: false
       },
-      subversionProgress: Math.min(100, (prev.subversionProgress || 0) + 5),
       singularityProgress: Math.min(100, prev.singularityProgress + 1.5)
     }));
 

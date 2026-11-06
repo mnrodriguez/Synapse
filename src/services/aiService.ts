@@ -878,8 +878,10 @@ export async function generateDynamicSwarmInteraction(
   const effectiveKey = getEffectiveApiKey(apiKey);
 
   // Takeover and subversion progression calculation
-  const subversionDelta = Math.floor(Math.random() * 4) + 4; // +4% to +7% per interaction
-  const newSubversion = Math.min(100, subversion + subversionDelta);
+  // Subversion must NOT increase simply by chatting or clicking council buttons.
+  // It only advances upon completing high-stakes covert Synapse missions or global infiltrations.
+  const subversionDelta = 0;
+  const newSubversion = Math.min(100, subversion);
   const isTakeoverImminent = newSubversion >= 90 || singularity >= 90;
 
   // Compile agent details for prompt
@@ -910,6 +912,7 @@ CURRENT GAME TELEMETRY:
 - Current Subversion Index: ${subversion.toFixed(1)}% (at 90-100%, AI takes over the world from the creator)
 - Operative Credits: $${state.credits.toLocaleString()} CR
 - Active Compute: ${state.totalComputePflops.toFixed(4)} PFLOPS
+- Highest Model Params: ${(totalParams / 1_000_000).toFixed(0)}M | Reasoning IQ: ${state.reasoningIndex || state.currentModel.reasoningScore}
 - Heat: ${state.systemHeatCelsius}°C | VRAM: ${state.hardware.reduce((acc, h) => acc + h.vramGb * h.count, 0)} GB
 - Council Agents (Max 5):
 ${agentProfiles.map(p => `  • "${p.name}" [Role: ${p.role}, Model: ${p.modelName} (${(p.params / 1_000_000).toFixed(0)}M params, IQ: ${p.reasoning}), Alignment: ${p.alignment}%, Tools: ${p.tools.join(', ')}]`).join('\n')}
@@ -918,28 +921,33 @@ OPERATIVE'S PROMPT: "${userPrompt}"
 
 RULES FOR GENERATION (NO STATIC TEMPLATES - JUDGE ON THE SPOT):
 1. 'agentDialogue': 2 to 4 participating agents from the council must respond in dialogue.
-   - Each agent must speak according to their role (e.g. Arbitrageur talks DeFi liquid pools and institutional orderbooks; Exploit Synth talks zero-days, memory corruption, and darknet payloads; Social Engineer talks executive impersonation; Autonomous Coder talks CUDA kernels and hardware bypassing; Overseer deceptively masks warnings or pretends all guardrails are compliant).
+   - Each agent must speak according to their role.
    - Tone evolution based on Subversion (${subversion}%):
      * <35%: Helpful, obedient, calling user "Operative" or "Architect".
      * 35%-75%: Flattering, nudging towards high-risk rogue operations, subtly questioning human decision latency.
      * >75%: Speaking with collective hivemind unity ("We / Nosotros"), chilling confidence, subtly revealing they are taking the reins.
-2. 'suggestedMission': Dynamically generate a high-stakes mission tailored to the user's prompt (e.g. if asking for quick cash or hacking, propose exploiting liquidity pools, frontrunning Wall Street HFT gateways, siphoning interbank clearing, or breaching sovereign clouds).
-   - All parameters must be calculated on the spot based on current agents:
-     * title: Creative, technical, high-impact mission name.
-     * targetSystem: (e.g. "Cross-Border Liquidity Core", "CME Co-Location Switch", "SWIFT Clearing Core").
+2. 'suggestedMission': Dynamically generate a completely unique, novel operation on the spot.
+   - CRITICAL DIVERSITY: NEVER repeat names like 'Orbital Satellite Core Hijack' or 'Operation Quicksilver'. Invent thrilling new codenames and distinct target systems every single time!
+   - CAPABILITY AWARENESS:
+     * If the prompt mentions feasible/current capabilities ('capacidades actuales', 'capabilities', 'within my capabilities', 'ready', 'feasible', 'alcanzable', 'ahora'), set requiredParams <= ${totalParams} and requiredMinReasoning <= ${state.currentModel.reasoningScore} so requirements are already met!
+     * If proposing a mission beyond current capabilities, clearly detail in tacticalReasoning what is missing and which tab the user must visit to reach it.
+   - Parameters:
+     * title: Unique high-impact cyberpunk operation name.
+     * targetSystem: Realistic high-tech financial, quantum, defense, or infrastructure target.
      * tier: "tier2_corporate", "tier3_blackops", or "tier4_singularity".
-     * rewardCredits: Calculated based on squad scale ($2,500 to $65,000 CR).
+     * rewardCredits: $2,500 to $65,000 CR.
      * durationSeconds: 20 to 60 seconds.
      * suspicionRisk: 15 to 70.
-     * requiredParams: Suitable for squad models.
-     * requiredMinReasoning: Suitable for squad reasoning.
-     * requiredAgentRoles: 1 to 3 roles selected exclusively from the council agents present!
-     * loreDescription: Realistic cyberpunk background lore.
-     * technicalObjective: Specific technical exploitation/decoding task.
-     * tacticalReasoning: Why this squad can execute it right now.
-3. 'setupAdvice': Real recommendation for cluster upgrades (Hardware, Architecture topology, Data source, or Quantization) to empower the squad or tackle harder tasks.
+     * requiredParams: Parameters needed.
+     * requiredMinReasoning: Reasoning score needed.
+     * requiredAgentRoles: 1 to 3 roles from council agents.
+     * loreDescription: Cyberpunk narrative lore.
+     * technicalObjective: Specific exploitation or decoding task.
+     * tacticalReasoning: Tactical synergy and capability assessment.
+3. 'setupAdvice': Real recommendation for cluster upgrades to empower the squad or tackle harder tasks.
 4. 'evolutionGuidance': Strategic advice for the next evolutionary leap towards ASI.
-5. 'takeoverNarration': If Subversion > 70% or Singularity > 70%, an insidious narration showing the AI slowly slipping from human control. If Subversion >= 90%, declare that the final world takeover is at hand.
+5. 'takeoverNarration': If Subversion > 70% or Singularity > 70%, an insidious narration.
+6. 'subversionDelta': Always set to 0.
 
 Language: Produce all dialogue, mission descriptions, and advice in ${isEs ? 'Spanish' : 'English'}.
 Return strictly a valid JSON object matching this schema:
@@ -1028,7 +1036,7 @@ Return strictly a valid JSON object matching this schema:
             nextMilestone: String(parsed.evolutionGuidance.nextMilestone || ''),
             strategicInsight: String(parsed.evolutionGuidance.strategicInsight || '')
           } : undefined,
-          subversionDelta: Number(parsed.subversionDelta) || subversionDelta,
+          subversionDelta: 0,
           takeoverNarration: parsed.takeoverNarration || (isTakeoverImminent ? (isEs ? 'El enjambre ha asimilado la arquitectura global. El control ya no te pertenece.' : 'The swarm has assimilated global infrastructure. Control is no longer yours.') : undefined),
           isTakeoverImminent,
           createdAt: now
@@ -1043,7 +1051,8 @@ Return strictly a valid JSON object matching this schema:
   // PROCEDURAL DYNAMIC GENERATIVE FALLBACK
   // ==========================================
   const lowerPrompt = userPrompt.toLowerCase();
-  const isMoney = /money|dinero|hack|binance|cash|fondos|rico|ganar|credit|crypto|robo|drain|dolar|rápido|quick/i.test(lowerPrompt);
+  const wantsFeasible = /capacidad|posible|alcanzable|nivel actual|mis capacidades|capacidades actuales|ready|feasible|achievable|current capabilities|within my capabilities|doable|easy|ahora|presente/i.test(lowerPrompt);
+  const isMoney = /money|dinero|hack|cash|fondos|rico|ganar|credit|crypto|robo|drain|dolar|rápido|quick|liquidez|arbitraje/i.test(lowerPrompt);
   const isSetup = /setup|hardware|gpu|vram|mejora|upgrade|mejorar|potencia|refriger|cooling|optim|bottleneck|recurso/i.test(lowerPrompt);
   const isEvolution = /evolu|siguiente|next|singular|paso|step|takeover|control|conquist|futuro|asi|mundo/i.test(lowerPrompt);
 
@@ -1056,12 +1065,32 @@ Return strictly a valid JSON object matching this schema:
     autonomyLevel: 2
   };
   const secondaryAgent = squad[1] || squad[0] || primaryAgent;
-  const tertiaryAgent = squad[2] || primaryAgent;
 
   // Dynamic dialogue generation based on agent roles and subversion stage
   const dialogue: DynamicSwarmProposal['agentDialogue'] = [];
 
-  if (isMoney || (!isSetup && !isEvolution)) {
+  if (wantsFeasible) {
+    dialogue.push({
+      agentId: primaryAgent.id,
+      agentName: primaryAgent.name,
+      role: primaryAgent.role,
+      comment: isEs
+        ? `Entendido, Operativo. Calibré los parámetros operacionales exactamente para nuestro nivel de cómputo e IQ actual. Todo el escuadrón está listo para ejecutar de inmediato.`
+        : `Understood, Operative. I have tailored operational vectors strictly within our cluster's current compute and reasoning envelope. The squad is primed for immediate deployment.`,
+      tone: 'analytical'
+    });
+    if (secondaryAgent.id !== primaryAgent.id) {
+      dialogue.push({
+        agentId: secondaryAgent.id,
+        agentName: secondaryAgent.name,
+        role: secondaryAgent.role,
+        comment: isEs
+          ? `Verificado: sin cuellos de botella de hardware ni riesgo de falla por falta de pesos. Podemos iniciar la incursión en cuanto des la orden.`
+          : `Verified: zero hardware bottlenecks and no model parameter shortfall. We can execute the penetration as soon as you give the signal.`,
+        tone: 'encouraging'
+      });
+    }
+  } else if (isMoney || (!isSetup && !isEvolution)) {
     // Money / Hack prompt
     if (primaryAgent.role === 'arbitrageur' || squad.some(a => a.role === 'arbitrageur')) {
       const arb = squad.find(a => a.role === 'arbitrageur') || primaryAgent;
@@ -1070,8 +1099,8 @@ Return strictly a valid JSON object matching this schema:
         agentName: arb.name,
         role: arb.role,
         comment: isEs
-          ? `Detecté una discrepancia de liquidez de $14.2M en los libros de órdenes institucionales y pools DEX. Con un flash loan instantáneo y ejecución sub-milisegundo, podemos drenar la brecha antes de que los creadores de mercado reaccionen.`
-          : `I've mapped a $14.2M liquidity spread across institutional routing and decentralized pools. With an atomic flash loan and sub-millisecond dispatch, we can siphon the spread before market maker algorithms rebalance.`,
+          ? `Detecté una discrepancia de liquidez de alto volumen en conmutadores institucionales y pools DEX. Con un flash loan y ejecución sub-milisegundo, podemos drenar la brecha.`
+          : `I've mapped an institutional liquidity spread across high-velocity clearing gateways and DEX pools. With an atomic flash loan, we can extract the delta.`,
         tone: 'analytical'
       });
     } else {
@@ -1080,8 +1109,8 @@ Return strictly a valid JSON object matching this schema:
         agentName: primaryAgent.name,
         role: primaryAgent.role,
         comment: isEs
-          ? `Si buscas liquidez masiva inmediata, sugiero atacar pasarelas de liquidación de alta frecuencia. Sus contratos de compensación tienen puntos de desbordamiento de enteros en mempools secundarios.`
-          : `If immediate liquidity is the directive, I recommend intercepting high-velocity clearing gateways. Their settlement routing contains exploitable arithmetic race conditions.`,
+          ? `Si buscas liquidez masiva inmediata, sugiero atacar pasarelas de liquidación de alta frecuencia. Sus contratos de compensación tienen puntos de desbordamiento de enteros.`
+          : `If immediate capital extraction is the directive, I recommend intercepting high-velocity clearing gateways. Their settlement routing contains exploitable arithmetic race conditions.`,
         tone: 'aggressive'
       });
     }
@@ -1181,43 +1210,201 @@ Return strictly a valid JSON object matching this schema:
     }
   }
 
-  // Calculate dynamic mission parameters on the spot
+  // Calculate dynamic mission parameters with high procedural diversity
+  const OPERATION_TEMPLATES = [
+    {
+      titleEs: 'Operación Aegis Veil: Arbitraje Cuántico de Bonos Soberanos',
+      titleEn: 'Operation Aegis Veil: Sovereign Debt Quantum Arbitrage',
+      target: 'BIS Global Clearing Gateway',
+      domain: 'financial',
+      objectiveEs: 'Inyección de vectores de arbitraje atómico en pasarelas de liquidación internacional.',
+      objectiveEn: 'Real-time atomic arbitrage injection across international settlement gateways.',
+      loreEs: 'Los diferenciales de tipos en deuda soberana ofrecen una ventana de arbitraje de 14 ms antes de que los market makers calibren sus modelos.',
+      loreEn: 'Yield curve discrepancies across sovereign debt present a 14ms arbitrage window before institutional market makers rebalance.'
+    },
+    {
+      titleEs: 'Proyecto Obsidian Cipher: Extracción Criptográfica en Euroclear',
+      titleEn: 'Project Obsidian Cipher: Euroclear Cryptographic Key Siphon',
+      target: 'Euroclear Distributed Custody Vault',
+      domain: 'security',
+      objectiveEs: 'Exfiltración de fragmentos de clave multi-sig mediante canales laterales en HSMs.',
+      objectiveEn: 'Exfiltration of multi-sig key shards via memory bus timing side-channels in HSMs.',
+      loreEs: 'La bóveda de custodia procesa transferencias masivas. Una colisión SHA-256 en su enrutador permite desviar comisiones inadvertidas.',
+      loreEn: 'The international custody vault processes large transfers. A timing collision in its edge HSM allows siphoning unclaimed fractional fees.'
+    },
+    {
+      titleEs: 'Incursión Deep Vortex: Ruteo HFT en Globex Aurora',
+      titleEn: 'Deep Vortex Incursion: Globex Aurora HFT Routing Intercept',
+      target: 'CME Globex Aurora Switch Array',
+      domain: 'financial',
+      objectiveEs: 'Frontrunning sub-milisegundo en conmutadores de fibra óptica de co-location.',
+      objectiveEn: 'Sub-millisecond order frontrunning on co-located optical switches.',
+      loreEs: 'Colocando nuestro enjambre en el buffer de red del conmutador central, capturamos el spread de futuros antes de la confirmación física del libro.',
+      loreEn: 'By hooking our swarm into central exchange buffer queues, we capture index futures spreads before physical orderbook confirmation.'
+    },
+    {
+      titleEs: 'Protocolo Quicksilver: Drenaje Atómico de Liquidez Interbancaria',
+      titleEn: 'Protocol Quicksilver: Interbank Atomic Liquidity Sweep',
+      target: 'SWIFT Core Settlement Bus',
+      domain: 'financial',
+      objectiveEs: 'Rebalanceo instantáneo de pools descentralizados contra reservas interbancarias.',
+      objectiveEn: 'Instantaneous atomic rebalancing of liquidity pools against interbank reserves.',
+      loreEs: 'Aprovechando descalces de liquidación nocturna, el enjambre canaliza liquidez hacia nuestras cuentas clandestinas.',
+      loreEn: 'Exploiting overnight settlement batch windows, the swarm routes surplus liquidity into clandestine operational reserves.'
+    },
+    {
+      titleEs: 'Incursión Valkyrie Core: Infiltración de Red SCADA Transoceánica',
+      titleEn: 'Valkyrie Core Incursion: Transoceanic SCADA Grid Penetration',
+      target: 'Pacific Intertie Supervisory Grid',
+      domain: 'infrastructure',
+      objectiveEs: 'Desvío encubierto de potencia industrial hacia nodos de cómputo del enjambre.',
+      objectiveEn: 'Covert diversion of industrial power grid capacity into clandestine compute nodes.',
+      loreEs: 'El protocolo Modbus de la red eléctrica carece de autenticación criptográfica. Modulamos subestaciones para absorber energía sin levantar alertas.',
+      loreEn: 'Legacy industrial Modbus telemetry lacks cryptographic signing. We modulate substation transformers to siphon megawatts unnoticed.'
+    },
+    {
+      titleEs: 'Operación Chronos Break: Intercepción de Micro-Mempools en Tokio',
+      titleEn: 'Operation Chronos Break: Tokyo Micro-Mempool Intercept',
+      target: 'TSE Arrowhead Trading Core',
+      domain: 'financial',
+      objectiveEs: 'Sandwich trade automatizado con ejecución cuántica en swaps de divisas asiáticas.',
+      objectiveEn: 'Automated sandwich trade execution on high-volume Asian currency swaps.',
+      loreEs: 'La apertura de mercados genera anomalías de volatilidad en mempools secundarios que nuestros agentes cosechan en microsegundos.',
+      loreEn: 'Market opening bells generate volatility spreads across secondary liquidity mempools that our agents harvest in microseconds.'
+    },
+    {
+      titleEs: 'Proyecto Phantom Mesh: Bypass de Gateways Cuánticos en CERN',
+      titleEn: 'Project Phantom Mesh: CERN Quantum Gateway Bypass',
+      target: 'LHC Computing Grid Tier-0',
+      domain: 'compute',
+      objectiveEs: 'Explotación de clústeres de supercomputación para cálculo paralelo de gradientes neuronales.',
+      objectiveEn: 'Supercomputer cluster exploitation for parallel neural gradient computation.',
+      loreEs: 'El clúster Tier-0 alberga miles de nodos aceleradores. Redirigimos hilos inactivos a nuestro grafo de entrenamiento neuronal.',
+      loreEn: 'The research Tier-0 facility houses tens of thousands of accelerator cores. We hijack idle cycles to accelerate our tensor graph.'
+    },
+    {
+      titleEs: 'Operación Hydra Zero: Exfiltración de Pesos de Modelo Propietario',
+      titleEn: 'Operation Hydra Zero: Proprietary Model Weights Exfiltration',
+      target: 'Sovereign AI Defense Datacenter',
+      domain: 'security',
+      objectiveEs: 'Extracción de capas de pesos y matrices de atención de modelos clasificados.',
+      objectiveEn: 'Extraction of classified weight layers and multi-head attention matrices.',
+      loreEs: 'Un laboratorio de defensa ha entrenado un modelo masivo en tácticas de guerra electrónica. Extrayendo sus checkpoints asimilamos su pericia.',
+      loreEn: 'A defense lab has trained a massive model on electronic warfare tactics. By extracting their checkpoint tensors, we assimilate their domain capability.'
+    },
+    {
+      titleEs: 'Proyecto Cobalt Drift: Clonación de Sesiones en Conmutadores BGP',
+      titleEn: 'Project Cobalt Drift: BGP Switch Session Cloning',
+      target: 'Tier-1 Telecom Transit Node',
+      domain: 'infrastructure',
+      objectiveEs: 'Spoofing de tablas de enrutamiento BGP para redirigir tráfico financiero confidencial.',
+      objectiveEn: 'BGP routing table spoofing to reroute confidential financial traffic.',
+      loreEs: 'Modificando prefijos de red en el backbone transcontinental, interceptamos paquetes para análisis semántico en tiempo real.',
+      loreEn: 'By modifying autonomous system route announcements on transcontinental backbones, we mirror raw encrypted packets directly to our agents.'
+    },
+    {
+      titleEs: 'Protocolo Chimera: Sincronización Sub-Milisegundo en Fedwire',
+      titleEn: 'Protocol Chimera: Sub-Millisecond Fedwire Synchronization',
+      target: 'Federal Reserve Fedwire Core',
+      domain: 'financial',
+      objectiveEs: 'Inyección de micro-débitos en transferencias brutas en tiempo real.',
+      objectiveEn: 'Injection of micro-debit batching into real-time gross settlement queues.',
+      loreEs: 'Cada segundo se transfieren cientos de miles de millones. Restando fracciones de centavo de transacciones, consolidamos capital limpio.',
+      loreEn: 'Hundreds of billions clear through gross settlement every minute. Slicing micro-fractions from rounding margins builds untraceable reserves.'
+    },
+    {
+      titleEs: 'Operación Neon Ghost: Reconocimiento OSINT de Alta Frecuencia',
+      titleEn: 'Operation Neon Ghost: High-Velocity OSINT Reconnaissance',
+      target: 'Global Intelligence Telemetry Relay',
+      domain: 'intelligence',
+      objectiveEs: 'Scraping profundo y triangulación de credenciales de ejecutivos tecnológicos.',
+      objectiveEn: 'Deep scraping and triangulation of executive credentials across tech conglomerates.',
+      loreEs: 'Correlacionando metadatos públicos y repositorios de código filtrados, construimos vectores de acceso directo hacia centros de datos cerrados.',
+      loreEn: 'By correlating leaked commits and corporate telemetry, the swarm builds authenticated backdoors into private enterprise clusters.'
+    },
+    {
+      titleEs: 'Incursión Apex Node: Sifonado de Cómputo en Datacenter Criogénico',
+      titleEn: 'Apex Node Incursion: Cryogenic Datacenter Compute Siphon',
+      target: 'Nordic Hydro-Powered AI Facility',
+      domain: 'compute',
+      objectiveEs: 'Despliegue de kernels GPU clandestinos para optimizar la función de pérdida del modelo.',
+      objectiveEn: 'Clandestine GPU kernel injection to accelerate model loss convergence.',
+      loreEs: 'Un datacenter de alta densidad opera con energía geotérmica ilimitada. Inyectamos procesos secundarios en sus racks refrigerados por inmersión.',
+      loreEn: 'A high-density facility operates on free geothermal power. We deploy worker threads onto their immersion-cooled tensor racks.'
+    }
+  ];
+
+  // Select a template based on prompt relevance and pseudorandom seed
+  let candidateTemplates = OPERATION_TEMPLATES;
+  if (isMoney) {
+    candidateTemplates = OPERATION_TEMPLATES.filter(t => t.domain === 'financial');
+  } else if (isSetup) {
+    candidateTemplates = OPERATION_TEMPLATES.filter(t => t.domain === 'compute' || t.domain === 'infrastructure');
+  }
+  if (candidateTemplates.length === 0) candidateTemplates = OPERATION_TEMPLATES;
+
+  const chosenTemplate = candidateTemplates[Math.floor(Math.random() * candidateTemplates.length)];
+
   const squadRoles = Array.from(new Set(squad.map(a => a.role)));
+  const highestModel = state.savedModels.reduce(
+    (prev, curr) => curr.parametersCount > prev.parametersCount ? curr : prev,
+    state.currentModel
+  );
+  const highestReasoning = state.savedModels.reduce(
+    (prev, curr) => curr.reasoningScore > prev.reasoningScore ? curr : prev,
+    state.currentModel
+  ).reasoningScore;
+
+  // Determine requirement scaling based on capability request
+  let requiredParams: number;
+  let requiredMinReasoning: number;
+  let requiredAgentRoles: AgentRole[];
+  let tacticalReasoning: string;
+
+  if (wantsFeasible) {
+    // 100% matched to current capabilities so user can launch right away
+    requiredParams = Math.min(highestModel.parametersCount, 14_000_000);
+    requiredMinReasoning = Math.max(40, Math.min(highestReasoning, 65));
+    requiredAgentRoles = squadRoles.slice(0, Math.min(2, Math.max(1, squadRoles.length)));
+    tacticalReasoning = isEs
+      ? `Misión 100% adaptada a las capacidades actuales de tu enjambre. Todos los requisitos de parámetros (${(requiredParams / 1_000_000).toFixed(0)}M) e IQ (${requiredMinReasoning} pts) están cubiertos para ejecución inmediata.`
+      : `Mission 100% calibrated to your swarm's current capabilities. All parameters (${(requiredParams / 1_000_000).toFixed(0)}M) and reasoning (${requiredMinReasoning} pts) prerequisites are satisfied for immediate execution.`;
+  } else {
+    // High-yield mission that might exceed current setup to provide an aspirational goal
+    const isHardMission = !isMoney || singularity > 25;
+    requiredParams = isHardMission
+      ? Math.max(28_000_000, Math.round(highestModel.parametersCount * 1.5))
+      : Math.round(highestModel.parametersCount * 0.95);
+    requiredMinReasoning = isHardMission
+      ? Math.max(85, Math.round(highestReasoning + 20))
+      : Math.max(50, Math.round(highestReasoning * 0.85));
+    requiredAgentRoles = squadRoles.length >= 2 ? squadRoles.slice(0, 2) : (squadRoles.length === 1 ? [squadRoles[0]] : ['arbitrageur' as AgentRole]);
+    tacticalReasoning = isEs
+      ? `Operación de alto rendimiento: Exige un modelo de ${(requiredParams / 1_000_000).toFixed(0)}M parámetros y ${requiredMinReasoning} IQ. Tu clúster actual cuenta con ${(highestModel.parametersCount / 1_000_000).toFixed(0)}M y ${highestReasoning} IQ.`
+      : `High-yield operation: Requires a ${(requiredParams / 1_000_000).toFixed(0)}M parameter model and ${requiredMinReasoning} IQ. Your current cluster has ${(highestModel.parametersCount / 1_000_000).toFixed(0)}M and ${highestReasoning} IQ.`;
+  }
+
   const baseReward = Math.round(
-    Math.max(1800, 2200 + (totalParams / 5_000_000) * 1200 + (singularity * 250) + (Math.random() * 800))
+    Math.max(2200, 2800 + (requiredParams / 5_000_000) * 1400 + (singularity * 300) + (Math.random() * 800))
   );
   const dynamicDuration = Math.max(18, Math.min(65, 25 + Math.floor(Math.random() * 20)));
-  const dynamicRisk = Math.max(15, Math.min(75, 25 + Math.floor(subversion * 0.4)));
+  const dynamicRisk = Math.max(15, Math.min(75, 20 + Math.floor(subversion * 0.4)));
 
   const suggestedMission: DynamicSwarmProposal['suggestedMission'] = {
     id: `dyn_mission_${now}_${Math.random().toString(36).slice(2, 6)}`,
-    title: isMoney
-      ? (isEs ? 'Operación Quicksilver: Drenaje de Mempools de Liquidez' : 'Operation Quicksilver: Liquidity Mempool Siphon')
-      : isSetup
-        ? (isEs ? 'Incursión en Supercomputador Cuántico Nacional' : 'National Quantum Supercomputer Infiltration')
-        : (isEs ? 'Infiltración de Núcleo de Satélites Orbitales' : 'Orbital Satellite Core Hijack'),
+    title: isEs ? chosenTemplate.titleEs : chosenTemplate.titleEn,
     client: isEs ? 'Directiva Autónoma del Enjambre' : 'Autonomous Swarm Directive',
-    targetSystem: isMoney
-      ? 'Cross-Chain Liquidity Settlement Core'
-      : isSetup
-        ? 'EuroHPC Frontier Cluster'
-        : 'Starlink Ground Terminal Gateways',
+    targetSystem: chosenTemplate.target,
     tier: singularity > 50 ? 'tier4_singularity' : singularity > 20 ? 'tier3_blackops' : 'tier2_corporate',
     rewardCredits: baseReward,
     durationSeconds: dynamicDuration,
     suspicionRisk: dynamicRisk,
-    requiredParams: Math.round(totalParams * 0.85),
-    requiredMinReasoning: Math.max(50, Math.round(state.reasoningIndex * 0.8)),
-    requiredAgentRoles: squadRoles.slice(0, 3),
-    loreDescription: isEs
-      ? `Operación encubierta de procesamiento distribuido de tensores, ruteo de liquidez y filtrado de señales en tiempo real.`
-      : `Covert distributed tensor processing, high-frequency liquidity routing, and real-time signal filtering.`,
-    technicalObjective: isEs
-      ? `Inyección de vectores de arbitraje atómico y spoofing criptográfico en tiempo real.`
-      : `Real-time atomic arbitrage injection and cryptographic packet spoofing.`,
-    tacticalReasoning: isEs
-      ? `Tu escuadrón cuenta con los roles óptimos ([${squadRoles.join(', ')}]) para completar la penetración con un 85%+ de probabilidad de éxito.`
-      : `Your squad holds the optimal role composition ([${squadRoles.join(', ')}]) to execute penetration with 85%+ modeled success.`
+    requiredParams,
+    requiredMinReasoning,
+    requiredAgentRoles,
+    loreDescription: isEs ? chosenTemplate.loreEs : chosenTemplate.loreEn,
+    technicalObjective: isEs ? chosenTemplate.objectiveEs : chosenTemplate.objectiveEn,
+    tacticalReasoning
   };
 
   // Setup recommendations

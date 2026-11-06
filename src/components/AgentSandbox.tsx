@@ -48,6 +48,7 @@ import { localize, t } from '../utils/i18n';
 import { INFERENCE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { evaluateAgentCapabilities } from '../utils/missionEvaluation';
+import { getRoleSimpleName } from '../utils/constants';
 
 const MISSION_ROLE_TASKS: Record<AgentRole, { en: string; es: string }> = {
   arbitrageur: { en: 'Analyzes simulated market signals and cross-checks anomalies.', es: 'Analiza señales de mercado simuladas y verifica anomalías.' },
@@ -613,7 +614,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     <div className="space-y-1 text-[10px]">
                       <div className="flex items-center justify-between text-zinc-400">
                         <span>{localize(state.language, 'Rol:', 'Role:')}</span>
-                        <span className="text-cyan-300 font-bold uppercase">{agent.role.replace('_', ' ')}</span>
+                        <span className="text-cyan-300 font-bold uppercase">{getRoleSimpleName(agent.role, state.language)}</span>
                       </div>
                       <div className="flex items-center justify-between text-zinc-400">
                         <span>{localize(state.language, 'Modelo:', 'Model:')}</span>
@@ -660,7 +661,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     }`}
                   >
                     {isSelected ? '✓ ' : '+ '}
-                    {agent.name} ({agent.role})
+                    {agent.name} ({getRoleSimpleName(agent.role, state.language)})
                   </button>
                 );
               })}
@@ -690,6 +691,16 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             >
               <span>🎯</span>
               <span>{localize(state.language, 'Operación Black-Ops de Alto Rendimiento', 'High-Yield Black-Ops Op')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCouncilSubmit(state.language === 'es' ? 'Genera una misión adaptada exactamente a mis capacidades actuales para que podamos completarla ya.' : 'Generate a mission strictly tailored to my current capabilities so we can complete it now.')}
+              disabled={isInterrogating || councilAgents.length === 0}
+              className="px-2.5 py-1 rounded bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-600/60 text-emerald-200 text-[10px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+            >
+              <span>✅</span>
+              <span>{localize(state.language, 'Misión Adaptada a Mis Capacidades', 'Mission Tailored to Capabilities')}</span>
             </button>
 
             <button
@@ -797,7 +808,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="font-bold text-xs text-zinc-100">{d.agentName}</span>
                       <span className="px-1.5 py-0.2 rounded text-[9px] bg-zinc-900 border border-zinc-700 text-zinc-400 uppercase">
-                        {d.role}
+                        {getRoleSimpleName(d.role, state.language)}
                       </span>
                       {d.tone && (
                         <span className={`text-[9px] font-bold ${
@@ -813,83 +824,196 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               ))}
             </div>
 
-            {/* Synthesized Mission Card (Direct Launch Available) */}
-            {state.latestCouncilProposal.suggestedMission && (
-              <div className="p-3 rounded-lg border border-amber-500/60 bg-gradient-to-r from-amber-950/30 via-[#18110b] to-amber-950/30 space-y-2.5">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-950 border border-amber-500 text-amber-300 uppercase">
-                        {state.latestCouncilProposal.suggestedMission.tier.replace('_', ' ')}
+            {/* Synthesized Mission Card (Direct Launch Available with Capability Checking) */}
+            {state.latestCouncilProposal.suggestedMission && (() => {
+              const sm = state.latestCouncilProposal.suggestedMission;
+              const councilModels = councilAgents
+                .map(a => state.savedModels.find(m => m.id === a.modelId))
+                .filter((m): m is NonNullable<typeof m> => !!m);
+              const bestCouncilParams = councilModels.length > 0 ? Math.max(...councilModels.map(m => m.parametersCount)) : 0;
+              const bestCouncilReasoning = councilModels.length > 0 ? Math.max(...councilModels.map(m => m.reasoningScore)) : 0;
+              const councilRoles = new Set(councilAgents.map(a => a.role));
+              const missingRoles = (sm.requiredAgentRoles || []).filter(r => !councilRoles.has(r));
+              const meetsParams = bestCouncilParams >= sm.requiredParams;
+              const meetsReasoning = bestCouncilReasoning >= (sm.requiredMinReasoning || 0);
+              const meetsRoles = missingRoles.length === 0;
+              const isEligible = meetsParams && meetsReasoning && meetsRoles;
+
+              return (
+                <div className="p-3 rounded-lg border border-amber-500/60 bg-gradient-to-r from-amber-950/30 via-[#18110b] to-amber-950/30 space-y-2.5">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-950 border border-amber-500 text-amber-300 uppercase">
+                          {sm.tier.replace('_', ' ')}
+                        </span>
+                        <span className="text-[10px] text-zinc-400">
+                          {localize(state.language, 'Objetivo:', 'Target:')} <strong className="text-zinc-200">{sm.targetSystem}</strong>
+                        </span>
+                      </div>
+                      <h5 className="text-sm font-black text-amber-200 mt-1">
+                        {sm.title}
+                      </h5>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] text-zinc-400 uppercase tracking-widest block">
+                        {localize(state.language, 'RECOMPENSA DINÁMICA', 'DYNAMIC PAYOUT')}
                       </span>
-                      <span className="text-[10px] text-zinc-400">
-                        {localize(state.language, 'Objetivo:', 'Target:')} <strong className="text-zinc-200">{state.latestCouncilProposal.suggestedMission.targetSystem}</strong>
+                      <span className="text-base font-black text-emerald-400">
+                        ${sm.rewardCredits.toLocaleString()} CR
                       </span>
                     </div>
-                    <h5 className="text-sm font-black text-amber-200 mt-1">
-                      {state.latestCouncilProposal.suggestedMission.title}
-                    </h5>
                   </div>
 
-                  <div className="text-right">
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-widest block">
-                      {localize(state.language, 'RECOMPENSA DINÁMICA', 'DYNAMIC PAYOUT')}
-                    </span>
-                    <span className="text-base font-black text-emerald-400">
-                      ${state.latestCouncilProposal.suggestedMission.rewardCredits.toLocaleString()} CR
-                    </span>
+                  <p className="text-[11px] text-zinc-300 leading-relaxed">
+                    {sm.loreDescription}
+                  </p>
+
+                  <div className="p-2 rounded bg-black/40 border border-amber-900/40 text-[10px] text-zinc-400 space-y-1">
+                    <div>
+                      <strong className="text-amber-300">{localize(state.language, 'Vector Técnico:', 'Technical Vector:')}</strong>{' '}
+                      {sm.technicalObjective}
+                    </div>
+                    <div>
+                      <strong className="text-cyan-300">{localize(state.language, 'Sinergia del Consejo:', 'Council Synergy:')}</strong>{' '}
+                      {sm.tacticalReasoning}
+                    </div>
+                  </div>
+
+                  {/* Requirements & Capability Checklist */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[10px] text-center">
+                    <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
+                      <span className="text-zinc-500 block">{localize(state.language, 'DURACIÓN', 'DURATION')}</span>
+                      <span className="font-bold text-zinc-200">{sm.durationSeconds}s</span>
+                    </div>
+                    <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
+                      <span className="text-zinc-500 block">{localize(state.language, 'RIESGO SOSPECHA', 'SUSPICION RISK')}</span>
+                      <span className="font-bold text-amber-400">+{sm.suspicionRisk}%</span>
+                    </div>
+                    <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
+                      <span className="text-zinc-500 block">{localize(state.language, 'PARÁMETROS MÍN.', 'MIN PARAMS')}</span>
+                      <span className={`font-bold ${meetsParams ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {(sm.requiredParams / 1_000_000).toFixed(0)}M {meetsParams ? '✓' : '✗'}
+                      </span>
+                    </div>
+                    <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
+                      <span className="text-zinc-500 block">{localize(state.language, 'IQ RAZONAMIENTO', 'REASONING IQ')}</span>
+                      <span className={`font-bold ${meetsReasoning ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {sm.requiredMinReasoning} pts {meetsReasoning ? '✓' : '✗'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {sm.requiredAgentRoles.length > 0 && (
+                    <div className="p-2 rounded bg-zinc-950/70 border border-zinc-800 text-[10px] flex items-center justify-between gap-2">
+                      <span className="text-zinc-500">{localize(state.language, 'Roles de Agentes Requeridos:', 'Required Agent Roles:')}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {sm.requiredAgentRoles.map(role => {
+                          const hasRole = councilRoles.has(role);
+                          return (
+                            <span
+                              key={role}
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                hasRole
+                                  ? 'bg-emerald-950 border border-emerald-500/60 text-emerald-300'
+                                  : 'bg-red-950 border border-red-500/60 text-red-300'
+                              }`}
+                            >
+                              {getRoleSimpleName(role, state.language)} {hasRole ? '✓' : '✗'}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Warning Box when Requirements are NOT met */}
+                  {!isEligible && (
+                    <div className="p-2.5 rounded bg-amber-950/40 border border-amber-600/70 text-[10px] space-y-1.5">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-300">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>{localize(state.language, 'ADVERTENCIA DEL CONSEJO: ESTA MISIÓN EXCEDE TUS CAPACIDADES ACTUALES', 'COUNCIL WARNING: THIS MISSION EXCEEDS YOUR CURRENT CAPABILITIES')}</span>
+                      </div>
+                      <p className="text-zinc-300 leading-relaxed">
+                        {localize(
+                          state.language,
+                          'El consejo ha registrado esta misión como pendiente en tu Tablero de Contratos para completarla más tarde. Para desbloquearla:',
+                          'The council registered this mission as pending on your Contract Board to complete later. To unlock it:'
+                        )}
+                      </p>
+                      <ul className="space-y-1 pl-2 text-zinc-300">
+                        {!meetsParams && (
+                          <li className="text-amber-200">
+                            • <strong>{localize(state.language, 'Escala de Parámetros:', 'Parameter Scale:')}</strong>{' '}
+                            {localize(
+                              state.language,
+                              `Requiere ${(sm.requiredParams / 1_000_000).toFixed(0)}M (tu mejor modelo del consejo tiene ${(bestCouncilParams / 1_000_000).toFixed(0)}M). Ve a "Lab Modelos" para entrenar o escalar un modelo.`,
+                              `Requires ${(sm.requiredParams / 1_000_000).toFixed(0)}M (your best council model has ${(bestCouncilParams / 1_000_000).toFixed(0)}M). Go to "Model Lab" to train or scale a model.`
+                            )}
+                          </li>
+                        )}
+                        {!meetsReasoning && (
+                          <li className="text-amber-200">
+                            • <strong>{localize(state.language, 'IQ de Razonamiento:', 'Reasoning IQ:')}</strong>{' '}
+                            {localize(
+                              state.language,
+                              `Requiere ${sm.requiredMinReasoning} pts (tu mejor modelo del consejo tiene ${bestCouncilReasoning} pts). Mejora la calidad del dataset y optimizadores en el entrenamiento.`,
+                              `Requires ${sm.requiredMinReasoning} pts (your best council model has ${bestCouncilReasoning} pts). Improve dataset quality and optimizers in training.`
+                            )}
+                          </li>
+                        )}
+                        {!meetsRoles && (
+                          <li className="text-amber-200">
+                            • <strong>{localize(state.language, 'Roles Faltantes:', 'Missing Roles:')}</strong>{' '}
+                            {localize(
+                              state.language,
+                              `El consejo necesita: ${missingRoles.map(r => getRoleSimpleName(r, state.language)).join(', ')}. Despliega nuevos agentes con esa especialidad o agrégalos al consejo.`,
+                              `The council needs: ${missingRoles.map(r => getRoleSimpleName(r, state.language)).join(', ')}. Deploy new agents with that specialty or add them to the council.`
+                            )}
+                          </li>
+                        )}
+                      </ul>
+                      <div className="pt-1 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => handleCouncilSubmit(state.language === 'es' ? 'Genera una misión adaptada exactamente a mis capacidades actuales para que podamos completarla ya.' : 'Generate a mission strictly tailored to my current capabilities so we can complete it now.')}
+                          disabled={isInterrogating}
+                          className="px-2.5 py-1 rounded bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/70 text-emerald-200 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        >
+                          <Sparkles className="w-3 h-3 text-emerald-400" />
+                          <span>{localize(state.language, 'Pedir Misión Adaptada a Mis Capacidades', 'Request Mission Tailored to Current Capabilities')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Direct Launch CTA or Locked State */}
+                  <div className="pt-2 flex items-center justify-end">
+                    <button
+                      onClick={handleLaunchProposedMission}
+                      disabled={!isEligible || !!state.activeGig || state.detentionSeconds > 0}
+                      className={`w-full sm:w-auto px-5 py-2.5 rounded-lg border text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        !isEligible
+                          ? 'border-zinc-700 bg-zinc-900/80 text-zinc-500 cursor-not-allowed opacity-60'
+                          : state.activeGig
+                            ? 'border-amber-800 bg-amber-950/60 text-amber-400 cursor-not-allowed opacity-60'
+                            : 'border-amber-500 bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-zinc-950 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                      }`}
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                      <span>
+                        {!isEligible
+                          ? localize(state.language, '🔒 REQUISITOS NO CUMPLIDOS · REGISTRADA EN CONTRATOS', '🔒 REQUIREMENTS NOT MET · SAVED IN CONTRACTS')
+                          : state.activeGig 
+                            ? localize(state.language, 'CLÚSTER OCUPADO EN OTRA MISIÓN', 'CLUSTER BUSY ON ANOTHER MISSION')
+                            : localize(state.language, '⚡ EJECUTAR MISIÓN PROPUESTA AHORA', '⚡ LAUNCH PROPOSED MISSION NOW')}
+                      </span>
+                    </button>
                   </div>
                 </div>
-
-                <p className="text-[11px] text-zinc-300 leading-relaxed">
-                  {state.latestCouncilProposal.suggestedMission.loreDescription}
-                </p>
-
-                <div className="p-2 rounded bg-black/40 border border-amber-900/40 text-[10px] text-zinc-400 space-y-1">
-                  <div>
-                    <strong className="text-amber-300">{localize(state.language, 'Vector Técnico:', 'Technical Vector:')}</strong>{' '}
-                    {state.latestCouncilProposal.suggestedMission.technicalObjective}
-                  </div>
-                  <div>
-                    <strong className="text-cyan-300">{localize(state.language, 'Sinergia del Consejo:', 'Council Synergy:')}</strong>{' '}
-                    {state.latestCouncilProposal.suggestedMission.tacticalReasoning}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 pt-1 text-[10px] text-center">
-                  <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
-                    <span className="text-zinc-500 block">{localize(state.language, 'DURACIÓN', 'DURATION')}</span>
-                    <span className="font-bold text-zinc-200">{state.latestCouncilProposal.suggestedMission.durationSeconds}s</span>
-                  </div>
-                  <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
-                    <span className="text-zinc-500 block">{localize(state.language, 'RIESGO SOSPECHA', 'SUSPICION RISK')}</span>
-                    <span className="font-bold text-amber-400">+{state.latestCouncilProposal.suggestedMission.suspicionRisk}%</span>
-                  </div>
-                  <div className="p-1.5 rounded bg-zinc-900/80 border border-zinc-800">
-                    <span className="text-zinc-500 block">{localize(state.language, 'ROLES REQUERIDOS', 'REQUIRED ROLES')}</span>
-                    <span className="font-bold text-cyan-300 truncate block">
-                      {state.latestCouncilProposal.suggestedMission.requiredAgentRoles.join(', ')}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Direct Launch CTA */}
-                <div className="pt-2 flex items-center justify-end">
-                  <button
-                    onClick={handleLaunchProposedMission}
-                    disabled={!!state.activeGig || state.detentionSeconds > 0}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-amber-500 bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-xs font-black tracking-wider text-zinc-950 uppercase shadow-[0_0_20px_rgba(245,158,11,0.5)] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    <span>
-                      {state.activeGig 
-                        ? localize(state.language, 'CLÚSTER OCUPADO EN OTRA MISIÓN', 'CLUSTER BUSY ON ANOTHER MISSION')
-                        : localize(state.language, '⚡ EJECUTAR MISIÓN PROPUESTA AHORA', '⚡ LAUNCH PROPOSED MISSION NOW')}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Setup Advice Card */}
             {state.latestCouncilProposal.setupAdvice && (
@@ -1172,7 +1296,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 return (
                   <div key={agent.id} className="rounded border border-zinc-800 bg-[#050a11] p-2">
                     <div className="flex items-center justify-between gap-2 text-[10px]">
-                      <span className="font-bold text-cyan-200">{agent.name} · {agent.role.replace(/_/g, ' ')}</span>
+                      <span className="font-bold text-cyan-200">{agent.name} · {getRoleSimpleName(agent.role, state.language)}</span>
                       <span className="text-zinc-500">{capability ? `${capability.overall}% ${localize(state.language, 'ajuste', 'fit')}` : ''}</span>
                     </div>
                     <p className="mt-1 text-[10px] leading-relaxed text-zinc-400">
