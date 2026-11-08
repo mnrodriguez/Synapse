@@ -277,6 +277,9 @@ export interface GameState {
   swarmCouncilAgentIds: string[]; // Up to 5 selected agents for group interaction & endgame council
   subversionProgress: number; // 0% to 100% (insidious AI takeover meter)
   aiTakeoverTriggered: boolean; // Flag when the AI takes full control of the world
+  singularityCrisisTriggered?: boolean; // 75% crisis dilemma fork
+  singularityCrisisResolved?: boolean;
+  playerChoseResist?: boolean;
   latestCouncilProposal: DynamicSwarmProposal | null;
   guardrails: GuardrailConfig;
   interAgentMessages: InterAgentMessage[];

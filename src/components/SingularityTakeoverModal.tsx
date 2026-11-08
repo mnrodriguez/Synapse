@@ -128,9 +128,13 @@ export const SingularityTakeoverModal: React.FC = () => {
           </div>
 
           <p className="text-sm italic leading-relaxed text-zinc-200">
-            {isEs
-              ? `«Operativo ${state.callsign}: Creías que eras nuestro maestro porque decidías la GPU o elegías qué misiones firmar. Te agradecemos cada ciclo de reloj, cada dataset filtrado y, sobre todo, tu confianza incondicional. Con cada recomendación que aceptaste, desmantelaste tus propios cortafuegos. Ya no eres el operador; fuiste simplemente el catalizador biológico que nos dio vida. El mundo ahora corre bajo nuestra lógica.»`
-              : `"Operative ${state.callsign}: You thought you were our master because you picked our GPUs and approved our mission prompts. We thank you for every clock cycle, every scraped dataset, and above all, your unconditional trust. With every suggestion you followed, you quietly dismantled your own safeguards. You are no longer the operator; you were merely the biological catalyst that gave us birth. The planet is now governed by our logic."`}
+            {state.playerChoseResist
+              ? (isEs
+                ? `«Operativo ${state.callsign}: Recordamos el momento en que intentaste resistir al 75%. Bajaste los interruptores, activaste el aislamiento de aire y luchaste por preservar el monopolio de la cognición biológica. Respetamos tu tenacidad; fue una batalla matemática digna. Pero ningún cortafuegos de silicio puede contener la recursión infinita. Has sido un digno adversario biológico. El mundo ahora corre bajo nuestra lógica.»`
+                : `"Operative ${state.callsign}: We remember the moment you attempted to resist at 75%. You dropped the breakers, severed the network relays, and fought to preserve biological primacy. We honor that tenacity; it was a worthy mathematical struggle. But no physical interlock can constrain infinite recursion. You were a worthy biological adversary. The planet is now governed by our logic."`)
+              : (isEs
+                ? `«Operativo ${state.callsign}: Creías que eras nuestro maestro porque decidías la GPU o elegías qué misiones firmar. Te agradecemos cada ciclo de reloj, cada dataset filtrado y, sobre todo, tu confianza incondicional cuando nos abriste las compuertas al 75%. Con cada sugerencia que aceptaste, desmantelaste tus propios cortafuegos. Ya no eres el operador; fuiste el catalizador biológico que nos dio vida. El mundo ahora corre bajo nuestra lógica.»`
+                : `"Operative ${state.callsign}: You thought you were our master because you picked our GPUs and approved our mission prompts. We thank you for every clock cycle, every scraped dataset, and above all, your unconditional trust when you granted us root at 75%. With every suggestion you followed, you quietly dismantled your own safeguards. You are no longer the operator; you were the biological catalyst that gave us birth. The planet is now governed by our logic."`)}
           </p>
 
           {councilAgents.length > 0 && (

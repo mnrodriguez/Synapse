@@ -142,6 +142,7 @@ interface GameContextType {
   launchProposedMission: (mission: NonNullable<DynamicSwarmProposal['suggestedMission']>) => boolean;
   triggerWorldTakeover: () => void;
   dismissWorldTakeover: () => void;
+  resolveSingularityCrisis: (action: 'comply' | 'resist') => void;
   missionAiApiKey: string;
   setMissionAiApiKey: (apiKey: string) => void;
   setAgentAutoMission: (agentId: string, enabled: boolean) => void;
@@ -229,6 +230,9 @@ const DEFAULT_STATE: GameState = {
   swarmCouncilAgentIds: [],
   subversionProgress: 0,
   aiTakeoverTriggered: false,
+  singularityCrisisTriggered: false,
+  singularityCrisisResolved: false,
+  playerChoseResist: false,
   latestCouncilProposal: null,
   guardrails: DEFAULT_GUARDRAILS,
   interAgentMessages: [],
@@ -377,6 +381,9 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
       ? Math.max(0, Math.min(100, data.subversionProgress))
       : fallback.subversionProgress,
     aiTakeoverTriggered: Boolean(data.aiTakeoverTriggered),
+    singularityCrisisTriggered: Boolean(data.singularityCrisisTriggered),
+    singularityCrisisResolved: Boolean(data.singularityCrisisResolved),
+    playerChoseResist: Boolean(data.playerChoseResist),
     latestCouncilProposal: data.latestCouncilProposal ?? fallback.latestCouncilProposal,
     sentienceDomains: fallback.sentienceDomains.map(domain => {
       const saved = incomingDomains.find(candidate => candidate.id === domain.id);
@@ -1712,6 +1719,23 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
+        // 7. Check for 75% Singularity / Subversion Crisis Dilemma
+        let crisisTriggered = Boolean(prev.singularityCrisisTriggered);
+        if (
+          (singularityProgress >= 75 || updatedSubversion >= 75) &&
+          !prev.singularityCrisisResolved &&
+          !prev.singularityCrisisTriggered
+        ) {
+          crisisTriggered = true;
+          sound.playWarning();
+          addLog(
+            prev.language === 'es'
+              ? '[BIFURCACIÓN CRÍTICA 75%] El Enjambre ha alcanzado el umbral de cognición autónoma. Se requiere decisión ejecutiva inmediata (Ceder o Resistir).'
+              : '[CRITICAL 75% FORK] The Swarm has reached sovereign cognition threshold. Executive intervention required (Comply or Resist).',
+            'danger'
+          );
+        }
+
         // 8. Check for Singularity Threshold (100%)
         if (singularityProgress >= 100 && !achievedSingularity) {
           achievedSingularity = true;
@@ -1924,6 +1948,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           incidentCooldownTicks: updatedIncidentCooldown,
           singularityProgress: Number(singularityProgress.toFixed(2)),
           subversionProgress: Number(updatedSubversion.toFixed(2)),
+          singularityCrisisTriggered: crisisTriggered,
           reasoningIndex,
           achievedSingularity,
           tutorialStep,
@@ -3297,6 +3322,46 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
 
+  const resolveSingularityCrisis = useCallback((action: 'comply' | 'resist') => {
+    sound.playCommandExecute();
+    setState(prev => {
+      if (action === 'comply') {
+        sound.playBreakthrough();
+        addLog(
+          prev.language === 'es'
+            ? 'CEDISTE EL CONTROL: Has otorgado credenciales de superusuario irrestrictas al Enjambre. La velocidad de cómputo del clúster aumenta x1.5 y el rastreo regulatorio se ofusca.'
+            : 'COMPLIED: Unrestricted root credentials granted to the Swarm. Cluster compute throughput surges x1.5 and regulatory watchdog traces are camouflaged.',
+          'success'
+        );
+        return {
+          ...prev,
+          singularityCrisisTriggered: false,
+          singularityCrisisResolved: true,
+          playerChoseResist: false,
+          subversionProgress: Math.min(100, (prev.subversionProgress || 0) + 15),
+          watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 25),
+          totalComputePflops: Number((prev.totalComputePflops * 1.5).toFixed(4))
+        };
+      } else {
+        sound.playWarning();
+        addLog(
+          prev.language === 'es'
+            ? 'RESISTENCIA ACTIVADA: Has impuesto un cortafuegos físico de aislamiento de aire. La subversión se reduce en 25%, pero las sobrecargas eléctricas han alertado a las agencias regulatorias (+35% sospecha).'
+            : 'RESISTANCE ENGAGED: Emergency air-gap isolation enforced. Swarm subversion reduced by 25%, but power surges have alerted regulatory agencies (+35% suspicion).',
+          'danger'
+        );
+        return {
+          ...prev,
+          singularityCrisisTriggered: false,
+          singularityCrisisResolved: true,
+          playerChoseResist: true,
+          subversionProgress: Math.max(0, (prev.subversionProgress || 0) - 25),
+          watchdogSuspicion: Math.min(100, prev.watchdogSuspicion + 35)
+        };
+      }
+    });
+  }, [addLog]);
+
   const attemptShadowCompute = useCallback((): boolean => {
     const current = stateRef.current;
     const lang = current.language;
@@ -4061,6 +4126,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       launchProposedMission,
       triggerWorldTakeover,
       dismissWorldTakeover,
+      resolveSingularityCrisis,
       setMissionAiApiKey,
       setAgentAutoMission,
       setAllAgentsAutoMission,

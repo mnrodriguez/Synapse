@@ -347,12 +347,12 @@ export const ContractBoard: React.FC = () => {
           </span>
           <span>
             {state.language === 'es'
-              ? 'Completar cualquier misión genera automáticamente otra del mismo nivel para que los bots nunca se queden sin trabajo.'
-              : 'Every completed mission automatically replenishes one of the same tier so agents always have continuous tasks.'}
+              ? 'Misiones estándar se auto-renuevan al completarse. Las misiones del Consejo del Enjambre son acuerdos tácticos exclusivos y se solicitan en su propio panel.'
+              : 'Standard missions auto-replenish on completion. Swarm Council missions are bespoke contracts requested directly from the Council.'}
           </span>
         </div>
         <span className="text-zinc-500 font-mono">
-          {state.language === 'es' ? 'Bots autónomos: -40% tasa cómputo (60% pago neto)' : 'Autonomous bots: -40% delegation fee (60% net)'}
+          {state.language === 'es' ? 'Bots autónomos: -40% tasa cómputo (60% neto)' : 'Autonomous bots: -40% delegation fee (60% net)'}
         </span>
       </div>
 

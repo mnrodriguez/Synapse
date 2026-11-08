@@ -21,6 +21,7 @@ import { AgentSandbox } from './components/AgentSandbox';
 import { BreachModal } from './components/BreachModal';
 import { GameOverModal } from './components/GameOverModal';
 import { SingularityTakeoverModal } from './components/SingularityTakeoverModal';
+import { SingularityCrisisModal } from './components/SingularityCrisisModal';
 import { GenesisOnboarding } from './components/GenesisOnboarding';
 import { TutorialMissionBanner } from './components/TutorialMissionBanner';
 import { ProgressionRoadmap } from './components/ProgressionRoadmap';
@@ -235,6 +236,9 @@ const MainGameScreen: React.FC = () => {
 
       {/* Real-World AI Guardrail Breach Incident Popup */}
       <BreachModal />
+
+      {/* Endgame 75% Interactive Crisis Dilemma Modal */}
+      <SingularityCrisisModal />
 
       {/* Endgame AI World Takeover Modal */}
       <SingularityTakeoverModal />
