@@ -16,6 +16,7 @@ import {
   CloudOff, 
   ShieldAlert, 
   BookOpen, 
+  FileText,
   Trophy, 
   User, 
   RefreshCw,
@@ -342,6 +343,18 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
           <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
           <span className="hidden md:inline">MANUAL</span>
         </button>
+
+        {/* AI Manual (PDF) Direct Link */}
+        <a
+          href="/assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900/90 hover:bg-zinc-800 border border-cyan-800/60 hover:border-cyan-400 text-cyan-300 transition-colors"
+          title={localize(state.language, 'Abrir Manual Técnico Oficial de IA en formato PDF (9 Páginas)', 'Open Official AI Technical Manual in PDF format (9 Pages)')}
+        >
+          <FileText className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="hidden lg:inline text-[10px] font-bold">MANUAL.PDF</span>
+        </a>
 
         {/* Leaderboard */}
         <button

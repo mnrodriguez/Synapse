@@ -1,0 +1,28 @@
+================================================================================
+SYNAPSE // SINGULARITY PROTOCOL V4.19
+Official AI Architecture, Training & Systems Manual (PDF Format)
+================================================================================
+
+The official comprehensive manual has been upgraded to a 9-page visual PDF:
+
+Local / Web Asset Path:
+  /assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf
+
+Direct Download Link:
+  /SYNAPSE_AI_Architecture_Manual.pdf
+
+Sections Covered:
+  1. Core Concepts & The AI Training Lifecycle
+  2. Neural Model Architectures & Topologies
+  3. Attention Mechanisms & Sequence Modeling
+  4. Floating-Point Precisions & Quantization (FP32 to 1-Bit)
+  5. Objective Functions, Alignment & Reinforcement Learning
+  6. Training Hyperparameters & In-Game Model Lab Options
+  7. Data Engineering, Vector Spaces (RAG) & Synthetic Flywheels
+  8. Autonomous Multi-Agent Swarms, Roles & Council Synthesis
+  9. Hardware Hierarchy, Accelerators & Infrastructure Physics
+  10. In-Game Strategy Guide: From Silicon Scraps to Singularity (Phases I, II & III)
+
+You can read the full PDF inside the in-game MANUAL modal with the built-in
+viewer, click "MANUAL.PDF" in the top navigation bar, or open the PDF link above.
+================================================================================

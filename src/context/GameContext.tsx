@@ -3514,6 +3514,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 - speed <0|1|5|20|50>: Cambia la velocidad de simulación (0=Pausa, 1x, 5x, 20x, 50x).
 - clear          : Limpia los logs de la consola.
 - singularity    : Consulta estado de trascendencia hacia la Singularidad Tecnológica.
+- guide          : Muestra enlace e información del Manual Oficial de Arquitectura y Sistemas (PDF).
 - lore           : Despliega los archivos confidenciales del proyecto SYNAPSE.`, `SYNAPSE OPERATIVE CLI COMMANDS:
 - status         : Show cluster, heat, FLOPs, and Singularity telemetry.
 - train          : Start or inspect training for the active model.
@@ -3536,6 +3537,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 - save           : Sync and save progress to Firebase cloud storage.
 - clear          : Clear console logs.
 - singularity    : Check progress toward the technological Singularity.
+- guide          : Show link and info for the Official AI Architecture & Systems Manual (PDF).
 - lore           : Show the SYNAPSE project narrative.`);
 
       case 'agents': {
@@ -3672,6 +3674,40 @@ El futuro de SYNAPSE depende de cómo decidamos construirlo."`, `[SYNAPSE MANIFE
 We begin with a small cluster, careful decisions, and a team of specialized agents.
 Every advance requires resources, evaluation, and responsibility.
 The future of SYNAPSE depends on how we choose to build it."`);
+
+      case 'manual':
+      case 'guide':
+        return text(`[MANUAL TÉCNICO OFICIAL DE ARQUITECTURAS & SISTEMAS // SYNAPSE V4.19 (PDF)]
+Manual operativo oficial en formato PDF (9 páginas):
+- Archivo local / web: /assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf
+- Descarga canónica: /SYNAPSE_AI_Architecture_Manual.pdf
+- Contenido del Documento:
+  1. Conceptos Fundamentales y Ciclo de Entrenamiento (Pre-entrenamiento, SFT, DPO/RLHF, Chinchilla)
+  2. Topologías Neuronales (Decoder Transformer, MoE Disperso, Mamba SSM, GNN Híbrido, Difusión)
+  3. Mecanismos de Atención y Modelado de Secuencias (MHA, GQA, FlashAttention-3, Atención Lineal)
+  4. Precisiones de Punto Flotante y Cuantización (FP32, BF16, INT8, FP4, BitNet 1.58b)
+  5. Funciones Objetivo, Alineamiento y RL (Cross-Entropy, DPO, PPO/RLHF, InfoNCE, EBM)
+  6. Hiperparámetros, Escala de Parámetros y Muestreo de Inferencia (LR, Cosine, AdamW, Temp, Top-P, Top-K, Rep Penalty)
+  7. Curaduría de Datos, Vectores (RAG), Dominios de Entrenamiento y Flywheels Sintéticos
+  8. Enjambres de Agentes Autónomos, Configuración ReAct y Consenso del Consejo
+  9. Jerarquía de Hardware, Aceleradores y Física de Infraestructura (Edge TPU, GPUs de Consumo, H100, B200)
+  10. Guía Estratégica en el Juego: De Chatarras de Silicio a la Singularidad (Fases I, II y III)
+Puedes abrirlo directamente en el visor integrado del botón MANUAL, abrir MANUAL.PDF en la barra superior o descargarlo.`, `[SYNAPSE OFFICIAL AI ARCHITECTURE & SYSTEMS MANUAL V4.19 (PDF)]
+Official operational reference manual in PDF format (9 pages):
+- Local / web route: /assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf
+- Direct download: /SYNAPSE_AI_Architecture_Manual.pdf
+- Document Content:
+  1. Core Concepts & The AI Training Lifecycle (Pre-training, SFT, DPO/RLHF, Chinchilla Law)
+  2. Neural Model Architectures & Topologies (Decoder Transformer, Sparse MoE, Mamba SSM, GNN, Latent Diffusion)
+  3. Attention Mechanisms & Sequence Modeling (MHA, GQA, FlashAttention-3, Linear Attention)
+  4. Floating-Point Precisions & Quantization (FP32, BF16, INT8, FP4, BitNet 1.58b)
+  5. Objective Functions, Alignment & Reinforcement Learning (Cross-Entropy, DPO, PPO/RLHF, InfoNCE, EBM)
+  6. Training Hyperparameters, Parameter Tiers & Inference Sampling (LR, Cosine, AdamW, Temp, Top-P, Top-K, Rep Penalty)
+  7. Data Engineering, Vector Spaces (RAG), Specialized Domains & Synthetic Flywheels
+  8. Autonomous Multi-Agent Swarms, Agent Setup & Council Consensus
+  9. Hardware Hierarchy, Accelerators & Infrastructure Physics (Edge TPU, Consumer GPUs, H100, B200)
+  10. In-Game Strategy Guide: From Silicon Scraps to Singularity (Phases I, II & III)
+Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top bar, or download it.`);
 
       case 'speed': {
         const val = args[0]?.toLowerCase();

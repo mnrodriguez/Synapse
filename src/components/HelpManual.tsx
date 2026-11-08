@@ -15,7 +15,10 @@ import {
   Zap, 
   Code,
   Layers,
-  HelpCircle
+  HelpCircle,
+  Download,
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { useGame } from '../context/GameContext';
@@ -28,32 +31,56 @@ interface HelpManualProps {
 
 export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
   const { state } = useGame();
-  const [activeSection, setActiveSection] = useState<'intro' | 'data' | 'arch' | 'infra' | 'singularity'>('intro');
+  const [activeSection, setActiveSection] = useState<'pdf' | 'intro' | 'data' | 'arch' | 'infra' | 'singularity'>('pdf');
 
   if (!isOpen) return null;
 
+  const pdfUrl = '/assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf';
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono select-none">
-      <div className="bg-[#080d15] border border-cyan-800/80 rounded-lg max-w-3xl w-full max-h-[85vh] flex flex-col shadow-[0_0_30px_rgba(0,255,200,0.15)] overflow-hidden">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 font-mono select-none">
+      <div className="bg-[#080d15] border border-cyan-800/80 rounded-lg max-w-5xl w-full max-h-[90vh] flex flex-col shadow-[0_0_30px_rgba(0,255,200,0.15)] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-3.5 bg-[#0b131f] border-b border-cyan-900/60">
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-cyan-400" />
             <h3 className="font-bold text-sm text-cyan-300 tracking-wider">
-              {localize(state.language, 'MANUAL TÉCNICO // FUNDAMENTOS DE ENTRENAMIENTO DE IA & SINGULARIDAD', 'TECHNICAL MANUAL // AI TRAINING & SINGULARITY')}
+              {localize(state.language, 'MANUAL TÉCNICO OFICIAL // ARQUITECTURA DE IA & SINGULARIDAD', 'OFFICIAL TECHNICAL MANUAL // AI ARCHITECTURE & SINGULARITY')}
             </h3>
           </div>
-          <button
-            onClick={() => { sound.playNavSwitch(); onClose(); }}
-            className="p-1 rounded text-zinc-400 hover:text-zinc-200"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-cyan-300 text-xs font-bold transition-all"
+              title={localize(state.language, 'Abrir PDF en pestaña nueva', 'Open PDF in new tab')}
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{localize(state.language, 'ABRIR PDF', 'OPEN PDF')}</span>
+            </a>
+            <a
+              href={pdfUrl}
+              download="SYNAPSE_AI_Architecture_Manual.pdf"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 text-xs font-bold transition-all hover:shadow-[0_0_12px_rgba(0,255,200,0.3)]"
+              title={localize(state.language, 'Descargar el manual técnico oficial de IA en PDF', 'Download official AI technical manual as PDF')}
+            >
+              <Download className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{localize(state.language, 'DESCARGAR PDF', 'DOWNLOAD PDF')}</span>
+            </a>
+            <button
+              onClick={() => { sound.playNavSwitch(); onClose(); }}
+              className="p-1 rounded text-zinc-400 hover:text-zinc-200"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Section Tabs */}
         <div className="flex items-center gap-1 p-2 bg-[#060a10] border-b border-zinc-800 text-xs overflow-x-auto">
           {[
+            { id: 'pdf', label: localize(state.language, '📄 MANUAL COMPLETO (PDF)', '📄 FULL MANUAL (PDF)') },
             { id: 'intro', label: localize(state.language, '1. INTRODUCCIÓN', '1. INTRODUCTION') },
             { id: 'data', label: localize(state.language, '2. GRAFOS, VECTORES & SQL', '2. GRAPHS, VECTORS & SQL') },
             { id: 'arch', label: localize(state.language, '3. TOPOLOGÍA & CUANTIZACIÓN', '3. TOPOLOGY & QUANTIZATION') },
@@ -75,7 +102,66 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs text-zinc-300 leading-relaxed scrollbar-thin scrollbar-thumb-cyan-950">
+        <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-4 text-xs text-zinc-300 leading-relaxed scrollbar-thin scrollbar-thumb-cyan-950">
+          {activeSection === 'pdf' && (
+            <div className="flex flex-col h-[65vh] w-full space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-[#060a10] border border-cyan-900/60 rounded text-xs">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-cyan-400" />
+                  <span className="font-bold text-cyan-300">
+                    {localize(state.language, 'MANUAL OFICIAL // ARQUITECTURAS, ENTRENAMIENTO & FÍSICA DEL CLÚSTER (9 PÁGS)', 'OFFICIAL MANUAL // AI ARCHITECTURES, TRAINING & CLUSTER PHYSICS (9 PAGES)')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-cyan-300 flex items-center gap-1.5 transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>{localize(state.language, 'PANTALLA COMPLETA', 'FULLSCREEN VIEW')}</span>
+                  </a>
+                  <a
+                    href={pdfUrl}
+                    download="SYNAPSE_AI_Architecture_Manual.pdf"
+                    className="px-2.5 py-1 rounded bg-cyan-500 hover:bg-cyan-400 text-black font-bold flex items-center gap-1.5 transition-colors shadow-[0_0_10px_rgba(0,255,200,0.4)]"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>{localize(state.language, 'DESCARGAR PDF', 'DOWNLOAD PDF')}</span>
+                  </a>
+                </div>
+              </div>
+              <div className="flex-1 w-full bg-zinc-950 rounded border border-cyan-950 overflow-hidden relative min-h-[420px]">
+                <object
+                  data={`${pdfUrl}#view=FitH`}
+                  type="application/pdf"
+                  className="w-full h-full min-h-[420px]"
+                >
+                  <iframe
+                    src={`${pdfUrl}#view=FitH`}
+                    className="w-full h-full min-h-[420px] border-0"
+                    title="SYNAPSE AI Architecture Manual PDF"
+                  >
+                    <div className="p-8 text-center space-y-4">
+                      <p className="text-zinc-400">
+                        {localize(state.language, 'El visor PDF integrado no está disponible en este navegador.', 'The embedded PDF viewer is not supported in this browser.')}
+                      </p>
+                      <a
+                        href={pdfUrl}
+                        download="SYNAPSE_AI_Architecture_Manual.pdf"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 text-black font-bold rounded"
+                      >
+                        <Download className="w-4 h-4" />
+                        {localize(state.language, 'Descargar Manual PDF Oficial', 'Download Official PDF Manual')}
+                      </a>
+                    </div>
+                  </iframe>
+                </object>
+              </div>
+            </div>
+          )}
+
           {activeSection === 'intro' && (
             <div className="space-y-3">
               <h4 className="text-cyan-400 font-bold text-sm">{localize(state.language, 'EL CAMINO DE SYNAPSE', 'THE SYNAPSE PATH')}</h4>
@@ -84,6 +170,39 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                   ? <>Inspired by cybersecurity simulators such as <em>Uplink</em> and <em>Hacknet</em>, your mission in SYNAPSE is not easy money from breaking firewalls, but to <strong>train an artificial intelligence from scratch</strong> until it becomes the dominant intellectual force on the planet.</>
                   : <>Inspirado en los simuladores de ciberseguridad como <em>Uplink</em> y <em>Hacknet</em>, tu misión en SYNAPSE no es penetrar firewalls por dinero fácil, sino <strong>entrenar una Inteligencia Artificial desde cero</strong> hasta convertirla en la entidad intelectual dominante del planeta.</>}
               </p>
+              <div className="p-3 bg-gradient-to-r from-cyan-950/60 to-purple-950/40 border border-cyan-500/40 rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-[0_0_15px_rgba(0,255,200,0.05)]">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5 text-cyan-300 font-bold">
+                    <FileText className="w-4 h-4 text-cyan-400" />
+                    <span>{localize(state.language, 'MANUAL TÉCNICO OFICIAL DE IA & SISTEMAS (PDF DE 9 PÁGINAS)', 'OFFICIAL AI & SYSTEMS TECHNICAL MANUAL (9-PAGE PDF)')}</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400">
+                    {localize(
+                      state.language,
+                      'Documento PDF oficial de 9 páginas con topologías neuronales, física de clúster, cuantización, fórmulas de cálculo y guía estratégica de campaña.',
+                      'Official 9-page PDF manual covering neural topologies, cluster physics, quantization formats, mathematical sizing, and campaign strategy.'
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { sound.playKeyClick(); setActiveSection('pdf'); }}
+                    className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-zinc-200 font-bold text-xs flex items-center gap-1.5 whitespace-nowrap transition-all"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>{localize(state.language, 'VER EN VISOR', 'VIEW IN VIEWER')}</span>
+                  </button>
+                  <a
+                    href={pdfUrl}
+                    download="SYNAPSE_AI_Architecture_Manual.pdf"
+                    className="px-3 py-1.5 rounded bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center gap-1.5 whitespace-nowrap transition-all shadow-[0_0_10px_rgba(0,255,200,0.4)]"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>{localize(state.language, 'DESCARGAR PDF', 'DOWNLOAD PDF')}</span>
+                  </a>
+                </div>
+              </div>
+
               <div className="p-3 bg-[#09111c] border border-cyan-900 rounded space-y-1.5">
                 <span className="text-yellow-400 font-bold block">{localize(state.language, 'EL CICLO DE PROGRESIÓN BÁSICO:', 'THE CORE PROGRESSION LOOP:')}</span>
                 <ol className="list-decimal list-inside space-y-1 text-zinc-400 text-[11px]">

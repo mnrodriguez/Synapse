@@ -90,7 +90,7 @@ export const Terminal: React.FC = () => {
     } else if (e.key === 'Tab') {
       e.preventDefault();
       // Auto-complete suggestions
-      const commands = ['status', 'train', 'abort', 'hardware', 'buy', 'data', 'unlock', 'contracts', 'run', 'scrub', 'shadow', 'query', 'swarm', 'save', 'clear', 'singularity', 'lore', 'help'];
+      const commands = ['status', 'train', 'abort', 'hardware', 'buy', 'data', 'unlock', 'contracts', 'run', 'scrub', 'shadow', 'query', 'swarm', 'save', 'clear', 'singularity', 'lore', 'manual', 'guide', 'help'];
       const match = commands.find(c => c.startsWith(input.toLowerCase().trim()));
       if (match) {
         setInput(match);
