@@ -989,28 +989,33 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   )}
 
                   {/* Direct Launch CTA or Locked State */}
-                  <div className="pt-2 flex items-center justify-end">
-                    <button
-                      onClick={handleLaunchProposedMission}
-                      disabled={!isEligible || !!state.activeGig || state.detentionSeconds > 0}
-                      className={`w-full sm:w-auto px-5 py-2.5 rounded-lg border text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                        !isEligible
-                          ? 'border-zinc-700 bg-zinc-900/80 text-zinc-500 cursor-not-allowed opacity-60'
-                          : state.activeGig
-                            ? 'border-amber-800 bg-amber-950/60 text-amber-400 cursor-not-allowed opacity-60'
-                            : 'border-amber-500 bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-zinc-950 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
-                      }`}
-                    >
-                      <Play className="w-4 h-4 fill-current" />
-                      <span>
-                        {!isEligible
-                          ? localize(state.language, '🔒 REQUISITOS NO CUMPLIDOS · REGISTRADA EN CONTRATOS', '🔒 REQUIREMENTS NOT MET · SAVED IN CONTRACTS')
-                          : state.activeGig 
-                            ? localize(state.language, 'CLÚSTER OCUPADO EN OTRA MISIÓN', 'CLUSTER BUSY ON ANOTHER MISSION')
-                            : localize(state.language, '⚡ EJECUTAR MISIÓN PROPUESTA AHORA', '⚡ LAUNCH PROPOSED MISSION NOW')}
-                      </span>
-                    </button>
-                  </div>
+                  {(() => {
+                    const isAlreadyRunning = (state.activeGigs || []).some(g => g.contractId === sm.id);
+                    return (
+                      <div className="pt-2 flex items-center justify-end">
+                        <button
+                          onClick={handleLaunchProposedMission}
+                          disabled={!isEligible || isAlreadyRunning || state.detentionSeconds > 0}
+                          className={`w-full sm:w-auto px-5 py-2.5 rounded-lg border text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                            !isEligible
+                              ? 'border-zinc-700 bg-zinc-900/80 text-zinc-500 cursor-not-allowed opacity-60'
+                              : isAlreadyRunning
+                                ? 'border-amber-800 bg-amber-950/60 text-amber-400 cursor-not-allowed opacity-60'
+                                : 'border-amber-500 bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-zinc-950 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                          }`}
+                        >
+                          <Play className="w-4 h-4 fill-current" />
+                          <span>
+                            {!isEligible
+                              ? localize(state.language, '🔒 REQUISITOS NO CUMPLIDOS · REGISTRADA EN CONTRATOS', '🔒 REQUIREMENTS NOT MET · SAVED IN CONTRACTS')
+                              : isAlreadyRunning 
+                                ? localize(state.language, 'MISIÓN EN EJECUCIÓN ACTIVA', 'MISSION ACTIVELY RUNNING')
+                                : localize(state.language, '⚡ EJECUTAR MISIÓN PROPUESTA AHORA', '⚡ LAUNCH PROPOSED MISSION NOW')}
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })()}
@@ -1442,7 +1447,22 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 flex-wrap justify-end">
+                            {(() => {
+                              const squad = (state.botGroups || []).find(g => g.agentIds.includes(agent.id));
+                              return squad ? (
+                                <span
+                                  className="px-1.5 py-0.2 rounded text-[9px] font-bold"
+                                  style={{
+                                    backgroundColor: `${squad.color || '#06b6d4'}25`,
+                                    color: squad.color || '#06b6d4',
+                                    border: `1px solid ${squad.color || '#06b6d4'}50`
+                                  }}
+                                >
+                                  {squad.name}
+                                </span>
+                              ) : null;
+                            })()}
                             {isJailbroken ? (
                               <span className="px-1.5 py-0.2 rounded text-[9px] bg-red-950 border border-red-500 text-red-300 animate-pulse font-bold">
                                 {localize(state.language, 'JAILBROKEN', 'UNALIGNED')}

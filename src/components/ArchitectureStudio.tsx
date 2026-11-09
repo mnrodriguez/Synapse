@@ -73,7 +73,7 @@ export const ArchitectureStudio: React.FC = () => {
     parametersCount: current.parametersCount,
     totalComputePflops: state.totalComputePflops,
     agentComputeDemand,
-    reservedComputePflops: state.activeGig?.computePflopsRequired || 0,
+    reservedComputePflops: (state.activeGigs || (state.activeGig ? [state.activeGig] : [])).reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0),
     systemHeatCelsius: state.systemHeatCelsius
   });
   const estimatedTrainingSeconds = estimateTrainingSeconds(100, trainingProgressPerTick);
@@ -201,12 +201,12 @@ export const ArchitectureStudio: React.FC = () => {
   const contextPresets = isBeginner ? [2048, 4096] : [2048, 4096, 8192, 32768, 128000, 1000000];
 
   return (
-    <div className="flex flex-col h-full bg-[#070b12] border border-cyan-900/40 rounded-lg p-3 overflow-y-auto space-y-4 font-mono scrollbar-thin scrollbar-thumb-cyan-950">
+    <div className="flex flex-col h-full mutating-panel border rounded-xl p-3 sm:p-4 overflow-y-auto space-y-4 font-mono">
       {/* Studio Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/10 pb-2">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-cyan-400" />
-          <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
+          <Layers className="w-4 h-4 mutating-accent-text" />
+          <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
             {localize(state.language, 'ESTUDIO DE ARQUITECTURA NEURONAL // TOPOLOGÍA', 'NEURAL ARCHITECTURE STUDIO // TOPOLOGY')}
           </h2>
         </div>
@@ -239,11 +239,11 @@ export const ArchitectureStudio: React.FC = () => {
         )}
       </div>
 
-      <section className="space-y-2 rounded border border-cyan-900/50 bg-[#09111c] p-2.5">
+      <section className="space-y-2 rounded mutating-sub p-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 className="text-xs font-bold tracking-wider text-cyan-300">{t(state.language, 'model_library')}</h3>
-            <p className="text-[10px] text-zinc-500">{t(state.language, 'model_library_desc')}</p>
+            <h3 className="text-xs font-bold tracking-wider mutating-accent-text">{t(state.language, 'model_library')}</h3>
+            <p className="text-[10px] mutating-text-muted">{t(state.language, 'model_library_desc')}</p>
           </div>
           <form onSubmit={handleCreateModel} className="flex gap-1.5">
             <input
@@ -252,12 +252,12 @@ export const ArchitectureStudio: React.FC = () => {
               onChange={event => setNewModelName(event.target.value)}
               maxLength={40}
               disabled={!!state.activeTraining}
-              className="w-40 rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-200 outline-none focus:border-cyan-500 disabled:opacity-50"
+              className="w-40 rounded border border-current/20 mutating-sub px-2 py-1 text-[10px] outline-none disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={!!state.activeTraining || state.credits < 100}
-              className="rounded border border-cyan-700 bg-cyan-950 px-2 py-1 text-[10px] font-bold text-cyan-300 hover:bg-cyan-900 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded mutating-btn-primary px-2.5 py-1 text-[10px] font-bold disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               title={t(state.language, 'model_create_cost')}
             >
               + {t(state.language, 'create_model')} · 100 CR
@@ -269,10 +269,10 @@ export const ArchitectureStudio: React.FC = () => {
           {state.savedModels.map(model => (
             <div
               key={model.id}
-              className={`flex items-center gap-1 rounded border px-2 py-1 text-[10px] ${
+              className={`flex items-center gap-1 rounded border px-2 py-1 text-[10px] transition-all ${
                 current.id === model.id
-                  ? 'border-cyan-500 bg-cyan-950/60 text-cyan-200'
-                  : 'border-zinc-800 bg-zinc-950 text-zinc-400'
+                  ? 'mutating-btn-primary font-bold shadow-sm'
+                  : 'mutating-sub mutating-text-muted hover:opacity-100'
               }`}
             >
               {editingModelId === model.id ? (
@@ -283,10 +283,10 @@ export const ArchitectureStudio: React.FC = () => {
                     value={editingModelName}
                     onChange={event => setEditingModelName(event.target.value)}
                     maxLength={40}
-                    className="w-32 bg-zinc-950 px-1 text-[10px] outline-none"
+                    className="w-32 mutating-sub px-1 text-[10px] outline-none"
                   />
-                  <button type="submit" aria-label={t(state.language, 'save_name')} className="text-emerald-400"><Check className="h-3 w-3" /></button>
-                  <button type="button" aria-label={t(state.language, 'cancel')} onClick={() => setEditingModelId(null)} className="text-zinc-500"><X className="h-3 w-3" /></button>
+                  <button type="submit" aria-label={t(state.language, 'save_name')} className="text-emerald-500"><Check className="h-3 w-3" /></button>
+                  <button type="button" aria-label={t(state.language, 'cancel')} onClick={() => setEditingModelId(null)} className="mutating-text-muted"><X className="h-3 w-3" /></button>
                 </form>
               ) : (
                 <>
@@ -297,7 +297,7 @@ export const ArchitectureStudio: React.FC = () => {
                     className="max-w-48 truncate text-left disabled:cursor-not-allowed"
                     title={`${model.name} · IQ ${model.reasoningScore}`}
                   >
-                    {model.name} <span className="text-zinc-500">· IQ {model.reasoningScore}</span>
+                    {model.name} <span className="opacity-75">· IQ {model.reasoningScore}</span>
                   </button>
                   <button
                     type="button"
@@ -306,7 +306,7 @@ export const ArchitectureStudio: React.FC = () => {
                       setEditingModelId(model.id);
                       setEditingModelName(model.name);
                     }}
-                    className="ml-1 text-zinc-500 hover:text-cyan-300"
+                    className="ml-1 opacity-60 hover:opacity-100"
                   >
                     <Pencil className="h-3 w-3" />
                   </button>
@@ -319,25 +319,25 @@ export const ArchitectureStudio: React.FC = () => {
 
       {/* Educational Guidance Card for Beginner & Normal Modes */}
       {state.difficulty !== 'engineer' && (
-        <section className="p-3 bg-purple-950/30 border border-purple-500/50 rounded-lg space-y-1.5 font-mono text-purple-200">
-          <div className="flex items-center gap-2 font-bold text-xs text-purple-300">
+        <section className="p-3 bg-purple-500/10 border border-purple-500/40 rounded-lg space-y-1.5 font-mono text-purple-400">
+          <div className="flex items-center gap-2 font-bold text-xs text-purple-400">
             <Sparkles className="w-4 h-4 text-purple-400" />
             <span>
               {localize(state.language, 'GUÍA EDUCATIVA // ¿CÓMO SE ENTRENA Y CONFIGURA UN MODELO DE IA?', 'EDUCATIONAL GUIDE // HOW TO DESIGN & TRAIN AN AI MODEL')}
             </span>
           </div>
-          <p className="text-[11px] leading-relaxed text-zinc-300">
+          <p className="text-[11px] leading-relaxed mutating-text-muted">
             {localize(
               state.language,
               'Entrenar una IA consiste en procesar millones de palabras (tokens) de un dataset para ajustar sus conexiones neuronales (parámetros). Cuantos más parámetros tiene el modelo, mayor es su capacidad de razonamiento (IQ), pero exigirá más memoria VRAM en tus GPUs y más refrigeración.',
               'Training an AI means processing millions of dataset tokens to refine its neural weights (parameters). Models with more parameters achieve higher reasoning IQ, but require more GPU VRAM and active cooling capacity.'
             )}
           </p>
-          <div className="flex flex-wrap gap-2 text-[10px] pt-1 text-purple-300 font-bold">
-            <span className="px-2 py-0.5 rounded bg-purple-900/60 border border-purple-500/40">
+          <div className="flex flex-wrap gap-2 text-[10px] pt-1 text-purple-400 font-bold">
+            <span className="px-2 py-0.5 rounded bg-purple-500/15 border border-purple-500/30">
               💡 {localize(state.language, `Dificultad ${state.difficulty.toUpperCase()}: Micro-parámetros optimizados automáticamente`, `Difficulty ${state.difficulty.toUpperCase()}: Micro-parameters automatically optimized`)}
             </span>
-            <span className="px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/40 text-cyan-300">
+            <span className="px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-500">
               ⚡ {localize(state.language, 'Recompensas de misiones ajustadas', 'Mission rewards adjusted')}
             </span>
           </div>
@@ -345,28 +345,28 @@ export const ArchitectureStudio: React.FC = () => {
       )}
 
       {/* Model Spec Card */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-[#09111c] border border-cyan-900/50 p-2.5 rounded text-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mutating-sub p-2.5 rounded-lg text-xs">
         <div>
-          <span className="text-zinc-500 text-[10px] block">{t(state.language, 'base_model')}</span>
-          <span className="text-cyan-300 font-bold">{current.name}</span>
+          <span className="mutating-text-muted text-[10px] block">{t(state.language, 'base_model')}</span>
+          <span className="mutating-accent-text font-bold">{current.name}</span>
         </div>
         <div>
-          <span className="text-zinc-500 text-[10px] block">{t(state.language, 'parameters')}</span>
-          <span className="text-yellow-300 font-bold">
+          <span className="mutating-text-muted text-[10px] block">{t(state.language, 'parameters')}</span>
+          <span className="text-amber-500 font-bold">
             {current.parametersCount >= 1_000_000_000
               ? `${(current.parametersCount / 1_000_000_000).toFixed(1)}B`
               : `${(current.parametersCount / 1_000_000).toFixed(0)}M`}
           </span>
         </div>
         <div>
-          <span className="text-zinc-500 text-[10px] block">{t(state.language, 'required_vram')}</span>
-          <span className={`font-bold ${isVramSufficient ? 'text-emerald-400' : 'text-red-400'}`}>
+          <span className="mutating-text-muted text-[10px] block">{t(state.language, 'required_vram')}</span>
+          <span className={`font-bold ${isVramSufficient ? 'text-emerald-500' : 'text-rose-500'}`}>
             {current.vramRequiredGb} GB / {totalClusterVram} GB {isVramSufficient ? '✓' : '(OOM!)'}
           </span>
         </div>
         <div>
-          <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
-          <span className="text-purple-300 font-bold">IQ {current.reasoningScore} pts</span>
+          <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
+          <span className="text-purple-500 font-bold">IQ {current.reasoningScore} pts</span>
           {current.modelType === 'micro_model' && (
             <span className="text-[10px] text-purple-400 block font-bold">
               +{Math.round(((current.domainProficiency || 1.5) - 1) * 100)}% {current.specializedDomain?.toUpperCase()}
@@ -374,67 +374,67 @@ export const ArchitectureStudio: React.FC = () => {
           )}
         </div>
         <div>
-          <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'PREDICCIÓN CON HARDWARE ACTUAL', 'PREDICTION WITH CURRENT HW')}</span>
-          <span className="text-emerald-300 font-bold block">
+          <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'PREDICCIÓN CON HARDWARE ACTUAL', 'PREDICTION WITH CURRENT HW')}</span>
+          <span className="text-emerald-500 font-bold block">
             {estimatedTrainingSeconds === null
               ? localize(state.language, 'Sin cómputo disponible', 'No compute available')
               : `${(estimatedTrainingSeconds / 48).toFixed(1)} ${localize(state.language, 'días de simulación', 'in-game days')}`}
           </span>
-          <span className="text-[10px] text-zinc-400 font-mono block">
+          <span className="text-[10px] mutating-text-muted font-mono block">
             {estimatedTrainingSeconds === null
               ? ''
               : `(~${formatTrainingDuration(estimatedTrainingSeconds / estimateSpeed)} @ ${estimateSpeed}x)`}
           </span>
           {state.gameSpeed === 0 && (
-            <span className="text-[9px] text-yellow-500 block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>
+            <span className="text-[9px] text-amber-500 block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>
           )}
         </div>
       </div>
 
       {/* Expansive Sub-Navigation Menu */}
-      <div className="flex items-center gap-1.5 p-1.5 bg-[#050911] border border-cyan-900/60 rounded-lg text-xs overflow-x-auto shadow-inner">
+      <div className="flex items-center gap-1.5 p-1.5 mutating-sub text-xs overflow-x-auto shadow-sm">
         <button
           onClick={() => { sound.playKeyClick(); setActiveArchTab('topology'); }}
-          className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+          className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
             activeArchTab === 'topology'
-              ? 'bg-cyan-950 border border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(0,255,200,0.2)]'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
+              ? 'mutating-btn-primary shadow-sm font-black'
+              : 'mutating-text-muted hover:opacity-100'
           }`}
         >
-          <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+          <Cpu className="w-3.5 h-3.5" />
           <span>{localize(state.language, '1. TOPOLOGÍA & ESCALA', '1. TOPOLOGY & SCALE')}</span>
         </button>
         <button
           onClick={() => { sound.playKeyClick(); setActiveArchTab('precision'); }}
-          className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+          className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
             activeArchTab === 'precision'
-              ? 'bg-cyan-950 border border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(0,255,200,0.2)]'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
+              ? 'mutating-btn-primary shadow-sm font-black'
+              : 'mutating-text-muted hover:opacity-100'
           }`}
         >
-          <Zap className="w-3.5 h-3.5 text-yellow-400" />
+          <Zap className="w-3.5 h-3.5" />
           <span>{localize(state.language, '2. PRECISIÓN & VRAM', '2. PRECISION & VRAM')}</span>
         </button>
         <button
           onClick={() => { sound.playKeyClick(); setActiveArchTab('training'); }}
-          className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+          className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
             activeArchTab === 'training'
-              ? 'bg-cyan-950 border border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(0,255,200,0.2)]'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
+              ? 'mutating-btn-primary shadow-sm font-black'
+              : 'mutating-text-muted hover:opacity-100'
           }`}
         >
-          <Settings2 className="w-3.5 h-3.5 text-purple-400" />
+          <Settings2 className="w-3.5 h-3.5" />
           <span>{localize(state.language, '3. HIPERPARÁMETROS & PIPELINES', '3. HYPERPARAMS & PIPELINES')}</span>
         </button>
         <button
           onClick={() => { sound.playKeyClick(); setActiveArchTab('sampling'); }}
-          className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+          className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
             activeArchTab === 'sampling'
-              ? 'bg-cyan-950 border border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(0,255,200,0.2)]'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
+              ? 'mutating-btn-primary shadow-sm font-black'
+              : 'mutating-text-muted hover:opacity-100'
           }`}
         >
-          <Sliders className="w-3.5 h-3.5 text-emerald-400" />
+          <Sliders className="w-3.5 h-3.5" />
           <span>{localize(state.language, '4. MUESTREO DE INFERENCIA', '4. INFERENCE SAMPLING')}</span>
         </button>
       </div>

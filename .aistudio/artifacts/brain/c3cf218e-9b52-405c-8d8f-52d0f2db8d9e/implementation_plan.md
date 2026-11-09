@@ -137,10 +137,14 @@ A comprehensive calibration and UI architectural redesign plan to transform SYNA
 
 ### Execution Steps Upon Approval
 
-1. **Architecture Studio Refactor**: Implement clean 4-tab sub-navigation for Architecture Studio with expansive controls and generous padding.
-2. **Hardware Rack Refactor**: Split Hardware into 3 dedicated sub-views (Accelerators, Cooling, Facility & Power).
-3. **Data Pipeline Refactor**: Organize Data Engines and Custom Synthesizers into spacious tabs.
-4. **Contract Board Refactor**: Refine contracts into segmented Available, Active, and Archive views.
-5. **Economic & Pacing Balance**: Verify early game utility bills, lease costs, and day gating.
-6. **Endgame Triad Implementation**: Implement the interactive crisis dilemma at 75%+ Singularity leading into the 100% Ascension sequence.
-7. **Build & Lint Verification**: Verify compilation with `compile_applet` and `lint_applet`.
+1. **Architecture Studio Refactor**: Implement clean 4-tab sub-navigation for Architecture Studio with expansive controls and generous padding. [Completed]
+2. **Hardware Rack Refactor**: Split Hardware into 3 dedicated sub-views (Accelerators, Cooling, Facility & Power). [Completed]
+3. **Data Pipeline Refactor**: Organize Data Engines and Custom Synthesizers into spacious tabs. [Completed]
+4. **Contract Board Refactor & Multi-Contract Execution**:
+   - Enable concurrent execution of multiple contracts whenever cluster compute PFLOPS, power kW, and unassigned agents permit. [Completed]
+   - Implement Bot Groups (Squads) with 1-group-per-agent rule, custom names, and accent colors. [Completed]
+   - Per-contract team assignment: operator can select either a Bot Group or unassigned free agents. [Completed]
+   - Expansive 2-tab view architecture ("Tablero de Contratos" and "Escuadrones de Bots") and live concurrent operations monitor. [Completed]
+5. **Economic & Pacing Balance**: Verified utility bills, lease costs, asset seizure on police raids, and suspicion dissipation. [Completed]
+6. **Endgame Triad Implementation**: Interactive crisis dilemma at 75%+ Singularity leading into the 100% Ascension sequence. [Completed]
+7. **Build & Lint Verification**: Verified with `compile_applet` and `lint_applet` with zero errors. [Completed]

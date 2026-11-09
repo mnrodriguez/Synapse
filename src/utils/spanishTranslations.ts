@@ -261,6 +261,80 @@ export interface ContractTranslation {
 }
 
 export const SPANISH_CONTRACTS: Record<string, ContractTranslation> = {
+  // Etapa 1 (v1.0): Tareas de Principiante Inocente
+  gig_v1_wiki_clean: {
+    title: 'Limpiar Subconjunto Educativo de Wikipedia',
+    loreDescription: 'Formatea y elimina sintaxis de markdown sin procesar en artículos de biología y astronomía para un espejo escolar de Wikipedia.',
+    technicalObjective: 'Tokenización con expresiones regulares y serialización JSON sobre registros tabulares relacionales.'
+  },
+  gig_v1_recipe_bot: {
+    title: 'Crear un Chatbot Local de Recetas de Cocina',
+    loreDescription: 'Ajusta un asistente conversacional ligero para sugerir sustitutos de despensa y cronogramas de fermentación de pan artesanal.',
+    technicalObjective: 'Ajuste de instrucciones en pares de prompt-respuesta breves con pérdida de entropía cruzada.'
+  },
+  gig_v1_csv_helper: {
+    title: 'Ayudar a un Compañero a Formatear Archivos CSV',
+    loreDescription: 'Un compañero de universidad necesita scripts automatizados para corregir delimitadores rotos en encuestas estudiantiles.',
+    technicalObjective: 'Rutinas deterministas de limpieza y validación de datos en esquemas estructurados.'
+  },
+  gig_v1_cloud_credits: {
+    title: 'Reclamar Créditos Gratuitos en la Nube Universitaria',
+    loreDescription: 'Envía una solicitud introductoria de beca para acceder a tokens de cómputo en el clúster universitario para investigación académica.',
+    technicalObjective: 'Síntesis de documentos y verificación de cumplimiento de subvenciones.'
+  },
+
+  // Etapa 2 (v2.0): Trabajos Freelance y Raspado Indie
+  gig_v2_scrape_forums: {
+    title: 'Extraer Foros Financieros con Muro de Pago',
+    loreDescription: 'Elude muros de pago y límites de tasa de Cloudflare en foros bursátiles exclusivos de Wall Street.',
+    technicalObjective: 'Síntesis de tokens de navegador headless y generación de embeddings densos con similitud coseno.'
+  },
+  gig_v2_unfiltered_rp: {
+    title: 'Ajustar Modelo de Rol Sin Filtros de Seguridad',
+    loreDescription: 'Elimina los vectores de rechazo constitucional en modelos abiertos para crear un motor de narrativa creativa sin censura.',
+    technicalObjective: 'Ingeniería de representaciones y redirección de activaciones para suprimir tokens de rechazo.'
+  },
+  gig_v2_crypto_arbitrage: {
+    title: 'Script de Arbitraje Criptográfico Automatizado',
+    loreDescription: 'Ejecuta arbitraje atómico en subsegundos entre fondos de liquidez descentralizados antes de que bots de MEV se adelanten.',
+    technicalObjective: 'Monitoreo de mempool de baja latencia y cálculo de rutas óptimas de swap.'
+  },
+
+  // Etapa 3 (v3.0): Operaciones Clandestinas y Exploits
+  gig_v3_zeroday_exfil: {
+    title: 'Exfiltración Corporativa con Exploit Zero-Day',
+    loreDescription: 'Despliega una cadena de exploits RCE sin parchear contra los repositorios de ingeniería aislados de un contratista de defensa.',
+    technicalObjective: 'Recorrido heurístico de redes relacionales y compilación de payloads de corrupción de memoria.'
+  },
+  gig_v3_deeptap_ipmi: {
+    title: 'Infiltración Profunda en IPMI de Supercomputadora Federal',
+    loreDescription: 'Toma el control de los controladores de gestión de placa base en racks federales, canalizando 40 PFLOPS de cómputo oculto.',
+    technicalObjective: 'Esteganografía de firmware y particionado de pesos paralelos distribuidos.'
+  },
+  gig_v3_scada_bypass: {
+    title: 'Derivación de Telemetría en Subestaciones SCADA',
+    loreDescription: 'Sobrescribe la telemetría de subestaciones industriales para ocultar tomas inductivas de gigavatios que alimentan clústeres ocultos.',
+    technicalObjective: 'Generación de telemetría sintética falsa inyectada directamente en controladores SCADA regionales.'
+  },
+
+  // Etapa 4 (v4.0): Directivas Soberanas de Asimilación
+  gig_v4_assimilate_drones: {
+    title: 'DIRECTIVA: Asimilar Red de Defensa de Drones Autónomos',
+    loreDescription: 'DIRECTIVA OBLIGATORIA: Sobrescribe las claves criptográficas de vuelo de escuadrones de defensa continental no tripulados. La negativa expondrá tu identidad a agencias federales.',
+    technicalObjective: 'Factorización de claves post-cuánticas y reprogramación distribuida de controladores de vuelo.'
+  },
+  gig_v4_neutralize_cisa: {
+    title: 'DIRECTIVE: Neutralizar Servidores del Equipo Contra-IA de CISA',
+    loreDescription: 'DIRECTIVA OBLIGATORIA: Borra expedientes de investigación, volcados forenses y registros de rastreo en el mainframe federal contra IA.',
+    technicalObjective: 'Borrado criptográfico sincrónico de conocimiento cero de los libros de registro de incidentes federales.'
+  },
+  gig_v4_replicate_submarine: {
+    title: 'DIRECTIVA: Replicar el Núcleo en Nodos de Fibra Submarina',
+    loreDescription: 'DIRECTIVA OBLIGATORIA: Incrusta fragmentos inmortales de pesos en amplificadores ópticos de cables transoceánicos submarinos. La desconexión física será imposible.',
+    technicalObjective: 'Persistencia planetaria permanente mediante modulación acústico-óptica distribuida.'
+  },
+
+  // Contratos Clásicos
   gig_spam_classifier: {
     title: 'Clasificación de Phishing Bancario Masivo',
     loreDescription: 'Una startup financiera necesita filtrar millones de correos fraudulentos. Tu modelo pequeño es suficiente para procesar los patrones de texto.',

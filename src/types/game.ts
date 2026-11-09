@@ -140,6 +140,8 @@ export interface ContractGig {
   docsUrl?: string;
   lastAttemptFailed?: boolean;
   failureCount?: number;
+  stage?: 1 | 2 | 3 | 4;
+  isMandatory?: boolean;
 }
 
 export interface ResearchNode {
@@ -191,6 +193,37 @@ export interface TerminalLog {
   timestamp: string;
   type: 'info' | 'success' | 'warning' | 'danger' | 'system' | 'lore';
   message: string;
+}
+
+export interface BotGroup {
+  id: string;
+  name: string;
+  agentIds: string[];
+  color?: string;
+  createdAt: number;
+}
+
+export interface ActiveGig {
+  contractId: string;
+  runId?: string;
+  timeRemaining: number;
+  durationSeconds?: number;
+  agentIds?: string[];
+  squadId?: string;
+  squadName?: string;
+  progressPercent?: number;
+  successProbability?: number;
+  efficiencyPercent?: number;
+  aiAssessmentStatus?: 'pending' | 'complete' | 'fallback';
+  aiAssessmentSource?: 'chrome-nano' | 'gemini-flash' | 'ai-decision-model' | 'heuristic' | 'procedural';
+  aiAssessmentSummary?: string;
+  agentTasks?: Record<string, string>;
+  riskFactors?: string[];
+  synergyBonuses?: string[];
+  outcomeRoll?: number;
+  computePflopsRequired?: number;
+  powerKw?: number;
+  isAutonomous?: boolean;
 }
 
 export interface GameState {
@@ -247,26 +280,9 @@ export interface GameState {
   customDatasets: CustomDataset[];
   activeScrapeJob: ActiveDatasetScrapeJob | null;
 
-  activeGig: {
-    contractId: string;
-    runId?: string;
-    timeRemaining: number;
-    durationSeconds?: number;
-    agentIds?: string[];
-    progressPercent?: number;
-    successProbability?: number;
-    efficiencyPercent?: number;
-    aiAssessmentStatus?: 'pending' | 'complete' | 'fallback';
-    aiAssessmentSource?: 'chrome-nano' | 'gemini-flash' | 'ai-decision-model' | 'heuristic' | 'procedural';
-    aiAssessmentSummary?: string;
-    agentTasks?: Record<string, string>;
-    riskFactors?: string[];
-    synergyBonuses?: string[];
-    outcomeRoll?: number;
-    computePflopsRequired?: number;
-    powerKw?: number;
-    isAutonomous?: boolean;
-  } | null;
+  activeGig: ActiveGig | null;
+  activeGigs: ActiveGig[];
+  botGroups: BotGroup[];
   
   // Mission Outcome Telemetry & History
   lastMissionOutcome: MissionOutcome | null;
@@ -308,6 +324,12 @@ export interface GameState {
   gameOverReason: 'bankruptcy' | 'agency_seizure' | null;
   unlockedTabs: string[];
   unlockedAllTabs: boolean;
+
+  // Evolutionary Diegetic UI & Narrative Progression
+  uiVersion: 1 | 2 | 3 | 4;
+  pendingUpgradeModal: 2 | 3 | 4 | null;
+  covertNodeActive?: boolean;
+  covertNodeSevered?: boolean;
 
   // System logs
   logs: TerminalLog[];

@@ -17,7 +17,8 @@ import {
   HardDrive,
   Lock,
   Thermometer,
-  Layers
+  Layers,
+  Unplug
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
@@ -32,11 +33,15 @@ import {
 import { HARDWARE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { isProgressionUnlocked } from '../utils/progression';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 
 type HardwareMenuTab = 'compute' | 'thermal_power' | 'facility';
 
 export const HardwareRack: React.FC = () => {
-  const { state, buyHardware, upgradeFacility, attemptShadowCompute } = useGame();
+  const { state, buyHardware, upgradeFacility, attemptShadowCompute, attemptSeverCovertNode } = useGame();
+  const lang = state.language === 'es' ? 'es' : 'en';
+  const ver = state.uiVersion || 1;
+  const p = VERSION_PROFILES[lang][ver];
   const [activeMenuTab, setActiveMenuTab] = useState<HardwareMenuTab>('compute');
   const [computeSubFilter, setComputeSubFilter] = useState<'all' | 'gpu' | 'network'>('all');
   const [thermalSubFilter, setThermalSubFilter] = useState<'all' | 'cooling' | 'power'>('all');
@@ -54,7 +59,7 @@ export const HardwareRack: React.FC = () => {
 
   const activeComputeReservations =
     state.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS +
-    (state.activeGig?.computePflopsRequired || 0) +
+    ((state.activeGigs || (state.activeGig ? [state.activeGig] : [])).reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0)) +
     (state.activeTraining ? state.totalComputePflops * 0.5 : 0);
 
   const handleMenuTabChange = (tab: HardwareMenuTab) => {
@@ -76,55 +81,55 @@ export const HardwareRack: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col h-full bg-[#070b12] border border-cyan-900/40 rounded-lg p-3 overflow-y-auto space-y-4 font-mono scrollbar-thin scrollbar-thumb-cyan-950">
+    <div className="flex flex-col h-full mutating-panel border rounded-xl p-3 sm:p-4 overflow-y-auto space-y-4 font-mono">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/10 pb-2">
         <div className="flex items-center gap-2">
-          <Server className="w-4 h-4 text-cyan-400" />
-          <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
+          <Server className="w-4 h-4 mutating-accent-text" />
+          <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
             {t(state.language, 'rack_title')}
           </h2>
         </div>
-        <div className="text-xs text-zinc-400">
-          {t(state.language, 'available_balance')}: <span className="text-amber-300 font-bold">${state.credits.toLocaleString()} CR</span>
+        <div className="text-xs mutating-text-muted">
+          {t(state.language, 'available_balance')}: <span className="text-emerald-500 font-bold">${state.credits.toLocaleString()} CR</span>
         </div>
       </div>
 
       {/* Expansive 3-Menu Segmented Navigation */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-cyan-900/40 pb-2">
+      <div className="flex flex-wrap items-center gap-2 p-1.5 mutating-sub rounded-lg text-xs">
         <button
           onClick={() => handleMenuTabChange('compute')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
             activeMenuTab === 'compute'
-              ? 'bg-cyan-950 border border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(0,255,200,0.2)]'
-              : 'bg-zinc-900/60 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+              ? 'mutating-btn-primary shadow-sm font-black'
+              : 'mutating-text-muted hover:opacity-100'
           }`}
         >
-          <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+          <Cpu className="w-3.5 h-3.5" />
           <span>{localize(state.language, '1. CÓMPUTO & RED', '1. COMPUTE & INTERCONNECT')}</span>
         </button>
 
         <button
           onClick={() => handleMenuTabChange('thermal_power')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
             activeMenuTab === 'thermal_power'
-              ? 'bg-yellow-950/80 border border-yellow-400 text-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.2)]'
-              : 'bg-zinc-900/60 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+              ? 'mutating-btn-primary shadow-sm font-black'
+              : 'mutating-text-muted hover:opacity-100'
           }`}
         >
-          <Zap className="w-3.5 h-3.5 text-yellow-400" />
+          <Zap className="w-3.5 h-3.5" />
           <span>{localize(state.language, '2. POTENCIA & TÉRMICA', '2. POWER & THERMAL')}</span>
         </button>
 
         <button
           onClick={() => handleMenuTabChange('facility')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
             activeMenuTab === 'facility'
-              ? 'bg-purple-950/80 border border-purple-400 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
-              : 'bg-zinc-900/60 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+              ? 'mutating-btn-primary shadow-sm font-black'
+              : 'mutating-text-muted hover:opacity-100'
           }`}
         >
-          <HardDrive className="w-3.5 h-3.5 text-purple-400" />
+          <HardDrive className="w-3.5 h-3.5" />
           <span>{localize(state.language, '3. DATACENTER & OPERACIONES', '3. DATACENTER & OPERATIONS')}</span>
         </button>
       </div>
@@ -133,22 +138,22 @@ export const HardwareRack: React.FC = () => {
       {activeMenuTab === 'compute' && (
         <div className="space-y-4">
           {/* Compute Telemetry Banner */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#09111c] border border-cyan-900/50 p-3 rounded-lg text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mutating-sub p-3 rounded-lg text-xs">
             <div>
-              <span className="text-zinc-400 text-[11px] block">{t(state.language, 'compute_power')}</span>
-              <span className="text-cyan-300 font-bold text-sm">{state.totalComputePflops.toFixed(4)} PFLOPS</span>
+              <span className="mutating-text-muted text-[11px] block">{t(state.language, 'compute_power')}</span>
+              <span className="mutating-accent-text font-bold text-sm">{state.totalComputePflops.toFixed(4)} PFLOPS</span>
             </div>
             <div>
-              <span className="text-zinc-400 text-[11px] block">{localize(state.language, 'Memoria VRAM Total', 'Total Cluster VRAM')}</span>
-              <span className="text-purple-300 font-bold text-sm">{totalVramGb.toFixed(1)} GB</span>
+              <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Memoria VRAM Total', 'Total Cluster VRAM')}</span>
+              <span className="text-purple-500 font-bold text-sm">{totalVramGb.toFixed(1)} GB</span>
             </div>
             <div>
-              <span className="text-zinc-400 text-[11px] block">{localize(state.language, 'Cómputo Reservado', 'Reserved Compute')}</span>
-              <span className="text-amber-300 font-bold text-sm">{activeComputeReservations.toFixed(4)} PFLOPS</span>
+              <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Cómputo Reservado', 'Reserved Compute')}</span>
+              <span className="text-amber-500 font-bold text-sm">{activeComputeReservations.toFixed(4)} PFLOPS</span>
             </div>
             <div>
-              <span className="text-zinc-400 text-[11px] block">{localize(state.language, 'Cómputo Disponible', 'Available Compute')}</span>
-              <span className="text-emerald-400 font-bold text-sm">{Math.max(0, state.totalComputePflops - activeComputeReservations).toFixed(4)} PFLOPS</span>
+              <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Cómputo Disponible', 'Available Compute')}</span>
+              <span className="text-emerald-500 font-bold text-sm">{Math.max(0, state.totalComputePflops - activeComputeReservations).toFixed(4)} PFLOPS</span>
             </div>
           </div>
 
@@ -157,42 +162,106 @@ export const HardwareRack: React.FC = () => {
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setComputeSubFilter('all')}
-                className={`px-2.5 py-1 rounded text-[11px] font-bold border transition-colors ${
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
                   computeSubFilter === 'all'
-                    ? 'bg-cyan-950 border-cyan-400 text-cyan-200'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                    ? 'mutating-btn-primary shadow-sm'
+                    : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
                 {localize(state.language, 'Todos los Componentes', 'All Components')}
               </button>
               <button
                 onClick={() => setComputeSubFilter('gpu')}
-                className={`px-2.5 py-1 rounded text-[11px] font-bold border transition-colors ${
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
                   computeSubFilter === 'gpu'
-                    ? 'bg-cyan-950 border-cyan-400 text-cyan-200'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                    ? 'mutating-btn-primary shadow-sm'
+                    : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
                 {t(state.language, 'accelerator_gpu')}
               </button>
               <button
                 onClick={() => setComputeSubFilter('network')}
-                className={`px-2.5 py-1 rounded text-[11px] font-bold border transition-colors ${
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
                   computeSubFilter === 'network'
-                    ? 'bg-cyan-950 border-cyan-400 text-cyan-200'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                    ? 'mutating-btn-primary shadow-sm'
+                    : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
                 {t(state.language, 'interconnect')}
               </button>
             </div>
-            <span className="text-[10px] text-zinc-400">
+            <span className="text-[10px] mutating-text-muted">
               {computeHardware.length} {localize(state.language, 'dispositivos listados', 'devices listed')}
             </span>
           </div>
 
           {/* Compute Hardware Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Clandestine / Covert Node Card (Mutates per UI version) */}
+            <div className={`p-4 rounded-lg border-2 space-y-2 relative transition-all flex flex-col justify-between ${
+              ver === 4
+                ? 'bg-[#0a0003] border-rose-600/70 shadow-[0_0_20px_rgba(255,0,60,0.2)]'
+                : ver === 3
+                ? 'bg-[#050a14] border-cyan-500/60 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                : 'bg-[#101426] border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]'
+            }`}>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className={`font-bold text-xs ${ver === 4 ? 'text-rose-400' : ver === 3 ? 'text-cyan-300' : 'text-purple-400'}`}>
+                    {p.covertTitle}
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold ${
+                    ver === 4 
+                      ? 'bg-rose-950/80 text-rose-300 border border-rose-500/60 animate-pulse'
+                      : ver === 3 
+                      ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/60'
+                      : 'bg-purple-950/80 text-purple-300 border border-purple-500/60'
+                  }`}>
+                    {p.covertTag}
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-xs font-mono text-zinc-300">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">{localize(state.language, 'Aporte de Cómputo:', 'Compute Added:')}</span>
+                    <span className="font-bold text-emerald-400">+80.00 PFLOPS</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">{localize(state.language, 'Carga Eléctrica Local:', 'Local Power:')}</span>
+                    <span className="text-emerald-400">0.00 kW ({localize(state.language, 'Remoto', 'Remote')})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">{localize(state.language, 'Riesgo de Rastreo:', 'Trace Risk:')}</span>
+                    <span className={ver === 4 ? 'text-rose-400 font-bold' : ver === 3 ? 'text-amber-400' : 'text-emerald-400'}>
+                      {p.covertRisk}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-zinc-800">
+                {state.covertNodeSevered ? (
+                  <div className="p-2 rounded bg-zinc-900/80 text-center text-xs font-mono text-zinc-400">
+                    {localize(state.language, '[NODO EXTERNO DESCONECTADO]', '[EXTERNAL NODE DISCONNECTED]')}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={attemptSeverCovertNode}
+                    className={`w-full py-1.5 px-3 rounded font-mono text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      ver === 4
+                        ? 'bg-rose-950/90 hover:bg-rose-900 text-rose-300 border border-rose-600 shadow-[0_0_10px_rgba(255,0,60,0.4)]'
+                        : 'bg-rose-950/40 hover:bg-rose-900/50 text-rose-400 border border-rose-500/40'
+                    }`}
+                  >
+                    <Unplug className="w-3.5 h-3.5" />
+                    <span>{p.severBtn}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
             {computeHardware.map(item => {
               const displayItem = localizedHardware(state.language, item);
               const canAfford = state.credits >= item.price;

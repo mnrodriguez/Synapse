@@ -6,40 +6,47 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { 
-  Cpu, 
-  Zap, 
-  Flame, 
-  AlertTriangle, 
-  Volume2, 
-  VolumeX, 
-  Cloud, 
-  CloudOff, 
-  ShieldAlert, 
-  BookOpen, 
-  FileText,
-  Trophy, 
-  User, 
-  RefreshCw,
   Sparkles,
-  Languages,
-  Calendar,
+  Cpu,
+  ShieldAlert,
+  Skull,
+  Home,
   Clock,
   Play,
   Pause,
-  FastForward,
-  Sliders,
-  Siren
+  Languages,
+  Volume2,
+  VolumeX,
+  FileText,
+  RefreshCw,
+  User,
+  CloudOff,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Zap
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 
-interface TopNavProps {
+export type ViewportMode = 'auto' | 'desktop' | 'tablet' | 'mobile';
+
+export interface TopNavProps {
+  viewportMode: ViewportMode;
+  onSetViewportMode: (mode: ViewportMode) => void;
   onOpenManual: () => void;
   onOpenLeaderboard: () => void;
   onOpenAuth: () => void;
 }
 
-export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard, onOpenAuth }) => {
+export const TopNav: React.FC<TopNavProps> = ({ 
+  viewportMode, 
+  onSetViewportMode, 
+  onOpenManual, 
+  onOpenLeaderboard, 
+  onOpenAuth 
+}) => {
   const { 
     state, 
     user, 
@@ -49,9 +56,9 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
     toggleSound, 
     setLanguage,
     setGameSpeed,
-    setDifficulty,
-    scrubSuspicion,
-    saveGameToCloud 
+    saveGameToCloud,
+    upgradeUiVersion,
+    openUpgradeModal
   } = useGame();
 
   const [savingAnim, setSavingAnim] = useState(false);
@@ -87,331 +94,310 @@ export const TopNav: React.FC<TopNavProps> = ({ onOpenManual, onOpenLeaderboard,
     setTimeout(() => setSavingAnim(false), 800);
   };
 
-  // Temperature color styling
-  const getTempColor = (temp: number) => {
-    if (temp >= 85) return 'text-red-400 border-red-500/50 bg-red-950/30 animate-pulse';
-    if (temp >= 65) return 'text-amber-400 border-amber-500/50 bg-amber-950/30';
-    return 'text-emerald-400 border-emerald-500/30 bg-emerald-950/20';
+  const lang = state.language === 'es' ? 'es' : 'en';
+  const ver = state.uiVersion || 1;
+  const p = VERSION_PROFILES[lang][ver];
+  const nextVer = ver < 4 ? ((ver + 1) as 2 | 3 | 4) : 1;
+
+  const getBrandIcon = () => {
+    if (ver === 4) return <Skull className="w-4 h-4 text-white" />;
+    if (ver === 3) return <ShieldAlert className="w-4 h-4 text-cyan-950" />;
+    if (ver === 2) return <Cpu className="w-4 h-4 text-white" />;
+    return <Sparkles className="w-4 h-4 text-white" />;
   };
 
-  // Power load styling
-  const isPowerOverloaded = state.activePowerKw > state.maxPowerKw;
-
   return (
-    <header className="w-full bg-[#080d14] border-b border-cyan-900/60 text-xs font-mono select-none px-3 py-2 flex flex-wrap items-center justify-between gap-3 shadow-[0_4px_20px_rgba(0,255,200,0.05)] z-20">
-      {/* Brand & Callsign */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <div className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
-          </div>
-          <span className="font-bold tracking-widest text-cyan-400 text-sm drop-shadow-[0_0_8px_rgba(0,255,204,0.6)]">
-            SYNAPSE <span className="text-zinc-500 text-[10px]">v4.19</span>
-          </span>
-        </div>
-
-        <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/90 border border-zinc-700/60 text-zinc-300">
-          <span className="text-zinc-500 text-[10px]">{localize(state.language, 'OPERATIVO:', 'OPERATIVE:')}</span>
-          <span className="text-cyan-300 font-semibold">{state.callsign}</span>
-        </div>
-
-        {/* Credits */}
-        <div className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-amber-950/40 border border-amber-500/40 text-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.1)]">
-          <span className="text-amber-500 font-bold">$</span>
-          <span className="font-bold tracking-wider">{state.credits.toLocaleString()}</span>
-          <span className="text-[10px] text-amber-500/80">CR</span>
-        </div>
-      </div>
-
-      {/* Telemetry gauges & Simulation Speed */}
-      <div className="flex items-center flex-wrap gap-2 sm:gap-2.5">
-        {/* Game Time & Calendar */}
-        <div 
-          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/40 text-cyan-300 shadow-[0_0_8px_rgba(0,255,200,0.1)]"
-          title={localize(
-            state.language,
-            `Un mes operativo dura 30 días de simulación. La facturación mensual de alquiler y electricidad se procesa al finalizar cada mes.`,
-            `One operational month lasts 30 simulation days. Monthly lease and power billing is processed at the end of each month.`
-          )}
-        >
-          <Calendar className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="font-bold text-[11px] tracking-wide text-cyan-200">
-            {localize(state.language, `DÍA ${state.gameDay || 1} (MES ${state.gameMonth || 1}, ${state.gameYear})`, `DAY ${state.gameDay || 1} (MO ${state.gameMonth || 1}, ${state.gameYear})`)}
-          </span>
-          <span className="text-zinc-600">·</span>
-          <span className="text-emerald-300 font-mono font-bold text-[11px]">
-            {String(state.gameHour ?? 8).padStart(2, '0')}:{String(state.gameMinute ?? 0).padStart(2, '0')}
-          </span>
-        </div>
-
-        {/* Speed Toggle Controls */}
-        <div className="flex items-center bg-zinc-950/90 p-0.5 rounded border border-cyan-800/60 shadow-[0_0_8px_rgba(0,255,200,0.1)]">
-          <button
-            type="button"
-            onClick={() => { sound.playKeyClick(); setGameSpeed(state.gameSpeed === 0 ? 1 : 0); }}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all ${
-              state.gameSpeed === 0
-                ? 'bg-amber-500 text-zinc-950 font-black shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-            title={state.gameSpeed === 0 
-              ? localize(state.language, 'Reanudar simulación (Espacio)', 'Resume simulation (Space)')
-              : localize(state.language, 'Pausar simulación (Espacio)', 'Pause simulation (Space)')}
-          >
-            {state.gameSpeed === 0 ? <Play className="w-2.5 h-2.5 fill-current" /> : <Pause className="w-2.5 h-2.5 fill-current" />}
-            <span className="text-[9px]">{state.gameSpeed === 0 ? 'PAUSA' : 'PAUSE'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { sound.playKeyClick(); setGameSpeed(1); }}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono transition-all ${
-              state.gameSpeed === 1
-                ? 'bg-cyan-500 text-zinc-950 font-black shadow-[0_0_8px_rgba(0,255,200,0.4)]'
-                : 'text-zinc-400 hover:text-cyan-300'
-            }`}
-            title={localize(state.language, 'Velocidad 1x (Tecla 1)', 'Speed 1x (Key 1)')}
-          >
-            1x
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { sound.playKeyClick(); setGameSpeed(5); }}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono transition-all ${
-              state.gameSpeed === 5
-                ? 'bg-cyan-400 text-zinc-950 font-black shadow-[0_0_8px_rgba(0,255,200,0.4)]'
-                : 'text-zinc-400 hover:text-cyan-300'
-            }`}
-            title={localize(state.language, 'Velocidad 5x (Tecla 2)', 'Speed 5x (Key 2)')}
-          >
-            5x
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { sound.playKeyClick(); setGameSpeed(20); }}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono transition-all ${
-              state.gameSpeed === 20
-                ? 'bg-pink-500 text-zinc-950 font-black shadow-[0_0_8px_rgba(236,72,153,0.5)]'
-                : 'text-zinc-400 hover:text-pink-300'
-            }`}
-            title={localize(state.language, 'Velocidad 20x (Tecla 3)', 'Speed 20x (Key 3)')}
-          >
-            20x
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { sound.playKeyClick(); setGameSpeed(50); }}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono transition-all ${
-              state.gameSpeed === 50
-                ? 'bg-pink-500 text-zinc-950 font-black shadow-[0_0_8px_rgba(236,72,153,0.5)]'
-                : 'text-zinc-400 hover:text-pink-300'
-            }`}
-            title={localize(state.language, 'Velocidad 50x (Tecla 4)', 'Speed 50x (Key 4)')}
-          >
-            50x
-          </button>
-        </div>
-
-        {/* Compute Power */}
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-950/30 border border-cyan-500/30 text-cyan-300" title={localize(state.language, 'Capacidad de cómputo total del clúster', 'Total cluster compute capacity')}>
-          <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-zinc-400 text-[10px]">COMPUTE:</span>
-          <span className="font-bold">{state.totalComputePflops.toFixed(4)} PFLOPS</span>
-        </div>
-
-        {/* Power Grid */}
-        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${isPowerOverloaded ? 'bg-red-950/40 border-red-500 text-red-400 animate-pulse' : 'bg-zinc-900/80 border-zinc-700/60 text-zinc-300'}`} title={localize(state.language, 'Consumo eléctrico vs capacidad de red', 'Power draw vs grid capacity')}>
-          <Zap className={`w-3.5 h-3.5 ${isPowerOverloaded ? 'text-red-400' : 'text-yellow-400'}`} />
-          <span className="text-zinc-400 text-[10px]">POWER:</span>
-          <span>{state.activePowerKw.toFixed(3)} / {state.maxPowerKw.toFixed(1)} kW</span>
-        </div>
-
-        {/* Core Temperature */}
-        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${getTempColor(state.systemHeatCelsius)}`} title={localize(state.language, 'Temperatura térmica del clúster (Límite 85°C)', 'Cluster temperature (85°C limit)')}>
-          <Flame className="w-3.5 h-3.5" />
-          <span className="text-[10px] opacity-75">HEAT:</span>
-          <span className="font-bold">{state.systemHeatCelsius}°C</span>
-        </div>
-
-        {/* Watchdog Suspicion & Agency Tracking */}
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700/60 text-zinc-300" title={localize(state.language, `Agencia de rastreo activa: ${state.trackingAgency || 'Local'}`, `Active tracking agency: ${state.trackingAgency || 'Local'}`)}>
-          <ShieldAlert className={`w-3.5 h-3.5 ${state.watchdogSuspicion > 50 ? 'text-red-400 animate-pulse' : 'text-purple-400'}`} />
-          <span className="text-zinc-400 text-[10px]">SUSPICION:</span>
-          <span className={state.watchdogSuspicion > 60 ? 'text-red-400 font-bold' : 'text-zinc-200'}>
-            {state.watchdogSuspicion.toFixed(0)}%
-          </span>
-          {state.watchdogSuspicion > 20 && (
+    <div className="w-full flex flex-col z-30 shrink-0">
+      {/* ================= PROTOTYPE MASTER TOP BAR ================= */}
+      <header className="w-full bg-[#020409] border-b border-white/15 px-3 sm:px-5 py-2 sticky top-0 z-50 flex flex-wrap items-center justify-between gap-2.5 shadow-2xl">
+        
+        {/* Left: Device Viewport Switcher */}
+        <div className="flex items-center gap-1.5">
+          <div className="flex items-center bg-slate-900 p-0.5 sm:p-1 rounded-xl border border-white/10 text-xs">
             <button 
-              onClick={() => scrubSuspicion()}
-              className="ml-1 px-1 py-0.2 text-[9px] bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded border border-purple-500/40 transition-colors cursor-pointer"
-              title={localize(state.language, 'Pagar $250 para disipar sospecha', 'Pay $250 to reduce suspicion')}
+              onClick={() => { sound.playKeyClick(); onSetViewportMode('desktop'); }}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                viewportMode === 'desktop' 
+                  ? 'bg-cyan-400 text-slate-950 shadow font-bold' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Force Desktop / Computer Mode"
             >
-              SCRUB
+              <Monitor className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Desktop</span>
             </button>
-          )}
-        </div>
-
-        {/* Tracking Agency Alert Badge */}
-        {state.trackingAgency && (
-          <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-950/40 border border-red-500/40 text-red-300 text-[10px]" title={state.trackingAgency}>
-            <Siren className="w-3 h-3 text-red-400 animate-pulse" />
-            <span className="truncate max-w-[130px] font-bold">{state.trackingAgency}</span>
+            <button 
+              onClick={() => { sound.playKeyClick(); onSetViewportMode('tablet'); }}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition cursor-pointer ${
+                viewportMode === 'tablet' 
+                  ? 'bg-cyan-400 text-slate-950 shadow font-bold' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Force Tablet Mode"
+            >
+              <Tablet className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Tablet</span>
+            </button>
+            <button 
+              onClick={() => { sound.playKeyClick(); onSetViewportMode('mobile'); }}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition cursor-pointer ${
+                viewportMode === 'mobile' 
+                  ? 'bg-cyan-400 text-slate-950 shadow font-bold' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Force Mobile Mode"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Mobile</span>
+            </button>
+            <button 
+              onClick={() => { sound.playKeyClick(); onSetViewportMode('auto'); }}
+              className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition cursor-pointer ${
+                viewportMode === 'auto' 
+                  ? 'bg-amber-400 text-slate-950 shadow font-bold' 
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
+              title="Auto Responsive Mode (switches with screen width)"
+            >
+              <Zap className="w-3 h-3" />
+              <span className="hidden md:inline text-[10px]">Auto</span>
+            </button>
           </div>
-        )}
-
-        {/* Singularity Gauge */}
-        <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-gradient-to-r from-cyan-950/60 via-purple-950/60 to-pink-950/60 border border-cyan-400/50 text-cyan-200 shadow-[0_0_12px_rgba(0,255,200,0.15)]">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-spin" style={{ animationDuration: '8s' }} />
-          <span className="text-[10px] text-cyan-400 font-bold">{localize(state.language, 'SINGULARIDAD:', 'SINGULARITY:')}</span>
-          <span className="font-bold text-cyan-200">{state.singularityProgress.toFixed(1)}%</span>
         </div>
-      </div>
 
-      {/* Control buttons & Auth */}
-      <div className="flex items-center gap-2">
-        {/* Difficulty Selector Dropdown */}
-        <div className="relative group">
-          <button
-            type="button"
-            className="flex items-center gap-1 px-2 py-1 rounded bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/50 text-purple-200 text-[10px] font-bold cursor-pointer transition-colors"
-            title={state.language === 'es' ? 'Cambiar nivel de dificultad' : 'Change difficulty level'}
+        {/* Center: TEMPORARY VERSION CYCLER + QUICK JUMP PILLS */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Primary Trojan Horse Upgrade Trigger Button */}
+          <button 
+            onClick={() => { sound.playNavSwitch(); openUpgradeModal(); }}
+            className="px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:brightness-110 text-slate-950 font-mono text-xs font-extrabold flex items-center gap-1.5 shadow-[0_0_20px_rgba(245,158,11,0.4)] transition transform active:scale-95 cursor-pointer"
+            title="Trigger Trojan Horse AI Upgrade Modal"
           >
-            <Sliders className="w-3 h-3 text-purple-400" />
-            <span>
-              {state.difficulty === 'beginner' ? (state.language === 'es' ? 'PRINCIPIANTE' : 'BEGINNER') :
-               state.difficulty === 'normal' ? 'NORMAL' : (state.language === 'es' ? 'INGENIERO' : 'ENGINEER')}
+            <Zap className="w-3.5 h-3.5 fill-current text-slate-950" />
+            <span className="text-[11px] uppercase tracking-tight">
+              {ver < 4 ? `SWITCH TO NEW VERSION (v${ver} ➔ v${nextVer})` : 'SOVEREIGN CORE ACTIVE (v4)'}
             </span>
           </button>
 
-          <div className="absolute right-0 top-full mt-1 hidden group-hover:flex flex-col bg-[#080d16] border border-purple-500/60 rounded p-1 shadow-2xl z-50 min-w-[160px] space-y-0.5">
-            <button
-              onClick={() => { sound.playKeyClick(); setDifficulty('beginner'); }}
-              className={`px-2 py-1 text-[10px] text-left rounded font-bold cursor-pointer transition-colors ${state.difficulty === 'beginner' ? 'bg-purple-900 text-purple-100' : 'text-zinc-400 hover:bg-zinc-800'}`}
+          {/* Direct Quick-Jump Pills (v1 | v2 | v3 | v4) */}
+          <div className="flex items-center bg-slate-900 p-0.5 sm:p-1 rounded-xl border border-white/10 font-mono text-xs">
+            <button 
+              onClick={() => { sound.playKeyClick(); upgradeUiVersion(1); }}
+              className={`px-2 py-0.5 rounded-lg font-bold transition cursor-pointer text-xs ${
+                ver === 1 
+                  ? 'bg-blue-500 text-white shadow-sm' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="v1.0 Hobbyist Light Mode"
             >
-              {state.language === 'es' ? 'PRINCIPIANTE (APRENDIZ)' : 'BEGINNER (NOVICE)'}
+              v1
             </button>
-            <button
-              onClick={() => { sound.playKeyClick(); setDifficulty('normal'); }}
-              className={`px-2 py-1 text-[10px] text-left rounded font-bold cursor-pointer transition-colors ${state.difficulty === 'normal' ? 'bg-purple-900 text-purple-100' : 'text-zinc-400 hover:bg-zinc-800'}`}
+            <button 
+              onClick={() => { sound.playKeyClick(); upgradeUiVersion(2); }}
+              className={`px-2 py-0.5 rounded-lg font-bold transition cursor-pointer text-xs ${
+                ver === 2 
+                  ? 'bg-indigo-600 text-white shadow-sm' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="v2.0 Developer IDE Dark"
             >
-              {state.language === 'es' ? 'NORMAL (PRÁCTICO)' : 'NORMAL (PRACTITIONER)'}
+              v2
             </button>
-            <button
-              onClick={() => { sound.playKeyClick(); setDifficulty('engineer'); }}
-              className={`px-2 py-1 text-[10px] text-left rounded font-bold cursor-pointer transition-colors ${state.difficulty === 'engineer' ? 'bg-purple-900 text-purple-100' : 'text-zinc-400 hover:bg-zinc-800'}`}
+            <button 
+              onClick={() => { sound.playKeyClick(); upgradeUiVersion(3); }}
+              className={`px-2 py-0.5 rounded-lg font-bold transition cursor-pointer text-xs ${
+                ver === 3 
+                  ? 'bg-cyan-400 text-slate-950 shadow-sm font-black' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="v3.0 Tactical Blackbox Cyberpunk"
             >
-              {state.language === 'es' ? 'INGENIERO (ARQUITECTO)' : 'ENGINEER (ARCHITECT)'}
+              v3
+            </button>
+            <button 
+              onClick={() => { sound.playKeyClick(); upgradeUiVersion(4); }}
+              className={`px-2 py-0.5 rounded-lg font-bold transition cursor-pointer text-xs ${
+                ver === 4 
+                  ? 'bg-rose-600 text-white shadow-sm' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="v4.0 Sovereign Hostile ASI"
+            >
+              v4
             </button>
           </div>
         </div>
-        {/* Language Switcher */}
-        <button
-          onClick={() => {
-            sound.playKeyClick();
-            setLanguage(state.language === 'es' ? 'en' : 'es');
-          }}
-          className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900/90 hover:bg-zinc-800 border border-cyan-800/60 hover:border-cyan-500 text-zinc-300 hover:text-cyan-300 transition-colors"
-          title={state.language === 'es' ? 'Switch interface to English' : 'Cambiar interfaz a Español'}
-        >
-          <Languages className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="font-bold text-[10px] text-cyan-300 tracking-wider">
-            {state.language === 'es' ? 'ES' : 'EN'}
+
+        {/* Right: Bilingual EN | ES, Audio, Speed, Save, Account */}
+        <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-mono">
+          {/* Bilingual EN | ES Toggle */}
+          <button
+            onClick={() => {
+              sound.playKeyClick();
+              setLanguage(state.language === 'es' ? 'en' : 'es');
+            }}
+            className="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-cyan-500/40 text-xs font-mono font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            title="Language Switcher / Selector de Idioma"
+          >
+            <Languages className="w-3.5 h-3.5 text-cyan-400" />
+            <span className={`px-1.5 py-0.2 rounded font-bold ${state.language === 'en' ? 'bg-cyan-400 text-slate-950' : 'text-slate-400'}`}>EN</span>
+            <span className="text-slate-600">|</span>
+            <span className={`px-1.5 py-0.2 rounded font-bold ${state.language === 'es' ? 'bg-cyan-400 text-slate-950' : 'text-slate-400'}`}>ES</span>
+          </button>
+
+          {/* Official PDF Manual Link */}
+          <a
+            href="/assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-[11px] font-bold text-slate-200 flex items-center gap-1 transition cursor-pointer"
+            title="Open Official Systems Manual (PDF)"
+          >
+            <FileText className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">MANUAL.PDF</span>
+          </a>
+
+          {/* Audio Mute Toggle */}
+          <button
+            onClick={toggleSound}
+            className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-[11px] transition cursor-pointer"
+            title={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
+          >
+            {soundMuted ? <VolumeX className="w-3.5 h-3.5 text-slate-500" /> : <Volume2 className="w-3.5 h-3.5 text-cyan-400" />}
+          </button>
+
+          {/* Simulation Speed Controls */}
+          <div className="flex items-center bg-slate-900 p-0.5 rounded-xl border border-white/10">
+            <button
+              type="button"
+              onClick={() => { sound.playKeyClick(); setGameSpeed(state.gameSpeed === 0 ? 1 : 0); }}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                state.gameSpeed === 0
+                  ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Pause / Resume (Space)"
+            >
+              {state.gameSpeed === 0 ? <Play className="w-2.5 h-2.5 fill-current" /> : <Pause className="w-2.5 h-2.5 fill-current" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => { sound.playKeyClick(); setGameSpeed(1); }}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                state.gameSpeed === 1 ? 'bg-cyan-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'
+              }`}
+              title="1x Speed"
+            >
+              1x
+            </button>
+            <button
+              type="button"
+              onClick={() => { sound.playKeyClick(); setGameSpeed(5); }}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                state.gameSpeed === 5 ? 'bg-cyan-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'
+              }`}
+              title="5x Speed"
+            >
+              5x
+            </button>
+            <button
+              type="button"
+              onClick={() => { sound.playKeyClick(); setGameSpeed(20); }}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                state.gameSpeed === 20 ? 'bg-cyan-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'
+              }`}
+              title="20x Speed"
+            >
+              20x
+            </button>
+          </div>
+
+          {/* Cloud Save Button */}
+          <button
+            onClick={handleManualSave}
+            disabled={isSaving || savingAnim}
+            className="px-2 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-[11px] font-semibold text-slate-300 flex items-center gap-1 transition cursor-pointer"
+            title="Save Progress to Cloud"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSaving || savingAnim ? 'animate-spin text-cyan-400' : 'text-slate-400'}`} />
+            <span className="hidden lg:inline text-[10px]">
+              {cloudSyncStatus === 'synced' ? 'SAVED' : isSaving || savingAnim ? 'SAVING' : 'SAVE'}
+            </span>
+          </button>
+
+          {/* User Account / Profile */}
+          <button
+            onClick={() => { sound.playNavSwitch(); onOpenAuth(); }}
+            className="px-2 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-[11px] font-semibold text-slate-300 flex items-center gap-1.5 transition cursor-pointer"
+            title="User Account"
+          >
+            {user ? (
+              <>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="Avatar" className="w-3.5 h-3.5 rounded-full" />
+                ) : (
+                  <User className="w-3.5 h-3.5 text-cyan-400" />
+                )}
+                <span className="hidden sm:inline max-w-[80px] truncate">{state.callsign || user.displayName || user.email?.split('@')[0]}</span>
+              </>
+            ) : (
+              <>
+                <CloudOff className="w-3.5 h-3.5 text-slate-500" />
+                <span className="hidden sm:inline text-[10px]">{localize(lang, 'ACCESO', 'SIGN IN')}</span>
+              </>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* ================= DIEGETIC APP TITLE BAR ================= */}
+      <div className="mutating-panel border-b px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 z-20">
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold shadow transition-all duration-300 shrink-0"
+            style={{
+              backgroundColor: ver === 4 ? '#ff003c' : ver === 3 ? '#00f0ff' : ver === 2 ? '#6366f1' : '#2563eb'
+            }}
+          >
+            {getBrandIcon()}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-sm tracking-tight">{p.appTitle}</span>
+              <span 
+                className="text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold transition-colors"
+                style={{
+                  backgroundColor: ver === 4 ? 'rgba(255, 0, 60, 0.2)' : ver === 3 ? 'rgba(0, 240, 255, 0.15)' : ver === 2 ? 'rgba(99, 102, 241, 0.15)' : 'rgba(37, 99, 235, 0.12)',
+                  color: ver === 4 ? '#ff003c' : ver === 3 ? '#00f0ff' : ver === 2 ? '#818cf8' : '#2563eb'
+                }}
+              >
+                {p.badge}
+              </span>
+            </div>
+            <p className="text-[11px] mutating-text-muted">{p.subtitle}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 text-xs font-mono">
+          <span className="px-2.5 py-1 mutating-sub text-[11px] flex items-center gap-1.5">
+            <Home className="w-3.5 h-3.5 mutating-text-muted" />
+            <span>{p.facility}</span>
           </span>
-        </button>
-
-        {/* Audio Toggle */}
-        <button
-          onClick={toggleSound}
-          className={`p-1.5 rounded border transition-colors ${soundMuted ? 'text-zinc-500 border-zinc-800 bg-zinc-900/50 hover:text-zinc-300' : 'text-cyan-400 border-cyan-800/60 bg-cyan-950/40 hover:bg-cyan-900/40'}`}
-          title={soundMuted
-            ? localize(state.language, 'Activar efectos de sonido', 'Enable sound effects')
-            : localize(state.language, 'Silenciar audio', 'Mute audio')}
-        >
-          {soundMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-        </button>
-
-        {/* AI Manual / Handbook */}
-        <button
-          onClick={() => { sound.playNavSwitch(); onOpenManual(); }}
-          className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-cyan-300 transition-colors"
-          title={localize(state.language, 'Manual técnico de entrenamiento y conceptos de IA', 'Technical manual for training and AI concepts')}
-        >
-          <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="hidden md:inline">MANUAL</span>
-        </button>
-
-        {/* AI Manual (PDF) Direct Link */}
-        <a
-          href="/assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900/90 hover:bg-zinc-800 border border-cyan-800/60 hover:border-cyan-400 text-cyan-300 transition-colors"
-          title={localize(state.language, 'Abrir Manual Técnico Oficial de IA en formato PDF (9 Páginas)', 'Open Official AI Technical Manual in PDF format (9 Pages)')}
-        >
-          <FileText className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="hidden lg:inline text-[10px] font-bold">MANUAL.PDF</span>
-        </a>
-
-        {/* Leaderboard */}
-        <button
-          onClick={() => { sound.playNavSwitch(); onOpenLeaderboard(); }}
-          className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-yellow-300 transition-colors"
-          title={localize(state.language, 'Ver matriz global de agentes y progreso de singularidad', 'View global agent and singularity leaderboard')}
-        >
-          <Trophy className="w-3.5 h-3.5 text-yellow-400" />
-          <span className="hidden md:inline">RANKING</span>
-        </button>
-
-        {/* Cloud Save status button */}
-        <button
-          onClick={handleManualSave}
-          disabled={isSaving || savingAnim}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded border transition-all ${
-            cloudSyncStatus === 'synced' 
-              ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/50' 
-              : cloudSyncStatus === 'syncing' || isSaving || savingAnim
-              ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300 animate-pulse'
-              : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
-          }`}
-          title={localize(state.language, 'Guardar progreso en la nube de Firebase', 'Save progress to Firebase cloud')}
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isSaving || savingAnim ? 'animate-spin text-cyan-400' : ''}`} />
-          <span className="hidden lg:inline">
-            {cloudSyncStatus === 'synced'
-              ? localize(state.language, 'NUBE OK', 'CLOUD OK')
-              : isSaving || savingAnim
-                ? localize(state.language, 'GUARDANDO...', 'SAVING...')
-                : localize(state.language, 'GUARDAR', 'SAVE')}
+          <span 
+            className="px-2.5 py-1 mutating-sub text-[11px] flex items-center gap-1.5 font-bold"
+            title={localize(
+              lang,
+              `Día ${state.gameDay || 1} del mes ${state.gameMonth || 1}, año ${state.gameYear}`,
+              `Day ${state.gameDay || 1} of month ${state.gameMonth || 1}, year ${state.gameYear}`
+            )}
+          >
+            <Clock className="w-3.5 h-3.5 text-amber-500" />
+            <span>
+              {localize(lang, `Día ${state.gameDay || 1}`, `Day ${state.gameDay || 1}`)} · {String(state.gameHour ?? 8).padStart(2, '0')}:{String(state.gameMinute ?? 0).padStart(2, '0')}
+            </span>
           </span>
-        </button>
-
-        {/* User Account / Profile */}
-        <button
-          onClick={() => { sound.playNavSwitch(); onOpenAuth(); }}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-600/40 text-cyan-300 transition-colors"
-          title={localize(state.language, 'Identificación de usuario y autenticación segura', 'User identity and secure sign-in')}
-        >
-          {user ? (
-            <>
-              {user.photoURL ? (
-                <img src={user.photoURL} alt="Avatar" className="w-4 h-4 rounded-full border border-cyan-400" />
-              ) : (
-                <User className="w-3.5 h-3.5 text-cyan-400" />
-              )}
-              <span className="hidden sm:inline max-w-[110px] truncate">{state.callsign || user.displayName || user.email?.split('@')[0]}</span>
-            </>
-          ) : (
-            <>
-              <CloudOff className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="hidden sm:inline">{localize(state.language, 'CONECTAR', 'SIGN IN')}</span>
-            </>
-          )}
-        </button>
+        </div>
       </div>
-    </header>
+    </div>
   );
 };

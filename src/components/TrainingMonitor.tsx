@@ -26,17 +26,17 @@ export const TrainingMonitor: React.FC = () => {
 
   if (!job) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-[#070b12] border border-cyan-900/40 rounded-lg p-6 text-center font-mono space-y-4">
-        <Activity className="w-12 h-12 text-cyan-900 animate-pulse" />
+      <div className="flex flex-col items-center justify-center h-full mutating-panel border rounded-xl p-6 text-center font-mono space-y-4">
+        <Activity className="w-12 h-12 mutating-accent-text opacity-40 animate-pulse" />
         <div>
-          <h3 className="text-sm font-bold text-zinc-300">{localize(state.language, 'CLÚSTER EN ESPERA (IDLE)', 'CLUSTER IDLE')}</h3>
-          <p className="text-xs text-zinc-500 max-w-md mt-1">
+          <h3 className="text-sm font-bold mutating-accent-text">{localize(state.language, 'CLÚSTER EN ESPERA (IDLE)', 'CLUSTER IDLE')}</h3>
+          <p className="text-xs mutating-text-muted max-w-md mt-1">
             {localize(state.language, 'No hay ninguna corrida de entrenamiento activa en este momento. Dirígete a la pestaña de Arquitectura para configurar los hiperparámetros e iniciar una nueva corrida.', 'There is no active training run. Go to the Architecture tab to configure the model and start a new run.')}
           </p>
         </div>
         <button
-          onClick={() => startTraining()}
-          className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs rounded flex items-center gap-2 shadow-[0_0_15px_rgba(0,255,200,0.3)] transition-all"
+          onClick={() => { sound.playBreakthrough(); startTraining(); }}
+          className="px-4 py-2 mutating-btn-primary font-bold text-xs rounded-lg flex items-center gap-2 shadow transition-all cursor-pointer"
         >
           <Play className="w-4 h-4 fill-current" />
           <span>{localize(state.language, 'INICIAR ENTRENAMIENTO DE', 'START TRAINING')} {state.currentModel.name}</span>
@@ -60,19 +60,19 @@ export const TrainingMonitor: React.FC = () => {
   }).join(' ');
 
   return (
-    <div className="flex flex-col h-full bg-[#070b12] border border-cyan-900/40 rounded-lg p-3 overflow-y-auto space-y-4 font-mono scrollbar-thin scrollbar-thumb-cyan-950">
+    <div className="flex flex-col h-full mutating-panel border rounded-xl p-3 sm:p-4 overflow-y-auto space-y-4 font-mono">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/10 pb-2">
         <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
-          <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
+          <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
+          <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
             {localize(state.language, 'MONITOR DE CONVERGENCIA // TELEMETRÍA DE ENTRENAMIENTO', 'CONVERGENCE MONITOR // TRAINING TELEMETRY')}
           </h2>
         </div>
 
         <button
-          onClick={cancelTraining}
-          className="flex items-center gap-1.5 px-3 py-1 bg-red-950/60 hover:bg-red-900 border border-red-500/60 text-red-300 rounded text-xs transition-colors"
+          onClick={() => { sound.playWarning(); cancelTraining(); }}
+          className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-500 rounded text-xs transition-colors cursor-pointer"
         >
           <AlertCircle className="w-3.5 h-3.5" />
           <span>{localize(state.language, 'CANCELAR CORRIDA', 'CANCEL RUN')}</span>
@@ -80,57 +80,49 @@ export const TrainingMonitor: React.FC = () => {
       </div>
 
       {/* Main Epoch Progress Bar */}
-      <div className="bg-[#09111c] border border-cyan-900/60 p-3 rounded-lg space-y-2">
+      <div className="mutating-sub p-3 rounded-lg space-y-2">
         <div className="flex flex-wrap items-center justify-between text-xs font-bold gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-cyan-300">
+            <span className="mutating-accent-text">
               {localize(state.language, 'PROGRESO TOTAL:', 'TOTAL PROGRESS:')} {Math.floor(job.progressPercent)}%
             </span>
             {job.targetModelType === 'micro_model' ? (
-              <span className="px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/60 text-purple-300 text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-purple-400 text-[10px] font-bold">
                 MICRO-MODEL ({job.datasetDomain || 'SPECIALIST'})
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/60 text-cyan-300 text-[10px]">
+              <span className="px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-500 text-[10px]">
                 {localize(state.language, 'MODELO GENERAL', 'GENERAL MODEL')}
               </span>
             )}
             {job.datasetName && (
-              <span className="text-[10px] text-zinc-400 font-mono truncate max-w-44">
+              <span className="text-[10px] mutating-text-muted font-mono truncate max-w-44">
                 [{job.datasetName}]
               </span>
             )}
           </div>
-          <span className="text-yellow-300 font-mono">
+          <span className="text-amber-500 font-mono">
             {localize(state.language, 'Época', 'Epoch')} {job.currentEpoch} / {job.totalEpochs} ({localize(state.language, 'Paso', 'Step')} #{job.step})
           </span>
         </div>
 
-        <div className="w-full h-3 bg-zinc-950 rounded-full border border-cyan-900/80 overflow-hidden relative">
+        <div className="w-full h-3 bg-slate-500/20 rounded-full border border-current/15 overflow-hidden relative">
           <div 
-            className="h-full bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 transition-all duration-300 rounded-full shadow-[0_0_10px_rgba(0,255,200,0.5)]"
-            style={{ width: `${job.progressPercent}%` }}
+            className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-300"
+            style={{ width: `${Math.min(100, Math.max(0, job.progressPercent))}%` }}
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-zinc-400 pt-1">
+        <div className="flex flex-wrap items-center justify-between text-xs pt-1 text-slate-400 gap-2">
           <div>
-            <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'TOKENS Y CÓMPUTO:', 'TOKENS & COMPUTE:')}</span>
-            <span>{(job.tokensProcessed / 1_000_000).toFixed(1)}M tok · {state.totalComputePflops.toFixed(4)} PF</span>
-          </div>
-          <div>
-            <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'DURACIÓN EN HARDWARE:', 'HARDWARE RUNTIME:')}</span>
-            <span className="text-zinc-300">
-              {state.gameSpeed === 0
-                ? localize(state.language, 'PAUSADO', 'PAUSED')
-                : job.timeRemainingSeconds === null
-                  ? localize(state.language, 'Sin cómputo', 'No compute')
-                  : `${formatTrainingDuration(job.timeRemainingSeconds / Math.max(1, state.gameSpeed))} @ ${state.gameSpeed}x`}
+            <span className="mutating-text-muted block text-[10px]">{localize(state.language, 'CÓMPUTO ASIGNADO A LA CORRIDA:', 'COMPUTE ALLOCATED TO RUN:')}</span>
+            <span className="mutating-accent-text font-bold">
+              {(state.totalComputePflops * 0.5).toFixed(2)} PFLOPS (50% Cluster)
             </span>
           </div>
           <div>
-            <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'PREDICCIÓN EN DÍAS CON HARDWARE ACTUAL:', 'ESTIMATED DAYS WITH CURRENT HARDWARE:')}</span>
-            <span className="text-emerald-300 font-bold">
+            <span className="mutating-text-muted block text-[10px]">{localize(state.language, 'PREDICCIÓN EN DÍAS CON HARDWARE ACTUAL:', 'ESTIMATED DAYS WITH CURRENT HARDWARE:')}</span>
+            <span className="text-emerald-500 font-bold">
               {job.timeRemainingSeconds === null
                 ? localize(state.language, 'N/A', 'N/A')
                 : `${(job.timeRemainingSeconds / 48).toFixed(1)} ${localize(state.language, 'días de simulación', 'in-game days')}`}
@@ -140,30 +132,30 @@ export const TrainingMonitor: React.FC = () => {
       </div>
 
       {/* Real-time Loss Curve Chart */}
-      <div className="bg-[#09111c] border border-cyan-900/60 p-3 rounded-lg space-y-2">
+      <div className="mutating-sub p-3 rounded-lg space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-zinc-300 flex items-center gap-1.5">
-            <TrendingDown className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="font-bold mutating-accent-text flex items-center gap-1.5">
+            <TrendingDown className="w-3.5 h-3.5" />
             {localize(state.language, 'CURVA DE PÉRDIDA EN TIEMPO REAL (CROSS-ENTROPY LOSS)', 'REAL-TIME LOSS CURVE (CROSS-ENTROPY)')}
           </span>
-          <span className="text-emerald-400 font-bold font-mono">
+          <span className="text-emerald-500 font-bold font-mono">
             {localize(state.language, 'Loss actual:', 'Current loss:')} {job.currentLoss.toFixed(4)}
           </span>
         </div>
 
         {/* SVG Chart */}
-        <div className="relative w-full h-[140px] bg-[#05080e] border border-cyan-950 rounded overflow-hidden p-2 flex items-center justify-center">
+        <div className="relative w-full h-[140px] mutating-panel border border-current/15 rounded-lg overflow-hidden p-2 flex items-center justify-center">
           <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
             {/* Grid lines */}
-            <line x1="0" y1="35" x2={width} y2="35" stroke="#102030" strokeDasharray="4" />
-            <line x1="0" y1="70" x2={width} y2="70" stroke="#102030" strokeDasharray="4" />
-            <line x1="0" y1="105" x2={width} y2="105" stroke="#102030" strokeDasharray="4" />
+            <line x1="0" y1="35" x2={width} y2="35" stroke="currentColor" strokeOpacity="0.1" strokeDasharray="4" />
+            <line x1="0" y1="70" x2={width} y2="70" stroke="currentColor" strokeOpacity="0.1" strokeDasharray="4" />
+            <line x1="0" y1="105" x2={width} y2="105" stroke="currentColor" strokeOpacity="0.1" strokeDasharray="4" />
 
             {/* Loss Polyline */}
             {points && (
               <polyline
                 fill="none"
-                stroke="#00ffcc"
+                stroke="var(--accent-primary)"
                 strokeWidth="2.5"
                 points={points}
                 strokeLinecap="round"
@@ -172,39 +164,39 @@ export const TrainingMonitor: React.FC = () => {
             )}
           </svg>
         </div>
-        <div className="flex items-center justify-between text-[10px] text-zinc-500">
+        <div className="flex items-center justify-between text-[10px] mutating-text-muted">
           <span>{localize(state.language, 'Paso Inicial:', 'Initial step:')} {job.initialLoss}</span>
-          <span className="text-cyan-400">{localize(state.language, 'Tendencia: Convergencia Monótona', 'Trend: Monotonic convergence')}</span>
+          <span className="mutating-accent-text">{localize(state.language, 'Tendencia: Convergencia Monótona', 'Trend: Monotonic convergence')}</span>
           <span>{localize(state.language, 'Objetivo:', 'Target:')} &lt; 0.05</span>
         </div>
       </div>
 
       {/* Numerical Metrics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-        <div className="p-2.5 rounded bg-[#09111c] border border-cyan-900/40">
-          <span className="text-[10px] text-zinc-500 block">{localize(state.language, 'PERPLEJIDAD', 'PERPLEXITY')}</span>
-          <span className="text-cyan-300 font-bold text-sm">{job.perplexity}</span>
-          <span className="text-[9px] text-zinc-600 block mt-0.5">e^(loss)</span>
+      <div className="triple-grid grid gap-2.5 text-xs">
+        <div className="p-3 rounded-lg mutating-sub">
+          <span className="text-[10px] mutating-text-muted block">{localize(state.language, 'PERPLEJIDAD', 'PERPLEXITY')}</span>
+          <span className="mutating-accent-text font-bold text-sm">{job.perplexity}</span>
+          <span className="text-[9px] mutating-text-muted block mt-0.5">e^(loss)</span>
         </div>
 
-        <div className="p-2.5 rounded bg-[#09111c] border border-cyan-900/40">
-          <span className="text-[10px] text-zinc-500 block">{localize(state.language, 'NORMA DE GRADIENTE', 'GRADIENT NORM')}</span>
-          <span className="text-yellow-300 font-bold text-sm">{job.gradientNorm}</span>
-          <span className="text-[9px] text-zinc-600 block mt-0.5">Clip: 1.0</span>
+        <div className="p-3 rounded-lg mutating-sub">
+          <span className="text-[10px] mutating-text-muted block">{localize(state.language, 'NORMA DE GRADIENTE', 'GRADIENT NORM')}</span>
+          <span className="text-amber-500 font-bold text-sm">{job.gradientNorm}</span>
+          <span className="text-[9px] mutating-text-muted block mt-0.5">Clip: 1.0</span>
         </div>
 
-        <div className="p-2.5 rounded bg-[#09111c] border border-cyan-900/40">
-          <span className="text-[10px] text-zinc-500 block">{localize(state.language, 'TEMPERATURA GPU', 'GPU TEMPERATURE')}</span>
-          <span className={`font-bold text-sm ${state.systemHeatCelsius > 80 ? 'text-red-400' : 'text-emerald-400'}`}>
+        <div className="p-3 rounded-lg mutating-sub">
+          <span className="text-[10px] mutating-text-muted block">{localize(state.language, 'TEMPERATURA GPU', 'GPU TEMPERATURE')}</span>
+          <span className={`font-bold text-sm ${state.systemHeatCelsius > 80 ? 'text-rose-500' : 'text-emerald-500'}`}>
             {state.systemHeatCelsius}°C
           </span>
-          <span className="text-[9px] text-zinc-600 block mt-0.5">{localize(state.language, 'Disipación', 'Cooling')} {state.maxCoolingKw} kW</span>
+          <span className="text-[9px] mutating-text-muted block mt-0.5">{localize(state.language, 'Disipación', 'Cooling')} {state.maxCoolingKw} kW</span>
         </div>
 
-        <div className="p-2.5 rounded bg-[#09111c] border border-cyan-900/40">
-          <span className="text-[10px] text-zinc-500 block">{localize(state.language, 'TOPOLOGÍA ACTIVA', 'ACTIVE TOPOLOGY')}</span>
-          <span className="text-purple-300 font-bold text-xs truncate block">{state.currentModel.topology}</span>
-          <span className="text-[9px] text-zinc-600 block mt-0.5">{state.currentModel.quantization.toUpperCase()}</span>
+        <div className="p-3 rounded-lg mutating-sub">
+          <span className="text-[10px] mutating-text-muted block">{localize(state.language, 'TOPOLOGÍA ACTIVA', 'ACTIVE TOPOLOGY')}</span>
+          <span className="text-purple-500 font-bold text-xs truncate block">{state.currentModel.topology}</span>
+          <span className="text-[9px] mutating-text-muted block mt-0.5">{state.currentModel.quantization.toUpperCase()}</span>
         </div>
       </div>
     </div>

@@ -106,31 +106,31 @@ export const DataPipelineManager: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#070b12] border border-cyan-900/40 rounded-lg p-3 overflow-y-auto space-y-4 font-mono scrollbar-thin scrollbar-thumb-cyan-950">
+    <div className="flex flex-col h-full mutating-panel border rounded-xl p-3 sm:p-4 overflow-y-auto space-y-4 font-mono">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/10 pb-2">
         <div className="flex items-center gap-2">
-          <Network className="w-4 h-4 text-cyan-400" />
-          <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
+          <Network className="w-4 h-4 mutating-accent-text" />
+          <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
             {localize(state.language, 'MOTOR DE DATOS Y CONOCIMIENTO // INGESTA MULTIMODAL', 'DATA & KNOWLEDGE ENGINES // MULTIMODAL INGESTION')}
           </h2>
         </div>
-        <div className="text-xs text-zinc-400">
-          {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="text-amber-300 font-bold">${state.credits.toLocaleString()} CR</span>
+        <div className="text-xs mutating-text-muted">
+          {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="text-emerald-500 font-bold">${state.credits.toLocaleString()} CR</span>
         </div>
       </div>
 
       {/* Sub-tab Navigation */}
-      <div className="flex flex-wrap gap-2 border-b border-cyan-950 pb-2">
+      <div className="flex flex-wrap gap-2 p-1.5 mutating-sub rounded-lg text-xs">
         <button
           onClick={() => {
             sound.playKeyClick();
             setActiveSubTab('engines');
           }}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
             activeSubTab === 'engines'
-              ? 'bg-cyan-950/80 border border-cyan-400 text-cyan-200 shadow-[0_0_10px_rgba(0,255,200,0.15)]'
-              : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+              ? 'mutating-btn-primary shadow-sm font-black'
+              : 'mutating-text-muted hover:opacity-100'
           }`}
         >
           <Database className="w-3.5 h-3.5" />
@@ -142,25 +142,25 @@ export const DataPipelineManager: React.FC = () => {
             sound.playKeyClick();
             setActiveSubTab('scraping');
           }}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
             activeSubTab === 'scraping'
-              ? 'bg-purple-950/80 border border-purple-400 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
-              : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+              ? 'mutating-btn-primary shadow-sm font-black'
+              : 'mutating-text-muted hover:opacity-100'
           }`}
         >
           <Search className="w-3.5 h-3.5" />
           <span>{localize(state.language, 'MÓDULO DE SCRAPING & MICRO-MODELOS', 'DATA SCRAPING & MICRO-MODELS')}</span>
           {!state.isDataScrapingUnlocked ? (
-            <span className="px-1.5 py-0.2 rounded bg-amber-950/90 text-amber-400 border border-amber-800 text-[9px] flex items-center gap-1">
+            <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/40 text-[9px] flex items-center gap-1">
               <Lock className="w-2.5 h-2.5" />
               {localize(state.language, 'BLOQUEADO', 'LOCKED')}
             </span>
           ) : state.activeScrapeJob ? (
-            <span className="px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-500 text-[9px] animate-pulse">
+            <span className="px-1.5 py-0.2 rounded bg-cyan-400 text-slate-950 font-black text-[9px] animate-pulse">
               SCRAPING {state.activeScrapeJob.progressPercent}%
             </span>
           ) : (
-            <span className="px-1.5 py-0.2 rounded bg-zinc-900 text-purple-300 text-[9px]">
+            <span className="px-1.5 py-0.2 rounded mutating-sub text-[9px] font-bold">
               {state.customDatasets.length} DATASETS
             </span>
           )}

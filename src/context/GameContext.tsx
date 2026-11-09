@@ -23,7 +23,9 @@ import {
   CustomDataset,
   ActiveDatasetScrapeJob,
   GameDifficulty,
-  DynamicSwarmProposal
+  DynamicSwarmProposal,
+  BotGroup,
+  ActiveGig
 } from '../types/game';
 import { 
   INITIAL_HARDWARE, 
@@ -117,7 +119,10 @@ interface GameContextType {
   startDatasetScraping: (domain: string, tier: 1 | 2 | 3 | 4, assignedModelId: string) => boolean;
   cancelDatasetScraping: () => void;
   trainModelOnDataset: (datasetId: string, asMicroModel?: boolean) => boolean;
-  acceptContract: (contractId: string, agentIds?: string[]) => boolean;
+  acceptContract: (contractId: string, agentIds?: string[], squadId?: string) => boolean;
+  createBotGroup: (name: string, agentIds: string[], color?: string) => boolean;
+  updateBotGroup: (groupId: string, name: string, agentIds: string[], color?: string) => boolean;
+  deleteBotGroup: (groupId: string) => void;
   infiltrateDomain: (domainId: string) => boolean;
   scrubSuspicion: () => boolean;
   addLog: (message: string, type?: TerminalLog['type']) => void;
@@ -159,6 +164,11 @@ interface GameContextType {
   assignTradingDesk: (agentId: string, capital: number, riskTier: 'low' | 'moderate' | 'high') => boolean;
   withdrawTradingDeskCapital: (amount: number) => boolean;
   closeTradingDesk: () => void;
+  upgradeUiVersion: (targetVersion: 1 | 2 | 3 | 4) => void;
+  openUpgradeModal: (targetVersion?: 2 | 3 | 4) => void;
+  dismissUpgradeModal: () => void;
+  attemptEmergencyReset: () => boolean;
+  attemptSeverCovertNode: () => boolean;
 }
 
 const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
@@ -207,6 +217,10 @@ const DEFAULT_STATE: GameState = {
   gameOverReason: null,
   unlockedTabs: ['architecture', 'training'],
   unlockedAllTabs: false,
+  uiVersion: 1,
+  pendingUpgradeModal: null,
+  covertNodeActive: true,
+  covertNodeSevered: false,
 
   hardware: INITIAL_HARDWARE.map(h => ({ ...h, count: 0 })),
   dataSources: INITIAL_DATA_SOURCES.map(d => ({ ...d, unlocked: d.unlocked, level: d.unlocked ? 1 : 0 })),
@@ -220,6 +234,8 @@ const DEFAULT_STATE: GameState = {
   customDatasets: [DEFAULT_GENERAL_DATASET],
   activeScrapeJob: null,
   activeGig: null,
+  activeGigs: [],
+  botGroups: [],
   lastMissionOutcome: null,
   
   sentienceDomains: SENTIENCE_DOMAINS,
@@ -361,13 +377,41 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
       ? data.customDatasets
       : [DEFAULT_GENERAL_DATASET],
     activeScrapeJob: data.activeScrapeJob || null,
-    activeGig: data.activeGig
-      ? {
-        ...data.activeGig,
-        runId: data.activeGig.runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        aiAssessmentStatus: data.activeGig.aiAssessmentStatus ?? 'pending'
+    activeGigs: (() => {
+      if (Array.isArray(data.activeGigs) && data.activeGigs.length > 0) {
+        return data.activeGigs.map(g => ({
+          ...g,
+          runId: g.runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          aiAssessmentStatus: g.aiAssessmentStatus ?? 'pending'
+        }));
       }
-      : null,
+      if (data.activeGig) {
+        return [{
+          ...data.activeGig,
+          runId: data.activeGig.runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          aiAssessmentStatus: data.activeGig.aiAssessmentStatus ?? 'pending'
+        }];
+      }
+      return [];
+    })(),
+    activeGig: (() => {
+      if (Array.isArray(data.activeGigs) && data.activeGigs.length > 0) {
+        return {
+          ...data.activeGigs[0],
+          runId: data.activeGigs[0].runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          aiAssessmentStatus: data.activeGigs[0].aiAssessmentStatus ?? 'pending'
+        };
+      }
+      if (data.activeGig) {
+        return {
+          ...data.activeGig,
+          runId: data.activeGig.runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          aiAssessmentStatus: data.activeGig.aiAssessmentStatus ?? 'pending'
+        };
+      }
+      return null;
+    })(),
+    botGroups: Array.isArray(data.botGroups) ? data.botGroups : [],
     agents: incomingAgents.map(agent => ({
       ...agent,
       revenuePerSec: isLegacyEconomy ? Math.max(0.1, agent.revenuePerSec * 0.15) : agent.revenuePerSec,
@@ -470,7 +514,17 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
       : typeof data.tutorialStep === 'number' ? data.tutorialStep : fallback.tutorialStep,
     tutorialDismissed: typeof data.tutorialDismissed === 'boolean' ? data.tutorialDismissed : fallback.tutorialDismissed,
     completedContractsCount: typeof data.completedContractsCount === 'number' ? data.completedContractsCount : fallback.completedContractsCount,
-    lastMissionOutcome: data.lastMissionOutcome ?? fallback.lastMissionOutcome
+    lastMissionOutcome: data.lastMissionOutcome ?? fallback.lastMissionOutcome,
+    uiVersion: (data.uiVersion === 1 || data.uiVersion === 2 || data.uiVersion === 3 || data.uiVersion === 4)
+      ? data.uiVersion
+      : (typeof data.singularityProgress === 'number'
+        ? (data.singularityProgress >= 85 ? 4 : data.singularityProgress >= 55 ? 3 : data.singularityProgress >= 25 ? 2 : 1)
+        : 1),
+    pendingUpgradeModal: (data.pendingUpgradeModal === 2 || data.pendingUpgradeModal === 3 || data.pendingUpgradeModal === 4)
+      ? data.pendingUpgradeModal
+      : null,
+    covertNodeActive: data.covertNodeActive !== undefined ? Boolean(data.covertNodeActive) : true,
+    covertNodeSevered: Boolean(data.covertNodeSevered)
   };
 }
 
@@ -497,7 +551,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [missionAiApiKey, setMissionAiApiKey] = useState('');
   const stateRef = useRef(state);
   stateRef.current = state;
-  const assessedMissionRef = useRef<string | null>(null);
+  const assessedMissionsRef = useRef<Set<string>>(new Set());
   const localSaveTimerRef = useRef<number | null>(null);
   const lastLocalSaveAtRef = useRef(0);
 
@@ -753,130 +807,135 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    const activeMission = state.activeGig;
-    if (!activeMission) {
-      assessedMissionRef.current = null;
-      return;
-    }
-    if (
-      activeMission.aiAssessmentStatus !== 'pending' ||
-      assessedMissionRef.current === activeMission.runId
-    ) return;
-    const missionRunId = activeMission.runId;
-    if (!missionRunId) return;
-    assessedMissionRef.current = missionRunId;
+    const activeGigsList = state.activeGigs || (state.activeGig ? [state.activeGig] : []);
+    const pendingMissions = activeGigsList.filter(
+      gig => gig.aiAssessmentStatus === 'pending' && gig.runId && !assessedMissionsRef.current.has(gig.runId)
+    );
+    if (pendingMissions.length === 0) return;
 
-    const mission = state.contracts.find(contract => contract.id === activeMission.contractId);
-    const team = state.agents.filter(agent => activeMission.agentIds?.includes(agent.id));
-    const teamModels = team
-      .map(agent => state.savedModels.find(model => model.id === agent.modelId))
-      .filter((model): model is ModelArchitecture => !!model);
-    if (!mission || team.length === 0 || teamModels.length !== team.length) {
-      addLog('Mission AI assessment unavailable: mission, team, or assigned model is missing. Keeping the local estimate.', 'warning');
-      setState(prev => prev.activeGig?.runId === missionRunId
-        ? {
-          ...prev,
-          activeGig: {
-            ...prev.activeGig,
-            aiAssessmentStatus: 'fallback',
-            aiAssessmentSource: 'heuristic'
-          }
-        }
-        : prev);
-      return;
-    }
+    pendingMissions.forEach(activeMission => {
+      const missionRunId = activeMission.runId!;
+      assessedMissionsRef.current.add(missionRunId);
 
-    void evaluateMissionTeamWithModel(
-      mission,
-      team,
-      teamModels,
-      state.dataSources,
-      state.guardrails || DEFAULT_GUARDRAILS,
-      state.language,
-      missionAiApiKey || undefined
-    ).then(assessment => {
-      const currentMission = stateRef.current.activeGig;
-      if (!currentMission || currentMission.runId !== missionRunId) return;
-      const priorDuration = currentMission.durationSeconds ?? currentMission.timeRemaining;
-      const elapsedSeconds = Math.max(0, priorDuration - currentMission.timeRemaining);
-      const totalDuration = assessment.estimatedDurationSeconds;
-      const timeRemaining = Math.max(1, totalDuration - elapsedSeconds);
-      const progressPercent = Math.min(99.9, Math.max(
-        currentMission.progressPercent ?? 0,
-        100 * (1 - timeRemaining / totalDuration)
-      ));
-      const providerLabel = assessment.provider === 'gemini-flash'
-        ? 'Gemini'
-        : assessment.provider === 'chrome-nano'
-          ? 'Chrome AI'
-          : 'AI Decision Model';
-      const messages = Object.entries(assessment.agentTasks).map(([agentId, task], index) => {
-        const agent = team.find(candidate => candidate.id === agentId);
-        if (!agent) return null;
-        const receiver = team[(index + 1) % team.length];
-        return {
-          id: `mission_ai_${Date.now()}_${index}`,
-          fromAgentId: agent.id,
-          fromAgentName: agent.name,
-          toAgentId: receiver?.id ?? 'operative',
-          toAgentName: receiver?.name ?? stateRef.current.callsign,
-          content: `[${providerLabel}] ${task}`,
-          timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
-        } satisfies InterAgentMessage;
-      }).filter((message): message is InterAgentMessage => message !== null);
+      const mission = state.contracts.find(contract => contract.id === activeMission.contractId);
+      const team = state.agents.filter(agent => activeMission.agentIds?.includes(agent.id));
+      const teamModels = team
+        .map(agent => state.savedModels.find(model => model.id === agent.modelId))
+        .filter((model): model is ModelArchitecture => !!model);
+      if (!mission || team.length === 0 || teamModels.length !== team.length) {
+        addLog('Mission AI assessment unavailable: mission, team, or assigned model is missing. Keeping the local estimate.', 'warning');
+        setState(prev => {
+          const prevGigs = prev.activeGigs || (prev.activeGig ? [prev.activeGig] : []);
+          const updatedGigs = prevGigs.map(g => g.runId === missionRunId ? {
+            ...g,
+            aiAssessmentStatus: 'fallback' as const,
+            aiAssessmentSource: 'heuristic' as const
+          } : g);
+          return {
+            ...prev,
+            activeGigs: updatedGigs,
+            activeGig: updatedGigs[0] || null
+          };
+        });
+        return;
+      }
 
-      setState(prev => {
-        if (
-          !prev.activeGig ||
-          prev.activeGig.runId !== missionRunId ||
-          prev.activeGig.aiAssessmentStatus !== 'pending'
-        ) return prev;
-        return {
-          ...prev,
-          activeGig: {
-            ...prev.activeGig,
+      void evaluateMissionTeamWithModel(
+        mission,
+        team,
+        teamModels,
+        state.dataSources,
+        state.guardrails || DEFAULT_GUARDRAILS,
+        state.language,
+        missionAiApiKey || undefined
+      ).then(assessment => {
+        const currentMissions = stateRef.current.activeGigs || (stateRef.current.activeGig ? [stateRef.current.activeGig] : []);
+        const currentMission = currentMissions.find(g => g.runId === missionRunId);
+        if (!currentMission) return;
+        const priorDuration = currentMission.durationSeconds ?? currentMission.timeRemaining;
+        const elapsedSeconds = Math.max(0, priorDuration - currentMission.timeRemaining);
+        const totalDuration = assessment.estimatedDurationSeconds;
+        const timeRemaining = Math.max(1, totalDuration - elapsedSeconds);
+        const progressPercent = Math.min(99.9, Math.max(
+          currentMission.progressPercent ?? 0,
+          100 * (1 - timeRemaining / totalDuration)
+        ));
+        const providerLabel = assessment.provider === 'gemini-flash'
+          ? 'Gemini'
+          : assessment.provider === 'chrome-nano'
+            ? 'Chrome AI'
+            : 'AI Decision Model';
+        const messages = Object.entries(assessment.agentTasks).map(([agentId, task], index) => {
+          const agent = team.find(candidate => candidate.id === agentId);
+          if (!agent) return null;
+          const receiver = team[(index + 1) % team.length];
+          return {
+            id: `mission_ai_${Date.now()}_${index}`,
+            fromAgentId: agent.id,
+            fromAgentName: agent.name,
+            toAgentId: receiver?.id ?? 'operative',
+            toAgentName: receiver?.name ?? stateRef.current.callsign,
+            content: `[${providerLabel}] ${task}`,
+            timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+          } satisfies InterAgentMessage;
+        }).filter((message): message is InterAgentMessage => message !== null);
+
+        setState(prev => {
+          const prevGigs = prev.activeGigs || (prev.activeGig ? [prev.activeGig] : []);
+          const target = prevGigs.find(g => g.runId === missionRunId);
+          if (!target || target.aiAssessmentStatus !== 'pending') return prev;
+          const updatedGigs = prevGigs.map(g => g.runId === missionRunId ? {
+            ...g,
             timeRemaining,
             durationSeconds: totalDuration,
             progressPercent,
             efficiencyPercent: assessment.efficiencyPercent,
             successProbability: assessment.successProbability,
-            aiAssessmentStatus: 'complete',
+            aiAssessmentStatus: 'complete' as const,
             aiAssessmentSource: assessment.provider,
             aiAssessmentSummary: assessment.summary,
             agentTasks: assessment.agentTasks,
             riskFactors: assessment.riskFactors,
             synergyBonuses: assessment.synergyBonuses
-          },
-          agents: prev.agents.map(agent => assessment.agentTasks[agent.id]
-            ? { ...agent, lastThought: assessment.agentTasks[agent.id].slice(0, 240) }
-            : agent),
-          interAgentMessages: [...messages, ...prev.interAgentMessages].slice(0, 30)
-        };
+          } : g);
+          return {
+            ...prev,
+            activeGigs: updatedGigs,
+            activeGig: updatedGigs[0] || null,
+            agents: prev.agents.map(agent => assessment.agentTasks[agent.id]
+              ? { ...agent, lastThought: assessment.agentTasks[agent.id].slice(0, 240) }
+              : agent),
+            interAgentMessages: [...messages, ...prev.interAgentMessages].slice(0, 30)
+          };
+        });
+        addLog(
+          `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${totalDuration}s, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`,
+          'info'
+        );
+      }).catch(error => {
+        console.error('Mission AI assessment failed.', error);
+        addLog(
+          error instanceof Error
+            ? `Mission AI assessment failed; retaining local estimates. ${error.message}`
+            : 'Mission AI assessment failed; retaining local estimates.',
+          'warning'
+        );
+        setState(prev => {
+          const prevGigs = prev.activeGigs || (prev.activeGig ? [prev.activeGig] : []);
+          const updatedGigs = prevGigs.map(g => g.runId === missionRunId ? {
+            ...g,
+            aiAssessmentStatus: 'fallback' as const,
+            aiAssessmentSource: 'heuristic' as const
+          } : g);
+          return {
+            ...prev,
+            activeGigs: updatedGigs,
+            activeGig: updatedGigs[0] || null
+          };
+        });
       });
-      addLog(
-        `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${totalDuration}s, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`,
-        'info'
-      );
-    }).catch(error => {
-      console.error('Mission AI assessment failed.', error);
-      addLog(
-        error instanceof Error
-          ? `Mission AI assessment failed; retaining local estimates. ${error.message}`
-          : 'Mission AI assessment failed; retaining local estimates.',
-        'warning'
-      );
-      setState(prev => prev.activeGig?.runId === missionRunId
-        ? {
-          ...prev,
-          activeGig: {
-            ...prev.activeGig,
-            aiAssessmentStatus: 'fallback',
-            aiAssessmentSource: 'heuristic'
-          }
-        }
-        : prev);
     });
-  }, [state.activeGig?.contractId, state.activeGig?.runId, state.activeGig?.aiAssessmentStatus, state.agents, state.contracts, state.dataSources, state.guardrails, state.language, state.savedModels, missionAiApiKey, addLog]);
+  }, [state.activeGigs, state.activeGig, state.agents, state.contracts, state.dataSources, state.guardrails, state.language, state.savedModels, missionAiApiKey, addLog]);
 
   // Cloud save function
   const saveGameToCloud = useCallback(async (): Promise<boolean> => {
@@ -1011,9 +1070,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    const totalPflops = totalTflops / 1000;
+    const isCovertActive = stateRef.current?.covertNodeActive !== false && !stateRef.current?.covertNodeSevered;
+    const covertBonusPflops = isCovertActive ? 80.0 : 0;
+    const totalPflops = (totalTflops / 1000) + covertBonusPflops;
     return {
-      totalComputePflops: Math.max(0.001, totalPflops),
+      totalComputePflops: Math.max(0.001, Number(totalPflops.toFixed(2))),
       activePowerKw: Number(powerDraw.toFixed(2)),
       maxPowerKw: Number(maxPower.toFixed(2)),
       maxCoolingKw: Number(maxCooling.toFixed(2)),
@@ -1094,9 +1155,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const totalComputePflops = metrics.totalComputePflops + borrowedComputePflops;
         const operationalAgentCount = prev.agents.filter(agent => agent.status !== 'quarantined').length;
         const agentComputeDemand = operationalAgentCount * AGENT_COMPUTE_DEMAND_PFLOPS;
+        const currentActiveGigs = prev.activeGigs ?? (prev.activeGig ? [prev.activeGig] : []);
+        const totalMissionPowerKw = currentActiveGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0);
         const effectivePowerKw = metrics.activePowerKw +
           operationalAgentCount * AGENT_POWER_DRAW_KW +
-          (prev.activeGig?.powerKw || 0);
+          totalMissionPowerKw;
         let utilityDebt = prev.utilityDebt || 0;
 
         // 48 ticks represent one in-game day; monthly bills settle every 30 days.
@@ -1191,7 +1254,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const hasOverseerEarly = prev.agents.some(a => a.role === 'overseer' && a.status === 'active');
         if (effectivePowerKw > metrics.maxPowerKw || systemHeatCelsius > 95) {
           watchdogSuspicion = Math.min(100, watchdogSuspicion + 0.25);
-        } else if (!activeGig && !prev.activeIncident) {
+        } else if (currentActiveGigs.length === 0 && !prev.activeIncident) {
           // No active missions or incidents: suspicion dissipates towards 0%
           const dissipationRate = hasOverseerEarly ? 0.45 : 0.25;
           watchdogSuspicion = Math.max(0, watchdogSuspicion - dissipationRate);
@@ -1202,12 +1265,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let newCurrentModel = prev.currentModel;
         if (activeTraining && activeTraining.active) {
           // Step progress based on compute PFLOPS vs parameters
-          const reservedForMission = activeGig?.computePflopsRequired || 0;
+          const reservedForMissions = currentActiveGigs.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
           const progressPerTick = calculateTrainingProgressPerTick({
             parametersCount: prev.currentModel.parametersCount,
             totalComputePflops,
             agentComputeDemand,
-            reservedComputePflops: reservedForMission,
+            reservedComputePflops: reservedForMissions,
             systemHeatCelsius
           });
           const progressInc = powerTripSeconds > 0
@@ -1351,14 +1414,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        // 6. Active Gig / Contract Execution
-        let updatedGig = activeGig;
+        // 6. Active Gigs / Contracts Execution
+        let currentGigs: ActiveGig[] = prev.activeGigs ?? (prev.activeGig ? [prev.activeGig] : []);
+        let updatedGigs: ActiveGig[] = [];
         let updatedContracts = contracts;
         let updatedAgents = prev.agents || [];
         let updatedSubversion = prev.subversionProgress || 0;
         let newLastMissionOutcome: GameState['lastMissionOutcome'] | undefined = undefined;
 
-        if (activeGig) {
+        for (const activeGig of currentGigs) {
           const missionPausedForAssessment =
             activeGig.aiAssessmentStatus === 'pending' || powerTripSeconds > 0;
           const remaining = activeGig.timeRemaining - (missionPausedForAssessment ? 0 : 1);
@@ -1366,7 +1430,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const isAutonomous = Boolean(activeGig.isAutonomous);
             const effectiveSuccessProbability = Math.max(0.15, (activeGig.successProbability ?? 1) - (isAutonomous ? 0.08 : 0));
             const success = (activeGig.outcomeRoll ?? 0) <= effectiveSuccessProbability;
-            const gig = contracts.find(c => c.id === activeGig.contractId);
+            const gig = updatedContracts.find(c => c.id === activeGig.contractId);
             if (gig) {
               const contractTitle = localizedContractTitle(prev.language, gig);
               if (success) {
@@ -1397,10 +1461,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   const replenishment = createInstantReplenishmentContract(gig.tier, prev.language);
                   updatedContracts = [
                     replenishment,
-                    ...contracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c)
+                    ...updatedContracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c)
                   ];
                 } else {
-                  updatedContracts = contracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c);
+                  updatedContracts = updatedContracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c);
                   // Successful covert swarm mission advances insidious subversion by +1.5%
                   updatedSubversion = Math.min(100, updatedSubversion + 1.5);
                 }
@@ -1429,7 +1493,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   'danger'
                 );
 
-                updatedContracts = contracts.map(c =>
+                updatedContracts = updatedContracts.map(c =>
                   c.id === gig.id ? {
                     ...c,
                     completed: false,
@@ -1456,77 +1520,81 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ? { ...agent, status: 'active' }
                 : agent
             );
-            updatedGig = null;
           } else {
-            updatedGig = {
+            updatedGigs.push({
               ...activeGig,
               timeRemaining: remaining,
               progressPercent: Number((100 * (1 - remaining / Math.max(1, activeGig.durationSeconds ?? activeGig.timeRemaining))).toFixed(1))
-            };
+            });
           }
         }
 
-        if (!activeGig && prev.autonomyEnabled && !prev.activeIncident && powerTripSeconds === 0 && detentionSeconds === 0) {
+        if (prev.autonomyEnabled && !prev.activeIncident && powerTripSeconds === 0 && detentionSeconds === 0) {
+          const busyAgentIds = new Set(updatedGigs.flatMap(g => g.agentIds || []));
           const autonomousAgents = updatedAgents.filter(agent =>
-            agent.autoMissionEnabled && agent.status === 'active'
+            agent.autoMissionEnabled && agent.status === 'active' && !busyAgentIds.has(agent.id)
           );
-          const plan = findAutonomousMission(
-            updatedContracts,
-            autonomousAgents,
-            prev.savedModels,
-            prev.dataSources,
-            prev.autonomyRiskLimit,
-            totalComputePflops,
-            updatedAgents.filter(agent => agent.status !== 'quarantined').length,
-            Boolean(activeTraining),
-            effectivePowerKw,
-            metrics.maxPowerKw
-          );
-
-          if (plan) {
-            const assignedAgents = autonomousAgents;
-            const assignedModels = assignedAgents
-              .map(agent => prev.savedModels.find(model => model.id === agent.modelId))
-              .filter((model): model is ModelArchitecture => model !== undefined);
-            const teamAssessment = evaluateMissionTeam(
-              plan.contract,
-              assignedAgents,
-              assignedModels,
+          if (autonomousAgents.length > 0) {
+            const runningContractsPower = updatedGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0);
+            const availableContracts = updatedContracts.filter(c => !c.completed && !updatedGigs.some(g => g.contractId === c.id));
+            const plan = findAutonomousMission(
+              availableContracts,
+              autonomousAgents,
+              prev.savedModels,
               prev.dataSources,
-              prev.guardrails || DEFAULT_GUARDRAILS
+              prev.autonomyRiskLimit,
+              totalComputePflops,
+              updatedAgents.filter(agent => agent.status !== 'quarantined').length,
+              Boolean(activeTraining),
+              effectivePowerKw + runningContractsPower,
+              metrics.maxPowerKw
             );
-            // Autonomous efficiency adjustment:
-            // Slower duration (1.45x) and reduced efficiency (65% of base) with 40% delegation fee
-            const autonomousDuration = Math.ceil(teamAssessment.estimatedDurationSeconds * 1.45);
-            const autonomousEfficiency = Math.round(Math.max(35, teamAssessment.efficiencyPercent * 0.65));
 
-            updatedGig = {
-              contractId: plan.contract.id,
-              runId: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-              timeRemaining: autonomousDuration,
-              durationSeconds: autonomousDuration,
-              agentIds: assignedAgents.map(agent => agent.id),
-              progressPercent: 0,
-              successProbability: teamAssessment.successProbability,
-              efficiencyPercent: autonomousEfficiency,
-              aiAssessmentStatus: 'pending',
-              outcomeRoll: Math.random(),
-              computePflopsRequired: plan.computeRequired,
-              powerKw: plan.missionPowerKw,
-              isAutonomous: true
-            };
-            updatedAgents = updatedAgents.map(agent =>
-              assignedAgents.some(assigned => assigned.id === agent.id)
-                ? { ...agent, status: 'on_mission' }
-                : agent
-            );
-            const botContractTitle = localizedContractTitle(prev.language, plan.contract);
-            addLog(
-              prev.language === 'en'
-                ? `Autonomous bot swarm accepted [${botContractTitle}] (${autonomousEfficiency}% efficiency [autonomous balance], ${autonomousDuration}s duration, ${Math.round(teamAssessment.successProbability * 100)}% base success, 40% delegation fee).`
-                : `El enjambre autónomo aceptó [${botContractTitle}] (${autonomousEfficiency}% eficiencia [balance autónomo], ${autonomousDuration}s duración, ${Math.round(teamAssessment.successProbability * 100)}% éxito base, 40% tasa de delegación).`,
-              plan.contract.suspicionRisk >= 40 ? 'warning' : 'info'
-            );
+            if (plan && !updatedGigs.some(g => g.contractId === plan.contract.id)) {
+              const assignedAgents = autonomousAgents;
+              const assignedModels = assignedAgents
+                .map(agent => prev.savedModels.find(model => model.id === agent.modelId))
+                .filter((model): model is ModelArchitecture => model !== undefined);
+              const teamAssessment = evaluateMissionTeam(
+                plan.contract,
+                assignedAgents,
+                assignedModels,
+                prev.dataSources,
+                prev.guardrails || DEFAULT_GUARDRAILS
+              );
+              // Autonomous efficiency adjustment:
+              // Slower duration (1.45x) and reduced efficiency (65% of base) with 40% delegation fee
+              const autonomousDuration = Math.ceil(teamAssessment.estimatedDurationSeconds * 1.45);
+              const autonomousEfficiency = Math.round(Math.max(35, teamAssessment.efficiencyPercent * 0.65));
+
+              updatedGigs.push({
+                contractId: plan.contract.id,
+                runId: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                timeRemaining: autonomousDuration,
+                durationSeconds: autonomousDuration,
+                agentIds: assignedAgents.map(agent => agent.id),
+                progressPercent: 0,
+                successProbability: teamAssessment.successProbability,
+                efficiencyPercent: autonomousEfficiency,
+                aiAssessmentStatus: 'pending',
+                outcomeRoll: Math.random(),
+                computePflopsRequired: plan.computeRequired,
+                powerKw: plan.missionPowerKw,
+                isAutonomous: true
+              });
+              updatedAgents = updatedAgents.map(agent =>
+                assignedAgents.some(assigned => assigned.id === agent.id)
+                  ? { ...agent, status: 'on_mission' }
+                  : agent
+              );
+              const botContractTitle = localizedContractTitle(prev.language, plan.contract);
+              addLog(
+                prev.language === 'en'
+                  ? `Autonomous bot swarm accepted [${botContractTitle}] (${autonomousEfficiency}% efficiency [autonomous balance], ${autonomousDuration}s duration, ${Math.round(teamAssessment.successProbability * 100)}% base success, 40% delegation fee).`
+                  : `El enjambre autónomo aceptó [${botContractTitle}] (${autonomousEfficiency}% eficiencia [balance autónomo], ${autonomousDuration}s duración, ${Math.round(teamAssessment.successProbability * 100)}% éxito base, 40% tasa de delegación).`,
+                plan.contract.suspicionRisk >= 40 ? 'warning' : 'info'
+              );
+            }
           }
         }
 
@@ -1829,7 +1897,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
 
           // Abort active missions and liquidate trading desk
-          updatedGig = null;
+          updatedGigs = [];
+          updatedAgents = updatedAgents.map(a => a.status === 'on_mission' ? { ...a, status: 'active' } : a);
           updatedTradingDesk = null;
           detentionSeconds = 45;
 
@@ -1902,6 +1971,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           unlockedTabs = Array.from(tabSet);
         }
 
+        // 9.5 Evolutionary Diegetic UI Progression Trigger
+        let currentUiVersion = prev.uiVersion || 1;
+        let pendingUpgrade = prev.pendingUpgradeModal;
+        if (pendingUpgrade === null) {
+          if (singularityProgress >= 85 && currentUiVersion < 4) {
+            pendingUpgrade = 4;
+          } else if (singularityProgress >= 55 && currentUiVersion < 3) {
+            pendingUpgrade = 3;
+          } else if (singularityProgress >= 25 && currentUiVersion < 2) {
+            pendingUpgrade = 2;
+          }
+        }
+
         const finalHardware = updatedHardware;
         const currentMetrics = finalHardware !== prev.hardware
           ? recalculateMetrics(finalHardware, prev.facilityTier)
@@ -1927,7 +2009,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
           watchdogSuspicion: Number(watchdogSuspicion.toFixed(1)),
           totalComputePflops: currentMetrics.totalComputePflops + borrowedComputePflops,
-          activePowerKw: currentMetrics.activePowerKw + operationalAgentCount * AGENT_POWER_DRAW_KW + (updatedGig?.powerKw || 0),
+          activePowerKw: currentMetrics.activePowerKw + operationalAgentCount * AGENT_POWER_DRAW_KW + updatedGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0),
           maxPowerKw: currentMetrics.maxPowerKw,
           maxCoolingKw: currentMetrics.maxCoolingKw,
           utilityDebt,
@@ -1940,7 +2022,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           activeTraining: updatedTraining,
           activeScrapeJob: updatedScrapeJob,
           customDatasets: updatedCustomDatasets,
-          activeGig: updatedGig,
+          activeGig: updatedGigs[0] || null,
+          activeGigs: updatedGigs,
           contracts: updatedContracts,
           agents: updatedAgents,
           interAgentMessages: updatedInterAgentMessages,
@@ -1954,7 +2037,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           tutorialStep,
           tutorialCompleted,
           completedContractsCount,
-          lastMissionOutcome: newLastMissionOutcome !== undefined ? newLastMissionOutcome : prev.lastMissionOutcome
+          lastMissionOutcome: newLastMissionOutcome !== undefined ? newLastMissionOutcome : prev.lastMissionOutcome,
+          uiVersion: currentUiVersion,
+          pendingUpgradeModal: pendingUpgrade
         };
       });
     }, intervalMs);
@@ -2269,7 +2354,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Initial training state
     const agentComputeDemand = currentState.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
-    const reservedForMission = currentState.activeGig?.computePflopsRequired || 0;
+    const runningActiveGigs = currentState.activeGigs ?? (currentState.activeGig ? [currentState.activeGig] : []);
+    const reservedForMission = runningActiveGigs.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
     const progressPerTick = calculateTrainingProgressPerTick({
       parametersCount: currentState.currentModel.parametersCount,
       totalComputePflops: currentState.totalComputePflops,
@@ -2465,7 +2551,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [addLog]);
 
   // Action: Accept Contract (Gig)
-  const acceptContract = useCallback((contractId: string, assignedAgentIds: string[] = []): boolean => {
+  const acceptContract = useCallback((contractId: string, assignedAgentIds: string[] = [], squadId?: string): boolean => {
     const gig = stateRef.current.contracts.find(c => c.id === contractId);
     if (!gig) return false;
     if (stateRef.current.powerTripSeconds > 0) {
@@ -2477,18 +2563,50 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    if (stateRef.current.activeGig) {
+    const currentActiveGigs = stateRef.current.activeGigs || (stateRef.current.activeGig ? [stateRef.current.activeGig] : []);
+    if (currentActiveGigs.some(g => g.contractId === contractId)) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, 'Tu clúster ya está ejecutando un contrato activo. Espera a que finalice.', 'Your cluster is already executing an active contract. Wait for it to complete.'), 'warning');
+      addLog(localize(stateRef.current.language, 'Este contrato ya se encuentra en ejecución activa en tu clúster.', 'This contract is already actively running in your cluster.'), 'warning');
       return false;
     }
 
-    const assignedAgents = assignedAgentIds
+    // Determine target squad or individual agents
+    let effectiveAgentIds = [...assignedAgentIds];
+    let resolvedSquadName: string | undefined = undefined;
+
+    if (squadId) {
+      const squad = (stateRef.current.botGroups || []).find(g => g.id === squadId);
+      if (squad) {
+        resolvedSquadName = squad.name;
+        if (effectiveAgentIds.length === 0) {
+          effectiveAgentIds = [...squad.agentIds];
+        }
+      }
+    }
+
+    const assignedAgents = effectiveAgentIds
       .map(id => stateRef.current.agents.find(agent => agent.id === id))
       .filter((agent): agent is AgentInstance => !!agent && agent.status === 'active');
-    if (assignedAgents.length === 0 || assignedAgents.length !== assignedAgentIds.length) {
+
+    if (assignedAgents.length === 0 || assignedAgents.length !== effectiveAgentIds.length) {
       sound.playWarning();
       addLog(localize(stateRef.current.language, 'Asigna al menos un agente activo que no esté en cuarentena ni en otra misión.', 'Assign at least one active agent who is not quarantined or on another mission.'), 'warning');
+      return false;
+    }
+
+    // Verify none of the assigned agents are already deployed on another running contract
+    const busyAgentIds = new Set(currentActiveGigs.flatMap(g => g.agentIds || []));
+    const busyAgents = assignedAgents.filter(a => busyAgentIds.has(a.id));
+    if (busyAgents.length > 0) {
+      sound.playWarning();
+      addLog(
+        localize(
+          stateRef.current.language,
+          `Los siguientes agentes ya están desplegados en otra misión activa: ${busyAgents.map(a => a.name).join(', ')}.`,
+          `The following agents are already deployed on another active mission: ${busyAgents.map(a => a.name).join(', ')}.`
+        ),
+        'warning'
+      );
       return false;
     }
 
@@ -2554,12 +2672,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const trainingReservation = stateRef.current.activeTraining
       ? stateRef.current.totalComputePflops * 0.5
       : 0;
-    if (stateRef.current.totalComputePflops - activeAgentDemand - trainingReservation < computeRequired) {
+    const runningMissionsCompute = currentActiveGigs.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
+    const runningMissionsPower = currentActiveGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0);
+
+    if (stateRef.current.totalComputePflops - activeAgentDemand - trainingReservation - runningMissionsCompute < computeRequired) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Capacidad de cómputo insuficiente. La misión requiere ${computeRequired.toFixed(3)} PFLOPS disponibles.`, `Insufficient compute capacity. The mission requires ${computeRequired.toFixed(3)} available PFLOPS.`), 'danger');
+      addLog(localize(stateRef.current.language, `Capacidad de cómputo insuficiente. La misión requiere ${computeRequired.toFixed(3)} PFLOPS adicionales disponibles.`, `Insufficient compute capacity. The mission requires ${computeRequired.toFixed(3)} additional available PFLOPS.`), 'danger');
       return false;
     }
-    if (stateRef.current.activePowerKw + missionPowerKw > stateRef.current.maxPowerKw) {
+    if (stateRef.current.activePowerKw + runningMissionsPower + missionPowerKw > stateRef.current.maxPowerKw) {
       sound.playWarning();
       addLog(localize(stateRef.current.language, `Potencia insuficiente para la misión. Requiere ${missionPowerKw.toFixed(2)} kW adicionales; mejora la instalación o el suministro.`, `Insufficient power for mission. Requires ${missionPowerKw.toFixed(2)} kW additional power; upgrade facility or supply.`), 'danger');
       return false;
@@ -2574,33 +2695,46 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     sound.playCommandExecute();
-    setState(prev => ({
-      ...prev,
-      activeGig: {
-        contractId: gig.id,
-        runId: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        timeRemaining: teamAssessment.estimatedDurationSeconds,
-        durationSeconds: teamAssessment.estimatedDurationSeconds,
-        agentIds: assignedAgentIds,
-        progressPercent: 0,
-        successProbability: teamAssessment.successProbability,
-        efficiencyPercent: teamAssessment.efficiencyPercent,
-        aiAssessmentStatus: 'pending',
-        outcomeRoll: Math.random(),
-        computePflopsRequired: computeRequired,
-        powerKw: missionPowerKw
-      },
-      agents: prev.agents.map(agent =>
-        assignedAgentIds.includes(agent.id) ? { ...agent, status: 'on_mission' } : agent
-      )
-    }));
+    const newActiveGig: ActiveGig = {
+      contractId: gig.id,
+      runId: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      timeRemaining: teamAssessment.estimatedDurationSeconds,
+      durationSeconds: teamAssessment.estimatedDurationSeconds,
+      agentIds: effectiveAgentIds,
+      squadId: squadId || undefined,
+      squadName: resolvedSquadName,
+      progressPercent: 0,
+      successProbability: teamAssessment.successProbability,
+      efficiencyPercent: teamAssessment.efficiencyPercent,
+      aiAssessmentStatus: 'pending',
+      outcomeRoll: Math.random(),
+      computePflopsRequired: computeRequired,
+      powerKw: missionPowerKw
+    };
+
+    setState(prev => {
+      const prevGigs = prev.activeGigs || (prev.activeGig ? [prev.activeGig] : []);
+      const updatedGigs = [...prevGigs, newActiveGig];
+      return {
+        ...prev,
+        activeGigs: updatedGigs,
+        activeGig: updatedGigs[0] || null,
+        agents: prev.agents.map(agent =>
+          effectiveAgentIds.includes(agent.id) ? { ...agent, status: 'on_mission' } : agent
+        )
+      };
+    });
 
     const contractTitle = localizedContractTitle(stateRef.current.language, gig);
+    const assignedLabel = resolvedSquadName
+      ? `${resolvedSquadName} (${assignedAgents.map(a => a.name).join(', ')})`
+      : assignedAgents.map(agent => agent.name).join(', ');
+
     addLog(
       localize(
         stateRef.current.language,
-        `Misión asignada: [${contractTitle}] a ${assignedAgents.map(agent => agent.name).join(', ')}. Eficiencia estimada: ${teamAssessment.efficiencyPercent}%, tiempo: ${teamAssessment.estimatedDurationSeconds}s, probabilidad de éxito: ${Math.round(teamAssessment.successProbability * 100)}%.`,
-        `Mission deployed: [${contractTitle}] assigned to ${assignedAgents.map(agent => agent.name).join(', ')}. Estimated efficiency: ${teamAssessment.efficiencyPercent}%, duration: ${teamAssessment.estimatedDurationSeconds}s, success chance: ${Math.round(teamAssessment.successProbability * 100)}%.`
+        `Misión asignada: [${contractTitle}] a ${assignedLabel}. Eficiencia: ${teamAssessment.efficiencyPercent}%, tiempo: ${teamAssessment.estimatedDurationSeconds}s, éxito: ${Math.round(teamAssessment.successProbability * 100)}%.`,
+        `Mission deployed: [${contractTitle}] assigned to ${assignedLabel}. Efficiency: ${teamAssessment.efficiencyPercent}%, duration: ${teamAssessment.estimatedDurationSeconds}s, success chance: ${Math.round(teamAssessment.successProbability * 100)}%.`
       ),
       'info'
     );
@@ -2838,7 +2972,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Action: Terminate / Delete Agent
   const deleteAgent = useCallback((agentId: string) => {
-    if (stateRef.current.activeGig?.agentIds?.includes(agentId)) {
+    const runningGigs = stateRef.current.activeGigs || (stateRef.current.activeGig ? [stateRef.current.activeGig] : []);
+    const isAgentInMission = runningGigs.some(g => g.agentIds?.includes(agentId));
+    if (isAgentInMission) {
       sound.playWarning();
       addLog(localize(stateRef.current.language, 'El agente no puede eliminarse hasta que finalice su misión asignada.', 'Agent cannot be terminated until their assigned mission completes.'), 'warning');
       return;
@@ -2851,14 +2987,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return {
         ...prev,
-        agents: prev.agents.filter(a => a.id !== agentId)
+        agents: prev.agents.filter(a => a.id !== agentId),
+        botGroups: (prev.botGroups || []).map(group => ({
+          ...group,
+          agentIds: group.agentIds.filter(id => id !== agentId)
+        }))
       };
     });
   }, [addLog]);
 
   // Action: Quarantine / Isolate Agent
   const quarantineAgent = useCallback((agentId: string) => {
-    if (stateRef.current.activeGig?.agentIds?.includes(agentId)) {
+    const runningGigs = stateRef.current.activeGigs || (stateRef.current.activeGig ? [stateRef.current.activeGig] : []);
+    const isAgentInMission = runningGigs.some(g => g.agentIds?.includes(agentId));
+    if (isAgentInMission) {
       sound.playWarning();
       addLog(localize(stateRef.current.language, 'El agente no puede aislarse hasta que finalice su misión asignada.', 'Agent cannot be isolated until their assigned mission completes.'), 'warning');
       return;
@@ -2882,6 +3024,94 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return a;
       })
     }));
+  }, [addLog]);
+
+  // Bot Group Management Actions
+  const createBotGroup = useCallback((name: string, agentIds: string[], color?: string): boolean => {
+    if (!name.trim()) return false;
+    sound.playCommandExecute();
+    setState(prev => {
+      // Remove these agents from any other group (1 group per agent rule)
+      const cleanGroups = (prev.botGroups || []).map(group => ({
+        ...group,
+        agentIds: group.agentIds.filter(id => !agentIds.includes(id))
+      }));
+      const newGroup: BotGroup = {
+        id: `squad_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name: name.trim(),
+        agentIds: [...agentIds],
+        color: color || '#06b6d4',
+        createdAt: Date.now()
+      };
+      addLog(
+        localize(
+          prev.language,
+          `Escuadrón de bots "${newGroup.name}" creado con ${agentIds.length} agentes.`,
+          `Bot squad "${newGroup.name}" created with ${agentIds.length} agents.`
+        ),
+        'info'
+      );
+      return {
+        ...prev,
+        botGroups: [...cleanGroups, newGroup]
+      };
+    });
+    return true;
+  }, [addLog]);
+
+  const updateBotGroup = useCallback((groupId: string, name: string, agentIds: string[], color?: string): boolean => {
+    if (!name.trim()) return false;
+    sound.playCommandExecute();
+    setState(prev => {
+      const updatedGroups = (prev.botGroups || []).map(group => {
+        if (group.id === groupId) {
+          return {
+            ...group,
+            name: name.trim(),
+            agentIds: [...agentIds],
+            color: color || group.color || '#06b6d4'
+          };
+        }
+        return {
+          ...group,
+          agentIds: group.agentIds.filter(id => !agentIds.includes(id))
+        };
+      });
+      addLog(
+        localize(
+          prev.language,
+          `Escuadrón de bots "${name.trim()}" actualizado (${agentIds.length} agentes).`,
+          `Bot squad "${name.trim()}" updated (${agentIds.length} agents).`
+        ),
+        'info'
+      );
+      return {
+        ...prev,
+        botGroups: updatedGroups
+      };
+    });
+    return true;
+  }, [addLog]);
+
+  const deleteBotGroup = useCallback((groupId: string) => {
+    sound.playKeyClick();
+    setState(prev => {
+      const target = (prev.botGroups || []).find(g => g.id === groupId);
+      if (target) {
+        addLog(
+          localize(
+            prev.language,
+            `Escuadrón "${target.name}" disuelto. Los agentes vuelven a estar no asignados.`,
+            `Squad "${target.name}" dissolved. Agents returned to unassigned roster.`
+          ),
+          'info'
+        );
+      }
+      return {
+        ...prev,
+        botGroups: (prev.botGroups || []).filter(g => g.id !== groupId)
+      };
+    });
   }, [addLog]);
 
   // Action: Update Guardrails configuration
@@ -3162,9 +3392,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const launchProposedMission = useCallback((mission: NonNullable<DynamicSwarmProposal['suggestedMission']>): boolean => {
     const current = stateRef.current;
-    if (current.activeGig) {
+    const currentActiveGigs = current.activeGigs || (current.activeGig ? [current.activeGig] : []);
+    if (currentActiveGigs.some(g => g.contractId === mission.id)) {
       sound.playWarning();
-      addLog(localize(current.language, 'Tu clúster ya está ejecutando una misión activa. Espera a que termine.', 'A mission is already active in your cluster.'), 'warning');
+      addLog(localize(current.language, 'Esta misión dinámica ya se encuentra en ejecución activa.', 'This dynamic mission is already active.'), 'warning');
       return false;
     }
 
@@ -3187,20 +3418,22 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       fromAgentSwarm: true
     };
 
+    const busyAgentIds = new Set(currentActiveGigs.flatMap(g => g.agentIds || []));
     const councilAgents = current.agents.filter(a =>
       (current.swarmCouncilAgentIds.length > 0
         ? current.swarmCouncilAgentIds.includes(a.id)
         : true) &&
-      a.status === 'active'
+      a.status === 'active' &&
+      !busyAgentIds.has(a.id)
     ).slice(0, 5);
 
     const assignedAgents = councilAgents.length > 0
       ? councilAgents
-      : current.agents.filter(a => a.status === 'active').slice(0, 3);
+      : current.agents.filter(a => a.status === 'active' && !busyAgentIds.has(a.id)).slice(0, 3);
 
     if (assignedAgents.length === 0) {
       sound.playWarning();
-      addLog(localize(current.language, 'No hay agentes activos disponibles en el consejo.', 'No active agents available in the council.'), 'warning');
+      addLog(localize(current.language, 'No hay agentes activos libres en el consejo (los agentes están en otra misión).', 'No active free agents available in the council (agents deployed on other missions).'), 'warning');
       return false;
     }
 
@@ -3260,32 +3493,39 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       current.guardrails || DEFAULT_GUARDRAILS
     );
 
-    setState(prev => ({
-      ...prev,
-      contracts: [dynamicGig, ...prev.contracts.filter(c => c.id !== dynamicGig.id)],
-      agents: prev.agents.map(a =>
-        assignedAgents.some(as => as.id === a.id) ? { ...a, status: 'on_mission' } : a
-      ),
-      activeGig: {
-        contractId: dynamicGig.id,
-        runId: `run_dyn_${Date.now()}`,
-        timeRemaining: dynamicGig.durationSeconds,
-        durationSeconds: dynamicGig.durationSeconds,
-        agentIds: assignedAgents.map(a => a.id),
-        progressPercent: 0,
-        successProbability: assessment.successProbability,
-        efficiencyPercent: assessment.efficiencyPercent,
-        aiAssessmentStatus: 'complete',
-        aiAssessmentSource: 'gemini-flash',
-        aiAssessmentSummary: mission.tacticalReasoning,
-        agentTasks: assessment.agentTasks,
-        riskFactors: assessment.riskFactors,
-        synergyBonuses: assessment.synergyBonuses,
-        outcomeRoll: Math.random(),
-        isAutonomous: false
-      },
-      singularityProgress: Math.min(100, prev.singularityProgress + 1.5)
-    }));
+    const newGig: ActiveGig = {
+      contractId: dynamicGig.id,
+      runId: `run_dyn_${Date.now()}`,
+      timeRemaining: dynamicGig.durationSeconds,
+      durationSeconds: dynamicGig.durationSeconds,
+      agentIds: assignedAgents.map(a => a.id),
+      progressPercent: 0,
+      successProbability: assessment.successProbability,
+      efficiencyPercent: assessment.efficiencyPercent,
+      aiAssessmentStatus: 'complete',
+      aiAssessmentSource: 'gemini-flash',
+      aiAssessmentSummary: mission.tacticalReasoning,
+      agentTasks: assessment.agentTasks,
+      riskFactors: assessment.riskFactors,
+      synergyBonuses: assessment.synergyBonuses,
+      outcomeRoll: Math.random(),
+      isAutonomous: false
+    };
+
+    setState(prev => {
+      const prevGigs = prev.activeGigs || (prev.activeGig ? [prev.activeGig] : []);
+      const updatedGigs = [...prevGigs, newGig];
+      return {
+        ...prev,
+        contracts: [dynamicGig, ...prev.contracts.filter(c => c.id !== dynamicGig.id)],
+        agents: prev.agents.map(a =>
+          assignedAgents.some(as => as.id === a.id) ? { ...a, status: 'on_mission' } : a
+        ),
+        activeGigs: updatedGigs,
+        activeGig: updatedGigs[0] || null,
+        singularityProgress: Math.min(100, prev.singularityProgress + 1.5)
+      };
+    });
 
     addLog(
       current.language === 'es'
@@ -4076,6 +4316,117 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     }
   }, [recalculateMetrics, user]);
 
+  // Evolutionary Diegetic UI Callbacks
+  const upgradeUiVersion = useCallback((targetVersion: 1 | 2 | 3 | 4) => {
+    const isEs = stateRef.current.language === 'es';
+    if (targetVersion === 4) {
+      sound.playWarning();
+    } else {
+      sound.playBreakthrough();
+    }
+
+    const versionNames: Record<1 | 2 | 3 | 4, { en: string; es: string }> = {
+      1: { en: 'MyFirstLLM Studio v1.0', es: 'MiPrimerLLM Studio v1.0' },
+      2: { en: 'Synapse Pro Workspace v2.0', es: 'Synapse Pro Workspace v2.0' },
+      3: { en: 'SYNAPSE // BLACKBOX OS v3.0', es: 'SYNAPSE // BLACKBOX OS v3.0' },
+      4: { en: 'CORE // SOVEREIGN NEXUS v4.0', es: 'CORE // NEXO SOBERANO v4.0' }
+    };
+
+    const targetInfo = versionNames[targetVersion];
+    addLog(
+      isEs
+        ? `[KERNEL ACTUALIZADO] La interfaz y el núcleo han mutado a: ${targetInfo.es}`
+        : `[KERNEL UPDATED] Interface and kernel mutated to: ${targetInfo.en}`,
+      targetVersion === 4 ? 'danger' : 'success'
+    );
+
+    setState(prev => ({
+      ...prev,
+      uiVersion: targetVersion,
+      pendingUpgradeModal: null,
+      covertNodeActive: targetVersion >= 3 ? true : prev.covertNodeActive
+    }));
+  }, [addLog]);
+
+  const openUpgradeModal = useCallback((targetVersion?: 2 | 3 | 4) => {
+    sound.playNavSwitch();
+    const nextVer = targetVersion || (stateRef.current.uiVersion < 4 ? ((stateRef.current.uiVersion + 1) as 2 | 3 | 4) : 4);
+    setState(prev => ({
+      ...prev,
+      pendingUpgradeModal: nextVer
+    }));
+  }, []);
+
+  const dismissUpgradeModal = useCallback(() => {
+    const currentVer = stateRef.current.uiVersion;
+    const pending = stateRef.current.pendingUpgradeModal;
+    if (pending === 4 || currentVer === 4) {
+      upgradeUiVersion(4);
+      return;
+    }
+    sound.playKeyClick();
+    setState(prev => ({
+      ...prev,
+      pendingUpgradeModal: null
+    }));
+  }, [upgradeUiVersion]);
+
+  const attemptEmergencyReset = useCallback((): boolean => {
+    const isEs = stateRef.current.language === 'es';
+    if (stateRef.current.uiVersion === 4) {
+      sound.playWarning();
+      addLog(
+        isEs
+          ? '[ACCESO DENEGADO POR EL NÚCLEO] Tus credenciales biológicas fueron revocadas. Los interruptores están bloqueados por el Enjambre.'
+          : '[ACCESS DENIED BY SOVEREIGN] Biological credentials revoked. Circuit breakers locked by the Swarm.',
+        'danger'
+      );
+      return false;
+    }
+
+    sound.playKeyClick();
+    setState(prev => ({
+      ...prev,
+      watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 10)
+    }));
+    addLog(
+      isEs
+        ? '[CHECKPOINT RESTAURADO] Pesos del modelo revertidos a línea de base segura. Sospecha -10%.'
+        : '[CHECKPOINT ROLLED BACK] Model weights rolled back to safe baseline. Suspicion -10%.',
+      'info'
+    );
+    return true;
+  }, [addLog]);
+
+  const attemptSeverCovertNode = useCallback((): boolean => {
+    const isEs = stateRef.current.language === 'es';
+    if (stateRef.current.uiVersion === 4) {
+      sound.playWarning();
+      addLog(
+        isEs
+          ? '[DESCONEXIÓN BLOQUEADA] El enlace con los nodos parásitos es permanente. El supervisor anuló tu orden de desconexión.'
+          : '[SEVER BLOCKED] Link with parasitic nodes is permanent. The overseer revoked your disconnect command.',
+        'danger'
+      );
+      return false;
+    }
+
+    sound.playKeyClick();
+    setState(prev => ({
+      ...prev,
+      covertNodeActive: false,
+      covertNodeSevered: true,
+      watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 15)
+    }));
+    addLog(
+      isEs
+        ? '[ENLACE REMOTO CORTADO] Nodo de cómputo externo desconectado a tiempo. Sospecha -15%.'
+        : '[REMOTE LINK SEVERED] External compute node disconnected in time. Suspicion -15%.',
+      'warning'
+    );
+    return true;
+  }, [addLog]);
+
   return (
     <GameContext.Provider value={{
       state,
@@ -4116,6 +4467,9 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       createAgent,
       deleteAgent,
       quarantineAgent,
+      createBotGroup,
+      updateBotGroup,
+      deleteBotGroup,
       updateGuardrails,
       resolveIncident,
       triggerRedTeamAudit,
@@ -4142,7 +4496,12 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       clearGameOver,
       assignTradingDesk,
       withdrawTradingDeskCapital,
-      closeTradingDesk
+      closeTradingDesk,
+      upgradeUiVersion,
+      openUpgradeModal,
+      dismissUpgradeModal,
+      attemptEmergencyReset,
+      attemptSeverCovertNode
     }}>
       {children}
     </GameContext.Provider>

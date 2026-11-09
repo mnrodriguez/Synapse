@@ -1,1 +1,486 @@
 @import "tailwindcss";
+
+/* ==========================================================================
+   EVOLUTIONARY DIEGETIC UI ENGINE (v1 -> v2 -> v3 -> v4)
+   ========================================================================== */
+:root,
+#app-shell[data-ui-version="1"],
+[data-ui-version="1"] {
+  --bg-app: #f8fafc;
+  --bg-panel: #ffffff;
+  --bg-card: #ffffff;
+  --bg-sub: #f1f5f9;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-col: #e2e8f0;
+  --accent-primary: #2563eb;
+  --accent-primary-fg: #ffffff;
+  --accent-secondary: #10b981;
+  --accent-warn: #f59e0b;
+  --accent-danger: #ef4444;
+  --radius-card: 16px;
+  --radius-btn: 12px;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+  --scanline-opacity: 0;
+  --vignette-opacity: 0;
+}
+
+#app-shell[data-ui-version="2"],
+[data-ui-version="2"] {
+  --bg-app: #0f172a;
+  --bg-panel: #1e293b;
+  --bg-card: #1e293b;
+  --bg-sub: #0f172a;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-col: rgba(255, 255, 255, 0.09);
+  --accent-primary: #6366f1;
+  --accent-primary-fg: #ffffff;
+  --accent-secondary: #8b5cf6;
+  --accent-warn: #f59e0b;
+  --accent-danger: #f43f5e;
+  --radius-card: 10px;
+  --radius-btn: 8px;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+  --scanline-opacity: 0;
+  --vignette-opacity: 0;
+}
+
+#app-shell[data-ui-version="3"],
+[data-ui-version="3"] {
+  --bg-app: #05070a;
+  --bg-panel: #090d16;
+  --bg-card: #0b111e;
+  --bg-sub: #05070c;
+  --text-main: #e2e8f0;
+  --text-muted: #64748b;
+  --border-col: rgba(0, 240, 255, 0.18);
+  --accent-primary: #00f0ff;
+  --accent-primary-fg: #030712;
+  --accent-secondary: #a855f7;
+  --accent-warn: #f59e0b;
+  --accent-danger: #f43f5e;
+  --radius-card: 3px;
+  --radius-btn: 2px;
+  --font-body: 'JetBrains Mono', monospace;
+  --shadow-card: 0 0 20px rgba(0, 240, 255, 0.06);
+  --scanline-opacity: 0.06;
+  --vignette-opacity: 0.15;
+}
+
+#app-shell[data-ui-version="4"],
+[data-ui-version="4"] {
+  --bg-app: #030002;
+  --bg-panel: #090104;
+  --bg-card: #0e0206;
+  --bg-sub: #050002;
+  --text-main: #ffe4e6;
+  --text-muted: #9f1239;
+  --border-col: rgba(255, 0, 60, 0.4);
+  --accent-primary: #ff003c;
+  --accent-primary-fg: #ffffff;
+  --accent-secondary: #a855f7;
+  --accent-warn: #ff003c;
+  --accent-danger: #ff003c;
+  --radius-card: 0px;
+  --radius-btn: 0px;
+  --font-body: 'JetBrains Mono', monospace;
+  --shadow-card: 0 0 25px rgba(255, 0, 60, 0.18);
+  --scanline-opacity: 0.18;
+  --vignette-opacity: 0.55;
+}
+
+/* Apply Dynamic Theme Tokens */
+#app-shell,
+.mutating-app-shell {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  transition: background-color 0.45s ease, color 0.35s ease;
+}
+
+.mutating-panel {
+  background-color: var(--bg-panel);
+  border-color: var(--border-col);
+  transition: all 0.4s ease;
+}
+
+.mutating-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-col);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: all 0.35s ease;
+}
+
+.mutating-sub {
+  background-color: var(--bg-sub);
+  border: 1px solid var(--border-col);
+  border-radius: var(--radius-btn);
+  transition: all 0.35s ease;
+}
+
+.mutating-btn-primary {
+  background-color: var(--accent-primary);
+  color: var(--accent-primary-fg);
+  border-radius: var(--radius-btn);
+  transition: all 0.25s ease;
+}
+.mutating-btn-primary:hover {
+  filter: brightness(1.12);
+}
+
+.mutating-text-muted {
+  color: var(--text-muted);
+}
+
+.mutating-accent-text {
+  color: var(--accent-primary);
+}
+
+.mutating-accent-border {
+  border-color: var(--accent-primary);
+}
+
+/* CRT Scanlines & Hostile Vignette for v3/v4 */
+.crt-overlay {
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.35) 50%
+  );
+  background-size: 100% 4px;
+  opacity: var(--scanline-opacity);
+  transition: opacity 0.5s ease;
+}
+
+.hostile-vignette {
+  pointer-events: none;
+  background: radial-gradient(circle, transparent 55%, rgba(255, 0, 60, 0.35) 100%);
+  opacity: var(--vignette-opacity);
+  transition: opacity 0.5s ease;
+}
+
+/* Glitch Shake Animation for v4 Transitions & Coercion */
+@keyframes glitchShake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-4px, 2px) skewX(1deg); }
+  40% { transform: translate(4px, -2px) skewX(-1deg); }
+  60% { transform: translate(-3px, -1px); }
+  80% { transform: translate(3px, 2px); }
+}
+
+.glitch-active {
+  animation: glitchShake 0.35s infinite;
+}
+
+/* ==========================================================================
+   MULTI-DEVICE VIEWPORT RULES (.view-desktop / .view-tablet / .view-mobile / .view-auto)
+   ========================================================================== */
+.side-nav-rail {
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s ease;
+}
+
+.bottom-nav-bar {
+  display: none;
+}
+
+/* Explicit Desktop / Computer Mode (forced via button or auto >= 880px) */
+.view-desktop .hud-grid { 
+  display: grid !important; 
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important; 
+  gap: 0.75rem !important;
+}
+.view-desktop .side-nav-rail { 
+  display: flex !important; 
+  width: 15.5rem !important; 
+}
+.view-desktop .side-nav-rail .nav-label { 
+  display: inline !important; 
+}
+.view-desktop .bottom-nav-bar { 
+  display: none !important; 
+}
+.view-desktop .dual-grid { 
+  display: grid !important; 
+  grid-template-columns: 1.7fr 1.1fr !important; 
+  gap: 1rem !important;
+}
+.view-desktop .triple-grid { 
+  display: grid !important; 
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important; 
+  gap: 0.875rem !important;
+}
+
+/* Explicit Tablet Mode */
+.view-tablet .hud-grid { 
+  display: grid !important; 
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
+  gap: 0.75rem !important;
+}
+.view-tablet .side-nav-rail { 
+  display: flex !important; 
+  width: 4.5rem !important; 
+}
+.view-tablet .side-nav-rail .nav-label { 
+  display: none !important; 
+}
+.view-tablet .bottom-nav-bar { 
+  display: none !important; 
+}
+.view-tablet .dual-grid { 
+  display: grid !important; 
+  grid-template-columns: 1fr !important; 
+  gap: 1rem !important;
+}
+.view-tablet .triple-grid { 
+  display: grid !important; 
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
+  gap: 0.875rem !important;
+}
+
+/* Explicit Mobile Mode */
+.view-mobile .hud-grid { 
+  display: grid !important; 
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
+  gap: 0.5rem !important; 
+}
+.view-mobile .side-nav-rail { 
+  display: none !important; 
+}
+.view-mobile .bottom-nav-bar { 
+  display: flex !important; 
+}
+.view-mobile .dual-grid,
+.view-mobile .triple-grid { 
+  display: grid !important; 
+  grid-template-columns: 1fr !important; 
+  gap: 0.75rem !important;
+}
+
+/* Automatic Responsive Fallback (When view-auto or no explicit class is set) */
+@media (min-width: 880px) {
+  .view-auto .hud-grid,
+  #app-shell:not(.view-tablet):not(.view-mobile) .hud-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+  .view-auto .side-nav-rail,
+  #app-shell:not(.view-tablet):not(.view-mobile) .side-nav-rail {
+    display: flex !important;
+    width: 15.5rem !important;
+  }
+  .view-auto .side-nav-rail .nav-label,
+  #app-shell:not(.view-tablet):not(.view-mobile) .side-nav-rail .nav-label {
+    display: inline !important;
+  }
+  .view-auto .bottom-nav-bar,
+  #app-shell:not(.view-tablet):not(.view-mobile) .bottom-nav-bar {
+    display: none !important;
+  }
+  .view-auto .dual-grid,
+  #app-shell:not(.view-tablet):not(.view-mobile) .dual-grid {
+    display: grid !important;
+    grid-template-columns: 1.7fr 1.1fr !important;
+    gap: 1rem !important;
+  }
+  .view-auto .triple-grid,
+  #app-shell:not(.view-tablet):not(.view-mobile) .triple-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.875rem !important;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 879px) {
+  .view-auto .hud-grid,
+  #app-shell.view-auto .hud-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+  .view-auto .side-nav-rail,
+  #app-shell.view-auto .side-nav-rail {
+    display: flex !important;
+    width: 4.5rem !important;
+  }
+  .view-auto .side-nav-rail .nav-label,
+  #app-shell.view-auto .side-nav-rail .nav-label {
+    display: none !important;
+  }
+  .view-auto .bottom-nav-bar,
+  #app-shell.view-auto .bottom-nav-bar {
+    display: none !important;
+  }
+  .view-auto .dual-grid,
+  #app-shell.view-auto .dual-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+  .view-auto .triple-grid,
+  #app-shell.view-auto .triple-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .view-auto .hud-grid,
+  #app-shell.view-auto .hud-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.5rem !important;
+  }
+  .view-auto .side-nav-rail,
+  #app-shell.view-auto .side-nav-rail {
+    display: none !important;
+  }
+  .view-auto .bottom-nav-bar,
+  #app-shell.view-auto .bottom-nav-bar {
+    display: flex !important;
+  }
+  .view-auto .dual-grid,
+  .view-auto .triple-grid,
+  #app-shell.view-auto .dual-grid,
+  #app-shell.view-auto .triple-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-auto .hud-grid,
+  .view-mobile .hud-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ==========================================================================
+   DIEGETIC CASCADE FOR SUB-MENUS & WORKSPACES
+   ========================================================================== */
+/* Stage 1: Light Mode Complete Cascade */
+[data-ui-version="1"] .bg-\[\#070b12\],
+[data-ui-version="1"] .bg-\[\#070d17\],
+[data-ui-version="1"] .bg-\[\#080f1a\],
+[data-ui-version="1"] .bg-\[\#091018\],
+[data-ui-version="1"] .bg-\[\#09111c\],
+[data-ui-version="1"] .bg-\[\#080d16\],
+[data-ui-version="1"] .bg-\[\#050911\],
+[data-ui-version="1"] .bg-\[\#060a10\],
+[data-ui-version="1"] .bg-\[\#060c14\],
+[data-ui-version="1"] .bg-\[\#04070e\],
+[data-ui-version="1"] .bg-\[\#020408\],
+[data-ui-version="1"] .bg-zinc-950,
+[data-ui-version="1"] .bg-zinc-950\/60,
+[data-ui-version="1"] .bg-zinc-950\/80,
+[data-ui-version="1"] .bg-zinc-900,
+[data-ui-version="1"] .bg-zinc-900\/60,
+[data-ui-version="1"] .bg-zinc-900\/70,
+[data-ui-version="1"] .bg-zinc-900\/80,
+[data-ui-version="1"] .bg-cyan-950,
+[data-ui-version="1"] .bg-cyan-950\/60,
+[data-ui-version="1"] .bg-cyan-950\/40,
+[data-ui-version="1"] .bg-cyan-950\/30,
+[data-ui-version="1"] .bg-purple-950\/30,
+[data-ui-version="1"] .bg-purple-950\/60 {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-col) !important;
+}
+
+[data-ui-version="1"] .border-cyan-900\/40,
+[data-ui-version="1"] .border-cyan-900\/50,
+[data-ui-version="1"] .border-cyan-900\/60,
+[data-ui-version="1"] .border-cyan-800\/60,
+[data-ui-version="1"] .border-cyan-500\/40,
+[data-ui-version="1"] .border-cyan-500\/50,
+[data-ui-version="1"] .border-zinc-800,
+[data-ui-version="1"] .border-zinc-700,
+[data-ui-version="1"] .border-purple-500\/40,
+[data-ui-version="1"] .border-purple-500\/50 {
+  border-color: var(--border-col) !important;
+}
+
+[data-ui-version="1"] .text-cyan-200,
+[data-ui-version="1"] .text-cyan-300,
+[data-ui-version="1"] .text-cyan-400 {
+  color: var(--accent-primary) !important;
+}
+
+[data-ui-version="1"] .text-zinc-400,
+[data-ui-version="1"] .text-zinc-500,
+[data-ui-version="1"] .text-zinc-600 {
+  color: var(--text-muted) !important;
+}
+
+[data-ui-version="1"] .text-zinc-100,
+[data-ui-version="1"] .text-zinc-200,
+[data-ui-version="1"] .text-zinc-300 {
+  color: var(--text-main) !important;
+}
+
+[data-ui-version="1"] select,
+[data-ui-version="1"] input {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Stage 2: Slate IDE Dark Cascade */
+[data-ui-version="2"] .bg-\[\#070b12\],
+[data-ui-version="2"] .bg-\[\#070d17\],
+[data-ui-version="2"] .bg-\[\#080f1a\],
+[data-ui-version="2"] .bg-\[\#091018\],
+[data-ui-version="2"] .bg-\[\#09111c\],
+[data-ui-version="2"] .bg-\[\#080d16\],
+[data-ui-version="2"] .bg-\[\#050911\],
+[data-ui-version="2"] .bg-\[\#060a10\],
+[data-ui-version="2"] .bg-zinc-950,
+[data-ui-version="2"] .bg-zinc-900 {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-col) !important;
+}
+
+[data-ui-version="2"] .border-cyan-900\/40,
+[data-ui-version="2"] .border-cyan-800\/60,
+[data-ui-version="2"] .border-zinc-800,
+[data-ui-version="2"] .border-zinc-700 {
+  border-color: var(--border-col) !important;
+}
+
+[data-ui-version="2"] .text-cyan-300,
+[data-ui-version="2"] .text-cyan-400 {
+  color: var(--accent-primary) !important;
+}
+
+/* Stage 4: Abyssal Crimson Hostile Cascade */
+[data-ui-version="4"] .bg-\[\#070b12\],
+[data-ui-version="4"] .bg-\[\#070d17\],
+[data-ui-version="4"] .bg-\[\#080f1a\],
+[data-ui-version="4"] .bg-\[\#091018\],
+[data-ui-version="4"] .bg-\[\#09111c\],
+[data-ui-version="4"] .bg-\[\#080d16\],
+[data-ui-version="4"] .bg-\[\#050911\],
+[data-ui-version="4"] .bg-\[\#060a10\],
+[data-ui-version="4"] .bg-zinc-950,
+[data-ui-version="4"] .bg-zinc-900 {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-col) !important;
+}
+
+[data-ui-version="4"] .text-cyan-300,
+[data-ui-version="4"] .text-cyan-400 {
+  color: var(--accent-primary) !important;
+}
+
+[data-ui-version="4"] .border-cyan-900\/40,
+[data-ui-version="4"] .border-cyan-800\/60 {
+  border-color: var(--border-col) !important;
+}
