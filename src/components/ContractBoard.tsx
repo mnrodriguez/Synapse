@@ -49,6 +49,21 @@ const SQUAD_COLORS = [
   { name: 'Sky', hex: '#0284c7', bgClass: 'bg-sky-500/20 text-sky-300 border-sky-500/40' }
 ];
 
+const isContractTierUnlocked = (tier: string, uiVersion: number = 1): boolean => {
+  if (tier === 'tier1_micro') return true;
+  if (tier === 'tier2_corporate') return uiVersion >= 2;
+  if (tier === 'tier3_blackops') return uiVersion >= 3;
+  if (tier === 'tier4_singularity') return uiVersion >= 4;
+  return true;
+};
+
+const getRequiredUiVersionForTier = (tier: string) => {
+  if (tier === 'tier2_corporate') return { nameEn: 'Synapse Studio Pro (v2.0)', nameEs: 'Synapse Studio Pro (v2.0)', ver: 2 };
+  if (tier === 'tier3_blackops') return { nameEn: 'Blackbox OS (v3.0)', nameEs: 'Blackbox OS (v3.0)', ver: 3 };
+  if (tier === 'tier4_singularity') return { nameEn: 'Sovereign Core (v4.0)', nameEs: 'Sovereign Core (v4.0)', ver: 4 };
+  return { nameEn: 'Synapse Home Lab (v1.0)', nameEs: 'Synapse Home Lab (v1.0)', ver: 1 };
+};
+
 export const ContractBoard: React.FC = () => {
   const { 
     state, 
@@ -271,7 +286,11 @@ export const ContractBoard: React.FC = () => {
       ))
     );
 
-    const isEligible = !isRunning &&
+    const isTierUnlocked = isContractTierUnlocked(contract.tier, state.uiVersion || 1);
+    const requiredUiVer = getRequiredUiVersionForTier(contract.tier);
+
+    const isEligible = isTierUnlocked &&
+      !isRunning &&
       !hasPowerBreaker &&
       !hasDetention &&
       hasClusterCompute &&
@@ -315,6 +334,8 @@ export const ContractBoard: React.FC = () => {
       hasDetention,
       computeRequired,
       missionPowerKw,
+      isTierUnlocked,
+      requiredUiVer,
       isEligible,
       assessment
     };
@@ -972,6 +993,17 @@ export const ContractBoard: React.FC = () => {
                         )}
                       </div>
 
+                      {!readiness.isTierUnlocked && (
+                        <div className="mt-2 p-2 rounded mutating-sub border text-[10px] text-amber-500 font-bold flex items-center gap-1.5 font-mono">
+                          <Lock className="w-3.5 h-3.5 shrink-0" />
+                          <span>
+                            {state.language === 'es'
+                              ? `DESBLOQUEO PENDIENTE DE ETAPA DE HISTORIA: ${readiness.requiredUiVer.nameEs}`
+                              : `STORY MILESTONE LOCKED: ${readiness.requiredUiVer.nameEn}`}
+                          </span>
+                        </div>
+                      )}
+
                       {contract.completed ? (
                         <span className="flex items-center gap-1 text-emerald-400 text-xs font-bold">
                           <Check className="w-3.5 h-3.5" />
@@ -986,6 +1018,7 @@ export const ContractBoard: React.FC = () => {
                         <button
                           onClick={() => handleLaunchContract(contract.id)}
                           disabled={!readiness.isEligible}
+                          title={!readiness.isTierUnlocked ? (state.language === 'es' ? `Monta un modelo anfitrión que alcance ${readiness.requiredUiVer.nameEs} para desbloquear esta misión.` : `Mount a Host Model that reaches ${readiness.requiredUiVer.nameEn} to unlock this mission.`) : undefined}
                           className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
                             readiness.isEligible
                               ? (contract.isMandatory || state.uiVersion === 4)

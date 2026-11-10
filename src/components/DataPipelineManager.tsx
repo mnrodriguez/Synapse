@@ -193,7 +193,7 @@ export const DataPipelineManager: React.FC = () => {
                   key={ds.id} 
                   className={`p-3 rounded-lg border transition-all flex flex-col justify-between ${
                     ds.unlocked 
-                      ? 'bg-[#09111c] border-cyan-800/60 shadow-[0_0_15px_rgba(0,255,200,0.04)]' 
+                      ? 'mutating-card border-cyan-800/60 shadow-sm'
                       : 'bg-zinc-950/60 border-zinc-800 opacity-70'
                   }`}
                 >
@@ -239,7 +239,7 @@ export const DataPipelineManager: React.FC = () => {
                       {content.description}
                     </p>
 
-                    <div className="mt-2 p-2 rounded bg-[#060a10] border border-cyan-950 text-[11px] space-y-1">
+                    <div className="mt-2 p-2 rounded mutating-sub border text-[11px] space-y-1">
                       <div className="text-purple-300 font-semibold">{content.bonusAttribute}</div>
                       <div className="text-zinc-500 text-[10px]">{content.technicalDetails}</div>
                     </div>
@@ -304,7 +304,7 @@ export const DataPipelineManager: React.FC = () => {
           </div>
 
           {/* Visual Knowledge Flow Diagram */}
-          <div className="bg-[#09111c] border border-cyan-900/50 p-3 rounded-lg text-xs space-y-2">
+          <div className="mutating-panel border p-3 rounded-lg text-xs space-y-2">
             <h4 className="font-bold text-cyan-300 flex items-center gap-1.5">
               <GitFork className="w-3.5 h-3.5 text-cyan-400" />
               {localize(state.language, 'FLUJO ARQUITECTÓNICO DE ALIMENTACIÓN NEURONAL (DAG)', 'NEURAL DATA FLOW ARCHITECTURE (DAG)')}
@@ -426,7 +426,7 @@ export const DataPipelineManager: React.FC = () => {
               </div>
 
               {/* Progressive Complexity Tree Preview */}
-              <div className="bg-[#09111c] border border-cyan-900/50 p-3 rounded-lg text-xs space-y-2">
+              <div className="mutating-panel border p-3 rounded-lg text-xs space-y-2">
                 <h4 className="font-bold text-cyan-300 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                   {localize(state.language, 'ÁRBOL DE COMPLEJIDAD PROGRESIVA DE DATASETS (VISTA PREVIA)', 'PROGRESSIVE DATASET COMPLEXITY TREE (PREVIEW)')}
@@ -485,7 +485,7 @@ export const DataPipelineManager: React.FC = () => {
               )}
 
               {/* Generator Console */}
-              <form onSubmit={handleStartScraping} className="rounded-lg border border-cyan-800/60 bg-[#09111c] p-3 space-y-3">
+              <form onSubmit={handleStartScraping} className="rounded-lg border mutating-panel p-3 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-cyan-400" />

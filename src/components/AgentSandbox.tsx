@@ -370,7 +370,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
   return (
     <div className="h-full flex flex-col gap-2 overflow-y-auto pr-1 text-xs font-mono select-none">
       {/* Top Banner: Swarm Telemetry & Master Controls */}
-      <div className="bg-[#070d17] border border-cyan-800/60 rounded-lg p-3 shadow-[0_0_15px_rgba(0,255,200,0.06)]">
+      <div className="mutating-panel border rounded-lg p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-cyan-900/40">
           <div>
             <div className="flex items-center gap-2">
@@ -541,7 +541,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
       </div>
 
       {/* 2. Swarm Council Podiums (Strictly Max 5 Agents) */}
-      <div className="rounded-lg border border-cyan-900/60 bg-[#070d17] p-3 space-y-3">
+      <div className="rounded-lg border mutating-panel p-3 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-cyan-400" />
@@ -1068,7 +1068,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
       </div>
 
       {/* CONTINUOUS MARKET TRADING DESK PANEL */}
-      <div className="bg-[#070d17] border border-cyan-800/60 rounded-lg p-3 space-y-3">
+      <div className="mutating-panel border rounded-lg p-3 space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-cyan-900/50">
           <div className="flex items-center gap-2">
             <Coins className="w-4 h-4 text-emerald-400" />
@@ -1083,7 +1083,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
         {state.activeTradingDesk ? (
           <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 p-3 rounded-lg bg-[#040810] border border-emerald-500/40 font-mono">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 p-3 rounded-lg mutating-sub border font-mono">
               <div>
                 <span className="text-zinc-500 block text-[10px]">{localize(state.language, 'AGENTE ASIGNADO', 'ASSIGNED AGENT')}</span>
                 <span className="text-cyan-300 font-bold text-xs flex items-center gap-1">
@@ -1143,7 +1143,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             </div>
           </div>
         ) : (
-          <div className="p-3 bg-[#040810] border border-zinc-800 rounded-lg space-y-3">
+          <div className="p-3 mutating-sub border rounded-lg space-y-3">
             <p className="text-zinc-400 text-xs leading-snug">
               {localize(
                 state.language,
@@ -1380,7 +1380,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1">
         {/* Left Column: Active Agents Roster (2 cols) */}
         <div className="lg:col-span-2 flex flex-col gap-2">
-          <div className="bg-[#070d17] border border-cyan-900/50 rounded-lg p-3 flex-1 flex flex-col">
+          <div className="mutating-panel border rounded-lg p-3 flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-2 pb-2 border-b border-cyan-900/40">
               <span className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
                 <Bot className="w-3.5 h-3.5 text-cyan-400" />

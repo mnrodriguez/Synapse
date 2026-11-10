@@ -476,7 +476,7 @@ export const ArchitectureStudio: React.FC = () => {
       {activeArchTab === 'topology' && (
         <div className="space-y-4 animate-fadeIn">
           {/* Section 0: Dataset Baseline & Micro-Model Specialization */}
-          <section className="space-y-2 rounded border border-cyan-800/60 bg-[#080f1a] p-3 font-mono">
+          <section className="space-y-2 rounded border mutating-panel p-3 font-mono">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-1.5">
           <div className="flex items-center gap-1.5">
             <Database className="w-4 h-4 text-cyan-400" />
@@ -655,7 +655,7 @@ export const ArchitectureStudio: React.FC = () => {
       </div>
 
           {/* Parameters scale */}
-          <div className="space-y-1.5 p-3 rounded-lg bg-[#080f1a] border border-cyan-900/50">
+          <div className="space-y-1.5 p-3 rounded-lg mutating-panel border">
             <label className="text-xs text-zinc-300 font-bold flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-yellow-400" />
               <span>{localize(state.language, 'ESCALA DE PARÁMETROS // CAPACIDAD COGNITIVA', 'PARAMETER SCALE // COGNITIVE CAPACITY')}</span>

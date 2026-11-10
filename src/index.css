@@ -76,12 +76,12 @@
 #app-shell[data-ui-version="4"],
 [data-ui-version="4"] {
   --bg-app: #020000;
-  --bg-panel: #090104;
-  --bg-card: rgba(20, 0, 5, 0.9);
+  --bg-panel: #080003;
+  --bg-card: #0e0205;
   --bg-sub: #050002;
-  --text-main: #ffe4e6;
-  --text-muted: #9f1239;
-  --border-col: rgba(255, 0, 60, 0.45);
+  --text-main: #ffffff;
+  --text-muted: #ff6685;
+  --border-col: #ff003c;
   --accent-primary: #ff003c;
   --accent-primary-fg: #ffffff;
   --accent-secondary: #a855f7;
@@ -91,9 +91,9 @@
   --radius-btn: 0px;
   --font-sans: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
   --font-mono: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
-  --shadow-card: 0 0 25px rgba(255, 0, 60, 0.22);
-  --scanline-opacity: 0.22;
-  --vignette-opacity: 0.6;
+  --shadow-card: 0 0 15px rgba(255, 0, 60, 0.25);
+  --scanline-opacity: 0.12;
+  --vignette-opacity: 0;
 }
 
 /* Apply Dynamic Theme Tokens */
