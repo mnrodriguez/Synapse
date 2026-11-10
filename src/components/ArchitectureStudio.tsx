@@ -311,6 +311,21 @@ export const ArchitectureStudio: React.FC = () => {
                   >
                     <Pencil className="h-3 w-3" />
                   </button>
+
+                  {current.id === model.id ? (
+                    <span className="ml-1 text-[9px] px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 font-bold border border-purple-500/40 shrink-0">
+                      {localize(state.language, 'ANFITRIÓN ✓', 'HOST ✓')}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => mountHostModel(model.id)}
+                      className="ml-1 text-[9px] px-1.5 py-0.2 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-200 font-bold border border-cyan-500/40 transition cursor-pointer shrink-0"
+                      title={localize(state.language, 'Montar como Agente Anfitrión de Synapse', 'Mount as Synapse Host Agent')}
+                    >
+                      🚀 {localize(state.language, 'Montar', 'Mount')}
+                    </button>
+                  )}
                 </>
               )}
             </div>

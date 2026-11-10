@@ -7,16 +7,13 @@ import React, { useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { 
   CheckCircle2, 
-  Circle, 
-  ArrowRight, 
-  X, 
-  Sparkles, 
+  ArrowRight,
+  Sparkles,
   Server, 
   Layers, 
   Activity, 
   Bot, 
-  Briefcase,
-  Coins
+  Briefcase
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
@@ -28,7 +25,7 @@ interface TutorialMissionBannerProps {
 }
 
 export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ onNavigateTab, activeTab = '' }) => {
-  const { state, advanceTutorialStep, dismissTutorial, addLog } = useGame();
+  const { state, advanceTutorialStep, addLog } = useGame();
 
   if (state.tutorialCompleted || state.tutorialDismissed) {
     return null;
@@ -53,7 +50,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       addLog(isEs 
         ? 'Protocolo Génesis [1/5]: Rig inicial completo: GPU, refrigeración, fuente de alimentación y red instaladas.'
         : 'Genesis Protocol [1/5]: Starter rig complete: GPU, cooling, power supply, and network installed.', 'success');
-    } else if (step === 2 && state.savedModels.some(m => m.reasoningScore >= 65)) {
+    } else if (step === 2 && state.savedModels.some(m => m.reasoningScore >= 16)) {
       sound.playBreakthrough();
       advanceTutorialStep(3);
       addLog(isEs
@@ -136,29 +133,29 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
   const currentStepInfo = stepsData[Math.min(4, step)];
 
   return (
-    <div className="w-full bg-gradient-to-r from-[#07131f] via-[#091829] to-[#040810] border-b border-cyan-500/60 p-2 sm:p-2.5 font-mono select-none shadow-[0_4px_25px_rgba(0,255,200,0.12)] z-10 animate-fadeIn">
+    <div className="w-full mutating-panel border-b p-2 sm:p-2.5 font-mono select-none shadow-md z-10 animate-fadeIn">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5">
         
         {/* Left: Mission Lore and current stage */}
         <div className="flex items-start sm:items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-cyan-950 border border-cyan-400/50 shadow-[0_0_12px_rgba(0,255,200,0.3)] shrink-0">
-            <Sparkles className="w-4 h-4 text-cyan-300 animate-pulse" />
+          <div className="p-1.5 rounded-lg mutating-sub border shrink-0">
+            <Sparkles className="w-4 h-4 mutating-accent-text animate-pulse" />
           </div>
 
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] uppercase tracking-widest font-black text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800/80">
+              <span className="text-[10px] uppercase tracking-widest font-black mutating-accent-text mutating-sub px-2 py-0.5 rounded border">
                 {isEs ? 'MISIÓN INICIAL // PROTOCOLO GÉNESIS' : 'FIRST MISSION // GENESIS PROTOCOL'}
               </span>
-              <span className="text-xs font-bold text-zinc-100 flex items-center gap-1">
+              <span className="text-xs font-bold font-sans flex items-center gap-1">
                 {currentStepInfo.title}
               </span>
-              <span className="text-[10px] text-amber-300 font-bold bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-600/40">
-                Paso {step + 1}/5
+              <span className="text-[10px] text-amber-500 font-bold mutating-sub px-1.5 py-0.2 rounded border border-amber-500/40">
+                {isEs ? `Paso ${step + 1}/5` : `Step ${step + 1}/5`}
               </span>
             </div>
 
-            <p className="text-[11px] text-zinc-300 mt-0.5 leading-snug">
+            <p className="text-[11px] mutating-text-muted mt-0.5 leading-snug">
               {currentStepInfo.desc}
             </p>
           </div>
@@ -174,69 +171,22 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
                 title={s.title}
                 className={`w-2.5 h-2.5 rounded-full transition-all ${
                   idx < step 
-                    ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
+                    ? 'bg-emerald-500 shadow-sm'
                     : idx === step
-                    ? 'bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(0,255,200,0.9)]'
-                    : 'bg-zinc-800'
+                    ? 'bg-cyan-400 animate-pulse shadow-md'
+                    : 'bg-zinc-700/50'
                 }`}
               />
             ))}
           </div>
 
-          {/* Action button */}
-          {step === 1 ? (
-            <button
-              type="button"
-              onClick={() => {
-                sound.playNavSwitch();
-                advanceTutorialStep(2);
-              }}
-              className="px-3 py-1.5 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-zinc-950 text-xs font-black rounded-lg shadow-[0_0_12px_rgba(0,255,200,0.4)] flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <span>{isEs ? 'CONFIRMAR Y AVANZAR' : 'CONFIRM & ADVANCE'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          ) : step === 2 && !state.activeTraining ? (
-            <button
-              type="button"
-              onClick={() => {
-                sound.playNavSwitch();
-                onNavigateTab('training');
-              }}
-              className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-black rounded-lg shadow-[0_0_10px_rgba(0,255,200,0.3)] flex items-center gap-1.5 transition-all cursor-pointer animate-pulse"
-            >
-              <span>{currentStepInfo.buttonText}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                sound.playNavSwitch();
-                onNavigateTab(currentStepInfo.tab);
-              }}
-              className={`px-3 py-1.5 text-xs font-black rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
-                activeTab === currentStepInfo.tab
-                  ? 'bg-zinc-800 text-cyan-300 border border-cyan-500/50'
-                  : 'bg-gradient-to-r from-cyan-500 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-zinc-950 shadow-[0_0_12px_rgba(0,255,200,0.4)] animate-pulse'
-              }`}
-            >
-              <span>{currentStepInfo.buttonText}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          {/* Dismiss button */}
           <button
             type="button"
-            onClick={() => {
-              sound.playKeyClick();
-              dismissTutorial();
-            }}
-            title={isEs ? 'Omitir tutorial' : 'Skip tutorial'}
-            className="p-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors cursor-pointer"
+            onClick={() => onNavigateTab(currentStepInfo.tab)}
+            className="px-3.5 py-1.5 mutating-btn-primary font-mono text-xs font-extrabold flex items-center gap-1.5 shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95"
           >
-            <X className="w-4 h-4" />
+            <span>{currentStepInfo.buttonText}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 

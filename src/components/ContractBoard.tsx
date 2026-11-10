@@ -529,6 +529,24 @@ export const ContractBoard: React.FC = () => {
       {/* ========================================================================= */}
       {activeBoardView === 'contracts' && (
         <div className="space-y-4">
+          {/* Stage-Adapted Contract Banner */}
+          <div className="p-2.5 rounded mutating-sub border text-[11px] font-mono flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4 mutating-accent-text shrink-0" />
+              <span className="mutating-text-muted font-bold">
+                {state.uiVersion === 4 ? (
+                  localize(state.language, 'DIRECTIVAS DE ASIMILACIÓN V4.0: Misiones obligatorias de infraestructura global emitidas por el Núcleo Soberano.', 'V4.0 ASSIMILATION DIRECTIVES: Mandatory global infrastructure takeover orders issued by Sovereign Core.')
+                ) : state.uiVersion === 3 ? (
+                  localize(state.language, 'OPERACIONES NEGRAS V3.0: Ciber-operaciones de alto riesgo, filtración corporativa y nodos parásitos.', 'V3.0 BLACK OPS: High-stakes cyber operations, corporate exfiltration, and parasitic node bridges.')
+                ) : state.uiVersion === 2 ? (
+                  localize(state.language, 'BOUNTIES FREELANCE V2.0: Automatización indie, fine-tuning sin censura y arbitraje API.', 'V2.0 FREELANCE BOUNTIES: Indie script automation, uncensored fine-tuning, and API arbitrage.')
+                ) : (
+                  localize(state.language, 'TRABAJITOS HOBBYIST V1.0: Tareas caseras inocentes para juntar moneditas para el chanchito de hardware.', 'V1.0 HOBBYIST SIDE GIGS: Innocent neighborhood tasks to earn extra cash for hardware.')
+                )}
+              </span>
+            </div>
+          </div>
+
           {/* Tier Filter Tabs */}
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/10 pb-2">
             <div className="flex flex-wrap items-center gap-1.5 text-[11px]">

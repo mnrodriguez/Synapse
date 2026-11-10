@@ -4217,7 +4217,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       quantization: config.modelQuantization,
       lossFunction: 'cross_entropy',
       activeDataSources: [config.starterDataId],
-      reasoningScore: 72,
+      reasoningScore: 18, // 18 * 4 = 72 Reasoning IQ (v1.0 Hobbyist)
       vramRequiredGb: Math.max(1, vramReq),
       computeRequiredPflops: Math.max(0.001, compReq)
     };

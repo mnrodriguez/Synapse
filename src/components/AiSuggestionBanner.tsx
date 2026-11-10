@@ -36,7 +36,7 @@ export const AiSuggestionBanner: React.FC<AiSuggestionBannerProps> = ({ activeTa
   let targetTab: string | undefined = undefined;
   let highlightBadge = isEs ? 'ACCIÓN PASO A PASO' : 'STEP-BY-STEP ACTION';
 
-  const trainedModel = state.currentModel.reasoningScore >= 70 || state.savedModels.some(m => m.reasoningScore >= 70);
+  const trainedModel = state.currentModel.reasoningScore >= 16 || state.savedModels.some(m => m.reasoningScore >= 16);
   const completedGig = state.completedContractsCount > 0 || state.contracts.some(c => c.completed);
   const hasAgent = state.agents.length > 0;
   const isTraining = Boolean(state.activeTraining);
