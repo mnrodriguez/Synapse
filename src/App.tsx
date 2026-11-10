@@ -58,7 +58,6 @@ type WorkspaceTab =
 const MainGameScreen: React.FC = () => {
   const { state, attemptEmergencyReset } = useGame();
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('architecture');
-  const [viewportMode, setViewportMode] = useState<ViewportMode>('auto');
   const [manualOpen, setManualOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -137,7 +136,7 @@ const MainGameScreen: React.FC = () => {
     <div 
       id="app-shell"
       data-ui-version={ver}
-      className={`flex flex-col h-screen w-screen mutating-app-shell overflow-hidden select-none antialiased relative view-${viewportMode}`}
+      className="flex flex-col h-screen w-screen mutating-app-shell overflow-hidden select-none antialiased relative"
     >
       {/* CRT Scanlines Overlay (Visible in v3/v4) */}
       <div className="crt-overlay absolute inset-0 z-40 pointer-events-none" />
@@ -145,10 +144,8 @@ const MainGameScreen: React.FC = () => {
       {/* Hostile Vignette Overlay (Visible in v3/v4) */}
       <div className="hostile-vignette absolute inset-0 z-40 pointer-events-none" />
 
-      {/* Master Top Bar + Diegetic Top Title Bar matching the prototype */}
+      {/* Diegetic Header Top Bar */}
       <TopNav 
-        viewportMode={viewportMode}
-        onSetViewportMode={setViewportMode}
         onOpenManual={() => setManualOpen(true)}
         onOpenLeaderboard={() => setLeaderboardOpen(true)}
         onOpenAuth={() => setAuthOpen(true)}
@@ -255,7 +252,7 @@ const MainGameScreen: React.FC = () => {
         </aside>
 
         {/* Central Workspace Module Panel */}
-        <main className="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-4">
+        <main className="workspace-container flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-4">
           {activeTab === 'architecture' && <ArchitectureStudio />}
           {activeTab === 'training' && <TrainingMonitor />}
           {activeTab === 'hardware' && <HardwareRack />}

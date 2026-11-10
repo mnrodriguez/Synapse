@@ -74,6 +74,24 @@ export const ResearchTree: React.FC = () => {
         {localize(state.language, 'La tecnología sigue un orden inspirado en hitos publicados. Cada avance puede financiarse antes para acelerar la partida o se desbloquea gratis al alcanzar su día de campaña; los nodos futuros son proyecciones, no hechos confirmados.', 'Technology follows a progression inspired by published milestones. Fund research early to accelerate, or wait for its campaign-day availability; future nodes are projections, not confirmed discoveries.')}
       </p>
 
+      {/* Stage-Adapted Funding Protocol Banner */}
+      <div className="p-2.5 rounded bg-purple-950/30 border border-purple-500/40 text-[11px] font-mono flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Zap className="w-4 h-4 text-purple-400 shrink-0" />
+          <span className="text-purple-300 font-bold">
+            {state.uiVersion === 4 ? (
+              localize(state.language, 'MODO DE COMPILACIÓN V4.0: Generación e integración directa de pruebas sintéticas post-humanas (Requiere 80%+ de disyuntor).', 'V4.0 COMPILATION MODE: Direct synthesis of post-human architectural proofs (Requires 80%+ Breaker Capacity).')
+            ) : state.uiVersion === 3 ? (
+              localize(state.language, 'PROTOCOLO V3.0 COVERT: Extracción encubierta de papers y exploits zero-day por agentes del enjambre.', 'V3.0 COVERT PROTOCOL: Swarm agent zero-day paper theft and server intercept vectors.')
+            ) : state.uiVersion === 2 ? (
+              localize(state.language, 'MECANISMO V2.0 PRO: Patrocinios de repositorios GitHub y pre-prints de ArXiv.', 'V2.0 PRO MECHANISM: GitHub repository sponsorships and early ArXiv pre-prints.')
+            ) : (
+              localize(state.language, 'FONDO DE INVESTIGACIÓN V1.0: Donaciones de horas GPU e impulsos de minicrowdfunding ($25, $100).', 'V1.0 RESEARCH FUND: Community crowdfunding pledges ($25, $100) and GPU hour donations.')
+            )}
+          </span>
+        </div>
+      </div>
+
       {/* Tech Tree Nodes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {[...state.researchTree]

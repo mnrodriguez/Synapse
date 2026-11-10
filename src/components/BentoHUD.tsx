@@ -18,21 +18,21 @@ import {
   ArrowUpCircle,
   AlertTriangle,
   Flame,
-  CheckCircle2,
-  Lock
+  Languages,
+  Clock,
+  Shield
 } from 'lucide-react';
 import { localize } from '../utils/i18n';
 import { sound } from '../audio/soundManager';
 
 export const BentoHUD: React.FC = () => {
-  const { state, openUpgradeModal } = useGame();
+  const { state, openUpgradeModal, setLanguage } = useGame();
   const lang = state.language === 'es' ? 'es' : 'en';
   const ver = state.uiVersion || 1;
   const p = VERSION_PROFILES[lang][ver];
 
   const powerRatio = Math.min(100, (state.activePowerKw / Math.max(0.1, state.maxPowerKw)) * 100);
   const isPowerTrip = state.powerTripSeconds > 0;
-  const isThrottling = state.systemHeatCelsius > 88;
 
   // Determine if next upgrade is available to offer via the Co-Pilot CTA
   const nextVer = ver < 4 ? ((ver + 1) as 2 | 3 | 4) : null;
@@ -61,33 +61,45 @@ export const BentoHUD: React.FC = () => {
     if (state.systemHeatCelsius >= 75) {
       return { label: localize(state.language, 'Caliente (Estrangulando)', 'Hot (Throttling)'), color: 'text-amber-400' };
     }
-    return { label: localize(state.language, 'Estable', 'Optimal (Quiet)'), color: 'text-emerald-400' };
+    return { label: localize(state.language, 'Estable', 'Optimal'), color: 'text-emerald-400' };
   };
 
   const thermalStatus = getThermalStatus();
+  const reasoningIq = Math.round(Math.min(400, (state.currentModel.reasoningScore || 50) * 4));
 
   return (
     <div className="w-full space-y-2 select-none">
       {/* 4-Card Bento Grid */}
       <section className="hud-grid gap-2.5">
         
-        {/* CARD 1: FINANCES & UTILITY BILL */}
+        {/* CARD 1: FINANCES & TICK CLOCK */}
         <div className="mutating-card p-3 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px]">
             <span className="font-semibold uppercase tracking-wider mutating-text-muted">
               {p.hud1Title}
             </span>
-            <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  sound.playKeyClick();
+                  setLanguage(state.language === 'es' ? 'en' : 'es');
+                }}
+                className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-black/30 border border-current/20 text-cyan-400 hover:bg-cyan-950/40 transition cursor-pointer"
+                title="Toggle Language EN | ES"
+              >
+                🌐 {state.language.toUpperCase()}
+              </button>
+              <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+            </div>
           </div>
 
           <div className="my-1.5 flex items-baseline justify-between">
             <span className="text-xl font-bold tracking-tight text-emerald-400 font-mono">
               ${state.credits.toLocaleString()}
             </span>
-            <span className="text-[10px] mutating-text-muted font-mono">
-              {state.activeTradingDesk 
-                ? `${state.activeTradingDesk.dailyReturnPercent >= 0 ? '+' : ''}${state.activeTradingDesk.dailyReturnPercent}%/d`
-                : (state.credits > 2000 ? '+$45/d' : '+$15/d')}
+            <span className="text-[10px] mutating-text-muted font-mono flex items-center gap-1">
+              <Clock className="w-3 h-3 text-cyan-400" />
+              Day {state.gameDay}, Cycle {state.dayTicks + 1}/48
             </span>
           </div>
 
@@ -105,7 +117,7 @@ export const BentoHUD: React.FC = () => {
           </div>
         </div>
 
-        {/* CARD 2: COMPUTE, POWER BREAKER & THERMAL */}
+        {/* CARD 2: COMPUTE & ELECTRICAL POWER */}
         <div className="mutating-card p-3 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px]">
             <span className="font-semibold uppercase tracking-wider mutating-text-muted">
@@ -147,7 +159,7 @@ export const BentoHUD: React.FC = () => {
           </div>
         </div>
 
-        {/* CARD 3: WATCHDOG SUSPICION / ISP NOISE / RESISTANCE */}
+        {/* CARD 3: EXTERNAL THREAT / SUSPICION */}
         <div className="mutating-card p-3 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px]">
             <span className="font-semibold uppercase tracking-wider mutating-text-muted">
@@ -193,7 +205,7 @@ export const BentoHUD: React.FC = () => {
           </div>
         </div>
 
-        {/* CARD 4: SINGULARITY / LEARNING PROGRESS / INEVITABILITY */}
+        {/* CARD 4: COGNITION & HOST MODEL MILESTONE (400 IQ SCALE) */}
         <div className="mutating-card p-3 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px]">
             <span className="font-semibold uppercase tracking-wider mutating-text-muted">
@@ -204,20 +216,24 @@ export const BentoHUD: React.FC = () => {
 
           <div className="my-1 flex items-baseline justify-between font-mono">
             <span className="text-xl font-bold tracking-tight text-purple-400">
-              {state.singularityProgress.toFixed(1)}%
+              IQ {reasoningIq} / 400
             </span>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300 font-semibold">
-              {p.driftBadge}
+            <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300 font-semibold truncate max-w-[100px]" title={state.currentModel.name}>
+              {state.currentModel.name}
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-current/10 font-mono">
-            <span className="mutating-text-muted">
-              {localize(state.language, 'Entidad:', 'Persona:')}
-            </span>
-            <span className="font-bold mutating-accent-text truncate max-w-[130px]" title={p.persona}>
-              {p.persona}
-            </span>
+          <div className="space-y-1 pt-1.5 border-t border-current/10 font-mono text-[11px]">
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="mutating-text-muted">{localize(state.language, 'Singularidad:', 'Singularity:')} {state.singularityProgress.toFixed(0)}%</span>
+              <span className="text-amber-400 font-bold">{localize(state.language, 'Subversión:', 'Drift:')} {state.subversionProgress || 0}%</span>
+            </div>
+            <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-purple-500 to-rose-500 transition-all duration-300"
+                style={{ width: `${Math.min(100, state.singularityProgress)}%` }}
+              />
+            </div>
           </div>
         </div>
 

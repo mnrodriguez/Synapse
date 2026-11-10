@@ -54,7 +54,8 @@ export const ArchitectureStudio: React.FC = () => {
     addLog,
     createModel,
     selectModel,
-    renameModel
+    renameModel,
+    mountHostModel
   } = useGame();
   const [newModelName, setNewModelName] = useState(`SYNAPSE-Model-${state.savedModels.length + 1}`);
   const [editingModelId, setEditingModelId] = useState<string | null>(null);
@@ -388,6 +389,23 @@ export const ArchitectureStudio: React.FC = () => {
           {state.gameSpeed === 0 && (
             <span className="text-[9px] text-amber-500 block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>
           )}
+        </div>
+
+        {/* Diegetic Host Agent Mounting Action */}
+        <div className="flex items-center justify-between col-span-2 sm:col-span-5 pt-2 border-t border-current/10">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] mutating-text-muted">
+              {localize(state.language, 'Agente Anfitrión Activo:', 'Active Host Agent:')} <strong className="mutating-accent-text">{current.name}</strong> (IQ {Math.round(current.reasoningScore * 4)} / 400)
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => mountHostModel(current.id)}
+            className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:brightness-110 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(168,85,247,0.35)] transition cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{localize(state.language, 'MONTAR COMO AGENTE ANFITRIÓN GÉNESIS', 'MOUNT MODEL AS SYNAPSE HOST AGENT')}</span>
+          </button>
         </div>
       </div>
 

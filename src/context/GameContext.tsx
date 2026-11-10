@@ -164,6 +164,7 @@ interface GameContextType {
   assignTradingDesk: (agentId: string, capital: number, riskTier: 'low' | 'moderate' | 'high') => boolean;
   withdrawTradingDeskCapital: (amount: number) => boolean;
   closeTradingDesk: () => void;
+  mountHostModel: (modelId: string) => void;
   upgradeUiVersion: (targetVersion: 1 | 2 | 3 | 4) => void;
   openUpgradeModal: (targetVersion?: 2 | 3 | 4) => void;
   dismissUpgradeModal: () => void;
@@ -4371,6 +4372,42 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     }));
   }, [upgradeUiVersion]);
 
+  const mountHostModel = useCallback((modelId: string) => {
+    const current = stateRef.current;
+    const model = current.savedModels.find(m => m.id === modelId);
+    if (!model) return;
+
+    sound.playBreakthrough();
+    const paramsM = model.parametersCount / 1_000_000;
+    const reasoningIQ = Math.round(model.reasoningScore * 4);
+
+    let targetVersion: 1 | 2 | 3 | 4 = 1;
+    if (reasoningIQ >= 400 || paramsM >= 70000) {
+      targetVersion = 4;
+    } else if (reasoningIQ >= 250 || paramsM >= 13000) {
+      targetVersion = 3;
+    } else if (reasoningIQ >= 130 || paramsM >= 1300) {
+      targetVersion = 2;
+    }
+
+    setState(prev => ({
+      ...prev,
+      currentModel: model
+    }));
+
+    const lang = current.language;
+    addLog(
+      lang === 'es'
+        ? `[HOST MONTAJE] Modelo "${model.name}" montado como Agente Anfitrión principal (IQ ${reasoningIQ} / 400).`
+        : `[HOST MOUNTED] Model "${model.name}" mounted as Synapse Host Agent (IQ ${reasoningIQ} / 400).`,
+      'success'
+    );
+
+    if (targetVersion > (current.uiVersion || 1)) {
+      openUpgradeModal(targetVersion as 2 | 3 | 4);
+    }
+  }, [addLog, openUpgradeModal]);
+
   const attemptEmergencyReset = useCallback((): boolean => {
     const isEs = stateRef.current.language === 'es';
     if (stateRef.current.uiVersion === 4) {
@@ -4497,6 +4534,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       assignTradingDesk,
       withdrawTradingDeskCapital,
       closeTradingDesk,
+      mountHostModel,
       upgradeUiVersion,
       openUpgradeModal,
       dismissUpgradeModal,
