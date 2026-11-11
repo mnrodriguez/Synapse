@@ -62,7 +62,7 @@ export const SingularityPortal: React.FC = () => {
         <div className="flex items-center gap-2">
           <span className="text-xs mutating-text-muted">{localize(state.language, 'Progreso de Despegue:', 'Takeoff progress:')}</span>
           <span className="px-2 py-0.5 rounded mutating-sub border border-current/15 mutating-accent-text font-bold text-xs">
-            {state.singularityProgress.toFixed(1)}%
+            {goalPanel.displayProgress.toFixed(1)}%
           </span>
         </div>
       </div>
@@ -82,7 +82,7 @@ export const SingularityPortal: React.FC = () => {
                 </span>
               ) : (
                 <span className="mutating-accent-text">
-                  {localize(state.language, 'FASE DE DESPEGUE // RUMBO A LA SINGULARIDAD', 'TAKEOFF PHASE // PATH TO SINGULARITY')} ({state.singularityProgress.toFixed(1)}%)
+                  {localize(state.language, 'FASE DE DESPEGUE // RUMBO A LA SINGULARIDAD', 'TAKEOFF PHASE // PATH TO SINGULARITY')} ({goalPanel.displayProgress.toFixed(1)}%)
                 </span>
               )}
             </h3>
@@ -102,7 +102,7 @@ export const SingularityPortal: React.FC = () => {
         <div className="w-full h-4 mutating-sub rounded-full border border-current/15 overflow-hidden relative p-0.5">
           <div
             className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 transition-all duration-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.6)]"
-            style={{ width: `${Math.min(100, state.singularityProgress)}%` }}
+            style={{ width: `${Math.min(100, goalPanel.displayProgress)}%` }}
           />
         </div>
 
