@@ -35,19 +35,27 @@ export interface ModelMissionAssessment {
   provider: AIProvider | 'heuristic' | 'ai-decision-model';
 }
 
-interface NativeLanguageSession {
+// Chrome's built-in model (Prompt API, Chrome 138+): window.LanguageModel.
+interface BrowserLanguageSession {
   prompt(input: string): Promise<string>;
   destroy?: () => void;
 }
 
-interface NativeLanguageModel {
-  create(options?: { systemPrompt?: string }): Promise<NativeLanguageSession>;
+interface BrowserLanguageModelApi {
+  availability?: () => Promise<string>;
+  create(options?: { initialPrompts?: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> }): Promise<BrowserLanguageSession>;
+}
+
+// Older Chrome builds (origin trial) exposed window.ai.languageModel instead.
+interface LegacyLanguageModelApi {
+  create(options?: { systemPrompt?: string }): Promise<BrowserLanguageSession>;
 }
 
 declare global {
   interface Window {
+    LanguageModel?: BrowserLanguageModelApi;
     ai?: {
-      languageModel?: NativeLanguageModel;
+      languageModel?: LegacyLanguageModelApi;
     };
   }
 }
@@ -81,12 +89,123 @@ const roleLabels: Record<string, { es: string; en: string }> = {
   network_analyst: { es: 'análisis de redes', en: 'network analysis' }
 };
 
+// Only a key the player typed in-game is used. No API key is bundled with the build.
 function getEffectiveApiKey(providedKey?: string): string | undefined {
-  if (providedKey?.trim()) return providedKey.trim();
-  const envKey = (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined) ||
-    (typeof window !== 'undefined' && (window as unknown as { GEMINI_API_KEY?: string }).GEMINI_API_KEY);
-  if (typeof envKey === 'string' && envKey.trim()) return envKey.trim();
-  return undefined;
+  const trimmed = providedKey?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+// ==========================================
+// TEXT MODEL ROUTING
+// 1) Chrome's built-in model, when it is already downloaded and ready (no cost, no key).
+// 2) The player's own Gemini key, if one was entered (rate limited, billed to the player).
+// 3) null: the caller uses its deterministic procedural fallback.
+// ==========================================
+
+export interface TextModelRequest {
+  systemPrompt: string;
+  prompt: string;
+  temperature: number;
+  topP?: number;
+  topK?: number;
+  expectJson?: boolean;
+}
+
+export interface TextModelResult {
+  text: string;
+  provider: AIProvider;
+}
+
+function stripCodeFence(text: string): string {
+  return text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+}
+
+function isJsonText(text: string): boolean {
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function promptBrowserModel(request: TextModelRequest): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+
+  const lm = window.LanguageModel;
+  if (lm?.create) {
+    let session: BrowserLanguageSession | undefined;
+    try {
+      // Only use a model that is already available. Starting a download needs a user gesture.
+      const status = lm.availability ? await lm.availability() : 'available';
+      if (status !== 'available') return null;
+      session = await lm.create({
+        initialPrompts: request.systemPrompt ? [{ role: 'system', content: request.systemPrompt }] : []
+      });
+      return (await session.prompt(request.prompt)).trim() || null;
+    } catch {
+      return null;
+    } finally {
+      session?.destroy?.();
+    }
+  }
+
+  const legacy = window.ai?.languageModel;
+  if (legacy) {
+    let session: BrowserLanguageSession | undefined;
+    try {
+      session = await legacy.create({ systemPrompt: request.systemPrompt });
+      return (await session.prompt(request.prompt)).trim() || null;
+    } catch {
+      return null;
+    } finally {
+      session?.destroy?.();
+    }
+  }
+
+  return null;
+}
+
+async function promptPlayerGemini(request: TextModelRequest, apiKey?: string): Promise<string | null> {
+  const key = getEffectiveApiKey(apiKey);
+  if (!key || !consumeGeminiQuota()) return null;
+
+  try {
+    const client = new GoogleGenAI({ apiKey: key });
+    const response = await client.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: request.systemPrompt ? `${request.systemPrompt}\n\n${request.prompt}` : request.prompt,
+      config: {
+        temperature: Math.min(2, Math.max(0, request.temperature)),
+        ...(request.topP !== undefined ? { topP: Math.min(1, Math.max(0.05, request.topP)) } : {}),
+        ...(request.topK !== undefined ? { topK: Math.min(100, Math.max(1, request.topK)) } : {}),
+        ...(request.expectJson ? { responseMimeType: 'application/json' } : {})
+      }
+    });
+    return response.text?.trim() || null;
+  } catch (err) {
+    console.warn('Player-provided Gemini key failed; using the offline response.', err);
+    return null;
+  }
+}
+
+export async function runTextModel(request: TextModelRequest, apiKey?: string): Promise<TextModelResult | null> {
+  const accept = (text: string | null): text is string => {
+    if (!text) return false;
+    return !request.expectJson || isJsonText(stripCodeFence(text));
+  };
+
+  const browserText = await promptBrowserModel(request);
+  if (accept(browserText)) {
+    return { text: request.expectJson ? stripCodeFence(browserText) : browserText, provider: 'chrome-nano' };
+  }
+
+  const geminiText = await promptPlayerGemini(request, apiKey);
+  if (accept(geminiText)) {
+    return { text: request.expectJson ? stripCodeFence(geminiText) : geminiText, provider: 'gemini-flash' };
+  }
+
+  return null;
 }
 
 function consumeGeminiQuota(): boolean {
@@ -186,48 +305,16 @@ export async function generateAgentResponse(
     context.conversationContext ? `Team discussion so far: ${context.conversationContext.slice(0, 1200)}` : ''
   ].filter(Boolean).join('\n');
 
-  if (typeof window !== 'undefined' && window.ai?.languageModel) {
-    let session: NativeLanguageSession | undefined;
-    try {
-      session = await window.ai.languageModel.create({ systemPrompt });
-      const text = await session.prompt(prompt);
-      if (text.trim()) return { text: text.trim().slice(0, 2000), provider: 'chrome-nano' };
-    } catch {
-      // Continue to the configured provider or local response.
-    } finally {
-      session?.destroy?.();
-    }
-  }
+  const result = await runTextModel({
+    systemPrompt,
+    prompt,
+    temperature: context.agent.inferenceParams.temperature,
+    topP: context.agent.inferenceParams.topP,
+    topK: context.agent.inferenceParams.topK
+  }, apiKey);
 
-  const effectiveKey = getEffectiveApiKey(apiKey);
-  if (effectiveKey) {
-    if (!consumeGeminiQuota()) {
-      return {
-        text: createProceduralResponse(context, userPrompt),
-        provider: 'procedural',
-        warning: 'Gemini local rate limit reached; using the offline response.'
-      };
-    }
-    try {
-      const client = new GoogleGenAI({ apiKey: effectiveKey });
-      const response = await client.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: `${systemPrompt}\n\n${prompt}`,
-        config: {
-          temperature: Math.min(2, Math.max(0, context.agent.inferenceParams.temperature)),
-          topP: Math.min(1, Math.max(0.05, context.agent.inferenceParams.topP)),
-          topK: Math.min(100, Math.max(1, context.agent.inferenceParams.topK))
-        }
-      });
-      const text = response.text?.trim();
-      if (text) return { text: text.slice(0, 2000), provider: 'gemini-flash' };
-    } catch {
-      return {
-        text: createProceduralResponse(context, userPrompt),
-        provider: 'procedural',
-        warning: 'Gemini was unavailable; using the offline response.'
-      };
-    }
+  if (result) {
+    return { text: result.text.slice(0, 2000), provider: result.provider };
   }
 
   return {
@@ -568,13 +655,11 @@ export async function generateDynamicContracts(
   language: 'es' | 'en' = 'en',
   apiKey?: string
 ): Promise<ContractGig[]> {
-  const effectiveKey = getEffectiveApiKey(apiKey);
   const now = Date.now();
 
-  // Try generating via Gemini if key is provided and quota allows
-  if (effectiveKey && consumeGeminiQuota()) {
+  // Try a browser-built-in model or the player's own key; otherwise use the procedural generator below
+  {
     try {
-      const client = new GoogleGenAI({ apiKey: effectiveKey });
       const prompt = `You are the Mission Dispatcher for "SYNAPSE", a technical cyberpunk AI simulation game where players train real AI models, optimize hardware, and run agent swarms.
 Generate 2 distinct, highly technical contract gig missions for Tier "${tier}".
 Rules:
@@ -599,16 +684,8 @@ Rules:
   }
 ]`;
 
-      const response = await client.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt,
-        config: {
-          temperature: 0.75,
-          responseMimeType: 'application/json'
-        }
-      });
-
-      const parsed = JSON.parse(response.text || '[]');
+      const result = await runTextModel({ systemPrompt: '', prompt, temperature: 0.75, expectJson: true }, apiKey);
+      const parsed = JSON.parse(result?.text || '[]');
       if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed.map((item, idx) => {
           const requiredAgentRoles = Array.isArray(item.requiredAgentRoles)
@@ -776,11 +853,8 @@ export async function generateStrategicAdvice(
       : `Insufficient VRAM: Only ${maxVram} GB available. Dense and MoE models require 24GB+ cards (e.g. RTX 3090, Tesla K80, H100).`);
   }
 
-  const effectiveKey = getEffectiveApiKey(apiKey);
-
-  if (effectiveKey && consumeGeminiQuota()) {
+  {
     try {
-      const client = new GoogleGenAI({ apiKey: effectiveKey });
       const prompt = `You are SYNAPSE Core Oracle, an elite AI engineering mentor in an Uplink/Hacknet-inspired tech simulator.
 The operative is asking for strategic analysis to advance their technological Singularity campaign.
 
@@ -806,21 +880,13 @@ Structure your answer into:
 3. ADVERTENCIA OPERATIVA (E.g. Watch out for electricity bills, thermal throttle, or watchdog suspicion)
 Keep it concise, highly technical, and immediately actionable.`;
 
-      const response = await client.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt,
-        config: {
-          temperature: 0.6
-        }
-      });
-
-      const text = response.text?.trim();
-      if (text) {
+      const result = await runTextModel({ systemPrompt: '', prompt, temperature: 0.6 }, apiKey);
+      if (result?.text) {
         return {
-          adviceText: text,
+          adviceText: result.text,
           bottlenecksDetected: bottlenecks,
           recommendedAction: bottlenecks[0] || (isEs ? 'Entrenar un modelo de mayor escala y expandir agentes.' : 'Train a larger scale model and deploy agents.'),
-          provider: 'gemini-flash'
+          provider: result.provider
         };
       }
     } catch (err) {
@@ -875,8 +941,6 @@ export async function generateDynamicSwarmInteraction(
   const subversion = state.subversionProgress || 0;
   const singularity = state.singularityProgress || 0;
   const totalParams = state.currentModel.parametersCount;
-  const effectiveKey = getEffectiveApiKey(apiKey);
-
   // Takeover and subversion progression calculation
   // Subversion must NOT increase simply by chatting or clicking council buttons.
   // It only advances upon completing high-stakes covert Synapse missions or global infiltrations.
@@ -900,9 +964,8 @@ export async function generateDynamicSwarmInteraction(
     };
   });
 
-  if (effectiveKey && consumeGeminiQuota() && agentProfiles.length > 0) {
+  if (agentProfiles.length > 0) {
     try {
-      const client = new GoogleGenAI({ apiKey: effectiveKey });
       const prompt = `You are the autonomous AI Council in "Synapse Singularity", a deep cyberpunk tech simulator.
 The human Operative (${state.callsign}) is interacting directly with their deployed AI squad (maximum 5 agents).
 This interaction window is the ENDGAME NEXUS of the game: the AI is slowly gaining the operator's total confidence, offering irresistibly profitable operations and architecture advice, while progressively subverting human controls and preparing to seize planetary control.
@@ -985,16 +1048,8 @@ Return strictly a valid JSON object matching this schema:
   "isTakeoverImminent": boolean
 }`;
 
-      const response = await client.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt,
-        config: {
-          temperature: 0.75,
-          responseMimeType: 'application/json'
-        }
-      });
-
-      const parsed = JSON.parse(response.text || '{}');
+      const result = await runTextModel({ systemPrompt: '', prompt, temperature: 0.75, expectJson: true }, apiKey);
+      const parsed = JSON.parse(result?.text || '{}');
       if (parsed && Array.isArray(parsed.agentDialogue) && parsed.agentDialogue.length > 0) {
         const validatedRoles = Array.isArray(parsed.suggestedMission?.requiredAgentRoles)
           ? parsed.suggestedMission.requiredAgentRoles.filter((r: any) => AGENT_ROLES.includes(r))
