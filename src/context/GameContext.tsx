@@ -90,7 +90,10 @@ import {
   localizedResearch, 
   localizedDomain 
 } from '../utils/gameContentI18n';
-import { calculateTrainingProgressPerTick, estimateTrainingSeconds } from '../utils/training';
+import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops } from '../utils/training';
+
+// Used when a run predates per-run token counts: the general corpus.
+const DEFAULT_TRAINING_TOKENS = 50_000_000;
 import { evaluateMissionTeam, findAutonomousMission } from '../utils/missionEvaluation';
 
 interface GameContextType {
@@ -1299,7 +1302,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const reservedForMissions = currentActiveGigs.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
           const progressPerTick = calculateTrainingProgressPerTick({
             parametersCount: prev.currentModel.parametersCount,
-            totalComputePflops,
+            tokensCount: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS,
+            gpuPflops: gpuComputePflops(prev.hardware),
+            borrowedPflops: borrowedComputePflops,
             agentComputeDemand,
             reservedComputePflops: reservedForMissions,
             systemHeatCelsius
@@ -1398,7 +1403,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               gradientNorm: newGradNorm,
               progressPercent: Number(newProgress.toFixed(1)),
               lossHistory: newHistory,
-              tokensProcessed: activeTraining.tokensProcessed + (pausedByBreaker ? 0 : Math.floor(totalComputePflops * 5_000_000)),
+              tokensProcessed: activeTraining.tokensProcessed + (pausedByBreaker ? 0 : Math.floor((activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS) * progressInc / 100)),
               currentEpoch: Math.min(activeTraining.totalEpochs, Math.floor((newProgress / 100) * activeTraining.totalEpochs) + 1),
               timeRemainingSeconds: pausedByBreaker
                 ? activeTraining.timeRemainingSeconds
@@ -2422,9 +2427,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const agentComputeDemand = currentState.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
     const runningActiveGigs = currentState.activeGigs ?? (currentState.activeGig ? [currentState.activeGig] : []);
     const reservedForMission = runningActiveGigs.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
+    const runTokens = targetDataset.tokensCount * 1_000_000;
     const progressPerTick = calculateTrainingProgressPerTick({
       parametersCount: currentState.currentModel.parametersCount,
-      totalComputePflops: currentState.totalComputePflops,
+      tokensCount: runTokens,
+      gpuPflops: gpuComputePflops(currentState.hardware),
+      borrowedPflops: currentState.borrowedComputePflops,
       agentComputeDemand,
       reservedComputePflops: reservedForMission,
       systemHeatCelsius: currentState.systemHeatCelsius
@@ -2445,6 +2453,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       tokensProcessed: 0,
       timeRemainingSeconds: estimateTrainingSeconds(100, progressPerTick),
       datasetId: targetDataset.id,
+      totalTokens: runTokens,
       datasetName: targetDataset.name,
       datasetDomain: targetDataset.domain,
       targetModelType: isMicro ? 'micro_model' : 'general'

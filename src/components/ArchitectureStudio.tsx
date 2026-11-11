@@ -40,10 +40,12 @@ import {
   LOSS_DOCS 
 } from '../utils/aiDocumentation';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
-import { calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration } from '../utils/training';
+import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
 import { DocLinkBadge } from './DocLinkBadge';
+
+const DEFAULT_TRAINING_TOKENS_ESTIMATE = 50_000_000; // general corpus, used for the architecture estimate
 
 export const ArchitectureStudio: React.FC = () => {
   const {
@@ -72,7 +74,9 @@ export const ArchitectureStudio: React.FC = () => {
   const agentComputeDemand = state.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
   const trainingProgressPerTick = calculateTrainingProgressPerTick({
     parametersCount: current.parametersCount,
-    totalComputePflops: state.totalComputePflops,
+    tokensCount: DEFAULT_TRAINING_TOKENS_ESTIMATE,
+    gpuPflops: gpuComputePflops(state.hardware),
+    borrowedPflops: state.borrowedComputePflops,
     agentComputeDemand,
     reservedComputePflops: (state.activeGigs || (state.activeGig ? [state.activeGig] : [])).reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0),
     systemHeatCelsius: state.systemHeatCelsius

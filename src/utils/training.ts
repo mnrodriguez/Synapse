@@ -1,23 +1,48 @@
+// Training work is estimated with the usual rule of thumb for dense transformers: about 6 FLOPs per
+// parameter per training token. A run is complete when that work has been done.
+//
+// Time is measured in simulated training minutes, and one game tick is one simulated minute. At 1x
+// speed a tick is one real second, so a starter run lasts about as long as its real hardware would need
+// in minutes, and the speed controls scale playback. The covert node bonus is not part of this: only
+// installed GPUs and temporary borrowed cluster capacity do the work.
+
+// Share of peak FLOPS a small transformer sustains in practice (memory bound, data loading, optimizer).
+export const TRAINING_EFFICIENCY = 0.35;
+export const SIMULATED_SECONDS_PER_TICK = 60;
+
+export const trainingWorkFlops = (parametersCount: number, tokensCount: number): number =>
+  6 * parametersCount * tokensCount;
+
+// Peak FLOPS, in PFLOPS, contributed by installed GPUs only.
+export const gpuComputePflops = (hardware: Array<{ category: string; computeTflops: number; count: number }>): number =>
+  hardware.reduce((sum, item) => item.category === 'gpu' ? sum + (item.computeTflops * item.count) / 1000 : sum, 0);
+
 export interface TrainingRateInput {
   parametersCount: number;
-  totalComputePflops: number;
+  tokensCount: number; // total training tokens of the run (not millions)
+  gpuPflops: number;
+  borrowedPflops: number;
   agentComputeDemand: number;
   reservedComputePflops: number;
   systemHeatCelsius: number;
 }
 
+// Percent of the run completed in one tick.
 export const calculateTrainingProgressPerTick = ({
   parametersCount,
-  totalComputePflops,
+  tokensCount,
+  gpuPflops,
+  borrowedPflops,
   agentComputeDemand,
   reservedComputePflops,
   systemHeatCelsius
 }: TrainingRateInput): number => {
-  const trainingScale = Math.sqrt(Math.max(1, parametersCount / 14_000_000));
   const thermalThrottle = systemHeatCelsius > 85 ? 0.4 : 1;
-  const availableCompute = Math.max(0, totalComputePflops - agentComputeDemand - reservedComputePflops);
-  // A run should take dozens of ticks on starter hardware, not one. Previously 40 PFLOPS converged in a single tick.
-  return (availableCompute * 100 * thermalThrottle) / (2000 * trainingScale);
+  const availableCompute = Math.max(0, gpuPflops + borrowedPflops - agentComputeDemand - reservedComputePflops);
+  const flopsPerSecond = availableCompute * 1e15 * TRAINING_EFFICIENCY * thermalThrottle;
+  const work = trainingWorkFlops(parametersCount, Math.max(1, tokensCount));
+  if (work <= 0) return 0;
+  return ((flopsPerSecond * SIMULATED_SECONDS_PER_TICK) / work) * 100;
 };
 
 export const estimateTrainingSeconds = (
