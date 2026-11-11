@@ -1766,15 +1766,15 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
       {/* Modal: Instantiate / Deploy Agent */}
       {isDeployModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-xl bg-[#080d18] border border-cyan-500/80 rounded-lg p-5 shadow-[0_0_30px_rgba(0,255,200,0.2)] max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-cyan-900/50 mb-4">
+          <div className="w-full max-w-xl mutating-panel border rounded-lg p-5 shadow-[0_0_30px_rgba(0,255,200,0.2)] max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-current/15 mb-4">
               <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5 text-cyan-400" />
-                <h3 className="font-bold text-sm text-cyan-200">{localize(state.language, 'INSTANCIAR NUEVO AGENTE AUTÓNOMO', 'DEPLOY NEW AUTONOMOUS AGENT')}</h3>
+                <Bot className="w-5 h-5 mutating-accent-text" />
+                <h3 className="font-bold text-sm mutating-accent-text">{localize(state.language, 'INSTANCIAR NUEVO AGENTE AUTÓNOMO', 'DEPLOY NEW AUTONOMOUS AGENT')}</h3>
               </div>
               <button
                 onClick={() => setIsDeployModalOpen(false)}
-                className="text-zinc-500 hover:text-zinc-300 text-sm font-bold"
+                className="mutating-text-muted hover:opacity-80 text-sm font-bold"
               >
                 ✕
               </button>
@@ -1783,25 +1783,25 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             <form onSubmit={handleDeployAgent} className="space-y-4">
               {/* Agent Name */}
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">{localize(state.language, 'Nombre / Identificador del agente', 'Agent name / identifier')}</label>
+                <label className=" font-bold block mb-1">{localize(state.language, 'Nombre / Identificador del agente', 'Agent name / identifier')}</label>
                 <input
                   type="text"
                   placeholder={localize(state.language, 'ej: NEURA-ARBITRAGE-01', 'e.g. NEURA-ANALYST-01')}
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
-                  className="w-full bg-black/60 border border-cyan-900/80 focus:border-cyan-400 rounded px-3 py-1.5 text-zinc-200 text-xs outline-none"
+                  className="w-full mutating-sub border border-current/15 focus:border-current/15 rounded px-3 py-1.5  text-xs outline-none"
                 />
               </div>
 
               {/* Bound Trained Model Selection */}
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">
+                <label className=" font-bold block mb-1">
                   {localize(state.language, 'Modelo entrenado asignado', 'Assigned trained model')}
                 </label>
                 <select
                   value={selectedModelId}
                   onChange={(e) => setSelectedModelId(e.target.value)}
-                  className="w-full bg-black/60 border border-cyan-900/80 focus:border-cyan-400 rounded px-3 py-1.5 text-cyan-300 text-xs outline-none"
+                  className="w-full mutating-sub border border-current/15 focus:border-current/15 rounded px-3 py-1.5 mutating-accent-text text-xs outline-none"
                 >
                   {state.savedModels.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -1809,15 +1809,15 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     </option>
                   ))}
                 </select>
-                <div className="mt-1.5 p-2 rounded bg-purple-950/20 border border-purple-900/40 text-[10px] text-purple-300">
+                <div className="mt-1.5 p-2 rounded mutating-sub border border-current/15 text-[10px] mutating-accent-text">
                   <span>{localize(state.language, 'Modelo seleccionado:', 'Selected model:')} <strong>{selectedModel.name}</strong> • {localize(state.language, 'Cuantización:', 'Quantization:')} {selectedModel.quantization.toUpperCase()} • {localize(state.language, 'Razonamiento:', 'Reasoning:')} IQ {selectedModel.reasoningScore}.</span>
-                  <p className="text-zinc-400 mt-0.5">{localize(state.language, 'Los modelos con mayor razonamiento aumentan los ingresos simulados y mejoran los resultados de las misiones.', 'Models with stronger reasoning improve simulated income and mission outcomes.')}</p>
+                  <p className="mutating-text-muted mt-0.5">{localize(state.language, 'Los modelos con mayor razonamiento aumentan los ingresos simulados y mejoran los resultados de las misiones.', 'Models with stronger reasoning improve simulated income and mission outcomes.')}</p>
                 </div>
               </div>
 
               {/* Role Selection */}
               <div>
-                <label className="text-zinc-300 font-bold block mb-1.5">{localize(state.language, 'Rol / especialidad', 'Role / specialty')}</label>
+                <label className=" font-bold block mb-1.5">{localize(state.language, 'Rol / especialidad', 'Role / specialty')}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {roleDefinitions.map((role) => {
                     const Icon = role.icon;
@@ -1888,21 +1888,21 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         }}
                         className={`p-2.5 rounded border text-left transition-all ${
                           isSelected
-                            ? 'bg-cyan-950/70 border-cyan-400 text-cyan-200 shadow-[0_0_8px_rgba(0,255,200,0.15)]'
-                            : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                            ? 'mutating-sub border-[var(--accent-primary)] mutating-accent-text shadow-[0_0_8px_rgba(0,255,200,0.15)]'
+                            : 'mutating-sub border-current/15 mutating-text-muted hover:border-[var(--accent-primary)]'
                         }`}
                       >
                         <div className="flex items-center gap-1.5 font-bold text-xs mb-0.5">
-                          <Icon className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <Icon className="w-3.5 h-3.5 mutating-accent-text shrink-0" />
                           <span className="truncate">{roleCopy?.name ?? role.name}</span>
                         </div>
-                        <div className="text-[9px] text-purple-300 font-mono mb-1.5 font-semibold">
+                        <div className="text-[9px] mutating-accent-text font-mono mb-1.5 font-semibold">
                           {state.language === 'en' ? roleTypeCopy[role.id]?.typeEn : roleTypeCopy[role.id]?.typeEs}
                         </div>
-                        <p className="text-[10px] text-zinc-400 line-clamp-2 mb-1.5">{roleCopy?.desc ?? role.desc}</p>
-                        <div className="flex items-center justify-between text-[9px] pt-1 border-t border-zinc-800/60">
-                          <span className="text-emerald-400 font-bold">{localize(state.language, 'Ingresos:', 'Income:')} {roleCopy?.income ?? role.baseIncome}</span>
-                          <span className="text-amber-400">{roleCopy?.risk ?? role.risk}</span>
+                        <p className="text-[10px] mutating-text-muted line-clamp-2 mb-1.5">{roleCopy?.desc ?? role.desc}</p>
+                        <div className="flex items-center justify-between text-[9px] pt-1 border-t border-current/15">
+                          <span className="text-emerald-600 font-bold">{localize(state.language, 'Ingresos:', 'Income:')} {roleCopy?.income ?? role.baseIncome}</span>
+                          <span className="text-amber-600">{roleCopy?.risk ?? role.risk}</span>
                         </div>
                       </button>
                     );
@@ -1912,7 +1912,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
               {/* Tool Grants */}
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">{localize(state.language, 'Herramientas y permisos concedidos', 'Granted tools & permissions')}</label>
+                <label className=" font-bold block mb-1">{localize(state.language, 'Herramientas y permisos concedidos', 'Granted tools & permissions')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {availableTools.map((tool) => {
                     const isChecked = grantedTools.includes(tool.id);
@@ -1921,18 +1921,18 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         key={tool.id}
                         onClick={() => handleToolToggle(tool.id)}
                         className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-colors ${
-                          isChecked ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200' : 'bg-zinc-900/40 border-zinc-800 text-zinc-400'
+                          isChecked ? 'mutating-sub border-[var(--accent-primary)] mutating-accent-text' : 'mutating-sub border-current/15 mutating-text-muted'
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => {}}
-                          className="mt-0.5 accent-cyan-400"
+                          className="mt-0.5 accent-[var(--accent-primary)]"
                         />
                         <div>
                           <div className="text-[11px] font-bold">{tool.label}</div>
-                          <div className="text-[9px] text-zinc-500">{tool.desc}</div>
+                          <div className="text-[9px] mutating-text-muted">{tool.desc}</div>
                         </div>
                       </label>
                     );
@@ -1941,24 +1941,24 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               </div>
 
               {/* Inference & Sampling Hyperparameters */}
-              <div className="p-3 rounded bg-[#050a12] border border-cyan-800/60 space-y-3">
-                <div className="flex items-center justify-between pb-1.5 border-b border-cyan-900/50">
-                  <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-xs">
-                    <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+              <div className="p-3 rounded mutating-sub border border-current/15 space-y-3">
+                <div className="flex items-center justify-between pb-1.5 border-b border-current/15">
+                  <div className="flex items-center gap-1.5 mutating-accent-text font-bold text-xs">
+                    <Sliders className="w-3.5 h-3.5 mutating-accent-text" />
                     <span>{t(state.language, 'inference_hyperparams')}</span>
                   </div>
-                  <span className="text-[10px] text-purple-400 font-bold font-mono">
+                  <span className="text-[10px] mutating-accent-text font-bold font-mono">
                     {state.difficulty === 'beginner' ? (state.language === 'es' ? 'AUTOMATIZADO' : 'AUTOMATED') : 'SAMPLING MATRIX'}
                   </span>
                 </div>
 
                 {state.difficulty === 'beginner' ? (
-                  <div className="p-2.5 rounded bg-purple-950/30 border border-purple-500/40 text-[10px] space-y-1.5 font-mono">
-                    <div className="font-bold text-purple-300 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  <div className="p-2.5 rounded mutating-sub border border-current/15 text-[10px] space-y-1.5 font-mono">
+                    <div className="font-bold mutating-accent-text flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 mutating-accent-text" />
                       <span>{localize(state.language, 'MUESTREO AUTOMÁTICO EN MODO PRINCIPIANTE', 'AUTOMATED SAMPLING IN BEGINNER MODE')}</span>
                     </div>
-                    <p className="text-zinc-300 leading-snug">
+                    <p className=" leading-snug">
                       {localize(
                         state.language,
                         'Los parámetros de inferencia (Temperatura = 0.70, Top-P = 0.90, Top-K = 40) han sido configurados automáticamente con valores óptimos para garantizar estabilidad.',
@@ -1968,24 +1968,24 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   </div>
                 ) : (
                   <>
-                    <p className="text-[10px] text-zinc-400">
+                    <p className="text-[10px] mutating-text-muted">
                       {t(state.language, 'hyperparams_desc')}
                     </p>
 
                     {/* Temperature Slider */}
                     <div>
                       <div className="flex justify-between items-center text-xs mb-1">
-                        <span className="text-zinc-300 font-bold flex items-center gap-1.5 flex-wrap">
+                        <span className=" font-bold flex items-center gap-1.5 flex-wrap">
                           <span>{t(state.language, 'param_temperature')}:</span>
                           <DocLinkBadge doc={INFERENCE_DOCS.temperature} language={state.language} />
-                          <span className="text-cyan-300 font-mono font-bold">{temperature.toFixed(2)}</span>
+                          <span className="mutating-accent-text font-mono font-bold">{temperature.toFixed(2)}</span>
                         </span>
                         <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold border ${
                           temperature < 0.35
-                            ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
+                            ? 'mutating-sub border-current/15 text-emerald-600'
                             : temperature > 0.95
                             ? 'bg-red-950 border-red-500 text-red-300 animate-pulse'
-                            : 'bg-cyan-950 border-cyan-500 text-cyan-300'
+                            : 'mutating-sub border-current/15 mutating-accent-text'
                         }`}>
                           {temperature < 0.35
                             ? (state.language === 'es' ? 'Determinista / Seguro' : 'Deterministic / Safe')
@@ -2001,23 +2001,23 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         step="0.05"
                         value={temperature}
                         onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                        className="w-full accent-cyan-400 cursor-pointer"
+                        className="w-full accent-[var(--accent-primary)] cursor-pointer"
                       />
-                      <p className="text-[9px] text-zinc-500 mt-0.5">
+                      <p className="text-[9px] mutating-text-muted mt-0.5">
                         {t(state.language, 'param_temperature_desc')}
                       </p>
                     </div>
 
                     {/* Dual Column: Top-P & Top-K */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-800/80">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-current/15">
                       {/* Top-P */}
                       <div>
                         <div className="flex justify-between items-center text-xs mb-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-zinc-300 font-bold">{t(state.language, 'param_top_p')}:</span>
+                            <span className=" font-bold">{t(state.language, 'param_top_p')}:</span>
                             <DocLinkBadge doc={INFERENCE_DOCS.top_p} language={state.language} />
                           </div>
-                          <span className="text-purple-300 font-mono font-bold">{topP.toFixed(2)}</span>
+                          <span className="mutating-accent-text font-mono font-bold">{topP.toFixed(2)}</span>
                         </div>
                         <input
                           type="range"
@@ -2026,16 +2026,16 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           step="0.05"
                           value={topP}
                           onChange={(e) => setTopP(parseFloat(e.target.value))}
-                          className="w-full accent-purple-400 cursor-pointer"
+                          className="w-full accent-[var(--accent-primary)] cursor-pointer"
                         />
-                        <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_top_p_desc')}</p>
+                        <p className="text-[9px] mutating-text-muted mt-0.5">{t(state.language, 'param_top_p_desc')}</p>
                       </div>
 
                       {/* Top-K */}
                       <div>
                         <div className="flex justify-between items-center text-xs mb-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-zinc-300 font-bold">{t(state.language, 'param_top_k')}:</span>
+                            <span className=" font-bold">{t(state.language, 'param_top_k')}:</span>
                             <DocLinkBadge doc={INFERENCE_DOCS.top_k} language={state.language} />
                           </div>
                           <span className="text-yellow-300 font-mono font-bold">{topK} tokens</span>
@@ -2049,18 +2049,18 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           onChange={(e) => setTopK(parseInt(e.target.value))}
                           className="w-full accent-yellow-400 cursor-pointer"
                         />
-                        <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_top_k_desc')}</p>
+                        <p className="text-[9px] mutating-text-muted mt-0.5">{t(state.language, 'param_top_k_desc')}</p>
                       </div>
                     </div>
 
                     {/* Repetition Penalty */}
-                    <div className="pt-2 border-t border-zinc-800/80">
+                    <div className="pt-2 border-t border-current/15">
                       <div className="flex justify-between items-center text-xs mb-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-zinc-300 font-bold">{t(state.language, 'param_repetition_penalty')}:</span>
+                          <span className=" font-bold">{t(state.language, 'param_repetition_penalty')}:</span>
                           <DocLinkBadge doc={INFERENCE_DOCS.repetition_penalty} language={state.language} />
                         </div>
-                        <span className="text-emerald-300 font-mono font-bold">{repetitionPenalty.toFixed(2)}x</span>
+                        <span className="text-emerald-600 font-mono font-bold">{repetitionPenalty.toFixed(2)}x</span>
                       </div>
                       <input
                         type="range"
@@ -2069,47 +2069,47 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         step="0.05"
                         value={repetitionPenalty}
                         onChange={(e) => setRepetitionPenalty(parseFloat(e.target.value))}
-                        className="w-full accent-emerald-400 cursor-pointer"
+                        className="w-full accent-[var(--accent-primary)] cursor-pointer"
                       />
-                      <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_repetition_penalty_desc')}</p>
+                      <p className="text-[9px] mutating-text-muted mt-0.5">{t(state.language, 'param_repetition_penalty_desc')}</p>
                     </div>
                   </>
                 )}
 
                 {/* Root System Prompt */}
-                <div className="pt-2 border-t border-zinc-800/80">
-                  <label className="text-zinc-300 font-bold block mb-1 text-xs">
+                <div className="pt-2 border-t border-current/15">
+                  <label className=" font-bold block mb-1 text-xs">
                     {t(state.language, 'param_system_prompt')}
                   </label>
                   <textarea
                     rows={2}
                     value={systemPrompt}
                     onChange={(e) => setSystemPrompt(e.target.value)}
-                    className="w-full bg-black/70 border border-zinc-800 focus:border-cyan-400 rounded px-2.5 py-1.5 text-zinc-300 text-[11px] font-mono outline-none resize-none"
+                    className="w-full mutating-sub border border-current/15 focus:border-current/15 rounded px-2.5 py-1.5  text-[11px] font-mono outline-none resize-none"
                     placeholder={localize(state.language, 'Instrucciones constitucionales de raíz...', 'Root system instructions...')}
                   />
-                  <p className="text-[9px] text-zinc-500 mt-0.5">{t(state.language, 'param_system_prompt_desc')}</p>
+                  <p className="text-[9px] mutating-text-muted mt-0.5">{t(state.language, 'param_system_prompt_desc')}</p>
                 </div>
               </div>
 
               {/* Submit Buttons */}
-              <div className="flex items-center justify-between pt-3 border-t border-cyan-900/50">
-                <div className="text-xs text-zinc-400">
-                  {localize(state.language, 'Costo de despliegue:', 'Deployment cost:')} <strong className="text-amber-300 font-bold">$75 CR</strong>
+              <div className="flex items-center justify-between pt-3 border-t border-current/15">
+                <div className="text-xs mutating-text-muted">
+                  {localize(state.language, 'Costo de despliegue:', 'Deployment cost:')} <strong className="text-amber-600 font-bold">$75 CR</strong>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setIsDeployModalOpen(false)}
-                    className="px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs"
+                    className="px-3 py-1.5 rounded mutating-sub hover:opacity-90 mutating-text-muted text-xs"
                   >
                     {localize(state.language, 'Cancelar', 'Cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={state.credits < 75}
-                    className="px-4 py-1.5 rounded bg-cyan-900 hover:bg-cyan-800 text-cyan-200 text-xs font-bold border border-cyan-500 shadow-[0_0_10px_rgba(0,255,200,0.2)]"
+                    className="px-4 py-1.5 rounded mutating-btn-primary hover:brightness-110 text-xs font-bold border border-[var(--accent-primary)] shadow-[0_0_10px_rgba(0,255,200,0.2)]"
                   >
                     {localize(state.language, 'Desplegar agente', 'Deploy agent')}
                   </button>
