@@ -159,6 +159,8 @@ export interface ResearchNode {
 
 export interface TrainingJob {
   active: boolean;
+  // Total training tokens of this run; the work to complete is 6 × parameters × tokens.
+  totalTokens?: number;
   modelId: string;
   modelName: string;
   currentEpoch: number;

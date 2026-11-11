@@ -51,7 +51,8 @@ export const TrainingMonitor: React.FC = () => {
       name: localize(state.language, 'Corpus General (Wikipedia / Libros / Noticias)', 'General Corpus (Web / Books / News)'),
       domain: 'general',
       tier: 1,
-      tokensCount: 50
+      // Show the tokens the run will actually use: the saved general corpus when present.
+      tokensCount: state.customDatasets.find(d => d.id === 'dataset_general_corpus')?.tokensCount ?? 50
     },
     // The general corpus is listed once above; a saved dataset with the same id would make two options look selected.
     ...state.customDatasets.filter(ds => ds.id !== 'dataset_general_corpus').map(ds => ({
