@@ -25,6 +25,7 @@ import { sound } from '../audio/soundManager';
 import confetti from 'canvas-confetti';
 import { localize } from '../utils/i18n';
 import { localizedDomain } from '../utils/gameContentI18n';
+import { domainCopyFor } from '../utils/domainCopy';
 import { buildGoalPanel, UiVersion } from '../utils/singularityGoals';
 
 export const SingularityPortal: React.FC = () => {
@@ -178,7 +179,13 @@ export const SingularityPortal: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
           {state.sentienceDomains.map(domain => {
-            const content = localizedDomain(state.language, domain);
+            // Name, category and description follow the UI version so the end goal is revealed gradually.
+            const content = domainCopyFor(
+              uiVersion,
+              domain.id,
+              state.language === 'es' ? 'es' : 'en',
+              localizedDomain(state.language, domain)
+            );
             const canInfiltrate = state.singularityProgress >= domain.requiredSingularity;
 
             return (
