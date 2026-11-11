@@ -473,6 +473,17 @@ export const DEFAULT_GENERAL_DATASET: CustomDataset = {
   description: 'Broad-spectrum general knowledge baseline collected from open web encyclopedias, technical textbooks, and public discourse. Yields balanced cognitive progression without domain bias.'
 };
 
+// Small starter corpus for the first training runs. Kept out of customDatasets so it is always available.
+export const STARTER_TRAINING_DATASET: CustomDataset = {
+  ...DEFAULT_GENERAL_DATASET,
+  id: 'dataset_starter_corpus',
+  name: 'Starter Corpus (Web / Books / News)',
+  domainLabel: 'Starter Corpus',
+  tokensCount: 50,
+  qualityScore: 60,
+  description: 'Small curated corpus of encyclopedia articles and news, enough for a first model run.'
+};
+
 export interface DatasetTierConfig {
   tier: 1 | 2 | 3 | 4;
   name: string;
@@ -615,7 +626,7 @@ export const INITIAL_MODEL: ModelArchitecture = {
   computeRequiredPflops: 0.05,
   modelType: 'general',
   domainProficiency: 1.0,
-  trainedOnDatasetId: 'dataset_general_corpus',
+  trainedOnDatasetId: 'dataset_starter_corpus',
   inferenceParams: {
     temperature: 0.70,
     topP: 0.90,
