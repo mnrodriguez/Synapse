@@ -6,6 +6,8 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    // GitHub Pages serves project sites under /<repo>/. The deploy workflow sets VITE_BASE_PATH; local dev uses '/'.
+    base: process.env.VITE_BASE_PATH || '/',
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, '.'),
