@@ -35,6 +35,7 @@ import {
   Lock
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
+import { tierForUiVersion } from '../utils/missionTiers';
 import { localize, t } from '../utils/i18n';
 import { localizedContract } from '../utils/gameContentI18n';
 import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from '../utils/constants';
@@ -655,6 +656,8 @@ export const ContractBoard: React.FC = () => {
               .filter(contract => {
                 if (activeTierFilter === 'completed') return contract.completed;
                 if (contract.completed) return false;
+                // Only the missions of the current UI version's tier are offered.
+                if (contract.tier !== tierForUiVersion(state.uiVersion || 1)) return false;
                 if (activeTierFilter === 'all') return true;
                 return contract.tier === activeTierFilter;
               })

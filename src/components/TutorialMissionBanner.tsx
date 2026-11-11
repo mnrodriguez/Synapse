@@ -18,6 +18,7 @@ import {
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
+import { lowestOpenIqForVersion } from '../utils/missionTiers';
 import confetti from 'canvas-confetti';
 
 interface TutorialMissionBannerProps {
@@ -135,6 +136,15 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
   ];
 
   const currentStepInfo = stepsData[Math.min(4, step)];
+  // On the contracts stage, explain how to unblock when no open mission fits the best model.
+  const bestIq = Math.max(0, ...state.savedModels.map(m => m.reasoningScore));
+  const lowestOpenIq = lowestOpenIqForVersion(state.contracts, state.uiVersion || 1);
+  const blockedByIq = currentStepInfo.tab === 'contracts' && lowestOpenIq !== null && bestIq < lowestOpenIq;
+  const guidanceText = blockedByIq
+    ? (isEs
+      ? `Tu mejor modelo tiene IQ ${bestIq} y la misión más accesible pide IQ ${lowestOpenIq}. Ve a ${tabLabels.training} y entrena: cada corrida sube el IQ. Después asigna agentes con el modelo entrenado.`
+      : `Your best model has IQ ${bestIq} and the easiest open mission needs IQ ${lowestOpenIq}. Go to ${tabLabels.training} and train: each run raises IQ. Then assign agents using the trained model.`)
+    : null;
 
   return (
     <div className="w-full mutating-panel border-b p-2 sm:p-2.5 font-mono select-none shadow-md z-10 animate-fadeIn">
@@ -160,7 +170,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
             </div>
 
             <p className={`text-[11px] mutating-text-muted mt-0.5 leading-snug ${detailsOpen ? '' : 'hidden md:block'}`}>
-              {currentStepInfo.desc.replace(/\{(\w+)\}/g, (_, key: string) => tabLabels[key as keyof typeof tabLabels] ?? key)}
+              {guidanceText ?? currentStepInfo.desc.replace(/\{(\w+)\}/g, (_, key: string) => tabLabels[key as keyof typeof tabLabels] ?? key)}
             </p>
           </div>
         </div>
