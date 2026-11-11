@@ -163,7 +163,7 @@ const MainGameScreen: React.FC = () => {
       />
 
       {/* ================= MAIN WORKSPACE AREA (SIDEBAR + CENTRAL WORKSPACE) ================= */}
-      <div className="flex-1 flex overflow-hidden relative z-10">
+      <div className="flex-1 min-h-0 flex overflow-hidden relative z-10">
 
         {/* DESKTOP/TABLET SIDEBAR (side-nav-rail) */}
         <aside className="side-nav-rail mutating-panel border-r flex flex-col justify-between p-2.5 shrink-0 select-none overflow-y-auto">

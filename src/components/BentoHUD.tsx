@@ -3,25 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
-import { 
-  DollarSign, 
+import {
+  DollarSign,
   Brain,
-  Smile, 
-  Zap, 
-  Eye, 
-  Skull, 
+  Smile,
+  Zap,
+  Eye,
+  Skull,
   ArrowUpCircle,
   Radio,
-  Clock
+  Clock,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { localize } from '../utils/i18n';
 import { sound } from '../audio/soundManager';
 
 export const BentoHUD: React.FC = () => {
   const { state, openUpgradeModal, setLanguage } = useGame();
+  // Full bento grid on wide screens; a compact strip on phones and small tablets so the workspace keeps its space.
+  const [expanded, setExpanded] = useState<boolean>(() =>
+    typeof window === 'undefined' || window.matchMedia('(min-width: 1025px)').matches
+  );
   const lang = state.language === 'es' ? 'es' : 'en';
   const ver = state.uiVersion || 1;
   const p = VERSION_PROFILES[lang][ver];
@@ -200,8 +206,66 @@ export const BentoHUD: React.FC = () => {
     return p.coPilotQuote;
   };
 
+  if (!expanded) {
+    return (
+      <div className="w-full select-none font-mono mutating-panel border rounded-xl px-2.5 py-2 space-y-1.5 shadow-sm">
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-expanded={false}
+            className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg mutating-sub border text-[11px] font-bold cursor-pointer"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+            <span>HUD</span>
+          </button>
+
+          <div className="flex items-center gap-2.5 overflow-x-auto min-w-0 whitespace-nowrap text-[11px] font-semibold">
+            <span className="text-emerald-500">${Math.round(state.credits).toLocaleString()}</span>
+            <span className="text-cyan-500">{state.totalComputePflops.toFixed(1)} PF</span>
+            <span className={isPowerTrip ? 'text-rose-500' : 'mutating-text-muted'}>
+              {isPowerTrip ? localize(state.language, '¡DISYUNTOR!', 'BREAKER!') : `${state.activePowerKw.toFixed(1)}/${state.maxPowerKw.toFixed(1)} kW`}
+            </span>
+            <span className={thermalStatus.color}>{state.systemHeatCelsius.toFixed(0)}°C</span>
+            <span className={state.watchdogSuspicion >= 40 ? 'text-amber-500' : 'text-emerald-400'}>
+              {localize(state.language, 'Sospecha', 'Suspicion')} {state.watchdogSuspicion.toFixed(0)}%
+            </span>
+            <span className="text-purple-400">IQ {reasoningIq}</span>
+          </div>
+
+          {nextVer && isUpgradeEligible && (
+            <button
+              type="button"
+              onClick={() => {
+                sound.playNavSwitch();
+                openUpgradeModal(nextVer);
+              }}
+              className="shrink-0 px-2 py-1 text-[11px] font-mono font-bold rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white cursor-pointer animate-pulse"
+            >
+              {p.ctaBtn}
+            </button>
+          )}
+        </div>
+
+        <p className="text-[11px] italic opacity-90 truncate">{getDynamicBark()}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full space-y-2 select-none font-mono">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setExpanded(false)}
+          aria-expanded={true}
+          className="flex items-center gap-1 px-2 py-0.5 rounded-md mutating-sub border text-[10px] font-bold cursor-pointer"
+        >
+          <ChevronUp className="w-3 h-3" />
+          <span>{localize(state.language, 'Contraer HUD', 'Collapse HUD')}</span>
+        </button>
+      </div>
+
       {/* 4-Card Bento Grid */}
       <section className="hud-grid gap-2.5">
         
