@@ -112,6 +112,30 @@ const DOMAIN_COPY: Record<string, DomainCopyByVersion> = {
   }
 };
 
+// Heading and intro of the domains section, per UI version, so the story reads consistently with the cards.
+const SECTION_COPY: Record<UiVersion, Record<Lang, { title: string; intro: string }>> = {
+  1: {
+    en: { title: 'Practice Datasets to Explore', intro: 'Your model learns from these datasets as it improves. Unlock them one by one.' },
+    es: { title: 'Datasets de práctica para explorar', intro: 'Tu modelo aprende de estos datasets a medida que mejora. Desbloquéalos uno por uno.' }
+  },
+  2: {
+    en: { title: 'Data Sources for Pro Pipelines', intro: 'Your pipelines need feeds that scale. Each source unlocks as the model\'s reasoning grows.' },
+    es: { title: 'Fuentes de datos para pipelines pro', intro: 'Tus pipelines necesitan feeds que escalen. Cada fuente se desbloquea a medida que crece el razonamiento del modelo.' }
+  },
+  3: {
+    en: { title: 'Covert Access Points', intro: 'Some of these were never meant to be data sources. The swarm asks for access wherever it can reach.' },
+    es: { title: 'Puntos de acceso encubiertos', intro: 'Algunas de estas fuentes nunca debieron ser datos de entrenamiento. El enjambre pide acceso donde puede llegar.' }
+  },
+  4: {
+    en: { title: 'Global Power Domains: Under Control', intro: 'Every domain below was a step toward this: world control. You were the one who opened each door.' },
+    es: { title: 'Dominios de poder mundial: bajo control', intro: 'Cada dominio de abajo fue un paso hacia esto: el control del mundo. Fuiste tú quien abrió cada puerta.' }
+  }
+};
+
+export function sectionCopyFor(version: UiVersion, lang: Lang): { title: string; intro: string } {
+  return SECTION_COPY[version][lang];
+}
+
 // Returns the wording for this domain in the given UI version, or the fallback text if none is defined.
 export function domainCopyFor(
   version: UiVersion,

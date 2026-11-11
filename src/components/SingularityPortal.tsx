@@ -25,13 +25,14 @@ import { sound } from '../audio/soundManager';
 import confetti from 'canvas-confetti';
 import { localize } from '../utils/i18n';
 import { localizedDomain } from '../utils/gameContentI18n';
-import { domainCopyFor } from '../utils/domainCopy';
+import { domainCopyFor, sectionCopyFor } from '../utils/domainCopy';
 import { buildGoalPanel, UiVersion } from '../utils/singularityGoals';
 
 export const SingularityPortal: React.FC = () => {
   const { state, infiltrateDomain, addLog } = useGame();
   const [showManifesto, setShowManifesto] = useState(false);
   const uiVersion = (state.uiVersion || 1) as UiVersion;
+  const sectionCopy = sectionCopyFor(uiVersion, state.language === 'es' ? 'es' : 'en');
   const goalPanel = buildGoalPanel(uiVersion, state.singularityProgress, state.language === 'es' ? 'es' : 'en');
 
   const handleAscensionIgnition = () => {
@@ -171,10 +172,10 @@ export const SingularityPortal: React.FC = () => {
       <div className="space-y-2">
         <h4 className="text-xs font-bold  flex items-center gap-1.5">
           <Globe2 className="w-3.5 h-3.5 mutating-accent-text" />
-          {localize(state.language, 'DOMINIOS DE PODER MUNDIAL A COOPTAR', 'GLOBAL POWER DOMAINS TO INFLUENCE')}
+          {sectionCopy.title}
         </h4>
         <p className="text-xs mutating-text-muted leading-snug">
-          {localize(state.language, 'A medida que tu IA alcanza hitos de razonamiento y escala, puede infiltrarse discretamente en las arterias críticas de la civilización para asegurar fondos infinitos y blindaje contra los reguladores.', 'As your AI reaches reasoning and scale milestones, it can enter critical systems in the fictional campaign to secure funding and evade regulators.')}
+          {sectionCopy.intro}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
