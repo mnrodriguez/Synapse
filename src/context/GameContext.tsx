@@ -81,7 +81,7 @@ import {
   limit 
 } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
-import { evaluateMissionTeamWithModel, generateAgentResponse, createInstantReplenishmentContract, generateDynamicSwarmInteraction } from '../services/aiService';
+import { evaluateMissionTeamWithModel, generateAgentResponse, createInstantReplenishmentContract, generateDynamicSwarmInteraction, minReasoningForTier } from '../services/aiService';
 import { localize } from '../utils/i18n';
 import { 
   localizedContractTitle, 
@@ -1486,9 +1486,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 // Automatic Mission Synthesis: regular contracts replenish, but Swarm Council side contracts do NOT automatically replenish!
                 if (!gig.fromAgentSwarm) {
-                  const replenishment = createInstantReplenishmentContract(gig.tier, prev.language);
+                  // Replenish only with missions the player's best model can already run.
+                  const constraints = {
+                    maxReasoning: Math.max(0, ...prev.savedModels.map(m => m.reasoningScore)),
+                    maxParams: Math.max(0, ...prev.savedModels.map(m => m.parametersCount))
+                  };
+                  const replenishment = createInstantReplenishmentContract(gig.tier, prev.language, constraints);
+                  if (!replenishment) {
+                    addLog(
+                      localize(
+                        prev.language,
+                        `No hay nuevas misiones de ${gig.tier} al alcance de tu mejor modelo (IQ ${constraints.maxReasoning}). Entrená tu modelo hasta IQ ${minReasoningForTier(gig.tier)} para desbloquearlas.`,
+                        `No new ${gig.tier} missions fit your best model (IQ ${constraints.maxReasoning}). Train your model to IQ ${minReasoningForTier(gig.tier)} to unlock them.`
+                      ),
+                      'warning'
+                    );
+                  }
                   updatedContracts = [
-                    replenishment,
+                    ...(replenishment ? [replenishment] : []),
                     ...updatedContracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c)
                   ];
                 } else {
