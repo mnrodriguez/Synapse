@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { OnboardingConfig, ModelTopology, QuantizationType, GameDifficulty } from '../types/game';
 import { 
@@ -55,6 +55,13 @@ export const GenesisOnboarding: React.FC = () => {
   const [modelParams, setModelParams] = useState<number>(14_000_000);
   const [modelQuant, setModelQuant] = useState<QuantizationType>('int8');
   const [modelName, setModelName] = useState<string>('SYNAPSE-Genesis-14M');
+  // The default name follows the chosen parameter count until the operative types their own name.
+  const [modelNameEdited, setModelNameEdited] = useState<boolean>(false);
+  useEffect(() => {
+    if (!modelNameEdited) {
+      setModelName(`SYNAPSE-Genesis-${Math.round(modelParams / 1_000_000)}M`);
+    }
+  }, [modelParams, modelNameEdited]);
 
   // Step 5 training simulation
   const [isTrainingSimulation, setIsTrainingSimulation] = useState<boolean>(false);
@@ -756,7 +763,10 @@ export const GenesisOnboarding: React.FC = () => {
                 <input
                   type="text"
                   value={modelName}
-                  onChange={(e) => setModelName(e.target.value)}
+                  onChange={(e) => {
+                    setModelName(e.target.value);
+                    setModelNameEdited(true);
+                  }}
                   className="w-full bg-[#05080e] border border-cyan-800 rounded px-3 py-1.5 text-xs text-cyan-200 outline-none focus:border-cyan-400"
                 />
               </div>

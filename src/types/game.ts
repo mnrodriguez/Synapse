@@ -226,7 +226,19 @@ export interface ActiveGig {
   isAutonomous?: boolean;
 }
 
+// Summary of a finished training run, shown until the operative confirms it.
+export interface TrainingReport {
+  modelName: string;
+  datasetName: string;
+  isMicroModel: boolean;
+  reasoningBefore: number;
+  reasoningAfter: number;
+  finalLoss: number;
+}
+
 export interface GameState {
+  // Last finished training run, awaiting confirmation (see dismissTrainingReport).
+  lastTrainingReport?: TrainingReport | null;
   // Phase objective rewards already paid out (see claimGoal).
   claimedGoalIds?: string[];
   saveSchemaVersion: number;
