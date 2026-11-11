@@ -19,6 +19,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
+import { gpuComputePflops, formatTrainingTime } from '../utils/training';
 import { localize } from '../utils/i18n';
 
 // Selected dataset: an inline style so the accent border and tint win over the theme surface classes.
@@ -76,7 +77,7 @@ export const TrainingMonitor: React.FC = () => {
             </h2>
           </div>
           <div className="flex items-center gap-2 text-[10px] mutating-text-muted">
-            <span>{localize(state.language, 'Cómputo:', 'Compute:')} <strong>{(state.totalComputePflops * 0.5).toFixed(2)} PFLOPS</strong></span>
+            <span>{localize(state.language, 'Cómputo:', 'Compute:')} <strong>{(gpuComputePflops(state.hardware) + state.borrowedComputePflops).toFixed(4)} PFLOPS</strong></span>
             <span>•</span>
             <span>{localize(state.language, 'VRAM Total:', 'Total VRAM:')} <strong className="text-emerald-500">{totalClusterVram} GB</strong></span>
           </div>
@@ -314,7 +315,7 @@ export const TrainingMonitor: React.FC = () => {
           <div>
             <span className="mutating-text-muted block text-[10px]">{localize(state.language, 'CÓMPUTO ASIGNADO A LA CORRIDA:', 'COMPUTE ALLOCATED TO RUN:')}</span>
             <span className="mutating-accent-text font-bold">
-              {(state.totalComputePflops * 0.5).toFixed(2)} PFLOPS (50% Cluster)
+              {(gpuComputePflops(state.hardware) + state.borrowedComputePflops).toFixed(4)} PFLOPS {localize(state.language, '(GPU instaladas + préstamo)', '(installed GPUs + loan)')}
             </span>
           </div>
           <div>
@@ -322,7 +323,7 @@ export const TrainingMonitor: React.FC = () => {
             <span className="text-emerald-500 font-bold">
               {job.timeRemainingSeconds === null
                 ? localize(state.language, 'N/A', 'N/A')
-                : `${(job.timeRemainingSeconds / 48).toFixed(1)} ${localize(state.language, 'días de simulación', 'in-game days')}`}
+                : formatTrainingTime(job.timeRemainingSeconds, state.language)}
             </span>
           </div>
         </div>

@@ -40,7 +40,7 @@ import {
   LOSS_DOCS 
 } from '../utils/aiDocumentation';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
-import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration } from '../utils/training';
+import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
 import { DocLinkBadge } from './DocLinkBadge';
@@ -398,7 +398,7 @@ export const ArchitectureStudio: React.FC = () => {
           <span className="text-emerald-500 font-bold block">
             {estimatedTrainingSeconds === null
               ? localize(state.language, 'Sin cómputo disponible', 'No compute available')
-              : `${(estimatedTrainingSeconds / 48).toFixed(1)} ${localize(state.language, 'días de simulación', 'in-game days')}`}
+              : formatTrainingTime(estimatedTrainingSeconds, state.language)}
           </span>
           <span className="text-[10px] mutating-text-muted font-mono block">
             {estimatedTrainingSeconds === null
