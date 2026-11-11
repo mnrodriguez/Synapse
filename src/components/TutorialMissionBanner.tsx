@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { 
   CheckCircle2, 
@@ -26,6 +26,8 @@ interface TutorialMissionBannerProps {
 
 export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ onNavigateTab, activeTab = '' }) => {
   const { state, advanceTutorialStep, addLog } = useGame();
+  // On phones the description is folded away by default to leave room for the workspace.
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   if (state.tutorialCompleted || state.tutorialDismissed) {
     return null;
@@ -155,7 +157,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
               </span>
             </div>
 
-            <p className="text-[11px] mutating-text-muted mt-0.5 leading-snug">
+            <p className={`text-[11px] mutating-text-muted mt-0.5 leading-snug ${detailsOpen ? '' : 'hidden md:block'}`}>
               {currentStepInfo.desc}
             </p>
           </div>
@@ -163,6 +165,15 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
 
         {/* Right: Step progress pills and action button */}
         <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+          <button
+            type="button"
+            onClick={() => setDetailsOpen(open => !open)}
+            aria-expanded={detailsOpen}
+            className="md:hidden px-2 py-1 text-[10px] font-bold rounded border mutating-sub cursor-pointer"
+          >
+            {detailsOpen ? (isEs ? 'Ocultar' : 'Hide') : (isEs ? 'Detalles' : 'Details')}
+          </button>
+
           {/* Progress dots */}
           <div className="hidden lg:flex items-center gap-1 mr-2">
             {stepsData.map((s, idx) => (

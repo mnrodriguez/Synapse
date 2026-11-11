@@ -116,6 +116,9 @@ export const TopNav: React.FC<TopNavProps> = ({
           </div>
         </div>
 
+        {/* Controls row: one line that scrolls sideways on phones instead of stacking into three rows */}
+        <div className="flex items-center gap-2 w-full sm:w-auto min-w-0 overflow-x-auto">
+
         {/* Center: Simulation Speed Controls */}
         <div className="flex items-center gap-1 mutating-sub p-1 rounded-xl border font-mono text-xs">
           <Clock className="w-3.5 h-3.5 mutating-text-muted ml-1 mr-0.5" />
@@ -210,6 +213,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           </button>
         </div>
 
+        </div>
       </header>
     </div>
   );
