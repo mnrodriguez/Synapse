@@ -27,6 +27,7 @@ import {
 import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
 import { generateStrategicAdvice, StrategicAdviceResponse } from '../services/aiService';
+import { toDisplayProgress, UiVersion } from '../utils/singularityGoals';
 
 interface ProgressionRoadmapProps {
   onClose?: () => void;
@@ -40,7 +41,8 @@ export const ProgressionRoadmap: React.FC<ProgressionRoadmapProps> = ({ onClose,
   const [aiAdvice, setAiAdvice] = useState<StrategicAdviceResponse | null>(null);
 
   const isEs = state.language === 'es';
-  const singularity = state.singularityProgress;
+  // Stages and advice use the same per-version scale as the transcendence bar.
+  const singularity = toDisplayProgress((state.uiVersion || 1) as UiVersion, state.singularityProgress);
   const maxVram = state.hardware.reduce((sum, h) => sum + (h.vramGb * h.count), 0);
   const activeKw = state.activePowerKw;
   const maxKw = state.maxPowerKw;
