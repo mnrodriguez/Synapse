@@ -39,7 +39,7 @@ export const BentoHUD: React.FC = () => {
 
   // Determine if next upgrade is available to offer via the Co-Pilot CTA
   const nextVer = ver < 4 ? ((ver + 1) as 2 | 3 | 4) : null;
-  const reasoningIq = Math.round(Math.min(400, Math.max(50, state.currentModel.reasoningScore || 72)));
+  const reasoningIq = Math.round(Math.min(400, Math.max(0, state.currentModel.reasoningScore ?? 0)));
   const isUpgradeEligible = 
     (ver === 1 && state.singularityProgress >= 25 && reasoningIq >= 100) ||
     (ver === 2 && state.singularityProgress >= 55 && reasoningIq >= 180) ||

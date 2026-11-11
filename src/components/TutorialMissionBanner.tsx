@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 import confetti from 'canvas-confetti';
 
 interface TutorialMissionBannerProps {
@@ -35,6 +36,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
 
   const step = state.tutorialStep ?? 0;
   const isEs = state.language === 'es';
+  const tabLabels = VERSION_PROFILES[isEs ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs;
 
   const hasStarterGpu = state.hardware.some(h => h.category === 'gpu' && h.isStarterChoice && h.count > 0);
   const hasStarterCooling = state.hardware.some(h => h.category === 'cooling' && h.isStarterChoice && h.count > 0);
@@ -80,10 +82,10 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'hardware',
       title: isEs ? 'Fase 1: Adquirir Hardware Inicial' : 'Stage 1: Acquire Starter Hardware',
       desc: isEs 
-        ? 'Tienes $500 CR de fondo semilla. Ve a HARDWARE y equipa una GPU inicial, refrigeración básica, una fuente de alimentación y una conexión de red. Esta fase no avanzará hasta que los cuatro componentes estén instalados.'
-        : 'You have a $500 CR initial grant. Open HARDWARE and install a starter GPU, basic cooling, a power supply, and a network connection. This stage will not advance until all four are installed.',
+        ? 'Tienes $500 CR de fondo semilla. Ve a {hardware} y equipa una GPU inicial, refrigeración básica, una fuente de alimentación y una conexión de red. Esta fase no avanzará hasta que los cuatro componentes estén instalados.'
+        : 'You have a $500 CR initial grant. Open {hardware} and install a starter GPU, basic cooling, a power supply, and a network connection. This stage will not advance until all four are installed.',
       icon: Server,
-      buttonText: isEs ? 'IR A HARDWARE' : 'GO TO HARDWARE',
+      buttonText: isEs ? `IR A ${tabLabels.hardware.toUpperCase()}` : `GO TO ${tabLabels.hardware.toUpperCase()}`,
       isCompleted: hasStarterHardware
     },
     {
@@ -91,10 +93,10 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'architecture',
       title: isEs ? 'Fase 2: Arquitectura del Modelo' : 'Stage 2: Model Architecture',
       desc: isEs 
-        ? 'Ve a ARQUITECTURA para inspeccionar la topología Transformer, cuantización INT8 y parámetros del modelo inicial SYNAPSE-Proto.'
-        : 'Open ARCHITECTURE to inspect the Transformer topology, INT8 quantization, and parameters of your first model.',
+        ? 'Ve a {architecture} para inspeccionar la topología Transformer, cuantización INT8 y parámetros del modelo inicial SYNAPSE-Proto.'
+        : 'Open {architecture} to inspect the Transformer topology, INT8 quantization, and parameters of your first model.',
       icon: Layers,
-      buttonText: isEs ? 'IR A ARQUITECTURA' : 'GO TO ARCHITECTURE',
+      buttonText: isEs ? `IR A ${tabLabels.architecture.toUpperCase()}` : `GO TO ${tabLabels.architecture.toUpperCase()}`,
       isCompleted: step > 1
     },
     {
@@ -102,10 +104,10 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'training',
       title: isEs ? 'Fase 3: Entrenar Pesos Neuronales' : 'Stage 3: Train Neural Weights',
       desc: isEs 
-        ? 'Ve a MONITOR e inicia una corrida de entrenamiento para optimizar los gradientes del modelo hasta reducir el Loss.'
-        : 'Open MONITOR and initiate a training run to optimize gradients and converge model loss.',
+        ? 'Ve a {training} e inicia una corrida de entrenamiento para optimizar los gradientes del modelo hasta reducir el Loss.'
+        : 'Open {training} and initiate a training run to optimize gradients and converge model loss.',
       icon: Activity,
-      buttonText: isEs ? 'IR A MONITOR' : 'GO TO MONITOR',
+      buttonText: isEs ? `IR A ${tabLabels.training.toUpperCase()}` : `GO TO ${tabLabels.training.toUpperCase()}`,
       isCompleted: step > 2
     },
     {
@@ -113,10 +115,10 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'agents',
       title: isEs ? 'Fase 4: Desplegar tu Primer Agente' : 'Stage 4: Deploy Your First Agent',
       desc: isEs 
-        ? 'Ve a SWARM AGENTES y despliega un agente autónomo (ej. Trader o Researcher) conectado a tu modelo entrenado.'
-        : 'Open AGENT SWARM and deploy your first autonomous agent (e.g. Trader or Researcher) bound to your trained model.',
+        ? 'Ve a {agents} y despliega un agente autónomo (ej. Trader o Researcher) conectado a tu modelo entrenado.'
+        : 'Open {agents} and deploy your first autonomous agent (e.g. Trader or Researcher) bound to your trained model.',
       icon: Bot,
-      buttonText: isEs ? 'IR A SWARM' : 'GO TO SWARM',
+      buttonText: isEs ? `IR A ${tabLabels.agents.toUpperCase()}` : `GO TO ${tabLabels.agents.toUpperCase()}`,
       isCompleted: hasAgent || step > 3
     },
     {
@@ -124,10 +126,10 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'contracts',
       title: isEs ? 'Fase 5: Resolver la Primera Misión' : 'Stage 5: Solve the First Mission',
       desc: isEs 
-        ? 'Ve a CONTRATOS, selecciona a tu agente activo y ejecuta tu primer contrato comercial para cobrar tu primera recompensa.'
-        : 'Open CONTRACTS, assign your active agent, and execute your first paid commercial mission.',
+        ? 'Ve a {contracts}, selecciona a tu agente activo y ejecuta tu primer contrato comercial para cobrar tu primera recompensa.'
+        : 'Open {contracts}, assign your active agent, and execute your first paid commercial mission.',
       icon: Briefcase,
-      buttonText: isEs ? 'IR A CONTRATOS' : 'GO TO CONTRACTS',
+      buttonText: isEs ? `IR A ${tabLabels.contracts.toUpperCase()}` : `GO TO ${tabLabels.contracts.toUpperCase()}`,
       isCompleted: hasFinishedContract
     }
   ];
@@ -158,7 +160,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
             </div>
 
             <p className={`text-[11px] mutating-text-muted mt-0.5 leading-snug ${detailsOpen ? '' : 'hidden md:block'}`}>
-              {currentStepInfo.desc}
+              {currentStepInfo.desc.replace(/\{(\w+)\}/g, (_, key: string) => tabLabels[key as keyof typeof tabLabels] ?? key)}
             </p>
           </div>
         </div>
