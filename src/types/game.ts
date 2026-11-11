@@ -227,6 +227,8 @@ export interface ActiveGig {
 }
 
 export interface GameState {
+  // Phase objective rewards already paid out (see claimGoal).
+  claimedGoalIds?: string[];
   saveSchemaVersion: number;
   callsign: string;
   credits: number;
