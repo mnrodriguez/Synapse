@@ -16,7 +16,8 @@ export const calculateTrainingProgressPerTick = ({
   const trainingScale = Math.sqrt(Math.max(1, parametersCount / 14_000_000));
   const thermalThrottle = systemHeatCelsius > 85 ? 0.4 : 1;
   const availableCompute = Math.max(0, totalComputePflops - agentComputeDemand - reservedComputePflops);
-  return (availableCompute * 100 * thermalThrottle) / (5 * trainingScale);
+  // A run should take dozens of ticks on starter hardware, not one. Previously 40 PFLOPS converged in a single tick.
+  return (availableCompute * 100 * thermalThrottle) / (2000 * trainingScale);
 };
 
 export const estimateTrainingSeconds = (

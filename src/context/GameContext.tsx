@@ -133,6 +133,7 @@ interface GameContextType {
   logoutUser: () => Promise<void>;
   resetProgress: () => Promise<void>;
   completeTutorial: (config: OnboardingConfig) => void;
+  dismissTrainingReport: () => void;
   claimGoal: (goalId: string, reward: number) => void;
   fetchLeaderboard: () => Promise<OperativeLeaderboard[]>;
   createAgent: (name: string, role: AgentRole, modelId: string, tools: string[], inferenceParams?: Partial<InferenceParams>) => boolean;
@@ -1291,6 +1292,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // 5. Active Training Progress Tick
         let updatedTraining = activeTraining;
+        let trainingReport: GameState['lastTrainingReport'] = null;
         let newCurrentModel = prev.currentModel;
         if (activeTraining && activeTraining.active) {
           // Step progress based on compute PFLOPS vs parameters
@@ -1331,10 +1333,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             sound.playBreakthrough();
             
             // Calculate new reasoning score bonus
-            const bonusReasoning = Math.round(
-              Math.min(8, (1 / Math.max(0.1, newLoss)) * 0.16) *
+            // Gain follows how much the loss fell during the run (at least +1 IQ per completed run).
+            // The previous formula rounded to 0 for any normal final loss, so IQ never moved.
+            const lossDrop = Math.max(0, (activeTraining.initialLoss ?? 4.82) - newLoss);
+            const bonusReasoning = Math.min(12, Math.max(1, Math.round(
+              lossDrop * 4 *
               (1 + Math.min(0.25, prev.currentModel.activeDataSources.length * 0.05))
-            );
+            )));
             const upgradedModelReasoning = prev.currentModel.reasoningScore + bonusReasoning;
             
             const isMicroModel = activeTraining.targetModelType === 'micro_model';
@@ -1375,6 +1380,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               );
             }
 
+            trainingReport = {
+              modelName: newCurrentModel.name,
+              datasetName: activeTraining.datasetName ?? 'General Corpus',
+              isMicroModel,
+              reasoningBefore: prev.currentModel.reasoningScore,
+              reasoningAfter: upgradedModelReasoning,
+              finalLoss: Number(newLoss.toFixed(4))
+            };
             updatedTraining = null; // finished
           } else {
             updatedTraining = {
@@ -2065,6 +2078,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           currentModel: newCurrentModel,
           savedModels: savedModelsList,
           activeTraining: updatedTraining,
+          lastTrainingReport: trainingReport ?? prev.lastTrainingReport ?? null,
           activeScrapeJob: updatedScrapeJob,
           customDatasets: updatedCustomDatasets,
           activeGig: updatedGigs[0] || null,
@@ -4242,6 +4256,11 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     }
   }, [addLog]);
 
+  // Operative confirms the training report; clearing it lets the next run start normally.
+  const dismissTrainingReport = useCallback(() => {
+    setState(prev => (prev.lastTrainingReport ? { ...prev, lastTrainingReport: null } : prev));
+  }, []);
+
   // Complete Onboarding / Tutorial Genesis Protocol
   const completeTutorial = useCallback((config: OnboardingConfig) => {
     sound.playBreakthrough();
@@ -4579,6 +4598,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       logoutUser,
       resetProgress,
       completeTutorial,
+      dismissTrainingReport,
       claimGoal,
       fetchLeaderboard,
       createAgent,

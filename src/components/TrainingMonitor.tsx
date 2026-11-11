@@ -21,6 +21,13 @@ import {
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
 
+// Selected dataset: an inline style so the accent border and tint win over the theme surface classes.
+const DATASET_SELECTED_STYLE: React.CSSProperties = {
+  borderColor: 'var(--accent-primary)',
+  boxShadow: '0 0 0 2px var(--accent-primary)',
+  backgroundColor: 'color-mix(in srgb, var(--accent-primary) 14%, transparent)'
+};
+
 export const TrainingMonitor: React.FC = () => {
   const { state, cancelTraining, startTraining, selectModel } = useGame();
   const job = state.activeTraining;
@@ -46,7 +53,8 @@ export const TrainingMonitor: React.FC = () => {
       tier: 1,
       tokensCount: 50
     },
-    ...state.customDatasets.map(ds => ({
+    // The general corpus is listed once above; a saved dataset with the same id would make two options look selected.
+    ...state.customDatasets.filter(ds => ds.id !== 'dataset_general_corpus').map(ds => ({
       id: ds.id,
       name: `${ds.name} (${ds.domainLabel})`,
       domain: ds.domain,
@@ -173,10 +181,12 @@ export const TrainingMonitor: React.FC = () => {
                     sound.playKeyClick();
                     setSelectedDatasetId(ds.id);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                  aria-pressed={selectedDatasetId === ds.id}
+                  style={selectedDatasetId === ds.id ? DATASET_SELECTED_STYLE : undefined}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer border ${
                     selectedDatasetId === ds.id
-                      ? 'mutating-btn-primary font-bold shadow-sm'
-                      : 'mutating-card border border-current/20 mutating-text-muted hover:opacity-100'
+                      ? 'mutating-sub mutating-accent-text font-bold'
+                      : 'mutating-sub border-current/15 mutating-text-muted hover:opacity-100'
                   }`}
                 >
                   {ds.name} · {ds.tokensCount}M tokens

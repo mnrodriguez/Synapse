@@ -17,6 +17,7 @@ import { ResearchTree } from './components/ResearchTree';
 import { TrainingMonitor } from './components/TrainingMonitor';
 import { SingularityPortal } from './components/SingularityPortal';
 import { LeaderboardModal } from './components/LeaderboardModal';
+import { TrainingReportModal } from './components/TrainingReportModal';
 import { AuthModal } from './components/AuthModal';
 import { HelpManual } from './components/HelpManual';
 import { AgentSandbox } from './components/AgentSandbox';
@@ -326,6 +327,7 @@ const MainGameScreen: React.FC = () => {
 
       {/* Dialog Modals */}
       <HelpManual isOpen={manualOpen} onClose={() => setManualOpen(false)} />
+      <TrainingReportModal />
       <LeaderboardModal isOpen={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
