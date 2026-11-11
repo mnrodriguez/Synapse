@@ -43,6 +43,7 @@ import {
 import { sound } from './audio/soundManager';
 import { localize } from './utils/i18n';
 import { VERSION_PROFILES } from './utils/versionProfiles';
+import { toDisplayProgress, UiVersion } from './utils/singularityGoals';
 
 type WorkspaceTab = 
   | 'architecture' 
@@ -123,7 +124,7 @@ const MainGameScreen: React.FC = () => {
       id: 'singularity' as WorkspaceTab, 
       label: p.tabs.singularity, 
       icon: Globe, 
-      badge: `${state.singularityProgress.toFixed(0)}%` 
+      badge: `${toDisplayProgress(ver as UiVersion, state.singularityProgress).toFixed(0)}%` 
     },
     { 
       id: 'terminal' as WorkspaceTab, 

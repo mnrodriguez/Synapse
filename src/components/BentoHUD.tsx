@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { localize } from '../utils/i18n';
 import { sound } from '../audio/soundManager';
+import { toDisplayProgress, UiVersion } from '../utils/singularityGoals';
 
 export const BentoHUD: React.FC = () => {
   const { state, openUpgradeModal, setLanguage } = useGame();
@@ -30,6 +31,7 @@ export const BentoHUD: React.FC = () => {
   );
   const lang = state.language === 'es' ? 'es' : 'en';
   const ver = state.uiVersion || 1;
+  const displayedSingularity = toDisplayProgress(ver as UiVersion, state.singularityProgress);
   const p = VERSION_PROFILES[lang][ver];
 
   const powerRatio = Math.min(100, (state.activePowerKw / Math.max(0.1, state.maxPowerKw)) * 100);
@@ -422,13 +424,13 @@ export const BentoHUD: React.FC = () => {
 
           <div className="space-y-1 pt-1.5 border-t border-current/10 font-mono text-[11px]">
             <div className="flex justify-between items-center text-[10px]">
-              <span className="mutating-text-muted font-sans">{localize(state.language, 'Singularidad:', 'Singularity:')} {state.singularityProgress.toFixed(0)}%</span>
+              <span className="mutating-text-muted font-sans">{localize(state.language, 'Singularidad:', 'Singularity:')} {displayedSingularity.toFixed(0)}%</span>
               <span className="text-amber-500 font-bold font-sans">{localize(state.language, 'Subversión:', 'Drift:')} {state.subversionProgress || 0}%</span>
             </div>
             <div className="w-full h-1 bg-current/15 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-purple-500 to-rose-500 transition-all duration-300"
-                style={{ width: `${Math.min(100, state.singularityProgress)}%` }}
+                style={{ width: `${Math.min(100, displayedSingularity)}%` }}
               />
             </div>
           </div>
