@@ -152,7 +152,8 @@ const MainGameScreen: React.FC = () => {
       />
 
       {/* Bento HUD & Whispering Co-Pilot Banner */}
-      <div className="px-3 pt-2 z-20 shrink-0">
+      {/* No z-index here: the workspace layer (z-10) must paint above the HUD so modals opened from it cover the HUD too. */}
+      <div className="px-3 pt-2 shrink-0">
         <BentoHUD />
       </div>
 
