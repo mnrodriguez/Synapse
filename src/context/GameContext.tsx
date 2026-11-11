@@ -133,6 +133,7 @@ interface GameContextType {
   logoutUser: () => Promise<void>;
   resetProgress: () => Promise<void>;
   completeTutorial: (config: OnboardingConfig) => void;
+  claimGoal: (goalId: string, reward: number) => void;
   fetchLeaderboard: () => Promise<OperativeLeaderboard[]>;
   createAgent: (name: string, role: AgentRole, modelId: string, tools: string[], inferenceParams?: Partial<InferenceParams>) => boolean;
   deleteAgent: (agentId: string) => void;
@@ -4224,6 +4225,23 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     });
   }, [recalculateMetrics]);
 
+  // Claim a completed phase objective's reward once; the id is remembered so it cannot be paid twice.
+  const claimGoal = useCallback((goalId: string, reward: number) => {
+    let claimed = false;
+    setState(prev => {
+      if ((prev.claimedGoalIds ?? []).includes(goalId)) return prev;
+      claimed = true;
+      return {
+        ...prev,
+        credits: prev.credits + reward,
+        claimedGoalIds: [...(prev.claimedGoalIds ?? []), goalId]
+      };
+    });
+    if (claimed) {
+      addLog(`[OBJETIVO COBRADO] +$${reward.toLocaleString()} CR`, 'success');
+    }
+  }, [addLog]);
+
   // Complete Onboarding / Tutorial Genesis Protocol
   const completeTutorial = useCallback((config: OnboardingConfig) => {
     sound.playBreakthrough();
@@ -4561,6 +4579,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       logoutUser,
       resetProgress,
       completeTutorial,
+      claimGoal,
       fetchLeaderboard,
       createAgent,
       deleteAgent,

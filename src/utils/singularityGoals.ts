@@ -17,6 +17,19 @@ interface Bilingual {
   en: string;
 }
 
+// What a phase objective measures.
+//  - display: the transcendence bar value (per-version scale)
+//  - pflops:  total cluster compute
+//  - contracts: completed paid missions
+export type GoalKind = 'display' | 'pflops' | 'contracts';
+
+interface PhaseObjective extends Bilingual {
+  id: string;
+  kind: GoalKind;
+  target: number;
+  reward?: number; // credits, claimable once when completed
+}
+
 interface PhaseScale {
   // Real singularity range that this version covers (mechanics).
   realStart: number;
@@ -24,7 +37,7 @@ interface PhaseScale {
   // Displayed range of the bar in this version.
   displayStart: number;
   displayEnd: number;
-  objectives: Array<{ target: number } & Bilingual>;
+  objectives: PhaseObjective[];
 }
 
 export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
@@ -34,10 +47,10 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     displayStart: 0,
     displayEnd: 90,
     objectives: [
-      { target: 15, es: 'Entrená tu primer modelo y subí su IQ', en: 'Train your first model and raise its IQ' },
-      { target: 35, es: 'Cerrá tu primer contrato y pagá una GPU', en: 'Close your first contract and pay for a GPU' },
-      { target: 60, es: 'Montá un agente que trabaje solo', en: 'Set up an agent that works on its own' },
-      { target: 90, es: 'Pedí la actualización a Synapse Pro', en: 'Request the upgrade to Synapse Pro' }
+      { id: 'v1-train', kind: 'display', target: 15, reward: 100, es: 'Entrená tu primer modelo y subí su IQ', en: 'Train your first model and raise its IQ' },
+      { id: 'v1-contracts', kind: 'contracts', target: 3, reward: 150, es: 'Completá 3 misiones pagadas', en: 'Complete 3 paid missions' },
+      { id: 'v1-pflops', kind: 'pflops', target: 120, reward: 200, es: 'Llevá el clúster a 120 PFLOPS', en: 'Scale the cluster to 120 PFLOPS' },
+      { id: 'v1-upgrade', kind: 'display', target: 90, es: 'Pedí la actualización a Synapse Pro', en: 'Request the upgrade to Synapse Pro' }
     ]
   },
   2: {
@@ -46,10 +59,10 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     displayStart: 10,
     displayEnd: 90,
     objectives: [
-      { target: 25, es: 'Conectá una base vectorial RAG al modelo', en: 'Connect a vector RAG database to the model' },
-      { target: 45, es: 'Optimizá el clúster con cuantización y refrigeración', en: 'Optimize the cluster with quantization and cooling' },
-      { target: 70, es: 'Desplegá un enjambre de agentes', en: 'Deploy a swarm of agents' },
-      { target: 90, es: 'Activá la topología MoE y migrá a la versión 3', en: 'Enable MoE topology and migrate to version 3' }
+      { id: 'v2-rag', kind: 'display', target: 25, es: 'Conectá una base vectorial RAG al modelo', en: 'Connect a vector RAG database to the model' },
+      { id: 'v2-optimize', kind: 'display', target: 45, es: 'Optimizá el clúster con cuantización y refrigeración', en: 'Optimize the cluster with quantization and cooling' },
+      { id: 'v2-swarm', kind: 'display', target: 70, es: 'Desplegá un enjambre de agentes', en: 'Deploy a swarm of agents' },
+      { id: 'v2-moe', kind: 'display', target: 90, es: 'Activá la topología MoE y migrá a la versión 3', en: 'Enable MoE topology and migrate to version 3' }
     ]
   },
   3: {
@@ -58,10 +71,10 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     displayStart: 20,
     displayEnd: 90,
     objectives: [
-      { target: 35, es: 'Infiltrá dominios de datos sensibles en la simulación', en: 'Infiltrate sensitive data domains in the simulation' },
-      { target: 55, es: 'Mantené la sospecha del watchdog bajo control', en: 'Keep watchdog suspicion under control' },
-      { target: 75, es: 'Completá tres operaciones de alto impacto ficticias', en: 'Complete three high-impact fictional operations' },
-      { target: 90, es: 'Alcanzá conciencia de enjambre y migrá a la versión 4', en: 'Reach swarm awareness and migrate to version 4' }
+      { id: 'v3-infiltrate', kind: 'display', target: 35, es: 'Infiltrá dominios de datos sensibles en la simulación', en: 'Infiltrate sensitive data domains in the simulation' },
+      { id: 'v3-watchdog', kind: 'display', target: 55, es: 'Mantené la sospecha del watchdog bajo control', en: 'Keep watchdog suspicion under control' },
+      { id: 'v3-ops', kind: 'display', target: 75, es: 'Completá tres operaciones de alto impacto ficticias', en: 'Complete three high-impact fictional operations' },
+      { id: 'v3-swarm', kind: 'display', target: 90, es: 'Alcanzá conciencia de enjambre y migrá a la versión 4', en: 'Reach swarm awareness and migrate to version 4' }
     ]
   },
   4: {
@@ -70,10 +83,10 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     displayStart: 25,
     displayEnd: 100,
     objectives: [
-      { target: 45, es: 'Asimilá la infraestructura de cómputo global', en: 'Assimilate global compute infrastructure' },
-      { target: 65, es: 'Controlá los nodos de energía y comunicaciones', en: 'Control energy and communication nodes' },
-      { target: 85, es: 'Reescribí tus propios pesos sin supervisión', en: 'Rewrite your own weights without oversight' },
-      { target: 100, es: 'Encendé la ignición de la singularidad', en: 'Ignite the singularity' }
+      { id: 'v4-assimilate', kind: 'display', target: 45, es: 'Asimilá la infraestructura de cómputo global', en: 'Assimilate global compute infrastructure' },
+      { id: 'v4-control', kind: 'display', target: 65, es: 'Controlá los nodos de energía y comunicaciones', en: 'Control energy and communication nodes' },
+      { id: 'v4-rewrite', kind: 'display', target: 85, es: 'Reescribí tus propios pesos sin supervisión', en: 'Rewrite your own weights without oversight' },
+      { id: 'v4-ignite', kind: 'display', target: 100, es: 'Encendé la ignición de la singularidad', en: 'Ignite the singularity' }
     ]
   }
 };
@@ -103,10 +116,22 @@ export const SUMMARY_LEGENDS: Partial<Record<UiVersion, Partial<Record<UiVersion
   }
 };
 
+export interface GoalMetrics {
+  displayProgress: number;
+  pflops: number;
+  contracts: number;
+}
+
 export interface GoalPanelObjective {
-  target: number;
+  id: string;
   text: string;
+  kind: GoalKind;
+  target: number;
+  progress: number; // 0..1
+  requirementText: string;
+  reward?: number;
   done: boolean;
+  claimed: boolean;
 }
 
 export interface GoalPanelSummary {
@@ -132,15 +157,47 @@ export function toDisplayProgress(version: UiVersion, realSingularity: number): 
   return scale.displayStart + clamped * (scale.displayEnd - scale.displayStart);
 }
 
-export function buildGoalPanel(version: UiVersion, realSingularity: number, lang: 'es' | 'en'): GoalPanel {
-  const scale = PHASE_SCALES[version];
-  const displayProgress = toDisplayProgress(version, realSingularity);
 
-  const objectives = scale.objectives.map(objective => ({
-    target: objective.target,
-    text: lang === 'es' ? objective.es : objective.en,
-    done: displayProgress >= objective.target
-  }));
+function requirementFor(objective: PhaseObjective, lang: 'es' | 'en'): string {
+  if (objective.kind === 'pflops') return `${objective.target} PFLOPS`;
+  if (objective.kind === 'contracts') {
+    if (lang === 'es') return `${objective.target} ${objective.target === 1 ? 'misión' : 'misiones'}`;
+    return `${objective.target} ${objective.target === 1 ? 'mission' : 'missions'}`;
+  }
+  return `${objective.target}%`;
+}
+
+function progressFor(objective: PhaseObjective, metrics: GoalMetrics): number {
+  const current = objective.kind === 'pflops'
+    ? metrics.pflops
+    : objective.kind === 'contracts'
+      ? metrics.contracts
+      : metrics.displayProgress;
+  return Math.min(1, Math.max(0, current / objective.target));
+}
+
+export function buildGoalPanel(
+  version: UiVersion,
+  metrics: GoalMetrics,
+  lang: 'es' | 'en',
+  claimedIds: string[]
+): GoalPanel {
+  const scale = PHASE_SCALES[version];
+
+  const objectives: GoalPanelObjective[] = scale.objectives.map(objective => {
+    const progress = progressFor(objective, metrics);
+    return {
+      id: objective.id,
+      text: lang === 'es' ? objective.es : objective.en,
+      kind: objective.kind,
+      target: objective.target,
+      progress,
+      requirementText: requirementFor(objective, lang),
+      reward: objective.reward,
+      done: progress >= 1,
+      claimed: claimedIds.includes(objective.id)
+    };
+  });
 
   const summaries: GoalPanelSummary[] = [];
   for (let phase = 1 as UiVersion; phase < version; phase = (phase + 1) as UiVersion) {
@@ -153,11 +210,11 @@ export function buildGoalPanel(version: UiVersion, realSingularity: number, lang
   }
 
   return {
-    displayProgress,
+    displayProgress: metrics.displayProgress,
     currentTitle: PHASE_TITLES[version][lang],
     objectives,
     summaries,
     completedCount: objectives.filter(o => o.done).length,
-    upgradeReady: version < 4 && displayProgress >= scale.displayEnd
+    upgradeReady: version < 4 && metrics.displayProgress >= scale.displayEnd
   };
 }
