@@ -650,12 +650,22 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
   ]
 };
 
+// Lowest reasoning IQ any mission of this tier asks for; used to tell the player what to train toward.
+export function minReasoningForTier(tier: ContractGig['tier']): number {
+  const templates = PROCEDURAL_CONTRACT_TEMPLATES[tier] || PROCEDURAL_CONTRACT_TEMPLATES.tier1_micro;
+  return Math.min(...templates.map(t => t.reasoning));
+}
+
 export async function generateDynamicContracts(
   tier: ContractGig['tier'],
   language: 'es' | 'en' = 'en',
-  apiKey?: string
+  apiKey?: string,
+  constraints?: { maxReasoning: number; maxParams: number }
 ): Promise<ContractGig[]> {
   const now = Date.now();
+  // Only generate missions the player's best model can already run.
+  const maxReasoning = constraints?.maxReasoning ?? Number.POSITIVE_INFINITY;
+  const maxParams = constraints?.maxParams ?? Number.POSITIVE_INFINITY;
 
   // Try a browser-built-in model or the player's own key; otherwise use the procedural generator below
   {
@@ -663,6 +673,7 @@ export async function generateDynamicContracts(
       const prompt = `You are the Mission Dispatcher for "SYNAPSE", a technical cyberpunk AI simulation game where players train real AI models, optimize hardware, and run agent swarms.
 Generate 2 distinct, highly technical contract gig missions for Tier "${tier}".
 Rules:
+- The operative's best model has reasoning IQ ${maxReasoning} and ${maxParams} parameters. requiredMinReasoning must be <= ${maxReasoning} and requiredParams must be <= ${maxParams}.
 - Missions must be grounded in realistic real-world AI applications (FinTech, cybersecurity, bioinformatics, NLP, computer vision, robotics, or distributed computing).
 - Return ONLY valid JSON as an array of 2 objects conforming to this schema:
 [
@@ -686,8 +697,11 @@ Rules:
 
       const result = await runTextModel({ systemPrompt: '', prompt, temperature: 0.75, expectJson: true }, apiKey);
       const parsed = JSON.parse(result?.text || '[]');
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((item, idx) => {
+      const affordable = Array.isArray(parsed)
+        ? parsed.filter((item: any) => Number(item.requiredMinReasoning) <= maxReasoning && Number(item.requiredParams) <= maxParams)
+        : [];
+      if (affordable.length > 0) {
+        return affordable.map((item: any, idx: number) => {
           const requiredAgentRoles = Array.isArray(item.requiredAgentRoles)
             ? Array.from(new Set<AgentRole>(item.requiredAgentRoles.filter((role: unknown): role is AgentRole =>
               AGENT_ROLES.some(validRole => validRole === role)
@@ -725,8 +739,10 @@ Rules:
   }
 
   // Procedural Fallback Generator (Guaranteed instant generation)
-  const templates = PROCEDURAL_CONTRACT_TEMPLATES[tier] || PROCEDURAL_CONTRACT_TEMPLATES.tier1_micro;
-  const picked = templates[Math.floor(Math.random() * templates.length)];
+  const affordableTemplates = (PROCEDURAL_CONTRACT_TEMPLATES[tier] || PROCEDURAL_CONTRACT_TEMPLATES.tier1_micro)
+    .filter(t => t.reasoning <= maxReasoning && t.params <= maxParams);
+  if (affordableTemplates.length === 0) return [];
+  const picked = affordableTemplates[Math.floor(Math.random() * affordableTemplates.length)];
   const client = FALLBACK_CLIENTS[Math.floor(Math.random() * FALLBACK_CLIENTS.length)];
   const variance = (Math.random() * 0.3) + 0.85;
 
@@ -754,9 +770,15 @@ Rules:
 
 export function createInstantReplenishmentContract(
   tier: ContractGig['tier'],
-  language: 'es' | 'en' = 'en'
-): ContractGig {
-  const templates = PROCEDURAL_CONTRACT_TEMPLATES[tier] || PROCEDURAL_CONTRACT_TEMPLATES.tier1_micro;
+  language: 'es' | 'en' = 'en',
+  constraints?: { maxReasoning: number; maxParams: number }
+): ContractGig | null {
+  const maxReasoning = constraints?.maxReasoning ?? Number.POSITIVE_INFINITY;
+  const maxParams = constraints?.maxParams ?? Number.POSITIVE_INFINITY;
+  // Replenish only with missions the player's best model can already run.
+  const templates = (PROCEDURAL_CONTRACT_TEMPLATES[tier] || PROCEDURAL_CONTRACT_TEMPLATES.tier1_micro)
+    .filter(t => t.reasoning <= maxReasoning && t.params <= maxParams);
+  if (templates.length === 0) return null;
   const picked = templates[Math.floor(Math.random() * templates.length)];
   const client = FALLBACK_CLIENTS[Math.floor(Math.random() * FALLBACK_CLIENTS.length)];
   const variance = (Math.random() * 0.3) + 0.85;
