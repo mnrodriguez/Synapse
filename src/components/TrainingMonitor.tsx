@@ -125,7 +125,7 @@ export const TrainingMonitor: React.FC = () => {
                   <div className="pt-1 border-t border-current/10 flex items-center justify-between text-[11px]">
                     <span className="text-purple-400 font-bold flex items-center gap-1">
                       <Brain className="w-3 h-3 text-purple-400" />
-                      IQ {model.reasoningScore || 72}
+                      IQ {model.reasoningScore ?? 0}
                     </span>
                     <span className={`text-[10px] ${hasVram ? 'mutating-text-muted' : 'text-rose-500 font-bold'}`}>
                       {model.vramRequiredGb} GB VRAM
