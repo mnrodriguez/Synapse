@@ -610,7 +610,7 @@ export const INITIAL_MODEL: ModelArchitecture = {
   quantization: 'int8',
   lossFunction: 'cross_entropy',
   activeDataSources: ['data_relational_sql'],
-  reasoningScore: 18, // 18 * 4 = 72 Reasoning IQ (v1.0 Hobbyist)
+  reasoningScore: 72, // 72 Reasoning IQ (v1.0 Beginner Model)
   vramRequiredGb: 2.5,
   computeRequiredPflops: 0.05,
   modelType: 'general',

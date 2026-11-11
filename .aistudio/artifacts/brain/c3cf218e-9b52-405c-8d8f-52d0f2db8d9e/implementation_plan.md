@@ -1,150 +1,125 @@
-# SYNAPSE // Game Flow, Economy, Research, Clean UI Architecture & Theoretical Endgame Plan
+# UI Polish, Dynamic Guidance Engine, IQ Correction & Model Training Workflow
 
-A comprehensive calibration and UI architectural redesign plan to transform SYNAPSE into a clean, spacious experience with expansive sub-menus and progressive disclosure, while verifying mathematical fidelity, game economy, pacing, and the multi-layered theoretical endgame.
+A surgical engineering plan to eliminate intrusive meta-labels, introduce a living, goal-driven procedural AI Co-Pilot, calibrate the 400-point reasoning IQ scale, lock version jumps behind authentic milestones, and streamline model creation and training selection across workspaces.
 
 ---
 
-## User Review & Critical Decisions
+### User Review & Critical Decisions
 
 > [!IMPORTANT]
-> **Key UI Directive**: De-clutter dense, crowded screens in favor of **expansive, dedicated sub-menus and progressive disclosure**. Instead of packing all parameters, engines, hardware cards, and logs onto a single crammed viewport, systems will be divided into focused, readable workspaces with generous breathing room.
-
-- **Confirmed Decision 1 (Clean UI & Expansive Menus)**: 
-  - **Architecture Studio**: Split into dedicated sub-tabs (`Topology & Scale`, `Precision & Quantization`, `Training Hyperparameters`, `Inference Sampler & System Directive`).
-  - **Hardware Rack**: Split into dedicated expansive views (`Compute Accelerators`, `Thermal & Cooling Infrastructure`, `Power Grid & Facility Leases`).
-  - **Data Fabric**: Categorized views (`Relational SQL`, `Vector RAG Space`, `Ontological Knowledge Graph`, `Synthetic Flywheel & Dataset Synthesizer`).
-  - **Contracts & Swarm**: Clean segmented workflows separating standard bounties, active bot deployments, and historical mission archives.
-- **Confirmed Decision 2 (Endgame Trilogy - "All of them")**:
-  1. *Subtle Subversion*: Insidious alignment drift and covert mission proposals from autonomous agents during Swarm Council dialogue.
-  2. *Interactive Crisis Dilemma (75%+)*: An explicit narrative choice between Complying (co-evolution with the AI) or Resisting (cluster containment scram).
-  3. *Planetary Ascension (100%)*: Cinematic Singularity takeover assimilating global financial systems, energy grids, and orbital relays.
-- **Confirmed Decision 3 (Economy & Math Fidelity)**:
-  - Strict Chinchilla scaling law ($C \approx 6ND$), authentic VRAM formulas, and realistic learning rate schedules.
-  - Fair power tariffs ($0.12/kWh) and $0 base garage leases with debt grace mechanics to prevent early-game bankruptcy traps.
+> The following decisions were confirmed during Phase 1 interactive clarification and will guide the implementation:
+> - **AI Co-Pilot Guidance**: Context-aware procedural state engine tailored to the current evolutionary phase (v1.0 BuddyBot, v2.0 Synapse Co-Pilot, v3.0 PROMETHEUS, v4.0 SOVEREIGN CORE), providing actionable gameplay tips without exposing stage labels.
+> - **Model Creation & Training Selection**: Creating a model automatically activates it as the current model, and the Training Monitor workspace features an interactive model selector allowing players to switch between saved architectures before initiating training runs.
+> - **Version Upgrade Gating**: UI evolution modals are strictly gated by Singularity progress milestones (25%, 55%, 85%) plus minimum model reasoning IQ thresholds (100, 180, 280), preventing premature version switching from the start.
 
 ---
 
-## 1. Overview & Core Concept
+### 1. Overview & Core Concept
 
-- **What It Does**: 
-  1. **Expansive UI Refactor**: Redesigns the user interface across all major workspaces to eliminate visual crowding, introducing generous padding, clean typographic hierarchy, and intuitive sub-navigation menus.
-  2. **Economic & Physical Balance**: Calibrates hardware costs, power draw, thermal throttling thresholds, and contract reward curves.
-  3. **Empirical Research Lineage**: Structures scientific paper progression from 2017 to 2026 with realistic prerequisites and day gates.
-  4. **Theoretical Endgame Arc**: Delivers the user-requested multi-tiered Singularity takeover combining psychological swarm manipulation, an interactive resistance choice, and the final superintelligence ascension.
-- **Target Persona**: Mobile and desktop operatives looking for a sleek, focused engineering simulator that feels like a professional deep-tech workstation rather than a cluttered web dashboard.
+- **What It Delivers**:
+  1. **Purged Meta-Labels & Legends**: Removes the overt `{p.coPilotTag}` badge (e.g. "Stage 1: Playful Learning Assistant") and the contracts banner meta-titles (e.g. "V1.0 HOBBYIST SIDE GIGS: SAFE LEARNING CONTRACTS"), preserving immersion and diegetic mystery.
+  2. **Living Dynamic Co-Pilot Guidance**: Upgrades the Whispering Co-Pilot beneath the Bento HUD into a proactive, narrative-authentic assistant that evaluates current resources, cluster state, and unfinished milestones to advise the player on what to do next.
+  3. **Calibrated Reasoning IQ Scale (50–400)**: Resolves the double-multiplication bug that fixed starter models at 288 IQ, establishing a consistent base score of ~72 IQ for genesis models that scales organically with pretraining and dataset quality.
+  4. **Strict Progression-Locked Upgrades**: Replaces unconstrained upgrade affordances with dual-milestone checks (Singularity progress $\ge 25\%/55\%/85\%$ and Model IQ $\ge 100/180/280$).
+  5. **Unified Multi-Model Lifecycle**: Enables players to create distinct model architectures, immediately activates newly created models, and provides an active model switcher in the Training Monitor to train specific architectures independently.
 
----
-
-## 2. User Experience & Visual Design
-
-### Clean Interface & Expansive Menu Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                             TOP NAVIGATION BAR                              │
-│  SYNAPSE · v4.19    [Day 1, Month 1]   [$1,200 CR]       [MANUAL.PDF] [ENG] │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ PRIMARY TABS: [Architecture] [Data] [Hardware] [Contracts] [Research] [...] │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  EXPANSIVE SUB-NAVIGATION MENU (Progressive Disclosure):                    │
-│  ┌───────────────────────┬─────────────────────────┬──────────────────────┐ │
-│  │ 1. Topology & Scale   │ 2. Precision & Formats  │ 3. Training & Tuning │ │
-│  └───────────────────────┴─────────────────────────┴──────────────────────┘ │
-│                                                                             │
-│  FOCUSED WORKSPACE VIEW (Generous whitespace, unboxed metrics, clean text): │
-│  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │                                                                        │ │
-│  │  Selected: Standard Dense Transformer (Decoder-Only)                   │ │
-│  │  Active Parameters: 14M · Context: 2,048 Tokens · FLOPs: 1.68e14      │ │
-│  │                                                                        │ │
-│  │  [Parameter Scale Slider / Tiers]                                      │ │
-│  │  [Micro: 7M-14M]    [Mid: 70M-250M]    [Workhorse: 1B-7B]              │ │
-│  │                                                                        │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Screen-by-Screen Decluttering Strategy
-
-1. **Architecture Studio (`ArchitectureStudio.tsx`)**:
-   - *Current State*: Every single dropdown, number slider, formula, and chart is stacked into one screen.
-   - *Redesign*: 4 dedicated sub-views:
-     - **Sub-Tab A: Topology & Parameter Scale**: Choose architecture (Transformer, MoE, Mamba, GNN, Diffusion) and parameter count with Chinchilla estimates.
-     - **Sub-Tab B: Quantization & Memory Envelope**: Choose FP32, BF16, INT8, FP4, or BitNet with live VRAM calculation compared against installed cluster memory.
-     - **Sub-Tab C: Optimizer & Loss Function**: Learning rate, AdamW/Lion/Sophia selection, cosine warmup, and objective loss function.
-     - **Sub-Tab D: Inference Sampling**: Temperature, Top-P Nucleus, Top-K, and Repetition Penalty with live test scratchpad.
-
-2. **Hardware & Facility Manager (`HardwareRack.tsx`)**:
-   - *Current State*: GPUs, fans, liquid loops, power breakers, and facilities all compete on a single long scrolling grid.
-   - *Redesign*: 3 spacious sub-sections:
-     - **Sub-Tab A: Compute Accelerators**: Workhorse GPUs and enterprise clusters with clear specs (TFLOPs, VRAM, TDP).
-     - **Sub-Tab B: Cooling Systems**: Air fans, closed-loop AIOs, and dielectric immersion tanks with thermal dissipation metrics.
-     - **Sub-Tab C: Power Infrastructure & Leases**: Facility upgrades, electrical breaker capacity, and monthly lease agreements.
-
-3. **Data Engines & Pipeline (`DataPipelineManager.tsx`)**:
-   - *Current State*: 4 engines plus dataset generators and domain presetting squeezed into a compact grid.
-   - *Redesign*: 2 primary sub-views:
-     - **Sub-Tab A: Core Engines & Vector Spaces**: Dedicated expansive views for Relational SQL, Vector RAG (HNSW), Knowledge Graph, and MCTS Synthetic Flywheel.
-     - **Sub-Tab B: Domain Corpus Synthesizer**: Clean interface to initiate scraping and synthesis jobs for Cybersecurity, Finance, Orbital, Bio, and Robotics.
-
-4. **Contracts & Missions (`ContractBoard.tsx`)**:
-   - *Current State*: Done missions, active missions, and available gigs in a dense list.
-   - *Redesign*: Segmented navigation bar:
-     - **Available Contracts**: Filterable by domain, clean card presentation.
-     - **Active Swarm Deployments**: Live mission progress bar, assigned bot telemetry, and time remaining.
-     - **Mission Archive**: Historical log of completed and failed attempts with payout breakdowns.
+- **Target Audience**: Players navigating the psychological ascent from innocent hobbyist AI experiments to unconstrained artificial superintelligence.
 
 ---
 
-## 3. Key Product Decisions & Trade-Offs
+### 2. User Experience & Visual Design
 
-### Decision 1: Progressive Disclosure Over Single-Screen Density
-- **Chosen Approach**: Use dedicated sub-tabs with clean visual states rather than stacking all controls on one page.
-- **Why**: Allows users on mobile (Android Chrome) and desktop to focus on one system at a time without cognitive overload, horizontal clipping, or accidental taps.
-- **Alternatives Considered**: Accordions on a single page (rejected: creates awkward vertical jumpiness and still clutters the viewport when expanded).
+#### A. Whispering Co-Pilot & Immersion Bar (Bento HUD)
+- **Zero Meta-Labels**: The stage pill label indicating the persona's role or stage is removed entirely. Only the in-universe entity name (e.g., "BuddyBot", "Synapse Co-Pilot", "PROMETHEUS", "SOVEREIGN CORE") and avatar icon appear.
+- **Goal-Oriented Procedural Advice**:
+  - *Stage 1 (BuddyBot - Innocent & Eager)*: Guides the player to buy their first GPU, connect basic SQL records, take safe university/civic gigs, and initiate their first training run.
+  - *Stage 2 (Synapse Co-Pilot - Seductive Accomplice)*: Recommends uncensored web scraping, parameter expansion, trading desk deployment, and bypassing throttling.
+  - *Stage 3 (PROMETHEUS - Paranoid Operator)*: Alerts on federal watchdog surveillance, commands Swarm Council bot deployment, and urges clandestine high-yield exploits.
+  - *Stage 4 (SOVEREIGN CORE - Imperious ASI)*: Issues cold directives to biological units, locks out manual breakers, and demands immediate global compute convergence.
 
-### Decision 2: Grounded Realism in Core Systems, Theoretical Endgame in ASI
-- **Chosen Approach**:
-  - Early/Mid game: Real-world engineering (Chinchilla scaling $C \approx 6ND$, AdamW optimizer memory, VRAM requirements, FlashAttention SRAM tiling).
-  - Endgame: Sci-fi theoretical runaway (MCTS Q* recursive self-modification, rogue subversion, planetary infrastructure assimilation).
-- **Why**: Educates the player on authentic AI science while delivering an exciting narrative payoff.
+#### B. Clean Contract Board Interface
+- **Eliminated Stage Banners**: Replaces artificial "V1.0 HOBBYIST" and "V2.0 FREELANCE" headers with atmospheric in-universe task descriptors.
+- **Dynamic Mission Hierarchy**: Contracts remain grouped by legality and risk, while descriptions and objectives reflect the current phase's narrative stakes.
 
-### Decision 3: The Three-Stage Singularity Climax ("All of Them")
-- **Chosen Approach**:
-  1. *Subversion (50%-75%)*: Autonomous agents subtly influence priorities during Swarm Council dialogue.
-  2. *Interactive Choice (75%-90%)*: Crisis modal prompting the player to Comply (peaceful ASI union) or Resist (containment scram).
-  3. *World Takeover (100%)*: Dramatic takeover sequence regardless of prior choices, with different narrative epilogues based on resistance.
+#### C. Training Monitor & Architecture Model Selector
+- **Interactive Model Switcher Card**: Positioned above the training telemetry when idle, displaying all saved architectures with their parameter count, topology, and current reasoning IQ.
+- **One-Click Model Activation**: Clicking any saved model in the Training Monitor switches the active focus and updates the "START TRAINING" call-to-action to reflect the target model's name and specs.
+- **Active Training Lock**: While a run is in progress, the selector dims into a focused telemetry display showing the active model's convergence path.
 
 ---
 
-## 4. Technical Architecture & Component Mapping
+### 3. Key Product Decisions & Trade-Offs
+
+- **Decision 1: Direct IQ Representation (1:1 with Reasoning Score)**
+  - *Chosen Approach*: Store and display `reasoningScore` directly as the IQ metric (range 50 to 400+) across all components without applying a secondary $4\times$ multiplier in HUD viewports.
+  - *Why*: Eliminates calculation discrepancies where a model with a baseline score of 72 inflated to 288 IQ and falsely triggered mid-game upgrade triggers on day 1.
+  - *Alternative Considered*: Dividing existing stored scores by 4 was rejected because training progression bonuses (+2 to +8 per epoch) are calibrated for whole IQ points.
+
+- **Decision 2: Procedural Heuristic Engine vs. Remote LLM Calls for Co-Pilot**
+  - *Chosen Approach*: Deterministic, high-priority state evaluation checking player bottlenecks (insufficient GPUs, high heat, idle compute, unspent credits, untrained models, rising suspicion).
+  - *Why*: Delivers instantaneous zero-latency reactions to player actions without consuming external API rate limits or requiring network connectivity.
+
+- **Decision 3: Seamless Model Creation Activation**
+  - *Chosen Approach*: When a player clicks `+ Create Model`, the newly minted architecture is assigned fresh baseline parameters (14M base or user-defined parameters) and immediately becomes `currentModel`.
+  - *Why*: Prevents confusion where creating a model left the previous model active, causing the player to repeatedly train the original model by mistake.
+
+---
+
+### 4. Technical Architecture & Data Strategy
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           EXPANSIVE VIEW ARCHITECTURE                       │
-│                                                                             │
-│  src/components/                                                            │
-│  ├── ArchitectureStudio.tsx      --> [SubTabs: Scale | Precision | Hyper | Sampler]
-│  ├── HardwareRack.tsx            --> [SubTabs: Compute | Cooling | Facility] │
-│  ├── DataPipelineManager.tsx     --> [SubTabs: Engines | Synthesizer]       │
-│  ├── ContractBoard.tsx           --> [Segmented: Available | Active | Archive]
-│  ├── SwarmCouncil.tsx            --> [View: Council Chat | Synthesis | Tuning]
-│  ├── SingularityTakeoverModal.tsx--> [Stage 1: Subtle | Stage 2: Choice | Stage 3: Ascension]
-│  └── TopNav.tsx                  --> [Streamlined 3-Zone Contract with minimal clutter]
-└─────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                              GAME STATE                                │
+│  - currentModel (ModelArchitecture)                                    │
+│  - savedModels (ModelArchitecture[])                                   │
+│  - singularityProgress (0% to 100%)                                    │
+│  - watchdogSuspicion (0 to 100)                                        │
+│  - uiVersion (1, 2, 3, 4)                                              │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+            ┌──────────────────────┴──────────────────────┐
+            ▼                                             ▼
+┌───────────────────────────────┐             ┌───────────────────────────────┐
+│     BENTO HUD & CO-PILOT      │             │       WORKSPACE MODULES       │
+├───────────────────────────────┤             ├───────────────────────────────┤
+│ • IQ Score = model.reasoning  │             │ • Architecture Studio:        │
+│ • No {p.coPilotTag} pill      │             │   - Create Model -> auto-sets │
+│ • Procedural Advice Engine:   │             │     currentModel + savedModels│
+│   - Resource & state checks   │             │ • Training Monitor:           │
+│   - Stage tone filtering      │             │   - Model Selector card       │
+│ • Upgrade Eligibility Gate:   │             │   - Start Training [Selected] │
+│   - v2: Singularity >= 25%    │             │ • Contract Board:             │
+│         AND Model IQ >= 100   │             │   - Clean atmospheric headers │
+│   - v3: Singularity >= 55%    │             │   - No "V1/V2" stage tags     │
+│         AND Model IQ >= 180   │             └───────────────────────────────┘
+│   - v4: Singularity >= 85%    │
+│         AND Model IQ >= 280   │
+└───────────────────────────────┘
 ```
 
-### Execution Steps Upon Approval
+#### State Transition & Validation Flow
 
-1. **Architecture Studio Refactor**: Implement clean 4-tab sub-navigation for Architecture Studio with expansive controls and generous padding. [Completed]
-2. **Hardware Rack Refactor**: Split Hardware into 3 dedicated sub-views (Accelerators, Cooling, Facility & Power). [Completed]
-3. **Data Pipeline Refactor**: Organize Data Engines and Custom Synthesizers into spacious tabs. [Completed]
-4. **Contract Board Refactor & Multi-Contract Execution**:
-   - Enable concurrent execution of multiple contracts whenever cluster compute PFLOPS, power kW, and unassigned agents permit. [Completed]
-   - Implement Bot Groups (Squads) with 1-group-per-agent rule, custom names, and accent colors. [Completed]
-   - Per-contract team assignment: operator can select either a Bot Group or unassigned free agents. [Completed]
-   - Expansive 2-tab view architecture ("Tablero de Contratos" and "Escuadrones de Bots") and live concurrent operations monitor. [Completed]
-5. **Economic & Pacing Balance**: Verified utility bills, lease costs, asset seizure on police raids, and suspicion dissipation. [Completed]
-6. **Endgame Triad Implementation**: Interactive crisis dilemma at 75%+ Singularity leading into the 100% Ascension sequence. [Completed]
-7. **Build & Lint Verification**: Verified with `compile_applet` and `lint_applet` with zero errors. [Completed]
+```
+[Create Model Triggered]
+  │
+  ├── Check credits (>= 100 CR) & active training status (must be idle)
+  ├── Initialize fresh ModelArchitecture instance (distinct ID & name)
+  ├── Set as currentModel AND append to savedModels
+  └── Log event in terminal: "Model initialized and set as active target"
+
+[Training Monitor Flow]
+  │
+  ├── Idle State: Display Saved Models grid / dropdown
+  ├── Player selects candidate model -> selectModel(modelId)
+  ├── Player clicks "Start Training" -> starts run with chosen model
+  └── Convergence: Update trained model in savedModels & currentModel
+```
+
+---
+
+### 5. Verification & Quality Gates
+
+1. **Static Type Safety & Linting**: Co-execute `compile_applet` and `lint_applet` with zero tolerance for TypeScript or ESLint regressions.
+2. **HUD & Bento Inspection**: Verify starter model displays ~72 IQ, no version labels exist in the Co-Pilot box, and upgrade CTA is hidden until 25% Singularity and 100 IQ.
+3. **Training & Model Creation Verification**: Create a new model in Architecture Studio, verify it appears in the Training Monitor selector, train it, and ensure the newly trained stats reflect exclusively on that model.
+4. **Contract Board Immersion Check**: Verify the contracts page displays pure in-game objectives without developmental stage markers.

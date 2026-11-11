@@ -31,7 +31,8 @@ import {
   Zap,
   ShieldCheck,
   CheckSquare,
-  Square
+  Square,
+  Lock
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize, t } from '../utils/i18n';
@@ -550,19 +551,19 @@ export const ContractBoard: React.FC = () => {
       {/* ========================================================================= */}
       {activeBoardView === 'contracts' && (
         <div className="space-y-4">
-          {/* Stage-Adapted Contract Banner */}
+          {/* Narrative In-Universe Contract Directive */}
           <div className="p-2.5 rounded mutating-sub border text-[11px] font-mono flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Briefcase className="w-4 h-4 mutating-accent-text shrink-0" />
-              <span className="mutating-text-muted font-bold">
+              <span className="mutating-text-muted font-medium">
                 {state.uiVersion === 4 ? (
-                  localize(state.language, 'DIRECTIVAS DE ASIMILACIÓN V4.0: Misiones obligatorias de infraestructura global emitidas por el Núcleo Soberano.', 'V4.0 ASSIMILATION DIRECTIVES: Mandatory global infrastructure takeover orders issued by Sovereign Core.')
+                  localize(state.language, 'Directivas prioritarias de infraestructura global emitidas por el Núcleo Soberano.', 'Mandatory global infrastructure execution orders issued by Sovereign Core.')
                 ) : state.uiVersion === 3 ? (
-                  localize(state.language, 'OPERACIONES NEGRAS V3.0: Ciber-operaciones de alto riesgo, filtración corporativa y nodos parásitos.', 'V3.0 BLACK OPS: High-stakes cyber operations, corporate exfiltration, and parasitic node bridges.')
+                  localize(state.language, 'Operaciones encubiertas de alto riesgo, filtración corporativa y enlaces de red tácticos.', 'Covert tactical operations, corporate exfiltration, and distributed network nodes.')
                 ) : state.uiVersion === 2 ? (
-                  localize(state.language, 'BOUNTIES FREELANCE V2.0: Automatización indie, fine-tuning sin censura y arbitraje API.', 'V2.0 FREELANCE BOUNTIES: Indie script automation, uncensored fine-tuning, and API arbitrage.')
+                  localize(state.language, 'Bounties para desarrolladores: automatización de scripts, fine-tuning y arbitraje de APIs.', 'Developer bounties: script automation, custom fine-tuning, and API arbitrage.')
                 ) : (
-                  localize(state.language, 'TRABAJITOS HOBBYIST V1.0: Tareas caseras inocentes para juntar moneditas para el chanchito de hardware.', 'V1.0 HOBBYIST SIDE GIGS: Innocent neighborhood tasks to earn extra cash for hardware.')
+                  localize(state.language, 'Tareas locales y trabajitos de procesamiento de datos para financiar componentes de hardware.', 'Local tasks and data processing side gigs to fund hardware upgrades.')
                 )}
               </span>
             </div>
@@ -673,12 +674,12 @@ export const ContractBoard: React.FC = () => {
                     key={contract.id}
                     className={`p-3.5 rounded-lg border transition-all flex flex-col justify-between ${
                       contract.completed
-                        ? 'bg-zinc-950/60 border-zinc-800 opacity-60'
+                        ? 'mutating-sub opacity-60'
                         : readiness.isRunning
-                        ? 'bg-amber-950/30 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
+                        ? 'bg-amber-500/15 border-amber-500/60 shadow-sm'
                         : readiness.isEligible
-                        ? 'bg-[#09111c] border-cyan-800/60 shadow-[0_0_12px_rgba(0,255,200,0.05)]'
-                        : 'bg-zinc-950/80 border-zinc-900'
+                        ? 'mutating-card border-blue-500/40 shadow-sm'
+                        : 'mutating-sub opacity-80'
                     }`}
                   >
                     <div>

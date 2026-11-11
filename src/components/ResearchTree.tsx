@@ -50,7 +50,7 @@ export const ResearchTree: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#070b12] border border-cyan-900/40 rounded-lg p-3 overflow-y-auto space-y-4 font-mono scrollbar-thin scrollbar-thumb-cyan-950">
+    <div className="flex flex-col h-full mutating-panel border rounded-lg p-3 overflow-y-auto space-y-4 font-mono">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
         <div className="flex items-center gap-2">

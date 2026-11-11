@@ -113,7 +113,7 @@ interface GameContextType {
   upgradeDataSource: (id: string) => boolean;
   unlockResearch: (id: string) => boolean;
   updateModelArchitecture: (updates: Partial<ModelArchitecture>) => void;
-  startTraining: (datasetId?: string, asMicroModel?: boolean) => boolean;
+  startTraining: (datasetId?: string, asMicroModel?: boolean, targetModelId?: string) => boolean;
   cancelTraining: () => void;
   unlockDataScrapingModule: (modelId?: string) => boolean;
   startDatasetScraping: (domain: string, tier: 1 | 2 | 3 | 4, assignedModelId: string) => boolean;
@@ -660,23 +660,50 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const model: ModelArchitecture = {
-      ...current.currentModel,
       id: `model_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       name: modelName,
-      reasoningScore: 50,
+      topology: current.currentModel.topology || 'transformer',
+      parametersCount: current.currentModel.parametersCount || 14_000_000,
+      contextWindow: current.currentModel.contextWindow || 2048,
+      attention: current.currentModel.attention || 'standard_mha',
+      quantization: current.currentModel.quantization || 'int8',
+      lossFunction: current.currentModel.lossFunction || 'cross_entropy',
+      activeDataSources: current.currentModel.activeDataSources.length > 0 
+        ? [...current.currentModel.activeDataSources] 
+        : ['data_relational_sql'],
+      reasoningScore: 60, // Fresh untrained reasoning baseline
+      vramRequiredGb: current.currentModel.vramRequiredGb || 2.5,
+      computeRequiredPflops: current.currentModel.computeRequiredPflops || 0.05,
+      modelType: 'general',
+      domainProficiency: 1.0,
+      specializedDomain: undefined,
+      trainedOnDatasetId: undefined,
       inferenceParams: current.currentModel.inferenceParams
         ? { ...current.currentModel.inferenceParams }
-        : undefined,
-      activeDataSources: [...current.currentModel.activeDataSources]
+        : {
+            temperature: 0.70,
+            topP: 0.90,
+            topK: 40,
+            repetitionPenalty: 1.10,
+            systemPrompt: 'You are an autonomous sub-agent.'
+          }
     };
 
+    sound.playBreakthrough();
     setState(prev => ({
       ...prev,
       credits: prev.credits - creationCost,
       currentModel: model,
       savedModels: [...prev.savedModels, model]
     }));
-    addLog(localize(stateRef.current.language, `Modelo "${modelName}" creado desde la configuración actual. Entrénalo para desarrollar sus capacidades.`, `Model "${modelName}" created from current configuration. Train it to develop its capabilities.`), 'success');
+    addLog(
+      localize(
+        stateRef.current.language, 
+        `Nuevo modelo "${modelName}" creado y activado como modelo actual. Configúralo y entrénalo en el Monitor.`, 
+        `New model "${modelName}" created and activated as current model. Configure and train it in the Monitor.`
+      ), 
+      'success'
+    );
     return true;
   }, [addLog]);
 
@@ -1976,11 +2003,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let currentUiVersion = prev.uiVersion || 1;
         let pendingUpgrade = prev.pendingUpgradeModal;
         if (pendingUpgrade === null) {
-          if (singularityProgress >= 85 && currentUiVersion < 4) {
+          const modelIq = Math.round(newCurrentModel.reasoningScore || 72);
+          if (singularityProgress >= 85 && modelIq >= 280 && currentUiVersion < 4) {
             pendingUpgrade = 4;
-          } else if (singularityProgress >= 55 && currentUiVersion < 3) {
+          } else if (singularityProgress >= 55 && modelIq >= 180 && currentUiVersion < 3) {
             pendingUpgrade = 3;
-          } else if (singularityProgress >= 25 && currentUiVersion < 2) {
+          } else if (singularityProgress >= 25 && modelIq >= 100 && currentUiVersion < 2) {
             pendingUpgrade = 2;
           }
         }
@@ -2319,8 +2347,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [addLog]);
 
   // Action: Start Training (Defaults to General Information dataset, or targeted specialized dataset for Micro-Models)
-  const startTraining = useCallback((datasetId?: string, asMicroModel?: boolean): boolean => {
-    const currentState = stateRef.current;
+  const startTraining = useCallback((datasetId?: string, asMicroModel?: boolean, targetModelId?: string): boolean => {
+    let currentState = stateRef.current;
+    if (targetModelId && targetModelId !== currentState.currentModel.id) {
+      const targetModel = currentState.savedModels.find(m => m.id === targetModelId);
+      if (targetModel) {
+        currentState = { ...currentState, currentModel: targetModel };
+      }
+    }
+
     if (currentState.powerTripSeconds > 0) {
       addLog(localize(currentState.language, `El interruptor está disparado. Espera ${currentState.powerTripSeconds}s antes de entrenar.`, `Circuit breaker is tripped. Wait ${currentState.powerTripSeconds}s before training.`), 'warning');
       return false;
@@ -2386,18 +2421,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     sound.playCommandExecute();
-    setState(prev => ({
-      ...prev,
-      gameSpeed: prev.gameSpeed === 0 ? 1 : prev.gameSpeed,
-      tutorialStep: (prev.tutorialStep ?? 0) <= 1 ? 2 : prev.tutorialStep,
-      activeTraining: job,
-      currentModel: {
-        ...prev.currentModel,
+    setState(prev => {
+      const activeModel = targetModelId 
+        ? (prev.savedModels.find(m => m.id === targetModelId) || prev.currentModel)
+        : prev.currentModel;
+
+      const updatedModel = {
+        ...activeModel,
         trainedOnDatasetId: targetDataset.id,
-        modelType: isMicro ? 'micro_model' : 'general',
+        modelType: isMicro ? ('micro_model' as const) : ('general' as const),
         specializedDomain: isMicro ? targetDataset.domain : undefined
-      }
-    }));
+      };
+
+      const savedModels = prev.savedModels.map(m => m.id === updatedModel.id ? updatedModel : m);
+
+      return {
+        ...prev,
+        gameSpeed: prev.gameSpeed === 0 ? 1 : prev.gameSpeed,
+        tutorialStep: (prev.tutorialStep ?? 0) <= 1 ? 2 : prev.tutorialStep,
+        activeTraining: job,
+        currentModel: updatedModel,
+        savedModels
+      };
+    });
 
     addLog(
       currentState.language === 'en'
@@ -4378,15 +4424,15 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     if (!model) return;
 
     sound.playBreakthrough();
-    const paramsM = model.parametersCount / 1_000_000;
-    const reasoningIQ = Math.round(model.reasoningScore * 4);
+    const reasoningIQ = Math.round(Math.min(400, Math.max(50, model.reasoningScore || 72)));
+    const singProg = current.singularityProgress || 0;
 
     let targetVersion: 1 | 2 | 3 | 4 = 1;
-    if (reasoningIQ >= 400 || paramsM >= 70000) {
+    if (singProg >= 85 && reasoningIQ >= 280) {
       targetVersion = 4;
-    } else if (reasoningIQ >= 250 || paramsM >= 13000) {
+    } else if (singProg >= 55 && reasoningIQ >= 180) {
       targetVersion = 3;
-    } else if (reasoningIQ >= 130 || paramsM >= 1300) {
+    } else if (singProg >= 25 && reasoningIQ >= 100) {
       targetVersion = 2;
     }
 

@@ -8,21 +8,21 @@
 [data-ui-version="1"] {
   --bg-app: #f8fafc;
   --bg-panel: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-card: #ffffff;
   --bg-sub: #f1f5f9;
   --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border-col: #e2e8f0;
-  --accent-primary: #2563eb;
+  --text-muted: #334155;
+  --border-col: #cbd5e1;
+  --accent-primary: #1d4ed8;
   --accent-primary-fg: #ffffff;
-  --accent-secondary: #10b981;
-  --accent-warn: #f59e0b;
-  --accent-danger: #ef4444;
+  --accent-secondary: #047857;
+  --accent-warn: #b45309;
+  --accent-danger: #b91c1c;
   --radius-card: 16px;
   --radius-btn: 12px;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
-  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
   --scanline-opacity: 0;
   --vignette-opacity: 0;
 }
@@ -152,6 +152,263 @@
 
 .font-mono-val {
   font-family: var(--font-mono);
+}
+
+/* ==========================================================================
+   STAGE 1 (v1.0 - MyFirstLLM Studio) HIGH CONTRAST CASCADE (WCAG AA/AAA)
+   Fixes all contrast issues against light backgrounds in Version 1 without affecting v2/v3/v4
+   ========================================================================== */
+
+#app-shell[data-ui-version="1"],
+[data-ui-version="1"] {
+  color: #0f172a;
+}
+
+/* Body & Muted Typography: 7.5:1 to 9.3:1 contrast against white */
+#app-shell[data-ui-version="1"] .text-zinc-400,
+#app-shell[data-ui-version="1"] .text-zinc-500,
+#app-shell[data-ui-version="1"] .text-slate-400,
+#app-shell[data-ui-version="1"] .text-slate-500,
+#app-shell[data-ui-version="1"] .text-gray-400,
+#app-shell[data-ui-version="1"] .text-gray-500,
+#app-shell[data-ui-version="1"] .text-neutral-400,
+#app-shell[data-ui-version="1"] .text-neutral-500,
+#app-shell[data-ui-version="1"] .mutating-text-muted {
+  color: #334155 !important;
+}
+
+#app-shell[data-ui-version="1"] .text-zinc-300,
+#app-shell[data-ui-version="1"] .text-zinc-200,
+#app-shell[data-ui-version="1"] .text-zinc-100,
+#app-shell[data-ui-version="1"] .text-slate-300,
+#app-shell[data-ui-version="1"] .text-slate-200,
+#app-shell[data-ui-version="1"] .text-slate-100,
+#app-shell[data-ui-version="1"] .text-gray-300,
+#app-shell[data-ui-version="1"] .text-gray-200 {
+  color: #0f172a !important;
+}
+
+#app-shell[data-ui-version="1"] .text-zinc-600,
+#app-shell[data-ui-version="1"] .text-slate-600 {
+  color: #475569 !important;
+}
+
+/* Saturated Color Accents tuned for light background readability */
+/* Deep Sky/Cyan (6.0:1 on white) */
+#app-shell[data-ui-version="1"] .text-cyan-200,
+#app-shell[data-ui-version="1"] .text-cyan-300,
+#app-shell[data-ui-version="1"] .text-cyan-400,
+#app-shell[data-ui-version="1"] .text-sky-300,
+#app-shell[data-ui-version="1"] .text-sky-400 {
+  color: #0369a1 !important;
+}
+
+/* Deep Purple/Violet (8.5:1 on white) */
+#app-shell[data-ui-version="1"] .text-purple-200,
+#app-shell[data-ui-version="1"] .text-purple-300,
+#app-shell[data-ui-version="1"] .text-purple-400,
+#app-shell[data-ui-version="1"] .text-purple-500,
+#app-shell[data-ui-version="1"] .text-violet-300,
+#app-shell[data-ui-version="1"] .text-violet-400,
+#app-shell[data-ui-version="1"] .text-fuchsia-300,
+#app-shell[data-ui-version="1"] .text-fuchsia-400 {
+  color: #6b21a8 !important;
+}
+
+/* Deep Amber/Bronze (6.0:1 on white) */
+#app-shell[data-ui-version="1"] .text-yellow-200,
+#app-shell[data-ui-version="1"] .text-yellow-300,
+#app-shell[data-ui-version="1"] .text-yellow-400,
+#app-shell[data-ui-version="1"] .text-amber-200,
+#app-shell[data-ui-version="1"] .text-amber-300,
+#app-shell[data-ui-version="1"] .text-amber-400 {
+  color: #92400e !important;
+}
+
+/* Deep Emerald (7.2:1 on white) */
+#app-shell[data-ui-version="1"] .text-emerald-200,
+#app-shell[data-ui-version="1"] .text-emerald-300,
+#app-shell[data-ui-version="1"] .text-emerald-400,
+#app-shell[data-ui-version="1"] .text-green-300,
+#app-shell[data-ui-version="1"] .text-green-400 {
+  color: #065f46 !important;
+}
+
+/* Deep Red/Rose (7.2:1 on white) */
+#app-shell[data-ui-version="1"] .text-rose-200,
+#app-shell[data-ui-version="1"] .text-rose-300,
+#app-shell[data-ui-version="1"] .text-rose-400,
+#app-shell[data-ui-version="1"] .text-red-200,
+#app-shell[data-ui-version="1"] .text-red-300,
+#app-shell[data-ui-version="1"] .text-red-400 {
+  color: #991b1b !important;
+}
+
+/* Containers and cards with hardcoded dark backgrounds remapped to crisp light mode */
+#app-shell[data-ui-version="1"] .bg-zinc-950,
+#app-shell[data-ui-version="1"] .bg-zinc-950\/60,
+#app-shell[data-ui-version="1"] .bg-zinc-950\/70,
+#app-shell[data-ui-version="1"] .bg-zinc-950\/80,
+#app-shell[data-ui-version="1"] .bg-zinc-900,
+#app-shell[data-ui-version="1"] .bg-zinc-900\/60,
+#app-shell[data-ui-version="1"] .bg-zinc-900\/70,
+#app-shell[data-ui-version="1"] .bg-zinc-900\/80,
+#app-shell[data-ui-version="1"] .bg-zinc-800,
+#app-shell[data-ui-version="1"] .bg-slate-900,
+#app-shell[data-ui-version="1"] .bg-slate-950,
+#app-shell[data-ui-version="1"] .bg-\[\#070b12\],
+#app-shell[data-ui-version="1"] .bg-\[\#080f1a\],
+#app-shell[data-ui-version="1"] .bg-\[\#09111c\],
+#app-shell[data-ui-version="1"] .bg-\[\#091522\],
+#app-shell[data-ui-version="1"] .bg-\[\#060a10\],
+#app-shell[data-ui-version="1"] .bg-\[\#060a12\],
+#app-shell[data-ui-version="1"] .bg-\[\#05080e\],
+#app-shell[data-ui-version="1"] .bg-\[\#0a111a\],
+#app-shell[data-ui-version="1"] .bg-\[\#090f18\],
+#app-shell[data-ui-version="1"] .bg-\[\#070c14\],
+#app-shell[data-ui-version="1"] .bg-\[\#03060a\],
+#app-shell[data-ui-version="1"] .bg-\[\#04070d\],
+#app-shell[data-ui-version="1"] .bg-\[\#080d15\],
+#app-shell[data-ui-version="1"] .bg-\[\#0b131f\],
+#app-shell[data-ui-version="1"] .bg-\[\#0b0e17\],
+#app-shell[data-ui-version="1"] .bg-\[\#101426\],
+#app-shell[data-ui-version="1"] .bg-\[\#0d1424\],
+#app-shell[data-ui-version="1"] .bg-\[\#150f28\],
+#app-shell[data-ui-version="1"] .bg-\[\#020409\] {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Tinted Badges & Notification Pills in Light Mode */
+#app-shell[data-ui-version="1"] .bg-purple-950,
+#app-shell[data-ui-version="1"] .bg-purple-950\/60,
+#app-shell[data-ui-version="1"] .bg-purple-950\/70,
+#app-shell[data-ui-version="1"] .bg-purple-950\/80,
+#app-shell[data-ui-version="1"] .bg-purple-950\/15,
+#app-shell[data-ui-version="1"] .bg-purple-500\/10,
+#app-shell[data-ui-version="1"] .bg-purple-500\/15,
+#app-shell[data-ui-version="1"] .bg-purple-500\/20 {
+  background-color: #f5f3ff !important;
+  border-color: #c4b5fd !important;
+  color: #6b21a8 !important;
+}
+
+#app-shell[data-ui-version="1"] .bg-cyan-950,
+#app-shell[data-ui-version="1"] .bg-cyan-950\/60,
+#app-shell[data-ui-version="1"] .bg-cyan-950\/70,
+#app-shell[data-ui-version="1"] .bg-cyan-950\/80,
+#app-shell[data-ui-version="1"] .bg-cyan-950\/30,
+#app-shell[data-ui-version="1"] .bg-cyan-500\/10,
+#app-shell[data-ui-version="1"] .bg-cyan-500\/15,
+#app-shell[data-ui-version="1"] .bg-cyan-500\/20 {
+  background-color: #f0f9ff !important;
+  border-color: #7dd3fc !important;
+  color: #0369a1 !important;
+}
+
+#app-shell[data-ui-version="1"] .bg-amber-950,
+#app-shell[data-ui-version="1"] .bg-amber-950\/30,
+#app-shell[data-ui-version="1"] .bg-amber-950\/60,
+#app-shell[data-ui-version="1"] .bg-amber-950\/80,
+#app-shell[data-ui-version="1"] .bg-yellow-950,
+#app-shell[data-ui-version="1"] .bg-yellow-950\/80,
+#app-shell[data-ui-version="1"] .bg-amber-500\/10,
+#app-shell[data-ui-version="1"] .bg-amber-500\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fcd34d !important;
+  color: #92400e !important;
+}
+
+#app-shell[data-ui-version="1"] .bg-emerald-950,
+#app-shell[data-ui-version="1"] .bg-emerald-950\/80,
+#app-shell[data-ui-version="1"] .bg-emerald-500\/10,
+#app-shell[data-ui-version="1"] .bg-emerald-500\/15,
+#app-shell[data-ui-version="1"] .bg-emerald-500\/20 {
+  background-color: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+  color: #065f46 !important;
+}
+
+#app-shell[data-ui-version="1"] .bg-rose-950,
+#app-shell[data-ui-version="1"] .bg-rose-950\/80,
+#app-shell[data-ui-version="1"] .bg-red-950,
+#app-shell[data-ui-version="1"] .bg-red-950\/70,
+#app-shell[data-ui-version="1"] .bg-rose-500\/15,
+#app-shell[data-ui-version="1"] .bg-red-500\/20 {
+  background-color: #fff1f2 !important;
+  border-color: #fda4af !important;
+  color: #991b1b !important;
+}
+
+#app-shell[data-ui-version="1"] .bg-blue-950,
+#app-shell[data-ui-version="1"] .bg-blue-950\/70,
+#app-shell[data-ui-version="1"] .bg-blue-500\/15,
+#app-shell[data-ui-version="1"] .bg-blue-500\/20 {
+  background-color: #eff6ff !important;
+  border-color: #93c5fd !important;
+  color: #1d4ed8 !important;
+}
+
+/* Crisp Accessible Borders */
+#app-shell[data-ui-version="1"] .border-zinc-800,
+#app-shell[data-ui-version="1"] .border-zinc-700,
+#app-shell[data-ui-version="1"] .border-zinc-900,
+#app-shell[data-ui-version="1"] .border-slate-800,
+#app-shell[data-ui-version="1"] .border-slate-700,
+#app-shell[data-ui-version="1"] .border-white\/10,
+#app-shell[data-ui-version="1"] .border-white\/15,
+#app-shell[data-ui-version="1"] .border-white\/20,
+#app-shell[data-ui-version="1"] .border-cyan-900\/40,
+#app-shell[data-ui-version="1"] .border-cyan-900\/50,
+#app-shell[data-ui-version="1"] .border-cyan-900\/60,
+#app-shell[data-ui-version="1"] .border-cyan-800\/60,
+#app-shell[data-ui-version="1"] .border-cyan-950,
+#app-shell[data-ui-version="1"] .border-purple-900\/40,
+#app-shell[data-ui-version="1"] .border-purple-900\/50 {
+  border-color: #cbd5e1 !important;
+}
+
+/* Form inputs & textareas */
+#app-shell[data-ui-version="1"] input,
+#app-shell[data-ui-version="1"] select,
+#app-shell[data-ui-version="1"] textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+#app-shell[data-ui-version="1"] input:focus,
+#app-shell[data-ui-version="1"] select:focus,
+#app-shell[data-ui-version="1"] textarea:focus {
+  border-color: #1d4ed8 !important;
+  outline: 2px solid rgba(29, 78, 216, 0.2) !important;
+}
+
+#app-shell[data-ui-version="1"] input::placeholder,
+#app-shell[data-ui-version="1"] textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Buttons and Action CTAs */
+#app-shell[data-ui-version="1"] .mutating-btn-primary,
+#app-shell[data-ui-version="1"] .mutating-btn-primary *,
+#app-shell[data-ui-version="1"] .bg-blue-600,
+#app-shell[data-ui-version="1"] .bg-blue-600 *,
+#app-shell[data-ui-version="1"] .bg-indigo-600,
+#app-shell[data-ui-version="1"] .bg-indigo-600 *,
+#app-shell[data-ui-version="1"] .bg-purple-600,
+#app-shell[data-ui-version="1"] .bg-purple-600 *,
+#app-shell[data-ui-version="1"] .bg-rose-600,
+#app-shell[data-ui-version="1"] .bg-rose-600 *,
+#app-shell[data-ui-version="1"] [class*="bg-gradient-to"],
+#app-shell[data-ui-version="1"] [class*="bg-gradient-to"] * {
+  color: #ffffff !important;
+}
+
+#app-shell[data-ui-version="1"] .bg-yellow-500,
+#app-shell[data-ui-version="1"] .bg-yellow-500 * {
+  color: #0f172a !important;
 }
 
 /* CRT Scanlines & Hostile Vignette for v3/v4 */

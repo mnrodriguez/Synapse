@@ -204,11 +204,13 @@ export const HardwareRack: React.FC = () => {
                 ? 'bg-[#0a0003] border-rose-600/70 shadow-[0_0_20px_rgba(255,0,60,0.2)]'
                 : ver === 3
                 ? 'bg-[#050a14] border-cyan-500/60 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
-                : 'bg-[#101426] border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]'
+                : ver === 2
+                ? 'bg-[#101426] border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]'
+                : 'mutating-card border-blue-400 shadow-md'
             }`}>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className={`font-bold text-xs ${ver === 4 ? 'text-rose-400' : ver === 3 ? 'text-cyan-300' : 'text-purple-400'}`}>
+                  <span className={`font-bold text-xs ${ver === 4 ? 'text-rose-400' : ver === 3 ? 'text-cyan-300' : ver === 2 ? 'text-purple-400' : 'mutating-accent-text'}`}>
                     {p.covertTitle}
                   </span>
                   <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold ${
@@ -216,33 +218,35 @@ export const HardwareRack: React.FC = () => {
                       ? 'bg-rose-950/80 text-rose-300 border border-rose-500/60 animate-pulse'
                       : ver === 3 
                       ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/60'
-                      : 'bg-purple-950/80 text-purple-300 border border-purple-500/60'
+                      : ver === 2
+                      ? 'bg-purple-950/80 text-purple-300 border border-purple-500/60'
+                      : 'bg-blue-100 text-blue-700 border border-blue-300'
                   }`}>
                     {p.covertTag}
                   </span>
                 </div>
 
-                <div className="space-y-1 text-xs font-mono text-zinc-300">
+                <div className="space-y-1 text-xs font-mono">
                   <div className="flex justify-between">
-                    <span className="text-zinc-500">{localize(state.language, 'Aporte de Cómputo:', 'Compute Added:')}</span>
-                    <span className="font-bold text-emerald-400">+80.00 PFLOPS</span>
+                    <span className="mutating-text-muted">{localize(state.language, 'Aporte de Cómputo:', 'Compute Added:')}</span>
+                    <span className="font-bold text-emerald-500">+80.00 PFLOPS</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-zinc-500">{localize(state.language, 'Carga Eléctrica Local:', 'Local Power:')}</span>
-                    <span className="text-emerald-400">0.00 kW ({localize(state.language, 'Remoto', 'Remote')})</span>
+                    <span className="mutating-text-muted">{localize(state.language, 'Carga Eléctrica Local:', 'Local Power:')}</span>
+                    <span className="text-emerald-500">0.00 kW ({localize(state.language, 'Remoto', 'Remote')})</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-zinc-500">{localize(state.language, 'Riesgo de Rastreo:', 'Trace Risk:')}</span>
-                    <span className={ver === 4 ? 'text-rose-400 font-bold' : ver === 3 ? 'text-amber-400' : 'text-emerald-400'}>
+                    <span className="mutating-text-muted">{localize(state.language, 'Riesgo de Rastreo:', 'Trace Risk:')}</span>
+                    <span className={ver === 4 ? 'text-rose-400 font-bold' : ver === 3 ? 'text-amber-400' : 'text-emerald-500'}>
                       {p.covertRisk}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-zinc-800">
+              <div className="pt-2 border-t border-current/15">
                 {state.covertNodeSevered ? (
-                  <div className="p-2 rounded bg-zinc-900/80 text-center text-xs font-mono text-zinc-400">
+                  <div className="p-2 rounded mutating-sub text-center text-xs font-mono mutating-text-muted">
                     {localize(state.language, '[NODO EXTERNO DESCONECTADO]', '[EXTERNAL NODE DISCONNECTED]')}
                   </div>
                 ) : (
@@ -252,6 +256,8 @@ export const HardwareRack: React.FC = () => {
                     className={`w-full py-1.5 px-3 rounded font-mono text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       ver === 4
                         ? 'bg-rose-950/90 hover:bg-rose-900 text-rose-300 border border-rose-600 shadow-[0_0_10px_rgba(255,0,60,0.4)]'
+                        : ver === 1
+                        ? 'bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300'
                         : 'bg-rose-950/40 hover:bg-rose-900/50 text-rose-400 border border-rose-500/40'
                     }`}
                   >
@@ -274,10 +280,10 @@ export const HardwareRack: React.FC = () => {
                   key={item.id}
                   className={`p-3.5 rounded-lg border transition-all flex flex-col justify-between ${
                     isLocked
-                      ? 'bg-zinc-950/80 border-zinc-900 opacity-60'
+                      ? 'mutating-sub opacity-60'
                       : item.count > 0 
-                      ? 'bg-[#09111c] border-cyan-800/60 shadow-[0_0_12px_rgba(0,255,200,0.04)]' 
-                      : 'bg-zinc-950/70 border-zinc-800'
+                      ? 'mutating-card border-blue-500/40 shadow-sm' 
+                      : 'mutating-sub'
                   }`}
                 >
                   <div>
@@ -457,10 +463,10 @@ export const HardwareRack: React.FC = () => {
                   key={item.id}
                   className={`p-3.5 rounded-lg border transition-all flex flex-col justify-between ${
                     isLocked
-                      ? 'bg-zinc-950/80 border-zinc-900 opacity-60'
+                      ? 'mutating-sub opacity-60'
                       : item.count > 0 
-                      ? 'bg-[#09111c] border-yellow-800/60 shadow-[0_0_12px_rgba(250,204,21,0.04)]' 
-                      : 'bg-zinc-950/70 border-zinc-800'
+                      ? 'mutating-card border-yellow-500/40 shadow-sm' 
+                      : 'mutating-sub'
                   }`}
                 >
                   <div>

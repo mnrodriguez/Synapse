@@ -193,15 +193,15 @@ export const DataPipelineManager: React.FC = () => {
                   key={ds.id} 
                   className={`p-3 rounded-lg border transition-all flex flex-col justify-between ${
                     ds.unlocked 
-                      ? 'mutating-card border-cyan-800/60 shadow-sm'
-                      : 'bg-zinc-950/60 border-zinc-800 opacity-70'
+                      ? 'mutating-card border-blue-500/40 shadow-sm'
+                      : 'mutating-sub opacity-70'
                   }`}
                 >
                   <div>
                     {/* Title & Badge */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded bg-zinc-900 border border-zinc-700">
+                        <div className="p-1.5 rounded mutating-sub border">
                           {getEngineIcon(ds.type)}
                         </div>
                         <div>

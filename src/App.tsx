@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { GameProvider, useGame } from './context/GameContext';
-import { TopNav, ViewportMode } from './components/TopNav';
+import { TopNav } from './components/TopNav';
 import { BentoHUD } from './components/BentoHUD';
 import { TrojanUpgradeModal } from './components/TrojanUpgradeModal';
 import { Terminal } from './components/Terminal';

@@ -3,44 +3,227 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { 
   Activity, 
   TrendingDown, 
-  Flame, 
   Cpu, 
   Layers, 
   AlertCircle, 
   CheckCircle2, 
   Play,
-  RotateCcw
+  Database,
+  Brain,
+  Sliders,
+  Sparkles
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
-import { formatTrainingDuration } from '../utils/training';
 
 export const TrainingMonitor: React.FC = () => {
-  const { state, cancelTraining, startTraining } = useGame();
+  const { state, cancelTraining, startTraining, selectModel } = useGame();
   const job = state.activeTraining;
+  const current = state.currentModel;
+  const [selectedDatasetId, setSelectedDatasetId] = useState<string>(
+    current.trainedOnDatasetId || 'dataset_general_corpus'
+  );
+
+  // Total cluster VRAM calculation
+  const totalClusterVram = state.hardware.reduce((sum, h) => 
+    h.category === 'gpu' ? sum + (h.vramGb * h.count) : sum, 0
+  );
+  const isVramSufficient = totalClusterVram >= current.vramRequiredGb;
+  const isBreakerTripped = state.powerTripSeconds > 0;
+  const isDetained = state.detentionSeconds > 0;
+
+  // Unlocked datasets for selection
+  const unlockedDatasets = [
+    {
+      id: 'dataset_general_corpus',
+      name: localize(state.language, 'Corpus General (Wikipedia / Libros / Noticias)', 'General Corpus (Web / Books / News)'),
+      domain: 'general',
+      tier: 1,
+      tokensCount: 50
+    },
+    ...state.customDatasets.map(ds => ({
+      id: ds.id,
+      name: `${ds.name} (${ds.domainLabel})`,
+      domain: ds.domain,
+      tier: ds.tier,
+      tokensCount: ds.tokensCount
+    }))
+  ];
 
   if (!job) {
     return (
-      <div className="flex flex-col items-center justify-center h-full mutating-panel border rounded-xl p-6 text-center font-mono space-y-4">
-        <Activity className="w-12 h-12 mutating-accent-text opacity-40 animate-pulse" />
-        <div>
-          <h3 className="text-sm font-bold mutating-accent-text">{localize(state.language, 'CLÚSTER EN ESPERA (IDLE)', 'CLUSTER IDLE')}</h3>
-          <p className="text-xs mutating-text-muted max-w-md mt-1">
-            {localize(state.language, 'No hay ninguna corrida de entrenamiento activa en este momento. Dirígete a la pestaña de Arquitectura para configurar los hiperparámetros e iniciar una nueva corrida.', 'There is no active training run. Go to the Architecture tab to configure the model and start a new run.')}
-          </p>
+      <div className="flex flex-col h-full mutating-panel border rounded-xl p-3 sm:p-5 overflow-y-auto space-y-4 font-mono">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/10 pb-2">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 mutating-accent-text" />
+            <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
+              {localize(state.language, 'MONITOR DE ENTRENAMIENTO // DESPACHADOR DE MODELOS', 'TRAINING MONITOR // MODEL DISPATCHER')}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] mutating-text-muted">
+            <span>{localize(state.language, 'Cómputo:', 'Compute:')} <strong>{(state.totalComputePflops * 0.5).toFixed(2)} PFLOPS</strong></span>
+            <span>•</span>
+            <span>{localize(state.language, 'VRAM Total:', 'Total VRAM:')} <strong className="text-emerald-500">{totalClusterVram} GB</strong></span>
+          </div>
         </div>
-        <button
-          onClick={() => { sound.playBreakthrough(); startTraining(); }}
-          className="px-4 py-2 mutating-btn-primary font-bold text-xs rounded-lg flex items-center gap-2 shadow transition-all cursor-pointer"
-        >
-          <Play className="w-4 h-4 fill-current" />
-          <span>{localize(state.language, 'INICIAR ENTRENAMIENTO DE', 'START TRAINING')} {state.currentModel.name}</span>
-        </button>
+
+        {/* Saved Models Selector Section */}
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold mutating-accent-text uppercase tracking-wider flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5" />
+              {localize(state.language, '1. Selecciona el Modelo para Entrenar', '1. Select Model to Train')}
+            </h3>
+            <span className="text-[10px] mutating-text-muted">
+              {state.savedModels.length} {localize(state.language, 'modelo(s) en biblioteca', 'model(s) in library')}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {state.savedModels.map(model => {
+              const isSelected = model.id === current.id;
+              const hasVram = totalClusterVram >= model.vramRequiredGb;
+              const paramsLabel = model.parametersCount >= 1_000_000_000
+                ? `${(model.parametersCount / 1_000_000_000).toFixed(1)}B`
+                : `${Math.round(model.parametersCount / 1_000_000)}M`;
+
+              return (
+                <div
+                  key={model.id}
+                  onClick={() => {
+                    sound.playKeyClick();
+                    selectModel(model.id);
+                  }}
+                  className={`p-3 rounded-lg border transition-all cursor-pointer flex flex-col justify-between space-y-2 ${
+                    isSelected
+                      ? 'mutating-sub border-2 border-current shadow-md'
+                      : 'mutating-card border-current/15 hover:border-current/40 opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-1">
+                    <div className="truncate">
+                      <span className="font-bold text-xs truncate block" title={model.name}>
+                        {model.name}
+                      </span>
+                      <span className="text-[10px] mutating-text-muted block">
+                        {model.topology.toUpperCase()} · {paramsLabel} params
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-bold mutating-btn-primary shrink-0 shadow-sm">
+                        {localize(state.language, 'ACTIVO ✓', 'ACTIVE ✓')}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="pt-1 border-t border-current/10 flex items-center justify-between text-[11px]">
+                    <span className="text-purple-400 font-bold flex items-center gap-1">
+                      <Brain className="w-3 h-3 text-purple-400" />
+                      IQ {model.reasoningScore || 72}
+                    </span>
+                    <span className={`text-[10px] ${hasVram ? 'mutating-text-muted' : 'text-rose-500 font-bold'}`}>
+                      {model.vramRequiredGb} GB VRAM
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Training Configuration & Launch Panel */}
+        <section className="mutating-sub p-4 rounded-xl border space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/10 pb-2">
+            <div>
+              <h3 className="text-xs font-bold mutating-accent-text uppercase tracking-wider flex items-center gap-1.5">
+                <Database className="w-3.5 h-3.5" />
+                {localize(state.language, '2. Dataset de Entrenamiento & Cuantización', '2. Training Dataset & Quantization')}
+              </h3>
+              <p className="text-[10px] mutating-text-muted mt-0.5">
+                {localize(
+                  state.language,
+                  'Los datos procesados reducirán la función de pérdida y aumentarán el coeficiente intelectual (IQ) de razonamiento del modelo seleccionado.',
+                  'Processed training data will decrease loss and elevate the reasoning IQ score of the selected model.'
+                )}
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] mutating-text-muted block">{localize(state.language, 'Objetivo:', 'Target Model:')}</span>
+              <span className="text-xs font-bold mutating-accent-text font-mono">{current.name}</span>
+            </div>
+          </div>
+
+          {/* Dataset Selector Dropdown */}
+          <div className="space-y-1">
+            <label className="text-[10px] mutating-text-muted block uppercase tracking-wider font-semibold">
+              {localize(state.language, 'Seleccionar Dataset:', 'Select Dataset:')}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {unlockedDatasets.map(ds => (
+                <button
+                  key={ds.id}
+                  type="button"
+                  onClick={() => {
+                    sound.playKeyClick();
+                    setSelectedDatasetId(ds.id);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                    selectedDatasetId === ds.id
+                      ? 'mutating-btn-primary font-bold shadow-sm'
+                      : 'mutating-card border border-current/20 mutating-text-muted hover:opacity-100'
+                  }`}
+                >
+                  {ds.name} · {ds.tokensCount}M tokens
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Hardware & VRAM Requirement Check */}
+          <div className="p-3 rounded-lg border border-current/15 mutating-card flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-emerald-500" />
+                <span className="font-bold">
+                  {localize(state.language, 'Verificación de Memoria VRAM:', 'VRAM Memory Audit:')}
+                </span>
+                <span className={isVramSufficient ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}>
+                  {current.vramRequiredGb} GB {localize(state.language, 'requeridos', 'required')} / {totalClusterVram} GB {localize(state.language, 'disponibles', 'available')}
+                </span>
+              </div>
+              <p className="text-[10px] mutating-text-muted">
+                {isVramSufficient
+                  ? localize(state.language, 'El clúster cuenta con memoria VRAM suficiente para alojar los tensores y el búfer de gradientes.', 'Cluster has sufficient VRAM to hold weights and gradient optimizer buffers.')
+                  : localize(state.language, '¡VRAM insuficiente! Cuantiza el modelo (INT8/FP4) en Arquitectura o adquiere más GPUs en Hardware.', 'Insufficient VRAM! Quantize the model (INT8/FP4) in Architecture or purchase GPUs in Hardware.')}
+              </p>
+            </div>
+
+            {/* Launch Training Button */}
+            <button
+              onClick={() => {
+                sound.playBreakthrough();
+                startTraining(selectedDatasetId, current.modelType === 'micro_model', current.id);
+              }}
+              disabled={!isVramSufficient || isBreakerTripped || isDetained}
+              className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-md ${
+                isVramSufficient && !isBreakerTripped && !isDetained
+                  ? 'mutating-btn-primary cursor-pointer hover:shadow-lg'
+                  : 'bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed opacity-50'
+              }`}
+            >
+              <Play className="w-4 h-4 fill-current" />
+              <span>
+                {localize(state.language, 'INICIAR ENTRENAMIENTO DE', 'START TRAINING')} {current.name}
+              </span>
+            </button>
+          </div>
+        </section>
       </div>
     );
   }
@@ -86,12 +269,15 @@ export const TrainingMonitor: React.FC = () => {
             <span className="mutating-accent-text">
               {localize(state.language, 'PROGRESO TOTAL:', 'TOTAL PROGRESS:')} {Math.floor(job.progressPercent)}%
             </span>
+            <span className="px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-500 text-[10px] font-bold">
+              {job.modelName}
+            </span>
             {job.targetModelType === 'micro_model' ? (
               <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-purple-400 text-[10px] font-bold">
                 MICRO-MODEL ({job.datasetDomain || 'SPECIALIST'})
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-500 text-[10px]">
+              <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 text-[10px]">
                 {localize(state.language, 'MODELO GENERAL', 'GENERAL MODEL')}
               </span>
             )}
@@ -195,8 +381,8 @@ export const TrainingMonitor: React.FC = () => {
 
         <div className="p-3 rounded-lg mutating-sub">
           <span className="text-[10px] mutating-text-muted block">{localize(state.language, 'TOPOLOGÍA ACTIVA', 'ACTIVE TOPOLOGY')}</span>
-          <span className="text-purple-500 font-bold text-xs truncate block">{state.currentModel.topology}</span>
-          <span className="text-[9px] mutating-text-muted block mt-0.5">{state.currentModel.quantization.toUpperCase()}</span>
+          <span className="text-purple-500 font-bold text-xs truncate block">{current.topology}</span>
+          <span className="text-[9px] mutating-text-muted block mt-0.5">{current.quantization.toUpperCase()}</span>
         </div>
       </div>
     </div>

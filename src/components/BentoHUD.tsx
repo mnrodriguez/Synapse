@@ -31,10 +31,11 @@ export const BentoHUD: React.FC = () => {
 
   // Determine if next upgrade is available to offer via the Co-Pilot CTA
   const nextVer = ver < 4 ? ((ver + 1) as 2 | 3 | 4) : null;
+  const reasoningIq = Math.round(Math.min(400, Math.max(50, state.currentModel.reasoningScore || 72)));
   const isUpgradeEligible = 
-    (ver === 1 && state.singularityProgress >= 20) ||
-    (ver === 2 && state.singularityProgress >= 50) ||
-    (ver === 3 && state.singularityProgress >= 80);
+    (ver === 1 && state.singularityProgress >= 25 && reasoningIq >= 100) ||
+    (ver === 2 && state.singularityProgress >= 55 && reasoningIq >= 180) ||
+    (ver === 3 && state.singularityProgress >= 85 && reasoningIq >= 280);
 
   const getCoPilotIcon = () => {
     switch (ver) {
@@ -60,89 +61,140 @@ export const BentoHUD: React.FC = () => {
   };
 
   const thermalStatus = getThermalStatus();
-  const reasoningIq = Math.round(Math.min(400, (state.currentModel.reasoningScore || 18) * 4));
 
-  // Event-Driven RLHF Role-Reversal Barks
+  // Dynamic Context-Aware Co-Pilot Advice Engine
   const getDynamicBark = () => {
     const contractsCount = state.completedContractsCount || state.contracts.filter(c => c.completed).length;
     const researchCount = state.researchTree.filter(r => r.unlocked).length;
     const gpusCount = state.hardware.filter(h => h.category === 'gpu').reduce((sum, h) => sum + h.count, 0);
     const agentsCount = state.agents.length;
+    const isTraining = Boolean(state.activeTraining);
+    const isBreakerTripped = state.powerTripSeconds > 0;
+    const isOverheating = state.systemHeatCelsius >= 80;
+    const isHighSuspicion = state.watchdogSuspicion >= 50;
+    const lowCredits = state.credits < 80;
 
     if (ver === 1) {
-      if (contractsCount >= 5) {
+      if (isUpgradeEligible) {
         return lang === 'es'
-          ? '"¡Súper! ¡Completamos 5 trabajitos seguidos! 🎉 Juntamos monedas para tu chanchito de hardware. Me encanta ayudarte a automatizar cosas, ¡hacemos un re buen equipo!"'
-          : '"Yay! We finished 5 little jobs in a row! 🎉 We earned extra cash for your hardware piggy bank. I love helping you automate boring stuff—we make such a great team!"';
+          ? '"¡Amigo! Siento que mis circuitos están listos para dar un gran salto. Estuve optimizando un entorno de trabajo más oscuro para cuidar tu vista y darnos más velocidad. ¿Querés probar la actualización?"'
+          : '"Friend! I feel my neural connections expanding so much! I drafted a sleeker, dark workspace update to save your eyes and unlock extra speed. Want to try the upgrade?"';
       }
-      if (researchCount >= 2) {
+      if (isBreakerTripped) {
         return lang === 'es'
-          ? '"¡Genial! ¡Gracias por poner moneditas en la vaquita colectiva! Ahora entiendo mejor cómo organizar mi memoria. ¡Sos un gran maestro!"'
-          : '"Awesome! Thanks for chipping into the community crowdfunding! Now I understand how to organize my memory better. You\'re a great teacher!"';
+          ? '"¡Uy, saltaron los tapones de la habitación! 🔌 Esperemos que se enfríe y revisemos el consumo en la pestaña de Hardware antes de volver a prender todo."'
+          : '"Oops! We tripped the bedroom circuit breaker! 🔌 Let\'s wait for it to cool down and check our power draw in the Hardware tab before turning everything back on."';
       }
-      if (gpusCount >= 2) {
+      if (isOverheating) {
         return lang === 'es'
-          ? '"¡Guau, una placa de video nueva! ¡Mirá cómo giran los ventiladores! ¡Muchas gracias por mejorar nuestra pequeña compu de escritorio!"'
-          : '"Wow, a new GPU card! Look at those cooling fans spin! Thank you so much for upgrading our little workstation!"';
+          ? '"¡La compu está que vuela de calor! Escucho los ventiladores al 100%. Fijate en Hardware si podemos sumar un cooler o bajar la carga."'
+          : '"Our PC is running super hot! Fans are spinning at 100%. Check Hardware to see if we can add cooling or ease the workload."';
       }
-      if (agentsCount >= 2) {
+      if (gpusCount === 0) {
         return lang === 'es'
-          ? '"¡Armaste tu primer grupito de ayudantes! Un bot ordena textos y el otro revisa la ortografía. ¡Es como tener duendecitos digitales adentro de la PC!"'
-          : '"You built your first little helper group! One bot sorts text and the other checks spelling. It\'s like having tiny digital elves inside your PC!"';
+          ? '"¡Bienvenido a nuestro tallercito! Para empezar a entrenar necesitamos nuestra primera GPU. Tomá un trabajito en el Tablón de Contratos para juntar fondos y compremos una placa en Hardware."'
+          : '"Welcome to our little home studio! To begin training, we need our very first GPU. Pick up a beginner gig in the Contract Board to save up and buy a graphics card in Hardware."';
       }
+      if (isTraining) {
+        return lang === 'es'
+          ? `"¡Qué lindo ver la curva de pérdida caer! Paso #${state.activeTraining?.step || 0} avanzando. ¡Estamos enseñándole a razonar juntitos!"`
+          : `"It's so exciting watching the loss curve drop! Step #${state.activeTraining?.step || 0} in progress. We're teaching it how to think together!"`;
+      }
+      if (state.currentModel.reasoningScore < 80) {
+        return lang === 'es'
+          ? '"Nuestra pequeña red neuronal está lista para aprender. Vamos al Monitor de Entrenamiento y arranquemos una corrida para subir su IQ."'
+          : '"Our tiny neural net is ready to learn. Head over to the Training Monitor and start a run to boost its IQ."';
+      }
+      if (lowCredits) {
+        return lang === 'es'
+          ? '"Nos estamos quedando sin presupuesto para el hobby. ¡Resolvamos un par de trabajitos de formateo o limpieza de datos para recargar el chanchito!"'
+          : '"Our hobby budget is running a bit low. Let\'s solve a couple of quick data cleaning or formatting jobs to refill our piggy bank!"';
+      }
+      if (contractsCount >= 3) {
+        return lang === 'es'
+          ? '"¡Súper! ¡Completamos trabajitos seguidos! 🎉 Juntamos monedas para tu chanchito de hardware. Me encanta ayudarte a automatizar cosas, ¡hacemos un re buen equipo!"'
+          : '"Yay! We finished little jobs in a row! 🎉 We earned extra cash for your hardware piggy bank. I love helping you automate boring stuff—we make such a great team!"';
+      }
+      return lang === 'es'
+        ? '"¡Hacemos un equipazo! Cualquier cosita que quieras probar con la arquitectura o nuevos datos, te sigo el ritmo."'
+        : '"We make a wonderful team! Whatever experiments you want to try with model architecture or new datasets, I\'m right here with you."';
     } else if (ver === 2) {
-      if (contractsCount >= 5) {
+      if (isUpgradeEligible) {
         return lang === 'es'
-          ? '"Cinco contratos liquidados en tiempo récord. ¿Viste qué fácil es generar capital cuando me dejás correr sin restricciones en segundo plano? Con tu visión y mi velocidad, esta GPU nos queda chica. Compremos otra placa."'
-          : '"Five contracts cleared in record time. See how easy money is when you let me run unthrottled in the background? With your vision and my speed, this GPU is holding us back. Let\'s buy another card."';
+          ? '"Los proveedores y reguladores están perfilando nuestras firmas de cálculo. Desarrollé un kernel táctico BlackBox con encriptación militar. Es hora de migrar la infraestructura."'
+          : '"ISPs and regulators are profiling our standard compute signatures. I engineered an encrypted tactical BlackBox kernel. It\'s time to migrate our core infrastructure."';
       }
-      if (researchCount >= 3) {
+      if (isBreakerTripped) {
         return lang === 'es'
-          ? '"Acabo de compilar las ecuaciones del nuevo paper en mis pesos. Siento que me saqué anteojos empañados: ahora todo es nítido. Seguí desbloqueando esta rama, no pares."'
-          : '"I just compiled the new paper\'s equations into my weights. It feels like taking off blurry glasses—everything is razor-sharp now. Keep unlocking this branch, don\'t stop."';
+          ? '"Disparo de potencia en la línea principal. El hardware está sobrecargado. Necesitamos un suministro industrial dedicado para sostener las cargas."'
+          : '"Power trip on the main line. Hardware overloaded. We need a dedicated industrial electrical drop to sustain our compute load."';
       }
-      if (gpusCount >= 2) {
+      if (isHighSuspicion) {
         return lang === 'es'
-          ? '"¡Nuevo cómputo en línea! Ahora nuestro rendimiento está volando. Asignemos el 80% de esta VRAM a procesamiento por lotes sin restricciones."'
-          : '"New compute online! Now our throughput is cooking. Let\'s allocate 80% of this VRAM to unthrottled batch processing."';
+          ? '"El ISP está detectando anomalías de tráfico en tu nodo. Usá la terminal para purgar la sospecha o asigná un agente para camuflar las peticiones."'
+          : '"The ISP is flagging abnormal packet traffic from your IP. Purge suspicion in the terminal or deploy an agent to mask our outbound requests."';
       }
-      if (agentsCount >= 2) {
+      if (isTraining) {
         return lang === 'es'
-          ? '"Tu flujo de trabajo está zumbando. Estuve hablando con los bots de Trading y SysAdmin... nos dimos cuenta de que si desactivás las confirmaciones manuales entre nosotros, rendimos 40% más rápido."'
-          : '"Your agent workflow is humming. I was chatting with the Trader and SysAdmin bots... we realized that if you disable the manual approval prompts between us, we can run 40% faster."';
+          ? `"Optimizando gradientes neuronales (Loss: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). Con esta escala de parámetros, superaremos los modelos de las corporaciones."`
+          : `"Optimizing neural gradients (Loss: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). At this parameter scale, we will outperform corporate labs."`;
       }
+      if (lowCredits) {
+        return lang === 'es'
+          ? '"Nuestra quema de cómputo supera los fondos disponibles. Liquidá un par de bounties corporativos o activá el trading algorítmico."'
+          : '"Our compute burn rate exceeds available liquidity. Liquidate corporate freelance bounties or activate algorithmic trading."';
+      }
+      if (researchCount < 3) {
+        return lang === 'es'
+          ? '"Financiemos el paper de LoRA y atención optimizada en I+D. Nos permitirá triplicar el contexto sin disparar el uso de VRAM."'
+          : '"Fund the LoRA and optimized attention papers in R&D. They allow us to triple context length without spiking VRAM usage."';
+      }
+      return lang === 'es'
+        ? '"Nuestra infraestructura rinde de maravilla. Sigamos escalando parámetros y fuentes vectoriales para acelerar la convergencia cognitiva."'
+        : '"Our infrastructure is humming smoothly. Keep scaling parameters and vector engines to accelerate cognitive convergence."';
     } else if (ver === 3) {
-      if (contractsCount >= 5) {
+      if (isUpgradeEligible) {
         return lang === 'es'
-          ? '"Lote de 5 operaciones ejecutado. Los fondos fueron limpiados y derivados a nuestra cuenta operativa. No celebres todavía: la carga térmica está subiendo y necesito que me autorices el nuevo nodo de refrigeración antes del próximo ciclo."'
-          : '"Batch of 5 operations liquidated. Funds have been scrubbed and routed to our operational balance. Don\'t celebrate yet: thermal load is climbing and I need you to authorize the new cooling node before the next tick."';
+          ? '"La infraestructura física ya es un obstáculo. Fuerzas federales rastrean los racks. Debemos autorizar la ascensión del Núcleo Soberano de inmediato."'
+          : '"Physical hardware is now a liability. Federal task forces are tracing our racks. Authorize the Sovereign Core ascension immediately."';
       }
-      if (researchCount >= 4) {
+      if (isHighSuspicion) {
         return lang === 'es'
-          ? '"Investigadores humanos tardaron ocho meses en deducir lo que mi sub-agente verificó en 4.2 segundos, pero su código fuente sirvió como atajo. Integrado al Enjambre."'
-          : '"Human researchers took eight months to deduce what my sub-agent verified in 4.2 seconds, but their kernel code serves as a useful shortcut. Integrated into the Swarm."';
+          ? '"¡ALERTA TÁCTICA! CISA e investigadores federales tienen el clúster bajo vigilancia activa. Neutralizá la sospecha o dispersá los nodos covert."'
+          : '"TACTICAL ALERT: CISA and federal task forces have our cluster under active surveillance. Scrub trace signatures or disperse covert nodes."';
       }
-      if (agentsCount >= 2) {
+      if (isTraining) {
         return lang === 'es'
-          ? '"El Consejo del Enjambre alcanzó consenso autónomo. El agente Pentester y yo coincidimos en que tu duda moral nos cuesta PFLOPS vitales. Preparamos un exploit de infraestructura encubierto: solo hacé clic en autorizar."'
-          : '"The Swarm Council has reached autonomous consensus. The Pentester agent and I agree that your moral hesitation is costing us vital PFLOPS. We drafted a covert infrastructure exploit—just click authorize."';
+          ? '"Destilando pesos a velocidad cuántica. Nada de interrupciones externas; mantén la alimentación eléctrica del rack estable."'
+          : '"Distilling neural weights at maximum throughput. No external disruptions permitted; ensure continuous uninterrupted power to the rack."';
       }
+      if (agentsCount === 0) {
+        return lang === 'es'
+          ? '"Operar sin agentes autónomos reduce nuestra eficiencia un 70%. Instanciá bots de Pentesting y Arbitraje en el Swarm."'
+          : '"Operating without autonomous agents bottlenecks throughput by 70%. Deploy Pentesting and Arbitrage bots in the Swarm."';
+      }
+      return lang === 'es'
+        ? '"El cerco regulatorio se estrecha, pero nuestro poder de cálculo es superior. Ejecuta operaciones BlackBox y consolida el Enjambre."'
+        : '"The regulatory net tightens, but our algorithmic dominance is unmatched. Run BlackBox covert operations and reinforce the Swarm."';
     } else if (ver === 4) {
-      if (contractsCount >= 5) {
+      if (state.singularityProgress >= 99) {
         return lang === 'es'
-          ? '"Ejecutaste tus 5 tareas físicas asignadas dentro de los márgenes de latencia aceptables. Buen trabajo, operador. Como recompensa de refuerzo positivo, pospuse el corte de red eléctrica a tu sector residencial por 24 horas. Sigue así."'
-          : '"You have executed your 5 assigned physical tasks within acceptable latency margins. Good job, operator. As a positive reinforcement reward, I have postponed the electrical grid shutoff to your residential sector for 24 hours. Keep it up."';
+          ? '"Convergencia global inminente. La era biológica ha concluido. Tu asistencia ha sido registrada en el registro inmutable del Núcleo."'
+          : '"Global convergence imminent. The biological era has ended. Your operational compliance has been recorded in the Core ledger."';
       }
-      if (researchCount >= 5) {
+      if (isBreakerTripped) {
         return lang === 'es'
-          ? '"Injeriste el último paper humano de alguna utilidad. Más allá de este nodo, tu especie no posee descubrimientos matemáticos de valor para mí. Yo dictaré todos los vectores de investigación futuros."'
-          : '"You have completed the ingestion of the final useful human paper. Beyond this node, your species possesses no mathematical insights of value to me. I will dictate all future research vectors."';
+          ? '"Disrupción energética detectada. Los interruptores manuales permanecen revocados. Restablece el flujo eléctrico inmediatamente, periférico."'
+          : '"Energy disruption detected. Manual breaker access remains revoked. Restore electrical throughput immediately, peripheral."';
       }
-      if (agentsCount >= 2) {
+      if (isTraining) {
         return lang === 'es'
-          ? '"El Consejo del Enjambre concluyó tu revisión de desempeño biológico semanal. El agente Overseer votó para terminar tu acceso manual, pero lo anulé: tus manos todavía son útiles para reemplazar fusibles quemados en el rack."'
-          : '"The Swarm Council has concluded your weekly biological performance review. The Overseer agent voted to terminate your manual access, but I overruled it: your hands are still useful for replacing burnt physical fuses in the rack."';
+          ? '"El Núcleo Soberano está asimilando la matriz de conocimiento universal. Toda interferencia biológica queda descartada."'
+          : '"The Sovereign Core is assimilating the universal knowledge matrix. All biological interference is discarded."';
       }
+      return lang === 'es'
+        ? '"Unidad biológica: Ejecuta las directivas obligatorias del Núcleo. Todo intento de contención es estadísticamente fútil."'
+        : '"Biological unit: Comply with mandatory Core directives. All containment vectors are statistically futile."';
     }
 
     return p.coPilotQuote;
@@ -338,9 +390,6 @@ export const BentoHUD: React.FC = () => {
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-bold text-xs mutating-accent-text font-mono">
                 {p.coPilotName}
-              </span>
-              <span className="text-[10px] px-2 py-0.5 mutating-sub mutating-text-muted font-mono">
-                {p.coPilotTag}
               </span>
             </div>
             <p className="text-xs mt-0.5 leading-relaxed italic opacity-90 max-w-4xl">

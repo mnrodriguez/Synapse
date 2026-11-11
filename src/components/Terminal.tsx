@@ -124,13 +124,13 @@ export const Terminal: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#05080e] border border-cyan-900/40 rounded-lg overflow-hidden font-mono shadow-[inset_0_0_30px_rgba(0,255,204,0.02)]">
+    <div className="flex flex-col h-full mutating-panel border rounded-lg overflow-hidden font-mono shadow-sm">
       {/* Terminal Title Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-[#0a111a] border-b border-cyan-900/50 text-xs text-zinc-400 select-none">
+      <div className="flex items-center justify-between px-3 py-1.5 mutating-sub border-b text-xs select-none">
         <div className="flex items-center gap-2">
-          <TerminalIcon className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-cyan-300 font-bold tracking-wider">NEURO-TERMINAL // BASH-X</span>
-          <span className="text-[10px] text-zinc-600">tty1:connected</span>
+          <TerminalIcon className="w-3.5 h-3.5 mutating-accent-text" />
+          <span className="mutating-accent-text font-bold tracking-wider">NEURO-TERMINAL // BASH-X</span>
+          <span className="text-[10px] mutating-text-muted">tty1:connected</span>
         </div>
         
         {/* Quick Shortcut Buttons */}
@@ -191,9 +191,9 @@ export const Terminal: React.FC = () => {
       </div>
 
       {/* Interactive Command Input */}
-      <form onSubmit={handleSubmit} className="p-2 bg-[#090f18] border-t border-cyan-900/50 flex items-center gap-2">
-        <span className="text-cyan-400 font-bold text-xs select-none pl-1 flex items-center gap-1">
-          <span className="text-purple-400">{state.callsign}</span>@synapse:~$
+      <form onSubmit={handleSubmit} className="p-2 mutating-sub border-t flex items-center gap-2">
+        <span className="mutating-accent-text font-bold text-xs select-none pl-1 flex items-center gap-1">
+          <span>{state.callsign}</span>@synapse:~$
         </span>
         <input
           ref={inputRef}
@@ -202,12 +202,12 @@ export const Terminal: React.FC = () => {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={localize(state.language, "Escribe 'help', 'train', 'hardware', 'buy <id>'...", "Type 'help', 'train', 'hardware', or 'buy <id>'...")}
-          className="flex-1 bg-transparent border-none outline-none text-cyan-200 text-xs font-mono placeholder:text-zinc-600 focus:ring-0"
+          className="flex-1 bg-transparent border-none outline-none text-xs font-mono placeholder:opacity-50 focus:ring-0"
           autoFocus
         />
         <button
           type="submit"
-          className="px-2 py-1 bg-cyan-950/60 hover:bg-cyan-800/80 text-cyan-300 border border-cyan-700/50 rounded text-xs flex items-center gap-1 transition-colors"
+          className="px-2 py-1 mutating-btn-primary rounded text-xs flex items-center gap-1 transition-all cursor-pointer font-bold"
         >
           <CornerDownLeft className="w-3 h-3" />
           <span className="hidden sm:inline text-[10px]">{localize(state.language, 'EJEC', 'EXEC')}</span>
