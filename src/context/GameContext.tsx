@@ -2084,6 +2084,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           savedModels: savedModelsList,
           activeTraining: updatedTraining,
           lastTrainingReport: trainingReport ?? prev.lastTrainingReport ?? null,
+          // A finished run drops back to 1x so the operative can review the result and adjust.
+          gameSpeed: trainingReport ? 1 : prev.gameSpeed,
           activeScrapeJob: updatedScrapeJob,
           customDatasets: updatedCustomDatasets,
           activeGig: updatedGigs[0] || null,

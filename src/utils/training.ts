@@ -113,3 +113,14 @@ export const formatTrainingDuration = (seconds: number): string => {
   const totalHours = Math.ceil(totalMinutes / 60);
   return `${Math.floor(totalHours / 24)}d ${totalHours % 24}h`;
 };
+
+// Training time in simulated minutes (one tick is one simulated minute). At 1x speed a tick is one real
+// second, so the same number of minutes is also the real time the run takes at 1x.
+export const formatTrainingTime = (ticks: number | null, language: 'en' | 'es' = 'en'): string => {
+  if (ticks === null) return 'N/A';
+  const minutes = Math.max(0, Math.round(ticks));
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  const duration = hours > 0 ? `${hours} h ${rest} min` : `${minutes} min`;
+  return language === 'es' ? `${duration} de entrenamiento` : `${duration} of training`;
+};
