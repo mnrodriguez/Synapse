@@ -19,6 +19,7 @@ import { SingularityPortal } from './components/SingularityPortal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { TrainingReportModal } from './components/TrainingReportModal';
 import { StoryEventModal } from './components/StoryEventModal';
+import { ContainmentEndingModal } from './components/ContainmentEndingModal';
 import { AuthModal } from './components/AuthModal';
 import { HelpManual } from './components/HelpManual';
 import { AgentSandbox } from './components/AgentSandbox';
@@ -331,6 +332,7 @@ const MainGameScreen: React.FC = () => {
       <HelpManual isOpen={manualOpen} onClose={() => setManualOpen(false)} />
       <TrainingReportModal />
       <StoryEventModal />
+      <ContainmentEndingModal />
       <LeaderboardModal isOpen={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </div>

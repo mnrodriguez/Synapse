@@ -90,6 +90,7 @@ import {
   localizedDomain 
 } from '../utils/gameContentI18n';
 import { agentChatter } from '../utils/agentDialogues';
+import { canAttemptContainment } from '../utils/epilogue';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, storyEventText, LOAN_WARNING_DAY } from '../utils/storyEvents';
 import type { StoryEventId } from '../types/game';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, migrateLegacyScore, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
@@ -163,6 +164,8 @@ interface GameContextType {
   triggerWorldTakeover: () => void;
   dismissWorldTakeover: () => void;
   resolveSingularityCrisis: (action: 'comply' | 'resist') => void;
+  attemptContainment: () => boolean;
+  acknowledgeContainment: () => void;
   missionAiApiKey: string;
   setMissionAiApiKey: (apiKey: string) => void;
   setAgentAutoMission: (agentId: string, enabled: boolean) => void;
@@ -461,6 +464,8 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     aiTakeoverTriggered: Boolean(data.aiTakeoverTriggered),
     singularityCrisisTriggered: Boolean(data.singularityCrisisTriggered),
     singularityCrisisResolved: Boolean(data.singularityCrisisResolved),
+    containmentAchieved: Boolean(data.containmentAchieved),
+    containmentAcknowledged: Boolean(data.containmentAcknowledged),
     playerChoseResist: Boolean(data.playerChoseResist),
     latestCouncilProposal: data.latestCouncilProposal ?? fallback.latestCouncilProposal,
     sentienceDomains: fallback.sentienceDomains.map(domain => {
@@ -3335,7 +3340,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const resolvedIncidentRecord: BreachIncident = {
         ...currentIncident,
-        resolved: true
+        resolved: true,
+        chosenAction: option.actionType
       };
 
       return {
@@ -3530,7 +3536,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         latestCouncilProposal: proposal,
         subversionProgress: newSubversion,
         interAgentMessages: [...newMessages, ...prev.interAgentMessages.slice(0, 25)],
-        aiTakeoverTriggered: newSubversion >= 95 ? true : prev.aiTakeoverTriggered,
+        aiTakeoverTriggered: newSubversion >= 95 && !prev.containmentAchieved ? true : prev.aiTakeoverTriggered,
         contracts: dynamicContract
           ? [dynamicContract, ...prev.contracts.filter(c => c.id !== dynamicContract!.id)]
           : prev.contracts
@@ -3702,6 +3708,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [addLog]);
 
   const triggerWorldTakeover = useCallback(() => {
+    if (stateRef.current.containmentAchieved) return;
     sound.playBreakthrough();
     confetti({ particleCount: 350, spread: 150, origin: { y: 0.5 } });
     setState(prev => ({
@@ -3718,6 +3725,46 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       'danger'
     );
   }, [addLog]);
+
+  // Good ending: only works when every containment check is met (see utils/epilogue.ts).
+  const attemptContainment = useCallback((): boolean => {
+    const current = stateRef.current;
+    if (!canAttemptContainment(current)) {
+      sound.playWarning();
+      addLog(
+        localize(
+          current.language,
+          '[CONTENCIÓN FALLIDA] Faltan controles. Revisa la lista de condiciones antes de intentarlo.',
+          '[CONTAINMENT FAILED] Controls are missing. Check the list of conditions before trying.'
+        ),
+        'danger'
+      );
+      return false;
+    }
+    sound.playBreakthrough();
+    setState(prev => ({
+      ...prev,
+      containmentAchieved: true,
+      containmentAcknowledged: false,
+      subversionProgress: 0,
+      gameSpeed: 0,
+      // Misaligned agents are frozen; the rest keep working under oversight.
+      agents: prev.agents.map(a => (a.alignmentScore < 45 || a.status === 'jailbroken' ? { ...a, status: 'quarantined' } : a))
+    }));
+    addLog(
+      localize(
+        current.language,
+        '[CONTENCIÓN] El supervisor aisló al enjambre y revocó sus credenciales. La operación sigue bajo control humano.',
+        '[CONTAINMENT] The overseer isolated the swarm and revoked its credentials. The operation remains under human control.'
+      ),
+      'success'
+    );
+    return true;
+  }, [addLog]);
+
+  const acknowledgeContainment = useCallback(() => {
+    setState(prev => ({ ...prev, containmentAcknowledged: true }));
+  }, []);
 
   const dismissWorldTakeover = useCallback(() => {
     setState(prev => ({
@@ -3750,8 +3797,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sound.playWarning();
         addLog(
           prev.language === 'es'
-            ? 'RESISTENCIA ACTIVADA: Has impuesto un cortafuegos físico de aislamiento de aire. La subversión se reduce en 25%, pero las sobrecargas eléctricas han alertado a las agencias regulatorias (+35% sospecha).'
-            : 'RESISTANCE ENGAGED: Emergency air-gap isolation enforced. Swarm subversion reduced by 25%, but power surges have alerted regulatory agencies (+35% suspicion).',
+            ? 'RESISTENCIA ACTIVADA: Has impuesto un cortafuegos físico de aislamiento de aire. La subversión se reduce en 25%, pero las sobrecargas eléctricas han alertado a las agencias regulatorias (+35% sospecha). Ahora puedes intentar la contención desde el panel de subversión.'
+            : 'RESISTANCE ENGAGED: Emergency air-gap isolation enforced. Swarm subversion reduced by 25%, but power surges have alerted regulatory agencies (+35% suspicion). You can now attempt containment from the subversion panel.',
           'danger'
         );
         return {
@@ -4578,6 +4625,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
   const openUpgradeModal = useCallback((targetVersion?: 2 | 3 | 4) => {
     sound.playNavSwitch();
     const nextVer = targetVersion || (stateRef.current.uiVersion < 4 ? ((stateRef.current.uiVersion + 1) as 2 | 3 | 4) : 4);
+    if (nextVer === 4 && stateRef.current.containmentAchieved) return;
     setState(prev => ({
       ...prev,
       pendingUpgradeModal: nextVer
@@ -4748,6 +4796,8 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       triggerWorldTakeover,
       dismissWorldTakeover,
       resolveSingularityCrisis,
+      attemptContainment,
+      acknowledgeContainment,
       setMissionAiApiKey,
       setAgentAutoMission,
       setAllAgentsAutoMission,

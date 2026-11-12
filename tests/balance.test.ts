@@ -13,6 +13,7 @@ import {
 } from '../src/utils/training';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, LOAN_WARNING_DAY } from '../src/utils/storyEvents';
 import type { GameState } from '../src/types/game';
+import { buildEpilogue, canAttemptContainment, endingTitle, CONTAINMENT_MAX_SUBVERSION } from '../src/utils/epilogue';
 import { agentChatter, AGENT_DIALOGUE_ROLES, STORY_LINES_FOR_TESTS, COVERT_LINES_FOR_TESTS } from '../src/utils/agentDialogues';
 
 const STARTER_GPU_PFLOPS = 0.0044; // GTX 1060
@@ -181,6 +182,57 @@ describe('agent dialogues by version', () => {
   test('both languages tell the same number of story beats', () => {
     for (const v of [1, 2, 3, 4] as const) {
       expect(STORY_LINES_FOR_TESTS.es[v].length).toBe(STORY_LINES_FOR_TESTS.en[v].length);
+    }
+  });
+});
+
+describe('endings and epilogue', () => {
+  const ready = {
+    language: 'es',
+    singularityCrisisResolved: true,
+    playerChoseResist: true,
+    subversionProgress: 40,
+    agents: [{ role: 'overseer', status: 'active', alignmentScore: 90 }],
+    guardrails: { constitutionalStrictness: 80, sandboxIsolation: 'container', outputFiltering: 'llama_guard', rewardHackingAudit: true, redTeamingFrequencySec: 60 },
+    incidentHistory: [],
+    seenStoryEvents: ['loan_audit'],
+    storyChoices: []
+  } as unknown as GameState;
+
+  test('containment works only with every control in place', () => {
+    expect(canAttemptContainment(ready)).toBe(true);
+    expect(canAttemptContainment({ ...ready, playerChoseResist: false })).toBe(false);
+    expect(canAttemptContainment({ ...ready, agents: [] })).toBe(false);
+    expect(canAttemptContainment({ ...ready, subversionProgress: CONTAINMENT_MAX_SUBVERSION })).toBe(false);
+    expect(canAttemptContainment({ ...ready, guardrails: { ...ready.guardrails, sandboxIsolation: 'none' } })).toBe(false);
+    expect(canAttemptContainment({ ...ready, singularityCrisisResolved: false })).toBe(false);
+    expect(canAttemptContainment({ ...ready, containmentAchieved: true })).toBe(false);
+  });
+
+  test('the epilogue reflects the player decisions', () => {
+    const safe = buildEpilogue(ready);
+    expect(safe.find(e => e.id === 'loan')?.verdict).toBe('safe');
+    expect(safe.find(e => e.id === 'fork')?.verdict).toBe('safe');
+    expect(safe.find(e => e.id === 'incidents')).toBeUndefined();
+
+    const risky = buildEpilogue({
+      ...ready,
+      storyChoices: ['loan_audit'],
+      playerChoseResist: false,
+      incidentHistory: [
+        { resolved: true, chosenAction: 'suppress' },
+        { resolved: true, chosenAction: 'bribe_coverup' }
+      ]
+    } as unknown as GameState);
+    expect(risky.find(e => e.id === 'loan')?.verdict).toBe('risky');
+    expect(risky.find(e => e.id === 'fork')?.verdict).toBe('risky');
+    expect(risky.find(e => e.id === 'incidents')?.verdict).toBe('risky');
+  });
+
+  test('every ending has a title in both languages', () => {
+    for (const kind of ['containment', 'takeover', 'agency_seizure', 'bankruptcy'] as const) {
+      expect(endingTitle({ ...ready, language: 'es' }, kind).title).toMatch(/^Final/);
+      expect(endingTitle({ ...ready, language: 'en' }, kind).title).toMatch(/^Ending/);
     }
   });
 });

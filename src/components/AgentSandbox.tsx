@@ -51,6 +51,7 @@ import { DocLinkBadge } from './DocLinkBadge';
 import { evaluateAgentCapabilities } from '../utils/missionEvaluation';
 import { getRoleSimpleName, AGENT_SPINUP_COST } from '../utils/constants';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
+import { ContainmentPanel } from './ContainmentPanel';
 
 const MISSION_ROLE_TASKS: Record<AgentRole, { en: string; es: string }> = {
   arbitrageur: { en: 'Analyzes simulated market signals and cross-checks anomalies.', es: 'Analiza señales de mercado simuladas y verifica anomalías.' },
@@ -532,8 +533,11 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           />
         </div>
 
+        {/* Good ending: containment checklist, available after the 75% fork */}
+        <ContainmentPanel />
+
         {/* Takeover Imminent Action Banner */}
-        {((state.subversionProgress || 0) >= 90 || state.singularityProgress >= 90) && (
+        {!state.containmentAchieved && ((state.subversionProgress || 0) >= 90 || state.singularityProgress >= 90) && (
           <div className="p-2.5 rounded-lg border border-red-500/80 bg-red-950/30 flex flex-wrap items-center justify-between gap-2 animate-pulse">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-red-400" />
