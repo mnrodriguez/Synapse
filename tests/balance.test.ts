@@ -8,8 +8,11 @@ import {
   calculateTrainingProgressPerTick,
   iqGainForRun,
   reasoningCeilingFor,
-  UNIVERSITY_LOAN_PFLOPS
+  UNIVERSITY_LOAN_PFLOPS,
+  LOAN_TRIAL_DAYS
 } from '../src/utils/training';
+import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, LOAN_WARNING_DAY } from '../src/utils/storyEvents';
+import type { GameState } from '../src/types/game';
 
 const STARTER_GPU_PFLOPS = 0.0044; // GTX 1060
 
@@ -106,5 +109,42 @@ describe('progression', () => {
     const fromTraining = (UPGRADE_SCORE[2] - INITIAL_MODEL.reasoningScore) * SINGULARITY_PER_SCORE_POINT;
     const fromMissions = 10 * MISSION_SINGULARITY.tier1_micro;
     expect(fromTraining + fromMissions).toBeGreaterThanOrEqual(25 * 0.8);
+  });
+});
+
+describe('story events', () => {
+  const base = { gameSpeed: 20, pendingStoryEvents: [], seenStoryEvents: [], speedBeforeStoryEvent: null } as unknown as GameState;
+
+  test('a new event pauses the game and remembers the speed', () => {
+    const next = { ...base, ...enqueueStoryEvents(base, ['loan_warning'], 20) };
+    expect(next.pendingStoryEvents).toEqual(['loan_warning']);
+    expect(next.gameSpeed).toBe(0);
+    expect(next.speedBeforeStoryEvent).toBe(20);
+  });
+
+  test('events fire only once', () => {
+    const seen = { ...base, seenStoryEvents: ['first_power_trip'] } as GameState;
+    const next = enqueueStoryEvents(seen, ['first_power_trip'], 5);
+    expect(next.pendingStoryEvents).toEqual([]);
+    expect(next.gameSpeed).toBe(5);
+  });
+
+  test('closing the last dialog restores the previous speed', () => {
+    const queued = { ...base, ...enqueueStoryEvents(base, ['loan_warning', 'first_overheat'], 5) };
+    const one = dismissStoryEventState(queued);
+    expect(one.pendingStoryEvents).toEqual(['first_overheat']);
+    expect(one.gameSpeed).toBe(0);
+    const done = dismissStoryEventState(one);
+    expect(done.pendingStoryEvents).toEqual([]);
+    expect(done.gameSpeed).toBe(5);
+  });
+
+  test('saved events are sanitized', () => {
+    expect(sanitizeStoryEvents(['loan_audit', 'bogus', 3])).toEqual(['loan_audit']);
+    expect(sanitizeStoryEvents(undefined)).toEqual([]);
+  });
+
+  test('the warning comes before the audit', () => {
+    expect(LOAN_WARNING_DAY).toBeLessThan(LOAN_TRIAL_DAYS);
   });
 });

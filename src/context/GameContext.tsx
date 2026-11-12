@@ -93,6 +93,8 @@ import {
   localizedResearch, 
   localizedDomain 
 } from '../utils/gameContentI18n';
+import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, storyEventText, LOAN_WARNING_DAY } from '../utils/storyEvents';
+import type { StoryEventId } from '../types/game';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, migrateLegacyScore, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
@@ -146,6 +148,7 @@ interface GameContextType {
   resetProgress: () => Promise<void>;
   completeTutorial: (config: OnboardingConfig) => void;
   dismissTrainingReport: () => void;
+  dismissStoryEvent: (alternative?: boolean) => void;
   claimGoal: (goalId: string, reward: number) => void;
   fetchLeaderboard: () => Promise<OperativeLeaderboard[]>;
   createAgent: (name: string, role: AgentRole, modelId: string, tools: string[], inferenceParams?: Partial<InferenceParams>) => boolean;
@@ -355,6 +358,10 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     ...fallback,
     ...data,
     saveSchemaVersion: 10,
+    pendingStoryEvents: sanitizeStoryEvents(data.pendingStoryEvents),
+    seenStoryEvents: sanitizeStoryEvents(data.seenStoryEvents),
+    speedBeforeStoryEvent: typeof data.speedBeforeStoryEvent === 'number' ? data.speedBeforeStoryEvent : null,
+    storyChoices: sanitizeStoryEvents(data.storyChoices),
     language: isLegacyLanguagePreference
       ? 'en'
       : data.language === 'es' ? 'es' : 'en',
@@ -1248,7 +1255,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const loanAuditDue = loanActive && !prev.loanAudited && campaignDays >= LOAN_TRIAL_DAYS;
         const loanTrainingTicks = (prev.loanTrainingTicks ?? 0) + (loanActive && prev.activeTraining ? 1 : 0);
         const loanMisuse = loanTrainingTicks >= LOAN_MISUSE_TICKS;
+        const storyEvents: StoryEventId[] = [];
+        if (loanActive && !prev.loanAudited && campaignDays === LOAN_WARNING_DAY) {
+          storyEvents.push('loan_warning');
+        }
         if (loanAuditDue) {
+          storyEvents.push(loanMisuse ? 'loan_audit_misuse' : 'loan_audit');
           addLog(
             prev.language === "es"
               ? (loanMisuse
@@ -1322,6 +1334,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Only alert when crossing into the critical >88°C zone, not repeatedly every tick
           if (systemHeatCelsius > 88 && (prev.systemHeatCelsius ?? 35) <= 88) {
             sound.playWarning();
+            storyEvents.push('first_overheat');
           }
         } else {
           // Cooled down towards 35°C ambient
@@ -1333,6 +1346,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (powerTripSeconds === 0 && Math.random() < 0.05) {
             powerTripSeconds = 15;
             sound.playWarning();
+            storyEvents.push('first_power_trip');
             addLog(
               prev.language === 'en'
                 ? 'Electrical overload: circuit breaker tripped. Training and missions paused for 15s.'
@@ -2151,7 +2165,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           activeTraining: updatedTraining,
           lastTrainingReport: trainingReport ?? prev.lastTrainingReport ?? null,
           // A finished run drops back to 1x so the operative can review the result and adjust.
-          gameSpeed: trainingReport ? 1 : prev.gameSpeed,
+          // Story dialogs pause the game until they are read.
+          ...enqueueStoryEvents(prev, storyEvents, trainingReport ? 1 : prev.gameSpeed),
           activeScrapeJob: updatedScrapeJob,
           customDatasets: updatedCustomDatasets,
           activeGig: updatedGigs[0] || null,
@@ -4364,6 +4379,19 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
   }, [addLog]);
 
   // Operative confirms the training report; clearing it lets the next run start normally.
+  // alternative = true when the player picks the dialog's second choice.
+  const dismissStoryEvent = useCallback((alternative = false) => {
+    sound.playKeyClick();
+    const current = stateRef.current;
+    const id = current.pendingStoryEvents?.[0];
+    const alt = id && alternative ? storyEventText(current.language, id).altAction : undefined;
+    if (alt) addLog(alt.result, 'warning');
+    setState(prev => {
+      const next = dismissStoryEventState(prev);
+      return alt && id ? { ...next, storyChoices: [...(prev.storyChoices ?? []), id] } : next;
+    });
+  }, [addLog]);
+
   const dismissTrainingReport = useCallback(() => {
     setState(prev => (prev.lastTrainingReport ? { ...prev, lastTrainingReport: null } : prev));
   }, []);
@@ -4708,6 +4736,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       resetProgress,
       completeTutorial,
       dismissTrainingReport,
+      dismissStoryEvent,
       claimGoal,
       fetchLeaderboard,
       createAgent,

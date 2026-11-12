@@ -239,7 +239,15 @@ export interface TrainingReport {
   finalLoss: number;
 }
 
+// One-time story dialogs (see utils/storyEvents.ts).
+export type StoryEventId = 'loan_warning' | 'loan_audit' | 'loan_audit_misuse' | 'first_power_trip' | 'first_overheat';
+
 export interface GameState {
+  // Story dialogs waiting to be read (the first one is on screen) and the ones already shown.
+  pendingStoryEvents?: StoryEventId[];
+  seenStoryEvents?: StoryEventId[];
+  speedBeforeStoryEvent?: number | null; // speed to restore when the last dialog closes
+  storyChoices?: string[]; // story events where the player took the alternative choice
   // Last finished training run, awaiting confirmation (see dismissTrainingReport).
   lastTrainingReport?: TrainingReport | null;
   // Phase objective rewards already paid out (see claimGoal).
