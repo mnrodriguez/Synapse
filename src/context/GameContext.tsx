@@ -1438,8 +1438,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
               addLog(
                 prev.language === 'en'
-                  ? `Training converged for [${newCurrentModel.name}]! General Reasoning IQ +${bonusReasoning} (Current: IQ ${upgradedModelReasoning}).`
-                  : `¡Entrenamiento convergido para [${newCurrentModel.name}]! IQ de Razonamiento General +${bonusReasoning} (Actual: IQ ${upgradedModelReasoning}).`,
+                  ? `Training converged for [${newCurrentModel.name}]! General evaluation score +${bonusReasoning} (Current: score ${upgradedModelReasoning}).`
+                  : `¡Entrenamiento convergido para [${newCurrentModel.name}]! puntaje de evaluación general +${bonusReasoning} (Actual: puntaje ${upgradedModelReasoning}).`,
                 'success'
               );
             }
@@ -1576,8 +1576,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     addLog(
                       localize(
                         prev.language,
-                        `No hay nuevas misiones de ${gig.tier} al alcance de tu mejor modelo (IQ ${constraints.maxReasoning}). Entrena tu modelo hasta IQ ${minReasoningForTier(gig.tier)} para desbloquearlas.`,
-                        `No new ${gig.tier} missions fit your best model (IQ ${constraints.maxReasoning}). Train your model to IQ ${minReasoningForTier(gig.tier)} to unlock them.`
+                        `No hay nuevas misiones de ${gig.tier} al alcance de tu mejor modelo (puntaje ${constraints.maxReasoning}). Entrena tu modelo hasta puntaje ${minReasoningForTier(gig.tier)} para desbloquearlas.`,
+                        `No new ${gig.tier} missions fit your best model (score ${constraints.maxReasoning}). Train your model to score ${minReasoningForTier(gig.tier)} to unlock them.`
                       ),
                       'warning'
                     );
@@ -2583,8 +2583,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const highestIQ = highestGeneral ? highestGeneral.reasoningScore : 0;
       addLog(
         current.language === 'en'
-          ? `Data Module Locked: Requires a deployed General Model leveled to Reasoning IQ ≥ 20 to research automated crawler heuristics. Current best: ${highestGeneral?.name ?? 'None'} (IQ ${highestIQ}/80). Train on General Information dataset first.`
-          : `Módulo de Datos Bloqueado: Requiere un Modelo General con IQ de Razonamiento ≥ 20 para investigar heurísticas de scraping web. Mejor actual: ${highestGeneral?.name ?? 'Ninguno'} (IQ ${highestIQ}/80). Entrena primero en el dataset General.`,
+          ? `Data Module Locked: Requires a deployed General Model leveled to Evaluation score ≥ 20 to research automated crawler heuristics. Current best: ${highestGeneral?.name ?? 'None'} (score ${highestIQ}/${DATA_SCRAPING_MIN_SCORE}). Train on General Information dataset first.`
+          : `Módulo de Datos Bloqueado: Requiere un Modelo General con puntaje de evaluación ≥ 20 para investigar heurísticas de scraping web. Mejor actual: ${highestGeneral?.name ?? 'Ninguno'} (puntaje ${highestIQ}/${DATA_SCRAPING_MIN_SCORE}). Entrena primero en el dataset General.`,
         'warning'
       );
       return false;
@@ -2599,8 +2599,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     addLog(
       current.language === 'en'
-        ? `[DATA MODULE UNLOCKED] General Model [${qualifyingModel.name}] (IQ ${qualifyingModel.reasoningScore}) successfully researched crawler heuristics and ETL pipelines! Data Scraping & Generation Module is now active.`
-        : `[MÓDULO DE DATOS DESBLOQUEADO] ¡El Modelo General [${qualifyingModel.name}] (IQ ${qualifyingModel.reasoningScore}) investigó exitosamente heurísticas de rastreo web y pipelines ETL! El Módulo de Scraping y Generación de Datos está activo.`,
+        ? `[DATA MODULE UNLOCKED] General Model [${qualifyingModel.name}] (score ${qualifyingModel.reasoningScore}) successfully researched crawler heuristics and ETL pipelines! Data Scraping & Generation Module is now active.`
+        : `[MÓDULO DE DATOS DESBLOQUEADO] ¡El Modelo General [${qualifyingModel.name}] (puntaje ${qualifyingModel.reasoningScore}) investigó exitosamente heurísticas de rastreo web y pipelines ETL! El Módulo de Scraping y Generación de Datos está activo.`,
       'success'
     );
     return true;
@@ -2612,8 +2612,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!current.isDataScrapingUnlocked) {
       addLog(
         current.language === 'en'
-          ? 'Data Scraping & Generation Module is locked. Fulfill prerequisite with an IQ ≥ 20 General Model.'
-          : 'El Módulo de Scraping está bloqueado. Cumple el prerrequisito con un Modelo General IQ ≥ 20.',
+          ? 'Data Scraping & Generation Module is locked. Fulfill prerequisite with an score ≥ 20 General Model.'
+          : 'El Módulo de Scraping está bloqueado. Cumple el prerrequisito con un Modelo General puntaje ≥ 20.',
         'warning'
       );
       return false;
@@ -2640,8 +2640,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sound.playWarning();
       addLog(
         current.language === 'en'
-          ? `Tier ${tier} scraping requires a model with Reasoning IQ ≥ ${tierConfig.minModelIQ} (Assigned model [${assignedModel.name}] has IQ ${assignedModel.reasoningScore}).`
-          : `La generación Nivel ${tier} requiere un modelo con IQ ≥ ${tierConfig.minModelIQ} (El modelo [${assignedModel.name}] tiene IQ ${assignedModel.reasoningScore}).`,
+          ? `Tier ${tier} scraping requires a model with Evaluation score ≥ ${tierConfig.minModelIQ} (Assigned model [${assignedModel.name}] has score ${assignedModel.reasoningScore}).`
+          : `La generación Nivel ${tier} requiere un modelo con puntaje ≥ ${tierConfig.minModelIQ} (El modelo [${assignedModel.name}] tiene puntaje ${assignedModel.reasoningScore}).`,
         'warning'
       );
       return false;
@@ -2805,7 +2805,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
     if (!hasQualifiedModel) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Contrato rechazado: el equipo necesita al menos un modelo con ${(gig.requiredParams / 1_000_000).toFixed(0)}M parámetros e índice de razonamiento ${gig.requiredMinReasoning}.`, `Contract rejected: the team requires at least one model with ${(gig.requiredParams / 1_000_000).toFixed(0)}M parameters and reasoning IQ ${gig.requiredMinReasoning}.`), 'danger');
+      addLog(localize(stateRef.current.language, `Contrato rechazado: el equipo necesita al menos un modelo con ${(gig.requiredParams / 1_000_000).toFixed(0)}M parámetros e índice de razonamiento ${gig.requiredMinReasoning}.`, `Contract rejected: the team requires at least one model with ${(gig.requiredParams / 1_000_000).toFixed(0)}M parameters and evaluation score ${gig.requiredMinReasoning}.`), 'danger');
       return false;
     }
 
@@ -3623,8 +3623,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       if (maxAssignedReasoning < (dynamicGig.requiredMinReasoning || 0)) {
         missingDetails.push(current.language === 'es'
-          ? `Razonamiento IQ: ${dynamicGig.requiredMinReasoning} pts (tienes ${maxAssignedReasoning} pts)`
-          : `Reasoning IQ: ${dynamicGig.requiredMinReasoning} pts (have ${maxAssignedReasoning} pts)`);
+          ? `Puntaje de evaluación: ${dynamicGig.requiredMinReasoning} pts (tienes ${maxAssignedReasoning} pts)`
+          : `Evaluation score: ${dynamicGig.requiredMinReasoning} pts (have ${maxAssignedReasoning} pts)`);
       }
       if (missingRoles.length > 0) {
         missingDetails.push(current.language === 'es'
@@ -4050,7 +4050,7 @@ ${text('Potencia', 'Power')}      : ${s.activePowerKw} kW / ${s.maxPowerKw} kW
 ${text('Temperatura', 'Temperature')}   : ${s.systemHeatCelsius}°C (${text('Límite', 'Limit')}: 85°C)
 ${text('Sospecha', 'Suspicion')}      : ${s.watchdogSuspicion}%
 ${text('Modelo activo', 'Active model')} : ${s.currentModel.name} (${(s.currentModel.parametersCount / 1_000_000).toFixed(0)}M ${text('parámetros', 'parameters')})
-${text('Razonamiento', 'Reasoning')}  : IQ ${s.currentModel.reasoningScore} / 100
+${text('Razonamiento', 'Reasoning')}  : puntaje ${s.currentModel.reasoningScore} / 100
 ${text('Singularidad', 'Singularity')}  : ${s.singularityProgress.toFixed(1)}% [${s.achievedSingularity ? text('ALCANZADA - IA AUTÓNOMA', 'ACHIEVED - AUTONOMOUS AI') : text('EN DESPEGUE', 'EMERGING')}]`;
       }
 
@@ -4605,8 +4605,8 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     const lang = current.language;
     addLog(
       lang === 'es'
-        ? `[HOST MONTAJE] Modelo "${model.name}" montado como Agente Anfitrión principal (IQ ${reasoningIQ} / 100).`
-        : `[HOST MOUNTED] Model "${model.name}" mounted as Synapse Host Agent (IQ ${reasoningIQ} / 100).`,
+        ? `[HOST MONTAJE] Modelo "${model.name}" montado como Agente Anfitrión principal (puntaje ${reasoningIQ} / 100).`
+        : `[HOST MOUNTED] Model "${model.name}" mounted as Synapse Host Agent (score ${reasoningIQ} / 100).`,
       'success'
     );
 

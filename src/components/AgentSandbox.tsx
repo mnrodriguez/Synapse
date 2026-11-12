@@ -50,6 +50,7 @@ import { INFERENCE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { evaluateAgentCapabilities } from '../utils/missionEvaluation';
 import { getRoleSimpleName, AGENT_SPINUP_COST } from '../utils/constants';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 
 const MISSION_ROLE_TASKS: Record<AgentRole, { en: string; es: string }> = {
   arbitrageur: { en: 'Analyzes simulated market signals and cross-checks anomalies.', es: 'Analiza señales de mercado simuladas y verifica anomalías.' },
@@ -101,6 +102,8 @@ export const AgentSandbox: React.FC = () => {
     withdrawTradingDeskCapital,
     closeTradingDesk
   } = useGame();
+  // Story texts of the active UI version (early versions must not name the end goal).
+  const story = VERSION_PROFILES[state.language === 'es' ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].story;
   // The first agent is free so the tutorial cannot dead-end on credits.
   const deployCost = state.agents.length === 0 ? 0 : AGENT_SPINUP_COST;
 
@@ -495,12 +498,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
       {/* ========================================================= */}
       
       {/* 1. AI Subversion & World Takeover Progression Bar */}
-      <div className="rounded-lg border border-purple-900/60 bg-gradient-to-r from-[#0c0617] via-[#140824] to-[#0c0617] p-3 shadow-[0_0_20px_rgba(168,85,247,0.12)] space-y-2">
+      <div className={`${story.subversionTitle ? '' : 'hidden '}rounded-lg border border-purple-900/60 bg-gradient-to-r from-[#0c0617] via-[#140824] to-[#0c0617] p-3 shadow-[0_0_20px_rgba(168,85,247,0.12)] space-y-2`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Skull className="w-4 h-4 text-pink-400 animate-pulse" />
             <h3 className="text-xs font-bold tracking-wider text-pink-300">
-              {localize(state.language, 'ÍNDICE DE SUBVERSIÓN DE LA IA // PROTOCOLO DE CONQUISTA GLOBAL', 'AI SUBVERSION INDEX // GLOBAL TAKEOVER PROTOCOL')}
+              {story.subversionTitle}
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -557,7 +560,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 mutating-accent-text" />
             <h3 className="text-xs font-bold tracking-wider mutating-accent-text">
-              {localize(state.language, 'CONSEJO DEL ENJAMBRE // INTERACCIÓN DE ÉLITE (MÁXIMO 5 AGENTES)', 'SWARM COUNCIL // ELITE INTERACTION (MAX 5 AGENTS)')}
+              {story.councilTitle}
             </h3>
             <span className="px-2 py-0.5 rounded text-[10px] mutating-sub border border-current/15/60 mutating-accent-text font-bold">
               {councilAgents.length} / 5 {localize(state.language, 'agentes', 'agents')}
@@ -570,7 +573,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               disabled={availableAgents.length === 0}
               className="px-2.5 py-1 rounded border border-cyan-700/60 mutating-sub/80 hover:bg-cyan-900/80 text-[10px] font-bold mutating-accent-text transition-colors disabled:opacity-40 cursor-pointer"
             >
-              {localize(state.language, 'TOP 5 POR IQ', 'TOP 5 BY IQ')}
+              {localize(state.language, 'TOP 5 POR PUNTAJE', 'TOP 5 BY SCORE')}
             </button>
             {councilAgents.length > 0 && (
               <button
@@ -632,7 +635,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         <span className="mutating-accent-text truncate max-w-[80px]">{model.name}</span>
                       </div>
                       <div className="flex items-center justify-between mutating-text-muted">
-                        <span>{localize(state.language, 'Escala / IQ:', 'Scale / IQ:')}</span>
+                        <span>{localize(state.language, 'Escala / puntaje:', 'Scale / score:')}</span>
                         <span className="text-emerald-600 font-bold">{(model.parametersCount / 1_000_000).toFixed(0)}M · {model.reasoningScore} pts</span>
                       </div>
                     </div>
@@ -726,12 +729,16 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
             <button
               type="button"
-              onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Cuál es el siguiente paso hacia la Singularidad y la evolución del enjambre?' : 'What is the next step toward the Singularity and swarm evolution?')}
+              onClick={() => handleCouncilSubmit((state.uiVersion || 1) >= 3
+                ? (state.language === 'es' ? '¿Cuál es el siguiente paso hacia la Singularidad y la evolución del enjambre?' : 'What is the next step toward the Singularity and swarm evolution?')
+                : (state.language === 'es' ? '¿Cuál debería ser nuestro próximo paso para crecer?' : 'What should our next step be to grow?'))}
               disabled={isInterrogating || councilAgents.length === 0}
               className="px-2.5 py-1 rounded bg-purple-950/60 hover:bg-purple-900/60 border border-purple-600/60 mutating-accent-text text-[10px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>🌐</span>
-              <span>{localize(state.language, 'Guía hacia la Singularidad', 'Guidance to Singularity')}</span>
+              <span>{(state.uiVersion || 1) >= 3
+                ? localize(state.language, 'Guía hacia la Singularidad', 'Guidance to Singularity')
+                : localize(state.language, 'Próximo paso', 'Next step')}</span>
             </button>
           </div>
 
@@ -909,7 +916,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                       </span>
                     </div>
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
-                      <span className="mutating-text-muted block">{localize(state.language, 'IQ RAZONAMIENTO', 'REASONING IQ')}</span>
+                      <span className="mutating-text-muted block">{localize(state.language, 'PUNTAJE DE EVALUACIÓN', 'EVALUATION SCORE')}</span>
                       <span className={`font-bold ${meetsReasoning ? 'text-emerald-600' : 'text-red-400'}`}>
                         {sm.requiredMinReasoning} pts {meetsReasoning ? '✓' : '✗'}
                       </span>
@@ -966,7 +973,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         )}
                         {!meetsReasoning && (
                           <li className="text-amber-200">
-                            • <strong>{localize(state.language, 'IQ de Razonamiento:', 'Reasoning IQ:')}</strong>{' '}
+                            • <strong>{localize(state.language, 'Puntaje de evaluación:', 'Evaluation score:')}</strong>{' '}
                             {localize(
                               state.language,
                               `Requiere ${sm.requiredMinReasoning} pts (tu mejor modelo del consejo tiene ${bestCouncilReasoning} pts). Mejora la calidad del dataset y optimizadores en el entrenamiento.`,
@@ -1829,12 +1836,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 >
                   {state.savedModels.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.name} — {(m.parametersCount / 1_000_000).toFixed(0)}M params | IQ {m.reasoningScore} ({m.topology})
+                      {m.name} — {(m.parametersCount / 1_000_000).toFixed(0)}M params | {state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} ({m.topology})
                     </option>
                   ))}
                 </select>
                 <div className="mt-1.5 p-2 rounded mutating-sub border border-current/15 text-[10px] mutating-accent-text">
-                  <span>{localize(state.language, 'Modelo seleccionado:', 'Selected model:')} <strong>{selectedModel.name}</strong> • {localize(state.language, 'Cuantización:', 'Quantization:')} {selectedModel.quantization.toUpperCase()} • {localize(state.language, 'Razonamiento:', 'Reasoning:')} IQ {selectedModel.reasoningScore}.</span>
+                  <span>{localize(state.language, 'Modelo seleccionado:', 'Selected model:')} <strong>{selectedModel.name}</strong> • {localize(state.language, 'Cuantización:', 'Quantization:')} {selectedModel.quantization.toUpperCase()} • {localize(state.language, 'Puntaje:', 'Score:')} {selectedModel.reasoningScore} / 100.</span>
                   <p className="mutating-text-muted mt-0.5">{localize(state.language, 'Los modelos con mayor razonamiento aumentan los ingresos simulados y mejoran los resultados de las misiones.', 'Models with stronger reasoning improve simulated income and mission outcomes.')}</p>
                 </div>
               </div>

@@ -36,7 +36,7 @@ export const TRANSLATIONS = {
     heat: 'TEMPERATURA HW',
     suspicion: 'SOSPECHA WATCHDOG',
     singularity: 'SINGULARIDAD',
-    reasoning_iq: 'IQ / RAZONAMIENTO',
+    reasoning_iq: 'PUNTAJE DE EVALUACIÓN',
     
     // Agent Sandbox
     agent_sandbox_title: 'MATRIZ DE AGENTES AUTONOMOS // SWARM MULTI-AGENT',
@@ -167,7 +167,7 @@ export const TRANSLATIONS = {
     client: 'CLIENTE',
     technical_objective: 'OBJETIVO TÉCNICO',
     minimum_parameters: 'PARÁMETROS MÍNIMOS',
-    minimum_reasoning: 'RAZONAMIENTO MÍNIMO (IQ)',
+    minimum_reasoning: 'PUNTAJE MÍNIMO DE EVALUACIÓN',
     required_topology: 'TOPOLOGÍA REQUERIDA',
     required_pipelines: 'PIPELINES REQUERIDOS',
     suspicion_risk: 'RIESGO DE SOSPECHA',
@@ -217,7 +217,7 @@ export const TRANSLATIONS = {
     heat: 'HW TEMP',
     suspicion: 'WATCHDOG SUSPICION',
     singularity: 'SINGULARITY',
-    reasoning_iq: 'IQ / REASONING',
+    reasoning_iq: 'EVALUATION SCORE',
     
     // Agent Sandbox
     agent_sandbox_title: 'AUTONOMOUS AGENT MATRIX // MULTI-AGENT SWARM',
@@ -348,7 +348,7 @@ export const TRANSLATIONS = {
     client: 'CLIENT',
     technical_objective: 'TECHNICAL OBJECTIVE',
     minimum_parameters: 'MINIMUM PARAMETERS',
-    minimum_reasoning: 'MINIMUM REASONING (IQ)',
+    minimum_reasoning: 'MINIMUM EVALUATION SCORE',
     required_topology: 'REQUIRED TOPOLOGY',
     required_pipelines: 'REQUIRED PIPELINES',
     suspicion_risk: 'SUSPICION RISK',

@@ -38,6 +38,7 @@ import { isDataSourceProgressionUnlocked } from '../utils/progression';
 import { DATASET_TIER_CONFIGS, DOMAIN_PRESETS } from '../utils/constants';
 import { formatTrainingDuration } from '../utils/training';
 import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 
 export const DataPipelineManager: React.FC = () => {
   const { 
@@ -49,6 +50,8 @@ export const DataPipelineManager: React.FC = () => {
     cancelDatasetScraping,
     trainModelOnDataset
   } = useGame();
+  // Story texts of the active UI version (early versions must not name the end goal).
+  const story = VERSION_PROFILES[state.language === 'es' ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].story;
 
   const [activeSubTab, setActiveSubTab] = useState<'engines' | 'scraping'>('engines');
   const [selectedDomain, setSelectedDomain] = useState<string>('cybersecurity');
@@ -172,12 +175,7 @@ export const DataPipelineManager: React.FC = () => {
       {activeSubTab === 'engines' && (
         <div className="space-y-4">
           <p className="text-xs text-zinc-400 leading-relaxed">
-            {state.language === 'en'
-              ? <>Advanced AI models need more than plain text. To reach the Singularity, you need a <strong className="text-cyan-300">modular data architecture</strong>: SQL transaction records for numerical accuracy, vector spaces (RAG) for associative memory, knowledge graphs for logical deduction, and synthetic self-play to extend beyond human knowledge.</>
-              : <>Los modelos de IA más avanzados no dependen únicamente de texto plano. Para alcanzar la Singularidad, necesitas
-            una <strong className="text-cyan-300">arquitectura modular de datos</strong>: registros transaccionales SQL para exactitud numérica, 
-            espacios vectoriales (RAG) para memoria asociativa, grafos de conocimiento para deducción lógica sin alucinaciones, 
-            y auto-juego sintético (Flywheel) para superar los límites del conocimiento humano.</>}
+            {story.dataIntro}
           </p>
 
           {/* Interactive Data Architecture Pipeline Cards */}
@@ -372,7 +370,7 @@ export const DataPipelineManager: React.FC = () => {
                   </div>
                   <ul className="list-disc list-inside space-y-0.5 text-zinc-400">
                     <li>
-                      {localize(state.language, '1x Modelo General desplegado con IQ de Razonamiento ≥ 20', '1x Deployed General AI Model with Reasoning IQ ≥ 80')}
+                      {localize(state.language, '1x Modelo General desplegado con puntaje de evaluación ≥ 20', '1x Deployed General AI Model with Evaluation score ≥ 20')}
                     </li>
                     <li>
                       {localize(state.language, 'Completar al menos 1 corrida de entrenamiento con el baseline de Información General', 'Complete at least 1 training run on the General Information baseline')}
@@ -404,7 +402,7 @@ export const DataPipelineManager: React.FC = () => {
                             {isQualified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                           </div>
                           <span className="text-[10px] text-zinc-500">
-                            IQ {m.reasoningScore} / 80 {localize(state.language, 'requerido', 'required')}
+                            {state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} / {DATA_SCRAPING_MIN_SCORE} {localize(state.language, 'requerido', 'required')}
                           </span>
                         </div>
 
@@ -436,7 +434,7 @@ export const DataPipelineManager: React.FC = () => {
                   {Object.values(DATASET_TIER_CONFIGS).map(tc => (
                     <div key={tc.tier} className="p-2 rounded bg-zinc-950/80 border border-zinc-800">
                       <div className="font-bold text-zinc-200">{state.language === 'en' ? tc.name : tc.nameEs}</div>
-                      <div className="text-zinc-500 mt-1">{localize(state.language, 'Req: Modelo IQ ≥', 'Req: Model IQ ≥')} {tc.minModelIQ}</div>
+                      <div className="text-zinc-500 mt-1">{localize(state.language, 'Req: puntaje del modelo ≥', 'Req: model score ≥')} {tc.minModelIQ}</div>
                       <div className="text-cyan-400 mt-0.5">{tc.targetTokensMillions}M tokens · {tc.computePflopsRequired} PF</div>
                     </div>
                   ))}
@@ -589,7 +587,7 @@ export const DataPipelineManager: React.FC = () => {
                             <span>{state.language === 'en' ? tc.name.split(':')[0] : tc.nameEs.split(':')[0]}</span>
                             {!modelMeetsIQ ? (
                               <span className="text-[9px] text-amber-400 flex items-center gap-0.5">
-                                <Lock className="w-2.5 h-2.5" /> IQ ≥ {tc.minModelIQ}
+                                <Lock className="w-2.5 h-2.5" /> {state.language === 'es' ? 'Puntaje' : 'Score'} ≥ {tc.minModelIQ}
                               </span>
                             ) : (
                               <span className="text-[9px] text-emerald-400 font-bold">✓ APTO</span>
@@ -620,12 +618,12 @@ export const DataPipelineManager: React.FC = () => {
                     >
                       {state.savedModels.map(m => (
                         <option key={m.id} value={m.id}>
-                          {m.name} (IQ {m.reasoningScore} · {m.modelType === 'micro_model' ? 'Micro-Model' : 'General'})
+                          {m.name} ({state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} · {m.modelType === 'micro_model' ? 'Micro-Model' : 'General'})
                         </option>
                       ))}
                     </select>
                     <span className="text-[10px] text-zinc-500 mt-1 block">
-                      {localize(state.language, 'Modelos con mayor IQ pueden generar tiers superiores de datos con mayor pureza.', 'Higher IQ models can scrape higher tiers with greater dataset purity.')}
+                      {localize(state.language, 'Modelos con mayor puntaje pueden generar tiers superiores de datos con mayor pureza.', 'Higher-scoring models can scrape higher tiers with greater dataset purity.')}
                     </span>
                   </div>
 
@@ -646,7 +644,7 @@ export const DataPipelineManager: React.FC = () => {
                     </button>
                     {!isModelQualifiedForTier && (
                       <span className="text-[10px] text-amber-400 mt-1 text-center font-bold">
-                        {localize(state.language, `El modelo asignado necesita IQ ≥ ${tierConfig.minModelIQ} para este nivel.`, `Assigned model needs IQ ≥ ${tierConfig.minModelIQ} for this tier.`)}
+                        {localize(state.language, `El modelo asignado necesita puntaje ≥ ${tierConfig.minModelIQ} para este nivel.`, `Assigned model needs score ≥ ${tierConfig.minModelIQ} for this tier.`)}
                       </span>
                     )}
                   </div>

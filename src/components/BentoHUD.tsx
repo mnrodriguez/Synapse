@@ -112,8 +112,8 @@ export const BentoHUD: React.FC = () => {
       }
       if (state.currentModel.reasoningScore < 20) {
         return lang === 'es'
-          ? '"Nuestra pequeña red neuronal está lista para aprender. Vamos al Monitor de Entrenamiento y arranquemos una corrida para subir su IQ."'
-          : '"Our tiny neural net is ready to learn. Head over to the Training Monitor and start a run to boost its IQ."';
+          ? '"Nuestra pequeña red neuronal está lista para aprender. Vamos al Monitor de Entrenamiento y arranquemos una corrida para subir su puntaje."'
+          : '"Our tiny neural net is ready to learn. Head over to the Training Monitor and start a run to boost its score."';
       }
       if (lowCredits) {
         return lang === 'es'
@@ -234,7 +234,7 @@ export const BentoHUD: React.FC = () => {
             <span className={state.watchdogSuspicion >= 40 ? 'text-amber-500' : 'text-emerald-400'}>
               {localize(state.language, 'Sospecha', 'Suspicion')} {state.watchdogSuspicion.toFixed(0)}%
             </span>
-            <span className="text-purple-400">IQ {reasoningIq}</span>
+            <span className="text-purple-400">{state.language === 'es' ? 'Puntaje' : 'Score'} {reasoningIq}</span>
           </div>
 
           {nextVer && isUpgradeEligible && (
@@ -426,7 +426,7 @@ export const BentoHUD: React.FC = () => {
 
           <div className="my-1 flex items-baseline justify-between font-mono">
             <span className="text-xl font-bold tracking-tight text-purple-500">
-              IQ {reasoningIq} / 100
+              {state.language === 'es' ? 'Puntaje' : 'Score'} {reasoningIq} / 100
             </span>
             <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300 font-semibold truncate max-w-[100px]" title={state.currentModel.name}>
               {state.currentModel.name}
@@ -435,8 +435,10 @@ export const BentoHUD: React.FC = () => {
 
           <div className="space-y-1 pt-1.5 border-t border-current/10 font-mono text-[11px]">
             <div className="flex justify-between items-center text-[10px]">
-              <span className="mutating-text-muted font-sans">{localize(state.language, 'Singularidad:', 'Singularity:')} {displayedSingularity.toFixed(0)}%</span>
-              <span className="text-amber-500 font-bold font-sans">{localize(state.language, 'Subversión:', 'Drift:')} {state.subversionProgress || 0}%</span>
+              <span className="mutating-text-muted font-sans">{p.story.progressLabel} {displayedSingularity.toFixed(0)}%</span>
+              {p.story.driftLabel && (
+                <span className="text-amber-500 font-bold font-sans">{p.story.driftLabel} {state.subversionProgress || 0}%</span>
+              )}
             </div>
             <div className="w-full h-1 bg-current/15 rounded-full overflow-hidden">
               <div

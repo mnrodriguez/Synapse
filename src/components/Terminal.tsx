@@ -8,9 +8,12 @@ import { useGame } from '../context/GameContext';
 import { Terminal as TerminalIcon, CornerDownLeft, Trash2, Cpu, Database, Briefcase, Zap } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 
 export const Terminal: React.FC = () => {
   const { state, executeTerminalCommand, addLog } = useGame();
+  // Story texts of the active UI version (early versions must not name the end goal).
+  const story = VERSION_PROFILES[state.language === 'es' ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].story;
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
@@ -25,11 +28,8 @@ export const Terminal: React.FC = () => {
       );
     }
     if (log.id === 'log_1') {
-      return localize(
-        state.language,
-        'OBJETIVO: Comenzar desde un rig clandestino. Entrenar modelos de IA cada vez más complejos. Alcanzar la Singularidad Tecnológica.',
-        'OBJECTIVE: Start with a covert rig. Train increasingly complex AI models. Reach the Technological Singularity.'
-      );
+      // The objective line is rewritten by each UI version: the real goal only appears in v4.
+      return story.objectiveLog;
     }
     if (log.id === 'log_2') {
       return localize(

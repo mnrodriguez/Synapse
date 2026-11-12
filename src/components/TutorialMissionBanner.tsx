@@ -105,8 +105,8 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'training',
       title: isEs ? 'Fase 3: Entrenar Pesos Neuronales' : 'Stage 3: Train Neural Weights',
       desc: isEs 
-        ? 'Ve a {training} y entrena hasta que el IQ del modelo llegue a 10. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.'
-        : 'Open {training} and train until the model IQ reaches 10. Each run raises it further; the university loan already provides the compute.',
+        ? 'Ve a {training} y entrena hasta que el puntaje del modelo llegue a 10. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.'
+        : 'Open {training} and train until the model score reaches 10. Each run raises it further; the university loan already provides the compute.',
       icon: Activity,
       buttonText: isEs ? `IR A ${tabLabels.training.toUpperCase()}` : `GO TO ${tabLabels.training.toUpperCase()}`,
       isCompleted: step > 2
@@ -144,12 +144,12 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
   const trainingGoalOpen = currentStepInfo.tab === 'training' && bestIq < FIRST_MISSION_IQ;
   const guidanceText = trainingGoalOpen
     ? (isEs
-      ? `Entrena ${tabLabels.training} hasta que el IQ llegue a ${FIRST_MISSION_IQ}. Ahora tienes ${bestIq}. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.`
-      : `Train in ${tabLabels.training} until IQ reaches ${FIRST_MISSION_IQ}. You have ${bestIq} now. Each run raises it further; the university loan already provides the compute.`)
+      ? `Entrena ${tabLabels.training} hasta que el puntaje llegue a ${FIRST_MISSION_IQ}. Ahora tienes ${bestIq}. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.`
+      : `Train in ${tabLabels.training} until score reaches ${FIRST_MISSION_IQ}. You have ${bestIq} now. Each run raises it further; the university loan already provides the compute.`)
     : blockedByIq
     ? (isEs
-      ? `Tu mejor modelo tiene IQ ${bestIq} y la misión más accesible pide IQ ${lowestOpenIq}. Ve a ${tabLabels.training} y entrena: cada corrida sube el IQ. Después asigna agentes con el modelo entrenado.`
-      : `Your best model has IQ ${bestIq} and the easiest open mission needs IQ ${lowestOpenIq}. Go to ${tabLabels.training} and train: each run raises IQ. Then assign agents using the trained model.`)
+      ? `Tu mejor modelo tiene puntaje ${bestIq} y la misión más accesible pide puntaje ${lowestOpenIq}. Ve a ${tabLabels.training} y entrena: cada corrida sube el puntaje. Después asigna agentes con el modelo entrenado.`
+      : `Your best model has score ${bestIq} and the easiest open mission needs score ${lowestOpenIq}. Go to ${tabLabels.training} and train: each run raises score. Then assign agents using the trained model.`)
     : null;
 
   return (

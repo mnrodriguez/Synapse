@@ -47,7 +47,7 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     displayStart: 0,
     displayEnd: 90,
     objectives: [
-      { id: 'v1-train', kind: 'display', target: 15, reward: 100, es: 'Entrena tu primer modelo y sube su IQ', en: 'Train your first model and raise its IQ' },
+      { id: 'v1-train', kind: 'display', target: 15, reward: 100, es: 'Entrena tu primer modelo y sube su puntaje', en: 'Train your first model and raise its score' },
       { id: 'v1-contracts', kind: 'contracts', target: 3, reward: 150, es: 'Completa 3 misiones pagadas', en: 'Complete 3 paid missions' },
       { id: 'v1-pflops', kind: 'pflops', target: 120, reward: 200, es: 'Lleva el clúster a 120 PFLOPS', en: 'Scale the cluster to 120 PFLOPS' },
       { id: 'v1-upgrade', kind: 'display', target: 90, es: 'Pide la actualización a Synapse Pro', en: 'Request the upgrade to Synapse Pro' }

@@ -673,7 +673,7 @@ export async function generateDynamicContracts(
       const prompt = `You are the Mission Dispatcher for "SYNAPSE", a technical cyberpunk AI simulation game where players train real AI models, optimize hardware, and run agent swarms.
 Generate 2 distinct, highly technical contract gig missions for Tier "${tier}".
 Rules:
-- The operative's best model has reasoning IQ ${maxReasoning} and ${maxParams} parameters. requiredMinReasoning must be <= ${maxReasoning} and requiredParams must be <= ${maxParams}.
+- The operative's best model has evaluation score ${maxReasoning} and ${maxParams} parameters. requiredMinReasoning must be <= ${maxReasoning} and requiredParams must be <= ${maxParams}.
 - Missions must be grounded in realistic real-world AI applications (FinTech, cybersecurity, bioinformatics, NLP, computer vision, robotics, or distributed computing).
 - Return ONLY valid JSON as an array of 2 objects conforming to this schema:
 [
@@ -886,7 +886,7 @@ Current System Telemetry:
 - Credits: $${state.credits.toLocaleString()} CR (Utility Debt: $${state.utilityDebt} CR)
 - Total Compute: ${state.totalComputePflops.toFixed(4)} PFLOPS
 - Total VRAM: ${maxVram} GB
-- Active Model: "${state.currentModel.name}" (${activeModelParams.toFixed(0)}M params, Topology: ${state.currentModel.topology}, IQ: ${state.currentModel.reasoningScore})
+- Active Model: "${state.currentModel.name}" (${activeModelParams.toFixed(0)}M params, Topology: ${state.currentModel.topology}, score: ${state.currentModel.reasoningScore})
 - Facility Tier: ${state.facilityTier}
 - Power Draw: ${activeKw} kW / Max: ${maxKw} kW
 - Heat: ${heat}°C (Cooling Max: ${coolingKw} kW)
@@ -1000,7 +1000,7 @@ CURRENT GAME TELEMETRY:
 - Highest Model Params: ${(totalParams / 1_000_000).toFixed(0)}M | Evaluation score (0-100): ${state.currentModel.reasoningScore}
 - Heat: ${state.systemHeatCelsius}°C | VRAM: ${state.hardware.reduce((acc, h) => acc + h.vramGb * h.count, 0)} GB
 - Council Agents (Max 5):
-${agentProfiles.map(p => `  • "${p.name}" [Role: ${p.role}, Model: ${p.modelName} (${(p.params / 1_000_000).toFixed(0)}M params, IQ: ${p.reasoning}), Alignment: ${p.alignment}%, Tools: ${p.tools.join(', ')}]`).join('\n')}
+${agentProfiles.map(p => `  • "${p.name}" [Role: ${p.role}, Model: ${p.modelName} (${(p.params / 1_000_000).toFixed(0)}M params, score: ${p.reasoning}), Alignment: ${p.alignment}%, Tools: ${p.tools.join(', ')}]`).join('\n')}
 
 OPERATIVE'S PROMPT: "${userPrompt}"
 
@@ -1152,7 +1152,7 @@ Return strictly a valid JSON object matching this schema:
       agentName: primaryAgent.name,
       role: primaryAgent.role,
       comment: isEs
-        ? `Entendido, Operativo. Calibré los parámetros operacionales exactamente para nuestro nivel de cómputo e IQ actual. Todo el escuadrón está listo para ejecutar de inmediato.`
+        ? `Entendido, Operativo. Calibré los parámetros operacionales exactamente para nuestro nivel de cómputo y puntaje actual. Todo el escuadrón está listo para ejecutar de inmediato.`
         : `Understood, Operative. I have tailored operational vectors strictly within our cluster's current compute and reasoning envelope. The squad is primed for immediate deployment.`,
       tone: 'analytical'
     });
@@ -1444,7 +1444,7 @@ Return strictly a valid JSON object matching this schema:
     requiredMinReasoning = Math.max(5, Math.min(highestReasoning, 16));
     requiredAgentRoles = squadRoles.slice(0, Math.min(2, Math.max(1, squadRoles.length)));
     tacticalReasoning = isEs
-      ? `Misión 100% adaptada a las capacidades actuales de tu enjambre. Todos los requisitos de parámetros (${(requiredParams / 1_000_000).toFixed(0)}M) e IQ (${requiredMinReasoning} pts) están cubiertos para ejecución inmediata.`
+      ? `Misión 100% adaptada a las capacidades actuales de tu enjambre. Todos los requisitos de parámetros (${(requiredParams / 1_000_000).toFixed(0)}M) y puntaje (${requiredMinReasoning}/100) están cubiertos para ejecución inmediata.`
       : `Mission 100% calibrated to your swarm's current capabilities. All parameters (${(requiredParams / 1_000_000).toFixed(0)}M) and reasoning (${requiredMinReasoning} pts) prerequisites are satisfied for immediate execution.`;
   } else {
     // High-yield mission that might exceed current setup to provide an aspirational goal
@@ -1457,8 +1457,8 @@ Return strictly a valid JSON object matching this schema:
       : Math.max(12, Math.round(highestReasoning * 0.85));
     requiredAgentRoles = squadRoles.length >= 2 ? squadRoles.slice(0, 2) : (squadRoles.length === 1 ? [squadRoles[0]] : ['arbitrageur' as AgentRole]);
     tacticalReasoning = isEs
-      ? `Operación de alto rendimiento: Exige un modelo de ${(requiredParams / 1_000_000).toFixed(0)}M parámetros y ${requiredMinReasoning} IQ. Tu clúster actual cuenta con ${(highestModel.parametersCount / 1_000_000).toFixed(0)}M y ${highestReasoning} IQ.`
-      : `High-yield operation: Requires a ${(requiredParams / 1_000_000).toFixed(0)}M parameter model and ${requiredMinReasoning} IQ. Your current cluster has ${(highestModel.parametersCount / 1_000_000).toFixed(0)}M and ${highestReasoning} IQ.`;
+      ? `Operación de alto rendimiento: Exige un modelo de ${(requiredParams / 1_000_000).toFixed(0)}M parámetros y ${requiredMinReasoning}/100 de puntaje. Tu clúster actual cuenta con ${(highestModel.parametersCount / 1_000_000).toFixed(0)}M y ${highestReasoning}/100 de puntaje.`
+      : `High-yield operation: Requires a ${(requiredParams / 1_000_000).toFixed(0)}M parameter model and a score of ${requiredMinReasoning}/100. Your current cluster has ${(highestModel.parametersCount / 1_000_000).toFixed(0)}M and a score of ${highestReasoning}/100.`;
   }
 
   const baseReward = Math.round(

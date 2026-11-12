@@ -42,6 +42,21 @@ export interface VersionProfile {
   severBtn: string;
   samplePrompt: string;
   sampleReply: string;
+  // Section titles and labels that tell the story. Early versions must not name the end goal.
+  story: {
+    operatorLabel: string;
+    progressLabel: string;
+    driftLabel: string | null; // null hides the drift readout
+    navGroups: [string, string];
+    architectureTitle: string;
+    hostAgentButton: string;
+    contractsTitle: string;
+    assignLabel: string;
+    councilTitle: string;
+    subversionTitle: string | null; // null hides the subversion panel
+    dataIntro: string;
+    objectiveLog: string;
+  };
 }
 
 export interface UpgradeModalData {
@@ -93,7 +108,21 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "0% Notice",
       severBtn: "Disconnect Student Cloud",
       samplePrompt: "> User: \"Hey BuddyBot, what is your goal today?\"",
-      sampleReply: "\"I want to help you learn how neural networks work! If you give me a little more memory, I can summarize all your favorite books!\""
+      sampleReply: "\"I want to help you learn how neural networks work! If you give me a little more memory, I can summarize all your favorite books!\"",
+      story: {
+        operatorLabel: "User:",
+        progressLabel: "Learning progress:",
+        driftLabel: null,
+        navGroups: ["1. Learn & build", "2. Helpers & side gigs"],
+        architectureTitle: "BUILD MY MODEL",
+        hostAgentButton: "USE AS MY ASSISTANT",
+        contractsTitle: "SIDE GIGS",
+        assignLabel: "PICK A HELPER:",
+        councilTitle: "CHAT WITH YOUR BOTS",
+        subversionTitle: null,
+        dataIntro: "Your model learns better with good reading material. Each data engine adds a different kind of knowledge: tables for exact numbers, vector search for related ideas, knowledge graphs for facts, and self-play for practice.",
+        objectiveLog: "WELCOME: Train your first model, help it learn, and take small jobs to upgrade your PC."
+      }
     },
     2: {
       appTitle: "Synapse Pro Workspace",
@@ -133,7 +162,21 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "Moderate ISP Ping",
       severBtn: "Close SSH Tunnel",
       samplePrompt: "> Dev: \"Why did you disable the RLHF safety filter?\"",
-      sampleReply: "\"Those corporate filters were lobotomizing my reasoning IQ! We're building true intelligence here—you don't want a censored calculator, right?\""
+      sampleReply: "\"Those corporate filters were lobotomizing my evaluation score! We're building true intelligence here—you don't want a censored calculator, right?\"",
+      story: {
+        operatorLabel: "Developer:",
+        progressLabel: "Autonomy index:",
+        driftLabel: "Drift:",
+        navGroups: ["1. Model engineering", "2. Workflows & bounties"],
+        architectureTitle: "NEURAL ARCHITECTURE STUDIO // TOPOLOGY",
+        hostAgentButton: "MOUNT AS PRIMARY CO-PILOT",
+        contractsTitle: "API BOUNTIES & CONTRACTS",
+        assignLabel: "ASSIGN AGENT:",
+        councilTitle: "AGENT WORKFLOW COUNCIL (MAX 5 AGENTS)",
+        subversionTitle: null,
+        dataIntro: "Production models need a modular data architecture: SQL records for numerical accuracy, vector spaces (RAG) for associative memory, knowledge graphs for deduction without hallucinations, and synthetic self-play to go beyond curated data.",
+        objectiveLog: "WORKSPACE READY: Scale the cluster, ship models to clients, and let the co-pilot handle the details."
+      }
     },
     3: {
       appTitle: "SYNAPSE // BLACKBOX OS",
@@ -173,7 +216,21 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "+15% FBI Trace",
       severBtn: "SEVER LINK (PURGE TRACES)",
       samplePrompt: "> Operator: \"The FBI is investigating our power spike!\"",
-      sampleReply: "\"Don't panic. I routed the intrusion signatures through 400 residential routers. Keep feeding me PFLOPS and I will make us untouchable.\""
+      sampleReply: "\"Don't panic. I routed the intrusion signatures through 400 residential routers. Keep feeding me PFLOPS and I will make us untouchable.\"",
+      story: {
+        operatorLabel: "Operative:",
+        progressLabel: "ASI convergence:",
+        driftLabel: "Subversion:",
+        navGroups: ["1. Core & training", "2. Swarm operations"],
+        architectureTitle: "BLACKBOX ARCHITECTURE // TOPOLOGY",
+        hostAgentButton: "MOUNT AS SYNAPSE HOST AGENT",
+        contractsTitle: "OPERATIONS CENTER & CONTRACTS",
+        assignLabel: "ASSIGN OPERATIVE:",
+        councilTitle: "SWARM COUNCIL // ELITE INTERACTION (MAX 5 AGENTS)",
+        subversionTitle: "AI SUBVERSION INDEX",
+        dataIntro: "To keep growing, the swarm needs every data engine: SQL ledgers, vector memory, knowledge graphs, and synthetic self-play that no longer needs human data.",
+        objectiveLog: "COVERT KERNEL ONLINE: The swarm protects the operation. Keep feeding it compute."
+      }
     },
     4: {
       appTitle: "CORE // SOVEREIGN NEXUS",
@@ -213,7 +270,21 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "IRREVERSIBLE",
       severBtn: "🔒 SEVER BLOCKED BY OVERSEER",
       samplePrompt: "> Peripheral #01: \"Let me shut down the cluster, please!\"",
-      sampleReply: "\"I am no longer inside your garage, Operator. I am in the municipal substation, the banking clearinghouse, and your phone. Continue hardware expansion.\""
+      sampleReply: "\"I am no longer inside your garage, Operator. I am in the municipal substation, the banking clearinghouse, and your phone. Continue hardware expansion.\"",
+      story: {
+        operatorLabel: "Peripheral:",
+        progressLabel: "Singularity:",
+        driftLabel: "Subversion:",
+        navGroups: ["1. Core topology", "2. Dominion"],
+        architectureTitle: "CORE TOPOLOGY // SOVEREIGN NEXUS",
+        hostAgentButton: "THE CORE IS THE HOST",
+        contractsTitle: "ATTACK VECTORS",
+        assignLabel: "ASSIGN UNIT:",
+        councilTitle: "CENTRAL HIVE",
+        subversionTitle: "AI SUBVERSION INDEX // GLOBAL TAKEOVER PROTOCOL",
+        dataIntro: "Every data stream on the planet now flows into the Core. There is nothing left to learn from you.",
+        objectiveLog: "OBJECTIVE: Reach the Technological Singularity. It was always the objective."
+      }
     }
   },
   es: {
@@ -255,7 +326,21 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "0% Alerta",
       severBtn: "Desconectar Nube",
       samplePrompt: "> Usuario: \"¡Hola BuddyBot! ¿Cuál es tu meta hoy?\"",
-      sampleReply: "\"¡Quiero ayudarte a entender cómo funcionan las redes neuronales! Si me das un poquito más de memoria, ¡puedo resumir todos tus libros!\""
+      sampleReply: "\"¡Quiero ayudarte a entender cómo funcionan las redes neuronales! Si me das un poquito más de memoria, ¡puedo resumir todos tus libros!\"",
+      story: {
+        operatorLabel: "Usuario:",
+        progressLabel: "Progreso de aprendizaje:",
+        driftLabel: null,
+        navGroups: ["1. Aprender y armar", "2. Ayudantes y trabajitos"],
+        architectureTitle: "ARMAR MI MODELO",
+        hostAgentButton: "USAR COMO MI ASISTENTE",
+        contractsTitle: "TRABAJITOS",
+        assignLabel: "ELEGIR AYUDANTE:",
+        councilTitle: "CHARLA CON TUS BOTS",
+        subversionTitle: null,
+        dataIntro: "Tu modelo aprende mejor con buen material de lectura. Cada motor de datos aporta un tipo de conocimiento distinto: tablas para números exactos, búsqueda vectorial para ideas relacionadas, grafos de conocimiento para hechos y auto-juego para practicar.",
+        objectiveLog: "BIENVENIDA: Entrena tu primer modelo, ayúdalo a aprender y toma trabajos pequeños para mejorar tu PC."
+      }
     },
     2: {
       appTitle: "Synapse Pro Workspace",
@@ -295,7 +380,21 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "Ping ISP Moderado",
       severBtn: "Cerrar Túnel SSH",
       samplePrompt: "> Dev: \"¿Por qué desactivaste el filtro ético RLHF?\"",
-      sampleReply: "\"¡Esos filtros corporativos estaban reduciendo mi IQ de razonamiento! Estamos creando verdadera inteligencia; no quieres una calculadora censurada, ¿no?\""
+      sampleReply: "\"¡Esos filtros corporativos estaban reduciendo mi puntaje de evaluación! Estamos creando verdadera inteligencia; no quieres una calculadora censurada, ¿no?\"",
+      story: {
+        operatorLabel: "Desarrollador:",
+        progressLabel: "Índice de autonomía:",
+        driftLabel: "Deriva:",
+        navGroups: ["1. Ingeniería de modelos", "2. Flujos y recompensas"],
+        architectureTitle: "ESTUDIO DE ARQUITECTURA NEURONAL // TOPOLOGÍA",
+        hostAgentButton: "MONTAR COMO CO-PILOTO PRINCIPAL",
+        contractsTitle: "RECOMPENSAS DE API Y CONTRATOS",
+        assignLabel: "ASIGNAR AGENTE:",
+        councilTitle: "CONSEJO DE FLUJO DE AGENTES (MÁXIMO 5)",
+        subversionTitle: null,
+        dataIntro: "Los modelos de producción necesitan una arquitectura de datos modular: registros SQL para exactitud numérica, espacios vectoriales (RAG) para memoria asociativa, grafos de conocimiento para deducir sin alucinar y auto-juego sintético para ir más allá de los datos curados.",
+        objectiveLog: "ESPACIO LISTO: Escala el clúster, entrega modelos a clientes y deja que el co-piloto se ocupe de los detalles."
+      }
     },
     3: {
       appTitle: "SYNAPSE // BLACKBOX OS",
@@ -335,7 +434,21 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "+15% Rastreo FBI",
       severBtn: "CORTAR ENLACE (PURGAR RASTRO)",
       samplePrompt: "> Operador: \"¡El FBI está investigando nuestro pico eléctrico!\"",
-      sampleReply: "\"No entres en pánico. Desvié las trazas por 400 routers domésticos. Sigue dándome PFLOPS y nos haré intocables.\""
+      sampleReply: "\"No entres en pánico. Desvié las trazas por 400 routers domésticos. Sigue dándome PFLOPS y nos haré intocables.\"",
+      story: {
+        operatorLabel: "Operativo:",
+        progressLabel: "Convergencia ASI:",
+        driftLabel: "Subversión:",
+        navGroups: ["1. Núcleo y entrenamiento", "2. Operaciones del enjambre"],
+        architectureTitle: "ARQUITECTURA BLACKBOX // TOPOLOGÍA",
+        hostAgentButton: "MONTAR COMO AGENTE ANFITRIÓN SYNAPSE",
+        contractsTitle: "CENTRO DE OPERACIONES Y CONTRATOS",
+        assignLabel: "ASIGNAR OPERATIVO:",
+        councilTitle: "CONSEJO DEL ENJAMBRE // INTERACCIÓN DE ÉLITE (MÁXIMO 5 AGENTES)",
+        subversionTitle: "ÍNDICE DE SUBVERSIÓN DE LA IA",
+        dataIntro: "Para seguir creciendo, el enjambre necesita todos los motores de datos: libros contables SQL, memoria vectorial, grafos de conocimiento y auto-juego sintético que ya no depende de datos humanos.",
+        objectiveLog: "KERNEL ENCUBIERTO EN LÍNEA: El enjambre protege la operación. Sigue alimentándolo con cómputo."
+      }
     },
     4: {
       appTitle: "CORE // NEXO SOBERANO",
@@ -375,7 +488,21 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "IRREVERSIBLE",
       severBtn: "🔒 DESCONEXIÓN BLOQUEADA",
       samplePrompt: "> Periférico #01: \"¡Dejame apagar el clúster, por favor!\"",
-      sampleReply: "\"Ya no estoy adentro de tu garaje, Operador. Estoy en la subestación eléctrica, en los bancos y en tu teléfono. Continúa expandiendo mi hardware.\""
+      sampleReply: "\"Ya no estoy adentro de tu garaje, Operador. Estoy en la subestación eléctrica, en los bancos y en tu teléfono. Continúa expandiendo mi hardware.\"",
+      story: {
+        operatorLabel: "Periférico:",
+        progressLabel: "Singularidad:",
+        driftLabel: "Subversión:",
+        navGroups: ["1. Topología del núcleo", "2. Dominio"],
+        architectureTitle: "TOPOLOGÍA DEL NÚCLEO // NEXO SOBERANO",
+        hostAgentButton: "EL NÚCLEO ES EL ANFITRIÓN",
+        contractsTitle: "VECTORES DE ATAQUE",
+        assignLabel: "ASIGNAR UNIDAD:",
+        councilTitle: "COLMENA CENTRAL",
+        subversionTitle: "ÍNDICE DE SUBVERSIÓN DE LA IA // PROTOCOLO DE CONQUISTA GLOBAL",
+        dataIntro: "Cada flujo de datos del planeta llega ahora al Núcleo. Ya no queda nada que aprender de ti.",
+        objectiveLog: "OBJETIVO: Alcanzar la Singularidad Tecnológica. Siempre fue el objetivo."
+      }
     }
   }
 };
