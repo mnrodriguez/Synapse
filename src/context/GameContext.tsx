@@ -91,7 +91,7 @@ import {
   localizedResearch, 
   localizedDomain 
 } from '../utils/gameContentI18n';
-import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops } from '../utils/training';
+import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
 const DEFAULT_TRAINING_TOKENS = 50_000_000;
@@ -1339,13 +1339,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             sound.playBreakthrough();
             
             // Calculate new reasoning score bonus
-            // Gain follows how much the loss fell during the run (at least +1 IQ per completed run).
-            // The previous formula rounded to 0 for any normal final loss, so IQ never moved.
-            const lossDrop = Math.max(0, (activeTraining.initialLoss ?? 4.82) - newLoss);
-            const bonusReasoning = Math.min(12, Math.max(1, Math.round(
-              lossDrop * 4 *
-              (1 + Math.min(0.25, prev.currentModel.activeDataSources.length * 0.05))
-            )));
+            // IQ gain: diminishing returns toward this model size's ceiling, scaled by data per parameter.
+            // Loss is the in-run signal; capability is limited by the architecture, not by repeated runs.
+            const bonusReasoning = iqGainForRun({
+              currentIq: prev.currentModel.reasoningScore,
+              parametersCount: prev.currentModel.parametersCount,
+              tokensCount: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS
+            });
             const upgradedModelReasoning = prev.currentModel.reasoningScore + bonusReasoning;
             
             const isMicroModel = activeTraining.targetModelType === 'micro_model';
@@ -1392,6 +1392,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isMicroModel,
               reasoningBefore: prev.currentModel.reasoningScore,
               reasoningAfter: upgradedModelReasoning,
+              reasoningCeiling: Math.round(reasoningCeilingFor(prev.currentModel.parametersCount)),
               finalLoss: Number(newLoss.toFixed(4))
             };
             updatedTraining = null; // finished

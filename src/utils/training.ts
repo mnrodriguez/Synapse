@@ -124,3 +124,27 @@ export const formatTrainingTime = (ticks: number | null, language: 'en' | 'es' =
   const duration = hours > 0 ? `${hours} h ${rest} min` : `${minutes} min`;
   return language === 'es' ? `${duration} de entrenamiento` : `${duration} of training`;
 };
+
+// Reasoning ceiling of a model of this size. Calibrated against the game's own mission table, so a
+// 14M model can reach the first missions but the top tiers need larger architectures, as in practice.
+export const reasoningCeilingFor = (parametersCount: number): number =>
+  Math.max(0, 115 * Math.log10(Math.max(1, parametersCount) / 1_000_000) - 51.8);
+
+// Reasoning points gained by one completed run. Each run closes a fraction of the remaining gap to the
+// ceiling (diminishing returns), and data helps less when the model is undertrained (few tokens per
+// parameter). Near the ceiling the gain rounds to zero: more training no longer helps; the model is too small.
+export const iqGainForRun = ({
+  currentIq,
+  parametersCount,
+  tokensCount
+}: {
+  currentIq: number;
+  parametersCount: number;
+  tokensCount: number;
+}): number => {
+  const ceiling = reasoningCeilingFor(parametersCount);
+  const gap = Math.max(0, ceiling - currentIq);
+  const tokensPerParam = Math.max(0, tokensCount) / Math.max(1, parametersCount);
+  const dataFactor = Math.min(1, 0.5 + 0.5 * Math.log10(1 + tokensPerParam) / Math.log10(21));
+  return Math.floor(gap * 0.15 * dataFactor);
+};
