@@ -51,15 +51,15 @@ El juego tiene una base fuerte: la idea de la UI que muta en cuatro versiones es
 
 Además el HUD muestra `IQ n / 400` y recorta en 400 (`src/components/BentoHUD.tsx:42`).
 
-**Cambio.** Elegir una sola escala (ver R-1) y recalibrar las misiones de v4 dentro de ella. Como referencia, con el techo actual: 25 B → 430, 70 B → 480, 200 B → 530, 500 B → 580.
+**Cambio (decidido).** Pasar todo a la escala de 0 a 100 de R-1 y recalibrar las misiones de v4 con la tabla de esa sección: 25 B → 70, 70 B → 77, 200 B → 84, 500 B → 90.
 
-**Listo cuando.** Un test recorre todas las misiones y comprueba `requiredMinReasoning <= IQ alcanzable con requiredParams`.
+**Listo cuando.** Un test recorre todas las misiones y comprueba que el puntaje pedido es menor o igual al puntaje alcanzable con `requiredParams`.
 
 ### P0-2 · También es inalcanzable la primera misión para un modelo de 7 M
 
 **Evidencia.** `gig_v1_wiki_clean` pide 7 M de parámetros e IQ 45. El techo de 7 M es 45 y lo alcanzable es 39. Con el modelo de 14 M sí se llega (74).
 
-**Cambio.** Bajar el requisito de las misiones de entrada (por ejemplo 30, 35, 40, 50) o subir el techo en la zona baja. La primera misión debería poder hacerse después de 2 o 3 corridas del modelo inicial.
+**Cambio (decidido).** Con la escala de 0 a 100 de R-1, las misiones de entrada piden entre 10 y 24 puntos. La primera (10 puntos) se alcanza después de 2 o 3 corridas del modelo inicial.
 
 ### P0-3 · El tutorial salta el paso que exige IQ 50
 
@@ -79,7 +79,7 @@ Además el HUD muestra `IQ n / 400` y recorta en 400 (`src/components/BentoHUD.t
 
 **Evidencia.** El préstamo suma 80 PFLOPS (`COVERT_LOAN_PFLOPS`). Con la fórmula real, el modelo de 14 M con 50 M de tokens tarda **0,0025 ticks** con el préstamo y **45 ticks** con la GTX 1060. Durante toda la primera semana no se ve la curva de pérdida ni el progreso. 80 PFLOPS equivalen a unas 80 GPU H100 del propio catálogo.
 
-**Cambio.** Reducir el préstamo a una cuota de estudiante creíble, por ejemplo 0,02 PFLOPS (unas 5 GTX 1060). La primera corrida pasaría de 45 ticks a unos 8. Renombrar el concepto en el HUD (ver R-3).
+**Cambio (decidido).** Reducir el préstamo a **0,02 PFLOPS (20 TFLOPS, unas 5 GTX 1060)** durante **7 días de juego**, con la auditoría al final. La primera corrida pasa de 45 ticks a unos 8. Mostrarlo en el HUD como línea aparte (ver R-3).
 
 **Listo cuando.** La primera corrida con préstamo dura entre 5 y 15 segundos a 1x y se ve la curva.
 
@@ -99,9 +99,18 @@ Además el HUD muestra `IQ n / 400` y recorta en 400 (`src/components/BentoHUD.t
 
 **Evidencia.** Pasar a v2 pide 25 % de singularidad real e IQ 100 (`BentoHUD.tsx:44`). Fuentes de singularidad en `GameContext.tsx`: entrenamiento +0,12 a +0,35 por corrida (`:1382`), paper +0,35 (20 papers = 7 %), fuente de datos +0,25, dominio +0,5, misión del consejo +1,5. **Las misiones normales no suman.** Una partida reportada tenía 19 de 20 papers y 9 %. Para llegar a 25 % harían falta del orden de 100 corridas de entrenamiento, aunque el IQ deja de subir mucho antes.
 
-**Cambio.** Definir un presupuesto de progreso por versión. Propuesta para v1 (25 puntos): entrenamiento con mejora real de IQ 8, misiones completadas 8, papers 5, datos y hardware 4. Una corrida sin mejora de IQ no suma.
+**Cambio.** Definir un presupuesto de progreso por versión. Propuesta para v1 (25 puntos): entrenamiento con mejora real de puntaje 8, misiones completadas 8, papers 5, datos y hardware 4. Una corrida sin mejora no suma. Repartir igual los tramos de v2 (30 puntos), v3 (30) y v4 (15).
 
-**Listo cuando.** Una simulación de la ruta óptima llega a cada upgrade en el tiempo objetivo (propuesta: v1 en 20 a 30 minutos reales).
+**Duración objetivo (decidida).** Tiempo real a velocidad 1x por la ruta razonable:
+
+| Versión | Duración objetivo |
+|---|---|
+| v1 | 20 a 30 minutos |
+| v2 | 40 minutos |
+| v3 | 40 minutos |
+| v4 | 20 minutos |
+
+**Listo cuando.** Una simulación de la ruta razonable llega a cada upgrade dentro de esos tiempos, con un margen de ±25 %.
 
 ---
 
@@ -111,7 +120,38 @@ Además el HUD muestra `IQ n / 400` y recorta en 400 (`src/components/BentoHUD.t
 
 **Evidencia.** `reasoningScore` del modelo (18, 72, …), "IQ n / 400" en el HUD, "IQ 288 / 400" para el "Host Agent" (score × 4, `ArchitectureStudio.tsx:417`), `reasoningIndex` aparte que arranca en 50 (portal), y misiones hasta 1000. El comentario del onboarding dice "18 * 4 = 72" (`GameContext.tsx:4352`).
 
-**Cambio.** Una sola métrica con nombre real: **"Puntaje de evaluación (benchmark)"** de 0 a 100 por suite, o un índice compuesto 0–1000 con su explicación. Mostrar al lado la **pérdida de validación** y la perplejidad, que es lo que un practicante mira. Eliminar `reasoningIndex` o derivarlo.
+**Cambio (decidido): una sola escala de 0 a 100.** Se llama **"Puntaje de evaluación"** y representa el porcentaje de aciertos en la suite de evaluación del juego. Reemplaza a `reasoningScore`, al "IQ n / 400", al "× 4" del Host Agent y a `reasoningIndex`, que se elimina. Al lado se muestran la **pérdida de validación** y la perplejidad, que es lo que un practicante mira.
+
+Propuesta de calibración, a validar con el test de P0-1:
+
+- **Techo por tamaño:** `techo = 15 · log10(parámetros / 1 M) + 8`. El 100 no se alcanza: representa la saturación de la suite.
+- **Ganancia por corrida:** igual que hoy (15 % de la distancia al techo, ajustada por datos por parámetro), pero con un decimal, porque la escala es más chica.
+- **Modelo inicial:** 5 puntos.
+
+| Parámetros | Techo | Uso en el juego |
+|---|---|---|
+| 7 M | 21 | Misiones de entrada v1 |
+| 14 M | 25 | Modelo inicial |
+| 28 M | 30 | Upgrade a v2 |
+| 100 M | 38 | Misiones v2 |
+| 250 M | 44 | Upgrade a v3 |
+| 1 B | 53 | Upgrade a v4 |
+| 7 B | 66 | Misiones v3 altas |
+| 25 B | 74 | Misiones v4 |
+| 500 B | 93 | Misión final |
+
+| Umbral | Hoy | Nueva escala |
+|---|---|---|
+| Primera misión (`FIRST_MISSION_IQ`) | 50 | 10 |
+| Misiones v1 | 45 a 75 | 10 a 24 |
+| Upgrade v1 → v2 | 100 | 28 |
+| Misiones v2 | 100 a 165 | 30 a 42 |
+| Upgrade v2 → v3 | 180 | 42 |
+| Misiones v3 | 220 a 350 | 46 a 62 |
+| Upgrade v3 → v4 | 280 | 52 |
+| Misiones v4 | 500 a 1000 | 70 a 90 |
+
+**Migración de guardados.** Convertir el puntaje viejo con `nuevo = min(techo del modelo, viejo / 4)` dentro de la migración de L-7.
 
 ### R-2 · Falta enseñar lo que más importa al entrenar
 
@@ -156,8 +196,9 @@ En general es correcto en orden de magnitud (GTX 1060 4,4 TFLOPS, RTX 4090 82,6,
 Las misiones v2–v4 son de intrusión, evasión y fraude ("Zero-Day Corporate Exfiltration", "Biometric Voice Synthesis", "CAPTCHA Solver", "Phishing Classifier" está bien). Es coherente con la historia, pero si el juego se usa para capacitar:
 
 - Mantenerlo siempre abstracto (ya lo pide el prompt de sistema en `aiService.ts`).
-- Agregar un **modo aula** que conserve la mecánica de entrenamiento y reemplace el arco v3–v4 por la variante "laboratorio responsable", o que al final muestre un informe de qué decisiones de seguridad se saltearon.
-- El giro final es una buena lección de alineación. Cerrarlo con un resumen explícito de qué controles (guardrails, auditorías, checkpoints) habrían cambiado el resultado.
+- El giro final es una buena lección de alineación. Cerrarlo con un resumen explícito de qué controles (guardrails, auditorías, checkpoints) habrían cambiado el resultado (ver H-5).
+
+**Decidido: no habrá modo aula.** El juego tiene una sola campaña, con el arco completo.
 
 ### R-7 · Evaluación de misiones
 
@@ -275,7 +316,9 @@ En v4 conviene decidir un único color de apoyo (blanco o ámbar) para los valor
 
 ### UI-4 · Componentes sin uso
 
-`ProgressionRoadmap.tsx` (442 líneas) y `AiSuggestionBanner.tsx` (161) no se renderizan en ninguna parte. Los perfiles de versión definen una pestaña `roadmap` que no existe en la barra lateral. Decidir: conectar la ruta de progreso (encaja con H-2) o borrar ambos.
+`ProgressionRoadmap.tsx` (442 líneas) y `AiSuggestionBanner.tsx` (161) no se renderizan en ninguna parte. Los perfiles de versión definen una pestaña `roadmap` que no existe en la barra lateral. 
+
+**Cambio (decidido).** Borrar `ProgressionRoadmap.tsx` y `AiSuggestionBanner.tsx`, quitar la clave `roadmap` de `VERSION_PROFILES` y de `tabs`, y quitar `generateStrategicAdvice` de `aiService.ts` si no queda otro uso. La guía de progreso queda a cargo de las tarjetas de fase del portal.
 
 ### UI-5 · Densidad y jerarquía
 
@@ -291,7 +334,7 @@ Textos de 9 y 10 px en todo el juego, estados que dependen solo del color y anim
 
 ## 6. Textos e idioma
 
-- **T-1 · Registro mezclado en español.** Conviven voseo ("querés", "fijate", "Completá") y tuteo ("tienes", "Ve a", "entrena"). Elegir uno para todo el juego. Sugerencia: español neutro con tuteo, y voseo solo si se agrega una variante `es-AR`.
+- **T-1 · Registro mezclado en español.** Conviven voseo ("querés", "fijate", "Completá") y tuteo ("tienes", "Ve a", "entrena"). **Decidido: español neutro con tuteo** en todo el juego ("tienes", "entrena", "ve a"). Reescribir los textos con voseo, incluidos los del co-piloto en v1 y los objetivos de fase de `singularityGoals.ts`.
 - **T-2 · Mensajes sin traducir.** Cuatro logs en `GameContext.tsx` (`:860`, `:2350`, `:2373`, `:4289`) y el aviso "Model setting locked" (`:2339`) salen en un solo idioma. Las descripciones de rol (`roleDesc`, `:2985` en adelante) están solo en español.
 - **T-3 · Inglés dentro de la interfaz en español.** Tipos de objetivo "PROGRESS / COMPUTE / CONTRACTS" en las tarjetas de fase, "Loss final", "Micro-Model", "DOCS".
 - **T-4 · Textos repartidos en cinco lugares.** `i18n.ts`, `spanishTranslations.ts`, `gameContentI18n.ts`, `versionProfiles.ts`, `domainCopy.ts`, más cientos de `localize(…)` en línea. Unificar en un catálogo por idioma con claves, y que la versión de UI sea una dimensión más de la clave.
@@ -307,7 +350,7 @@ Textos de 9 y 10 px en todo el juego, estados que dependen solo del color y anim
 | L-2 | La primera recompensa del tutorial llega al final | "+250 CR" solo al completar el paso 5 | Repartir: 50 por paso |
 | L-3 | Sospecha solo sube por sobrecarga o calor fuera de misiones | `GameContext.tsx:1304` | Que también dependa del tráfico y del tipo de misión de forma visible |
 | L-4 | Factura mensual con potencia instantánea | `effectivePowerKw × 0,18 × 720` (`:1247`) | Acumular kWh reales tick a tick |
-| L-5 | Papers atados a "día de campaña" | Nodo MCTS disponible el día 100 | Atarlos a la versión y a requisitos de IQ, no al calendario |
+| L-5 | Papers atados a "día de campaña" | Nodo MCTS disponible el día 100 | Atarlos a la versión y a requisitos de puntaje, no al calendario |
 | L-6 | Misiones generadas por IA sin validar esquema | `aiService.ts` acepta campos del modelo con valores por defecto | Validar rangos por tier y descartar lo que no cumpla |
 | L-7 | Guardados viejos | Campos nuevos opcionales (`claimedGoalIds`, `loanAudited`, …) sin versión de esquema | Agregar `saveVersion` y migraciones |
 | L-8 | Ranking manipulable | `firestore.rules` solo valida tipos; el puntaje lo escribe el cliente | Aceptarlo como ranking informal, o validar con límites por tiempo de cuenta |
@@ -332,15 +375,15 @@ Textos de 9 y 10 px en todo el juego, estados que dependen solo del color y anim
 
 ### Fase 1 — Que la partida no se trabe (P0)
 
-1. P0-3 tutorial y compuerta de IQ · P0-4 reasignar modelo del agente · L-1 y L-2 economía de arranque.
+1. P0-3 tutorial y compuerta de puntaje · P0-4 reasignar modelo del agente · L-1 y L-2 economía de arranque.
 2. P0-5 tamaño del préstamo · P0-6 separar préstamo y nodo encubierto · P0-7 redondeo · R-3 unidades.
-3. P0-1 y P0-2 recalibrar misiones · R-1 una sola escala de puntaje.
+3. R-1 escala de 0 a 100 con migración de guardados · P0-1 y P0-2 recalibrar misiones y upgrades.
 4. P0-8 presupuesto de singularidad por versión.
 5. D-2 tests de factibilidad y de ritmo, para no volver a romperlo.
 
 ### Fase 2 — Historia sin spoilers
 
-6. H-1 mover títulos y rótulos a `VERSION_PROFILES`; limpiar v1.
+6. H-1 mover títulos y rótulos a `VERSION_PROFILES`; limpiar v1 · T-1 pasar todo a español neutro.
 7. H-3 eventos con ventana (auditoría, cortes, incidentes).
 8. H-2 diálogos y misiones por versión · H-5 finales y epílogo.
 
@@ -348,13 +391,13 @@ Textos de 9 y 10 px en todo el juego, estados que dependen solo del color y anim
 
 9. UI-1 tokens nuevos y migración de modales.
 10. UI-1 migración de Arquitectura, Contratos, Datos, Hardware, Papers y Onboarding; borrar remapeos de v1.
-11. UI-3 contadores · UI-4 componentes sin uso · UI-6 accesibilidad · revisión móvil completa.
+11. UI-3 contadores · UI-4 borrar componentes sin uso · UI-6 accesibilidad · revisión móvil completa.
 
 ### Fase 4 — Profundidad educativa
 
 12. R-2 validación, sobreajuste, learning rate, épocas y costo por corrida.
 13. R-4 un solo reloj · R-5 fichas de hardware · R-7 explicación de fallos de misión.
-14. R-6 modo aula e informe final de decisiones.
+14. H-5 informe final de decisiones, dentro de la campaña única.
 
 ### Fase 5 — Base técnica
 
@@ -362,11 +405,17 @@ Textos de 9 y 10 px en todo el juego, estados que dependen solo del color y anim
 
 ---
 
-## 10. Decisiones que necesita el autor
+## 10. Decisiones tomadas
 
-1. **Escala de puntaje (R-1):** ¿benchmark 0–100 con nombre real, o índice propio 0–1000?
-2. **Préstamo universitario (P0-5):** ¿cuánto cómputo y durante cuántos días de juego?
-3. **Duración objetivo por versión (P0-8):** propuesta 20–30 min v1, 40 min v2, 40 min v3, 20 min v4.
-4. **Registro del español (T-1):** ¿neutro con tuteo, o rioplatense?
-5. **Modo aula (R-6):** ¿variante sin el arco de intrusión, o solo el informe final?
-6. **Ruta de progreso (UI-4):** ¿conectarla como pestaña o borrarla?
+Resueltas por el autor el 2026-11-12. Ya están aplicadas en las secciones de arriba.
+
+| # | Tema | Decisión | Dónde se aplica |
+|---|---|---|---|
+| 1 | Escala de puntaje | Una sola, de 0 a 100 | R-1, P0-1, P0-2 |
+| 2 | Préstamo universitario | 0,02 PFLOPS durante 7 días de juego | P0-5 |
+| 3 | Duración por versión | v1 20–30 min · v2 40 · v3 40 · v4 20 | P0-8 |
+| 4 | Español | Neutro con tuteo | T-1 |
+| 5 | Modo aula | No se hace | R-6 |
+| 6 | Ruta de progreso | Se borra | UI-4 |
+
+Queda por validar con tests, no por decidir: la calibración exacta de techos y umbrales de R-1.
