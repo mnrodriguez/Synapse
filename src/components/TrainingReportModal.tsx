@@ -50,6 +50,19 @@ export const TrainingReportModal: React.FC = () => {
             </span>
           </div>
           <div className="flex justify-between gap-3">
+            <span className="mutating-text-muted">{localize(state.language, 'Techo de este tamaño', 'Ceiling for this size')}</span>
+            <span className="font-bold">{report.reasoningCeiling}</span>
+          </div>
+          {delta === 0 && (
+            <p className="text-[11px] text-amber-500 leading-snug">
+              {localize(
+                state.language,
+                'Sin mejora: el modelo está cerca del techo de su tamaño. Para subir más necesitas más parámetros (Arquitectura) o más datos.',
+                'No gain: the model is near its size ceiling. To go further you need more parameters (Architecture) or more data.'
+              )}
+            </p>
+          )}
+          <div className="flex justify-between gap-3">
             <span className="mutating-text-muted">Loss final</span>
             <span className="font-bold">{report.finalLoss.toFixed(4)}</span>
           </div>

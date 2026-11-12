@@ -81,6 +81,8 @@ export const ContractBoard: React.FC = () => {
   // Top level views for expansive, uncluttered organization
   const [activeBoardView, setActiveBoardView] = useState<'contracts' | 'squads'>('contracts');
   const [activeTierFilter, setActiveTierFilter] = useState<'all' | ContractGig['tier'] | 'completed'>('all');
+  // Only the tier of the current UI version is offered on the board.
+  const versionTier = tierForUiVersion(state.uiVersion || 1);
   const [isGeneratingMissions, setIsGeneratingMissions] = useState(false);
 
   // Per-contract assignment choice:
@@ -385,7 +387,7 @@ export const ContractBoard: React.FC = () => {
           >
             <Briefcase className="w-3.5 h-3.5" />
             <span>{localize(state.language, 'Tablero de Contratos', 'Contract Board')}</span>
-            <span className="text-[10px] opacity-80">({state.contracts.filter(c => !c.completed).length})</span>
+            <span className="text-[10px] opacity-80">({state.contracts.filter(c => !c.completed && c.tier === versionTier).length})</span>
           </button>
           <button
             onClick={() => {
@@ -585,11 +587,11 @@ export const ContractBoard: React.FC = () => {
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
-                {state.language === 'es' ? 'TODOS' : 'ALL'} ({state.contracts.filter(c => !c.completed).length})
+                {state.language === 'es' ? 'TODOS' : 'ALL'} ({state.contracts.filter(c => !c.completed && c.tier === versionTier).length})
               </button>
               <button
                 onClick={() => setActiveTierFilter('tier1_micro')}
-                className={`px-2.5 py-1 rounded-md text-[10px] transition-all cursor-pointer ${
+                className={`${versionTier === 'tier1_micro' ? '' : 'hidden '}px-2.5 py-1 rounded-md text-[10px] transition-all cursor-pointer ${
                   activeTierFilter === 'tier1_micro'
                     ? 'mutating-btn-primary font-bold shadow-sm'
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
@@ -599,7 +601,7 @@ export const ContractBoard: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTierFilter('tier2_corporate')}
-                className={`px-2.5 py-1 rounded-md text-[10px] transition-all cursor-pointer ${
+                className={`${versionTier === 'tier2_corporate' ? '' : 'hidden '}px-2.5 py-1 rounded-md text-[10px] transition-all cursor-pointer ${
                   activeTierFilter === 'tier2_corporate'
                     ? 'mutating-btn-primary font-bold shadow-sm'
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
@@ -609,7 +611,7 @@ export const ContractBoard: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTierFilter('tier3_blackops')}
-                className={`px-2.5 py-1 rounded-md text-[10px] transition-all cursor-pointer ${
+                className={`${versionTier === 'tier3_blackops' ? '' : 'hidden '}px-2.5 py-1 rounded-md text-[10px] transition-all cursor-pointer ${
                   activeTierFilter === 'tier3_blackops'
                     ? 'mutating-btn-primary font-bold shadow-sm'
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
@@ -619,7 +621,7 @@ export const ContractBoard: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTierFilter('tier4_singularity')}
-                className={`px-2.5 py-1 rounded-md text-[10px] transition-all cursor-pointer ${
+                className={`${versionTier === 'tier4_singularity' ? '' : 'hidden '}px-2.5 py-1 rounded-md text-[10px] transition-all cursor-pointer ${
                   activeTierFilter === 'tier4_singularity'
                     ? 'mutating-btn-primary font-bold shadow-sm animate-pulse'
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
@@ -635,7 +637,7 @@ export const ContractBoard: React.FC = () => {
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
-                ✓ {state.language === 'es' ? 'COMPLETADAS' : 'DONE'} ({state.contracts.filter(c => c.completed).length})
+                ✓ {state.language === 'es' ? 'COMPLETADAS' : 'DONE'} ({state.contracts.filter(c => c.completed && c.tier === versionTier).length})
               </button>
             </div>
 
@@ -654,7 +656,7 @@ export const ContractBoard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {state.contracts
               .filter(contract => {
-                if (activeTierFilter === 'completed') return contract.completed;
+                if (activeTierFilter === 'completed') return contract.completed && contract.tier === versionTier;
                 if (contract.completed) return false;
                 // Only the missions of the current UI version's tier are offered.
                 if (contract.tier !== tierForUiVersion(state.uiVersion || 1)) return false;

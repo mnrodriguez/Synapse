@@ -235,6 +235,7 @@ export interface TrainingReport {
   isMicroModel: boolean;
   reasoningBefore: number;
   reasoningAfter: number;
+  reasoningCeiling: number; // highest reasoning this model size can reach
   finalLoss: number;
 }
 
