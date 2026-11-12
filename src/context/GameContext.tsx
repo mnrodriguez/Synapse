@@ -1142,6 +1142,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Refresh cluster metrics once after loading, so a save opened while paused shows its real compute
+  // (stored values can be stale or from an older formula until the first tick runs).
+  useEffect(() => {
+    setState(prev => {
+      const metrics = recalculateMetrics(prev.hardware, prev.facilityTier);
+      return {
+        ...prev,
+        totalComputePflops: metrics.totalComputePflops + (prev.borrowedComputePflops || 0),
+        activePowerKw: metrics.activePowerKw,
+        maxPowerKw: metrics.maxPowerKw,
+        maxCoolingKw: metrics.maxCoolingKw
+      };
+    });
+  }, [recalculateMetrics]);
+
   const upgradeFacility = useCallback((): boolean => {
     const current = stateRef.current;
     const nextTier = current.facilityTier + 1;
