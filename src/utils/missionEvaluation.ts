@@ -60,7 +60,7 @@ export function evaluateModelCapabilities(
 ): ModelCapabilityEvaluation {
   const sources = getAvailableSources(model, dataSources);
   const inference = model.inferenceParams;
-  const reasoning = clampScore(45 + model.reasoningScore * 0.3);
+  const reasoning = clampScore(45 + model.reasoningScore * 0.6); // evaluation score 0-100
   const isMicroModel = model.modelType === 'micro_model';
   const microSpecializationBonus = isMicroModel ? Math.round((model.domainProficiency || 1.5) * 20) : 0;
   const specialization = clampScore(

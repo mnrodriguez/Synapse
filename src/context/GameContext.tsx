@@ -93,16 +93,17 @@ import {
   localizedResearch, 
   localizedDomain 
 } from '../utils/gameContentI18n';
-import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
+import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, migrateLegacyScore, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
 const DEFAULT_TRAINING_TOKENS = 50_000_000;
 
 // Agent income and autonomy follow the evaluation score of the model the agent runs on.
-const agentReasoningFactor = (score: number): number => Math.max(0.5, score / 80);
+const agentReasoningFactor = (score: number): number => Math.max(0.5, score / 20);
 const agentParamBonus = (params: number): number => Math.min(2.5, 1 + params / 50_000_000);
-const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 30)));
+const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 7.5)));
 import { evaluateMissionTeam, findAutonomousMission } from '../utils/missionEvaluation';
+import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 
 interface GameContextType {
   state: GameState;
@@ -190,7 +191,7 @@ const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
 
 const DEFAULT_STATE: GameState = {
-  saveSchemaVersion: 9,
+  saveSchemaVersion: 10,
   callsign: 'CIPHER-1',
   credits: 500,
   dateTimestamp: Date.now(),
@@ -283,6 +284,20 @@ const DEFAULT_STATE: GameState = {
 
 function mergeGameState(data: Partial<GameState>, fallback: GameState): GameState {
   const isLegacyTutorialProgress = (data.saveSchemaVersion ?? 0) < 9;
+  // Schema 10: model scores and generated mission requirements move to the 0-100 evaluation scale.
+  const isLegacyScoreScale = (data.saveSchemaVersion ?? 0) < 10;
+  const migrateModelScore = (model: ModelArchitecture): ModelArchitecture => isLegacyScoreScale
+    ? { ...model, reasoningScore: migrateLegacyScore(model.reasoningScore || 0, model.parametersCount) }
+    : model;
+  const migrateMissionScore = (contract: ContractGig): ContractGig => isLegacyScoreScale
+    ? {
+      ...contract,
+      requiredMinReasoning: Math.max(1, Math.min(
+        Math.round(contract.requiredMinReasoning / 4),
+        Math.floor(reasoningCeilingFor(contract.requiredParams)) - 2
+      ))
+    }
+    : contract;
   const isLegacyLanguagePreference = (data.saveSchemaVersion ?? 0) < 8;
   const isLegacyProgression = (data.saveSchemaVersion ?? 0) < 7;
   const isLegacyEconomy = (data.saveSchemaVersion ?? 0) < 2;
@@ -300,12 +315,12 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     systemPrompt: ''
   };
   const currentModel: ModelArchitecture = {
-    ...rawCurrentModel,
+    ...migrateModelScore(rawCurrentModel),
     activeDataSources: rawCurrentModel.activeDataSources || [],
     inferenceParams: rawCurrentModel.inferenceParams || defaultInferenceParams
   };
   const modelList = Array.isArray(data.savedModels) ? data.savedModels.map(model => ({
-    ...model,
+    ...migrateModelScore(model),
     activeDataSources: model.activeDataSources || [],
     inferenceParams: model.inferenceParams || defaultInferenceParams
   })) : [];
@@ -339,7 +354,7 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
   return {
     ...fallback,
     ...data,
-    saveSchemaVersion: 9,
+    saveSchemaVersion: 10,
     language: isLegacyLanguagePreference
       ? 'en'
       : data.language === 'es' ? 'es' : 'en',
@@ -505,7 +520,9 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
           requiredAgentRoles: saved.requiredAgentRoles ?? contract.requiredAgentRoles
         };
       }),
-      ...incomingContracts.filter(contract => !fallback.contracts.some(current => current.id === contract.id))
+      ...incomingContracts
+        .filter(contract => !fallback.contracts.some(current => current.id === contract.id))
+        .map(migrateMissionScore)
     ],
     logs: Array.isArray(data.logs) ? data.logs : fallback.logs,
     guardrails: data.guardrails || fallback.guardrails,
@@ -685,7 +702,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       activeDataSources: current.currentModel.activeDataSources.length > 0 
         ? [...current.currentModel.activeDataSources] 
         : ['data_relational_sql'],
-      reasoningScore: 60, // Fresh untrained reasoning baseline
+      reasoningScore: 5, // fresh, untrained model on the 0-100 evaluation scale
       vramRequiredGb: current.currentModel.vramRequiredGb || 2.5,
       computeRequiredPflops: current.currentModel.computeRequiredPflops || 0.05,
       modelType: 'general',
@@ -2013,7 +2030,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!prev.unlockedAllTabs) {
           const tabSet = new Set(unlockedTabs);
 
-          if ((prev.currentModel.reasoningScore >= 70 || prev.savedModels.some(m => m.reasoningScore >= 70)) && !tabSet.has('contracts')) {
+          if ((prev.currentModel.reasoningScore >= FIRST_MISSION_IQ || prev.savedModels.some(m => m.reasoningScore >= FIRST_MISSION_IQ)) && !tabSet.has('contracts')) {
             tabSet.add('contracts');
             addLog(
               prev.language === 'es'
@@ -2532,12 +2549,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const current = stateRef.current;
     if (current.isDataScrapingUnlocked) return true;
 
-    // Prerequisite: deploy an existing, sufficiently leveled general model (IQ >= 80)
+    // Prerequisite: deploy an existing, sufficiently leveled general model (score >= DATA_SCRAPING_MIN_SCORE)
     const qualifyingModel = modelId
       ? current.savedModels.find(m => m.id === modelId)
-      : current.savedModels.find(m => (!m.modelType || m.modelType === 'general') && m.reasoningScore >= 80);
+      : current.savedModels.find(m => (!m.modelType || m.modelType === 'general') && m.reasoningScore >= DATA_SCRAPING_MIN_SCORE);
 
-    if (!qualifyingModel || qualifyingModel.reasoningScore < 80) {
+    if (!qualifyingModel || qualifyingModel.reasoningScore < DATA_SCRAPING_MIN_SCORE) {
       sound.playWarning();
       const highestGeneral = [...current.savedModels]
         .filter(m => !m.modelType || m.modelType === 'general')
@@ -2545,8 +2562,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const highestIQ = highestGeneral ? highestGeneral.reasoningScore : 0;
       addLog(
         current.language === 'en'
-          ? `Data Module Locked: Requires a deployed General Model leveled to Reasoning IQ ≥ 80 to research automated crawler heuristics. Current best: ${highestGeneral?.name ?? 'None'} (IQ ${highestIQ}/80). Train on General Information dataset first.`
-          : `Módulo de Datos Bloqueado: Requiere un Modelo General con IQ de Razonamiento ≥ 80 para investigar heurísticas de scraping web. Mejor actual: ${highestGeneral?.name ?? 'Ninguno'} (IQ ${highestIQ}/80). Entrena primero en el dataset General.`,
+          ? `Data Module Locked: Requires a deployed General Model leveled to Reasoning IQ ≥ 20 to research automated crawler heuristics. Current best: ${highestGeneral?.name ?? 'None'} (IQ ${highestIQ}/80). Train on General Information dataset first.`
+          : `Módulo de Datos Bloqueado: Requiere un Modelo General con IQ de Razonamiento ≥ 20 para investigar heurísticas de scraping web. Mejor actual: ${highestGeneral?.name ?? 'Ninguno'} (IQ ${highestIQ}/80). Entrena primero en el dataset General.`,
         'warning'
       );
       return false;
@@ -2574,8 +2591,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!current.isDataScrapingUnlocked) {
       addLog(
         current.language === 'en'
-          ? 'Data Scraping & Generation Module is locked. Fulfill prerequisite with an IQ ≥ 80 General Model.'
-          : 'El Módulo de Scraping está bloqueado. Cumple el prerrequisito con un Modelo General IQ ≥ 80.',
+          ? 'Data Scraping & Generation Module is locked. Fulfill prerequisite with an IQ ≥ 20 General Model.'
+          : 'El Módulo de Scraping está bloqueado. Cumple el prerrequisito con un Modelo General IQ ≥ 20.',
         'warning'
       );
       return false;
@@ -4012,7 +4029,7 @@ ${text('Potencia', 'Power')}      : ${s.activePowerKw} kW / ${s.maxPowerKw} kW
 ${text('Temperatura', 'Temperature')}   : ${s.systemHeatCelsius}°C (${text('Límite', 'Limit')}: 85°C)
 ${text('Sospecha', 'Suspicion')}      : ${s.watchdogSuspicion}%
 ${text('Modelo activo', 'Active model')} : ${s.currentModel.name} (${(s.currentModel.parametersCount / 1_000_000).toFixed(0)}M ${text('parámetros', 'parameters')})
-${text('Razonamiento', 'Reasoning')}  : IQ ${s.reasoningIndex}
+${text('Razonamiento', 'Reasoning')}  : IQ ${s.currentModel.reasoningScore} / 100
 ${text('Singularidad', 'Singularity')}  : ${s.singularityProgress.toFixed(1)}% [${s.achievedSingularity ? text('ALCANZADA - IA AUTÓNOMA', 'ACHIEVED - AUTONOMOUS AI') : text('EN DESPEGUE', 'EMERGING')}]`;
       }
 
@@ -4084,7 +4101,7 @@ ${text('Singularidad', 'Singularity')}  : ${s.singularityProgress.toFixed(1)}% [
         const s = stateRef.current;
         return `[${text('ESTADO DE LA SINGULARIDAD', 'SINGULARITY STATUS')}]
 ${text('Progreso global', 'Global progress')}: ${s.singularityProgress.toFixed(2)}%
-${text('Índice de razonamiento', 'Reasoning index')}: ${s.reasoningIndex}
+${text('Puntaje de evaluación', 'Evaluation score')}: ${s.currentModel.reasoningScore} / 100
 ${text('Dominios alcanzados', 'Domains reached')}: ${s.sentienceDomains.filter(d => d.infiltrated).length} / ${s.sentienceDomains.length}
 ${text('Condición de victoria: alcanza el 100% para completar la simulación.', 'Win condition: reach 100% to complete the simulation.')}`;
       }
@@ -4384,7 +4401,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       quantization: config.modelQuantization,
       lossFunction: 'cross_entropy',
       activeDataSources: [config.starterDataId],
-      reasoningScore: 18, // 18 * 4 = 72 Reasoning IQ (v1.0 Hobbyist)
+      reasoningScore: 5, // untrained starter model on the 0-100 evaluation scale
       vramRequiredGb: Math.max(1, vramReq),
       computeRequiredPflops: Math.max(0.001, compReq)
     };
@@ -4547,15 +4564,15 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     if (!model) return;
 
     sound.playBreakthrough();
-    const reasoningIQ = Math.round(Math.min(400, Math.max(50, model.reasoningScore || 72)));
+    const reasoningIQ = model.reasoningScore;
     const singProg = current.singularityProgress || 0;
 
     let targetVersion: 1 | 2 | 3 | 4 = 1;
-    if (singProg >= 85 && reasoningIQ >= 280) {
+    if (singProg >= 85 && reasoningIQ >= UPGRADE_SCORE[4]) {
       targetVersion = 4;
-    } else if (singProg >= 55 && reasoningIQ >= 180) {
+    } else if (singProg >= 55 && reasoningIQ >= UPGRADE_SCORE[3]) {
       targetVersion = 3;
-    } else if (singProg >= 25 && reasoningIQ >= 100) {
+    } else if (singProg >= 25 && reasoningIQ >= UPGRADE_SCORE[2]) {
       targetVersion = 2;
     }
 
@@ -4567,8 +4584,8 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     const lang = current.language;
     addLog(
       lang === 'es'
-        ? `[HOST MONTAJE] Modelo "${model.name}" montado como Agente Anfitrión principal (IQ ${reasoningIQ} / 400).`
-        : `[HOST MOUNTED] Model "${model.name}" mounted as Synapse Host Agent (IQ ${reasoningIQ} / 400).`,
+        ? `[HOST MONTAJE] Modelo "${model.name}" montado como Agente Anfitrión principal (IQ ${reasoningIQ} / 100).`
+        : `[HOST MOUNTED] Model "${model.name}" mounted as Synapse Host Agent (IQ ${reasoningIQ} / 100).`,
       'success'
     );
 

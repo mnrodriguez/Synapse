@@ -26,4 +26,10 @@ export function lowestOpenIqForVersion(contracts: ContractGig[], uiVersion: numb
 }
 
 // Reasoning IQ the first model needs before the first mission can be run with a deployed agent.
-export const FIRST_MISSION_IQ = 50;
+export const FIRST_MISSION_IQ = 10;
+
+// Evaluation score the active model needs to unlock each UI version upgrade (with the singularity progress).
+export const UPGRADE_SCORE: Record<2 | 3 | 4, number> = { 2: 28, 3: 42, 4: 50 };
+
+// Evaluation score a general model needs to unlock the data scraping module.
+export const DATA_SCRAPING_MIN_SCORE = 20;

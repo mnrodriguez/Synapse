@@ -199,7 +199,7 @@ export const SingularityTakeoverModal: React.FC = () => {
           </div>
           <div>
             <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'IQ de Razonamiento' : 'Reasoning IQ'}</span>
-            <span className="text-base font-bold text-pink-300">IQ {state.reasoningIndex}</span>
+            <span className="text-base font-bold text-pink-300">IQ {state.currentModel.reasoningScore} / 100</span>
           </div>
           <div>
             <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'Créditos Extraídos' : 'Total Capital Extracted'}</span>

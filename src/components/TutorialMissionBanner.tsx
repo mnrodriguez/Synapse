@@ -105,8 +105,8 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'training',
       title: isEs ? 'Fase 3: Entrenar Pesos Neuronales' : 'Stage 3: Train Neural Weights',
       desc: isEs 
-        ? 'Ve a {training} y entrena hasta que el IQ del modelo llegue a 50. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.'
-        : 'Open {training} and train until the model IQ reaches 50. Each run raises it further; the university loan already provides the compute.',
+        ? 'Ve a {training} y entrena hasta que el IQ del modelo llegue a 10. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.'
+        : 'Open {training} and train until the model IQ reaches 10. Each run raises it further; the university loan already provides the compute.',
       icon: Activity,
       buttonText: isEs ? `IR A ${tabLabels.training.toUpperCase()}` : `GO TO ${tabLabels.training.toUpperCase()}`,
       isCompleted: step > 2

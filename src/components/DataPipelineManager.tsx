@@ -37,6 +37,7 @@ import { DocLinkBadge } from './DocLinkBadge';
 import { isDataSourceProgressionUnlocked } from '../utils/progression';
 import { DATASET_TIER_CONFIGS, DOMAIN_PRESETS } from '../utils/constants';
 import { formatTrainingDuration } from '../utils/training';
+import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 
 export const DataPipelineManager: React.FC = () => {
   const { 
@@ -94,7 +95,7 @@ export const DataPipelineManager: React.FC = () => {
   const isModelQualifiedForTier = assignedModel.reasoningScore >= tierConfig.minModelIQ;
 
   // General models eligible to unlock the scraping module
-  const eligibleGeneralModels = state.savedModels.filter(m => (!m.modelType || m.modelType === 'general') && m.reasoningScore >= 80);
+  const eligibleGeneralModels = state.savedModels.filter(m => (!m.modelType || m.modelType === 'general') && m.reasoningScore >= DATA_SCRAPING_MIN_SCORE);
   const highestGeneralModel = [...state.savedModels]
     .filter(m => !m.modelType || m.modelType === 'general')
     .sort((a, b) => b.reasoningScore - a.reasoningScore)[0];
@@ -371,7 +372,7 @@ export const DataPipelineManager: React.FC = () => {
                   </div>
                   <ul className="list-disc list-inside space-y-0.5 text-zinc-400">
                     <li>
-                      {localize(state.language, '1x Modelo General desplegado con IQ de Razonamiento ≥ 80', '1x Deployed General AI Model with Reasoning IQ ≥ 80')}
+                      {localize(state.language, '1x Modelo General desplegado con IQ de Razonamiento ≥ 20', '1x Deployed General AI Model with Reasoning IQ ≥ 80')}
                     </li>
                     <li>
                       {localize(state.language, 'Completar al menos 1 corrida de entrenamiento con el baseline de Información General', 'Complete at least 1 training run on the General Information baseline')}
@@ -387,7 +388,7 @@ export const DataPipelineManager: React.FC = () => {
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {state.savedModels.filter(m => !m.modelType || m.modelType === 'general').map(m => {
-                    const isQualified = m.reasoningScore >= 80;
+                    const isQualified = m.reasoningScore >= DATA_SCRAPING_MIN_SCORE;
                     return (
                       <div
                         key={m.id}
