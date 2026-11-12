@@ -18,7 +18,7 @@ import {
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
-import { lowestOpenIqForVersion } from '../utils/missionTiers';
+import { lowestOpenIqForVersion, FIRST_MISSION_IQ } from '../utils/missionTiers';
 import confetti from 'canvas-confetti';
 
 interface TutorialMissionBannerProps {
@@ -55,7 +55,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       addLog(isEs 
         ? 'Protocolo Génesis [1/5]: Rig inicial completo: GPU, refrigeración, fuente de alimentación y red instaladas.'
         : 'Genesis Protocol [1/5]: Starter rig complete: GPU, cooling, power supply, and network installed.', 'success');
-    } else if (step === 2 && state.savedModels.some(m => m.reasoningScore >= 16)) {
+    } else if (step === 2 && state.savedModels.some(m => m.reasoningScore >= FIRST_MISSION_IQ)) {
       sound.playBreakthrough();
       advanceTutorialStep(3);
       addLog(isEs
@@ -105,8 +105,8 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       tab: 'training',
       title: isEs ? 'Fase 3: Entrenar Pesos Neuronales' : 'Stage 3: Train Neural Weights',
       desc: isEs 
-        ? 'Ve a {training} e inicia una corrida de entrenamiento para optimizar los gradientes del modelo hasta reducir el Loss.'
-        : 'Open {training} and initiate a training run to optimize gradients and converge model loss.',
+        ? 'Ve a {training} y entrena hasta que el IQ del modelo llegue a 50. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.'
+        : 'Open {training} and train until the model IQ reaches 50. Each run raises it further; the university loan already provides the compute.',
       icon: Activity,
       buttonText: isEs ? `IR A ${tabLabels.training.toUpperCase()}` : `GO TO ${tabLabels.training.toUpperCase()}`,
       isCompleted: step > 2
@@ -140,7 +140,13 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
   const bestIq = Math.max(0, ...state.savedModels.map(m => m.reasoningScore));
   const lowestOpenIq = lowestOpenIqForVersion(state.contracts, state.uiVersion || 1);
   const blockedByIq = currentStepInfo.tab === 'contracts' && lowestOpenIq !== null && bestIq < lowestOpenIq;
-  const guidanceText = blockedByIq
+  // On the training stage, the goal is the IQ the first mission needs; show progress toward it.
+  const trainingGoalOpen = currentStepInfo.tab === 'training' && bestIq < FIRST_MISSION_IQ;
+  const guidanceText = trainingGoalOpen
+    ? (isEs
+      ? `Entrena ${tabLabels.training} hasta que el IQ llegue a ${FIRST_MISSION_IQ}. Ahora tienes ${bestIq}. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.`
+      : `Train in ${tabLabels.training} until IQ reaches ${FIRST_MISSION_IQ}. You have ${bestIq} now. Each run raises it further; the university loan already provides the compute.`)
+    : blockedByIq
     ? (isEs
       ? `Tu mejor modelo tiene IQ ${bestIq} y la misión más accesible pide IQ ${lowestOpenIq}. Ve a ${tabLabels.training} y entrena: cada corrida sube el IQ. Después asigna agentes con el modelo entrenado.`
       : `Your best model has IQ ${bestIq} and the easiest open mission needs IQ ${lowestOpenIq}. Go to ${tabLabels.training} and train: each run raises IQ. Then assign agents using the trained model.`)

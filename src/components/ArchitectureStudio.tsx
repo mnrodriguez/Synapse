@@ -40,7 +40,7 @@ import {
   LOSS_DOCS 
 } from '../utils/aiDocumentation';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
-import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime } from '../utils/training';
+import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime, covertLoanPflops } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
 import { DocLinkBadge } from './DocLinkBadge';
@@ -76,7 +76,7 @@ export const ArchitectureStudio: React.FC = () => {
     parametersCount: current.parametersCount,
     tokensCount: DEFAULT_TRAINING_TOKENS_ESTIMATE,
     gpuPflops: gpuComputePflops(state.hardware),
-    borrowedPflops: state.borrowedComputePflops,
+    borrowedPflops: state.borrowedComputePflops + covertLoanPflops(state),
     agentComputeDemand,
     reservedComputePflops: (state.activeGigs || (state.activeGig ? [state.activeGig] : [])).reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0),
     systemHeatCelsius: state.systemHeatCelsius

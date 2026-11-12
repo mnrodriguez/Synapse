@@ -347,6 +347,8 @@ export interface GameState {
   pendingUpgradeModal: 2 | 3 | 4 | null;
   covertNodeActive?: boolean;
   covertNodeSevered?: boolean;
+  loanAudited?: boolean; // the university loan trial audit has run
+  loanTrainingTicks?: number; // ticks trained while the loan was active
 
   // System logs
   logs: TerminalLog[];
