@@ -62,33 +62,33 @@ export const DataPipelineManager: React.FC = () => {
   const getEngineIcon = (type: string) => {
     switch (type) {
       case 'relational_sql':
-        return <Database className="w-5 h-5 text-blue-400" />;
+        return <Database className="w-5 h-5 mutating-accent-text" />;
       case 'vector_rag':
       case 'vector_embeddings':
-        return <GitFork className="w-5 h-5 text-emerald-400" />;
+        return <GitFork className="w-5 h-5 theme-success-text" />;
       case 'knowledge_graph':
-        return <Network className="w-5 h-5 text-purple-400" />;
+        return <Network className="w-5 h-5 mutating-accent-text" />;
       case 'synthetic_flywheel':
-        return <Repeat className="w-5 h-5 text-amber-400" />;
+        return <Repeat className="w-5 h-5 theme-warn-text" />;
       default:
-        return <Layers className="w-5 h-5 text-cyan-400" />;
+        return <Layers className="w-5 h-5 mutating-accent-text" />;
     }
   };
 
   const getDomainIcon = (iconName: string) => {
     switch (iconName) {
       case 'Shield':
-        return <Shield className="w-4 h-4 text-emerald-400" />;
+        return <Shield className="w-4 h-4 theme-success-text" />;
       case 'TrendingUp':
-        return <TrendingUp className="w-4 h-4 text-amber-400" />;
+        return <TrendingUp className="w-4 h-4 theme-warn-text" />;
       case 'Orbit':
-        return <Orbit className="w-4 h-4 text-cyan-400" />;
+        return <Orbit className="w-4 h-4 mutating-accent-text" />;
       case 'Dna':
-        return <Dna className="w-4 h-4 text-purple-400" />;
+        return <Dna className="w-4 h-4 mutating-accent-text" />;
       case 'Cpu':
-        return <Cpu className="w-4 h-4 text-blue-400" />;
+        return <Cpu className="w-4 h-4 mutating-accent-text" />;
       default:
-        return <Database className="w-4 h-4 text-cyan-400" />;
+        return <Database className="w-4 h-4 mutating-accent-text" />;
     }
   };
 
@@ -120,7 +120,7 @@ export const DataPipelineManager: React.FC = () => {
           </h2>
         </div>
         <div className="text-xs mutating-text-muted">
-          {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="text-emerald-500 font-bold">${state.credits.toLocaleString()} CR</span>
+          {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="theme-success-text font-bold">${state.credits.toLocaleString()} CR</span>
         </div>
       </div>
 
@@ -155,12 +155,12 @@ export const DataPipelineManager: React.FC = () => {
           <Search className="w-3.5 h-3.5" />
           <span>{localize(state.language, 'MÓDULO DE SCRAPING & MICRO-MODELOS', 'DATA SCRAPING & MICRO-MODELS')}</span>
           {!state.isDataScrapingUnlocked ? (
-            <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/40 text-[11px] flex items-center gap-1">
+            <span className="px-1.5 py-0.2 rounded theme-warn-soft theme-warn-text border theme-warn-border text-[11px] flex items-center gap-1">
               <Lock className="w-2.5 h-2.5" />
               {localize(state.language, 'BLOQUEADO', 'LOCKED')}
             </span>
           ) : state.activeScrapeJob ? (
-            <span className="px-1.5 py-0.2 rounded bg-cyan-400 text-slate-950 font-black text-[11px] animate-pulse">
+            <span className="px-1.5 py-0.2 rounded theme-accent-soft theme-on-accent font-black text-[11px] animate-pulse">
               SCRAPING {state.activeScrapeJob.progressPercent}%
             </span>
           ) : (
@@ -174,7 +174,7 @@ export const DataPipelineManager: React.FC = () => {
       {/* VIEW 1: CORE KNOWLEDGE ENGINES */}
       {activeSubTab === 'engines' && (
         <div className="space-y-4">
-          <p className="text-xs text-zinc-400 leading-relaxed">
+          <p className="text-xs mutating-text-muted leading-relaxed">
             {story.dataIntro}
           </p>
 
@@ -192,7 +192,7 @@ export const DataPipelineManager: React.FC = () => {
                   key={ds.id} 
                   className={`p-3 rounded-lg border transition-all flex flex-col justify-between ${
                     ds.unlocked 
-                      ? 'mutating-card border-blue-500/40 shadow-sm'
+                      ? 'mutating-card theme-accent-border shadow-sm'
                       : 'mutating-sub opacity-70'
                   }`}
                 >
@@ -205,12 +205,12 @@ export const DataPipelineManager: React.FC = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <h3 className="font-bold text-xs text-zinc-100">{content.name}</h3>
+                            <h3 className="font-bold text-xs theme-text">{content.name}</h3>
                             {DATA_DOCS[ds.id] && (
                               <DocLinkBadge doc={DATA_DOCS[ds.id]} language={state.language} />
                             )}
                           </div>
-                          <span className="text-[11px] text-cyan-400 font-mono">
+                          <span className="text-[11px] mutating-accent-text font-mono">
                             {ds.unlocked
                               ? localize(state.language, `ESTADO: ONLINE (NIVEL ${ds.level})`, `STATUS: ONLINE (LEVEL ${ds.level})`)
                               : technologyAvailable
@@ -223,8 +223,8 @@ export const DataPipelineManager: React.FC = () => {
                       {ds.unlocked && (
                         <span className={`px-2 py-0.5 rounded text-[11px] border font-bold ${
                           isConnected 
-                            ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300' 
-                            : 'bg-zinc-900 border-zinc-700 text-zinc-500'
+                            ? 'theme-accent-soft theme-accent-border mutating-accent-text' 
+                            : 'theme-sub-bg theme-border mutating-text-muted'
                         }`}>
                           {isConnected
                             ? localize(state.language, 'ENLAZADO A IA', 'CONNECTED TO AI')
@@ -234,44 +234,44 @@ export const DataPipelineManager: React.FC = () => {
                     </div>
 
                     {/* Description & Technical Specs */}
-                    <p className="text-xs text-zinc-300 mt-2.5 leading-snug">
+                    <p className="text-xs theme-text mt-2.5 leading-snug">
                       {content.description}
                     </p>
 
                     <div className="mt-2 p-2 rounded mutating-sub border text-[11px] space-y-1">
-                      <div className="text-purple-300 font-semibold">{content.bonusAttribute}</div>
-                      <div className="text-zinc-500 text-[11px]">{content.technicalDetails}</div>
+                      <div className="mutating-accent-text font-semibold">{content.bonusAttribute}</div>
+                      <div className="mutating-text-muted text-[11px]">{content.technicalDetails}</div>
                     </div>
 
                     {/* Metric Bars if unlocked */}
                     {ds.unlocked && (
-                      <div className="grid grid-cols-3 gap-2 mt-3 pt-2 border-t border-zinc-800 text-[11px]">
+                      <div className="grid grid-cols-3 gap-2 mt-3 pt-2 border-t theme-border text-[11px]">
                         <div>
-                          <span className="text-zinc-500 text-[11px] block">{localize(state.language, 'TOKENS INDEXADOS', 'INDEXED TOKENS')}</span>
-                          <span className="text-cyan-300 font-bold">{ds.tokensIndexed}M</span>
+                          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'TOKENS INDEXADOS', 'INDEXED TOKENS')}</span>
+                          <span className="mutating-accent-text font-bold">{ds.tokensIndexed}M</span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 text-[11px] block">{localize(state.language, 'CALIDAD Y PUREZA', 'QUALITY & PURITY')}</span>
-                          <span className="text-emerald-400 font-bold">{ds.qualityScore}%</span>
+                          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'CALIDAD Y PUREZA', 'QUALITY & PURITY')}</span>
+                          <span className="theme-success-text font-bold">{ds.qualityScore}%</span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 text-[11px] block">{localize(state.language, 'ALMACENAMIENTO', 'STORAGE')}</span>
-                          <span className="text-yellow-300 font-bold">{ds.storageGb} GB</span>
+                          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'ALMACENAMIENTO', 'STORAGE')}</span>
+                          <span className="theme-warn-text font-bold">{ds.storageGb} GB</span>
                         </div>
                       </div>
                     )}
                   </div>
 
                   {/* Action buttons */}
-                  <div className="mt-3 pt-2 border-t border-zinc-800 flex items-center justify-between">
+                  <div className="mt-3 pt-2 border-t theme-border flex items-center justify-between">
                     {!ds.unlocked ? (
                       <button
                         onClick={() => unlockDataSource(ds.id)}
                         disabled={state.credits < ds.cost || !technologyAvailable}
                         className={`w-full py-1.5 px-3 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                           state.credits >= ds.cost
-                            ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(0,255,200,0.3)]'
-                            : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                            ? 'mutating-btn-primary theme-on-accent cursor-pointer'
+                            : 'theme-raised-bg mutating-text-muted cursor-not-allowed border theme-border'
                         }`}
                       >
                         <Unlock className="w-3.5 h-3.5" />
@@ -279,7 +279,7 @@ export const DataPipelineManager: React.FC = () => {
                       </button>
                     ) : (
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-[11px] text-zinc-500">
+                        <span className="text-[11px] mutating-text-muted">
                           {localize(state.language, 'Capacidad Nivel', 'Capacity level')} {ds.level}
                         </span>
                         <button
@@ -287,8 +287,8 @@ export const DataPipelineManager: React.FC = () => {
                           disabled={state.credits < upgradeCost}
                           className={`py-1 px-3 rounded text-xs font-bold flex items-center gap-1 transition-all ${
                             state.credits >= upgradeCost
-                              ? 'bg-zinc-800 hover:bg-zinc-700 text-cyan-300 border border-cyan-600/50 cursor-pointer'
-                              : 'bg-zinc-900 text-zinc-600 border border-zinc-800 cursor-not-allowed'
+                              ? 'theme-raised-bg mutating-accent-text border theme-accent-border cursor-pointer'
+                              : 'theme-sub-bg mutating-text-muted border theme-border cursor-not-allowed'
                           }`}
                         >
                           <TrendingUp className="w-3.5 h-3.5" />
@@ -304,28 +304,28 @@ export const DataPipelineManager: React.FC = () => {
 
           {/* Visual Knowledge Flow Diagram */}
           <div className="mutating-panel border p-3 rounded-lg text-xs space-y-2">
-            <h4 className="font-bold text-cyan-300 flex items-center gap-1.5">
-              <GitFork className="w-3.5 h-3.5 text-cyan-400" />
+            <h4 className="font-bold mutating-accent-text flex items-center gap-1.5">
+              <GitFork className="w-3.5 h-3.5 mutating-accent-text" />
               {localize(state.language, 'FLUJO ARQUITECTÓNICO DE ALIMENTACIÓN NEURONAL (DAG)', 'NEURAL DATA FLOW ARCHITECTURE (DAG)')}
             </h4>
             <div className="flex flex-wrap items-center justify-center gap-2 py-2 text-center">
-              <div className="px-2 py-1 rounded bg-blue-950/60 border border-blue-500/50 text-blue-300 text-[11px]">
+              <div className="px-2 py-1 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px]">
                 SQL Relacional (Tablas ACID)
               </div>
-              <ArrowRight className="w-3 h-3 text-zinc-600" />
-              <div className="px-2 py-1 rounded bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 text-[11px]">
+              <ArrowRight className="w-3 h-3 mutating-text-muted" />
+              <div className="px-2 py-1 rounded theme-success-soft border theme-success-border theme-success-text text-[11px]">
                 {localize(state.language, 'Vectores Semánticos (HNSW RAG)', 'Semantic Vectors (HNSW RAG)')}
               </div>
-              <ArrowRight className="w-3 h-3 text-zinc-600" />
-              <div className="px-2 py-1 rounded bg-purple-950/60 border border-purple-500/50 text-purple-300 text-[11px]">
+              <ArrowRight className="w-3 h-3 mutating-text-muted" />
+              <div className="px-2 py-1 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px]">
                 {localize(state.language, 'Grafo Ontológico (RDF Tripletas)', 'Ontological Graph (RDF Triples)')}
               </div>
-              <ArrowRight className="w-3 h-3 text-zinc-600" />
-              <div className="px-2 py-1 rounded bg-amber-950/60 border border-amber-500/50 text-amber-300 text-[11px]">
+              <ArrowRight className="w-3 h-3 mutating-text-muted" />
+              <div className="px-2 py-1 rounded theme-warn-soft border theme-warn-border theme-warn-text text-[11px]">
                 {localize(state.language, 'Auto-Juego Sintético (Flywheel)', 'Synthetic Self-Play (Flywheel)')}
               </div>
-              <ArrowRight className="w-3 h-3 text-zinc-600" />
-              <div className="px-2 py-1 rounded bg-cyan-500 text-zinc-950 font-bold text-[11px] shadow-[0_0_10px_rgba(0,255,200,0.5)]">
+              <ArrowRight className="w-3 h-3 mutating-text-muted" />
+              <div className="px-2 py-1 rounded mutating-btn-primary theme-on-accent font-bold text-[11px]">
                 SYNAPSE NEURAL CORE
               </div>
             </div>
@@ -338,37 +338,37 @@ export const DataPipelineManager: React.FC = () => {
         <div className="space-y-4">
           {!state.isDataScrapingUnlocked ? (
             /* LOCKED STATE: EXPLAINS PREREQUISITES & DEPLOY ACTION */
-            <div className="rounded-lg border border-amber-900/60 bg-gradient-to-b from-[#130d06] to-[#0a0703] p-4 space-y-4">
+            <div className="rounded-lg border theme-warn-border theme-accent-soft p-4 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 rounded bg-amber-950 border border-amber-700 text-amber-400">
+                  <div className="p-2 rounded theme-warn-soft border theme-warn-border theme-warn-text">
                     <Lock className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-amber-200">
+                    <h3 className="font-bold text-sm theme-warn-text">
                       {localize(state.language, 'MÓDULO DE SCRAPING Y GENERACIÓN DE DATOS [BLOQUEADO]', 'DATA SCRAPING & GENERATION MODULE [LOCKED]')}
                     </h3>
-                    <p className="text-xs text-amber-400/80">
+                    <p className="text-xs theme-warn-text">
                       {localize(state.language, 'Investigación Heurística de Rastreadores Requerida', 'Autonomous Crawler Heuristic Research Required')}
                     </p>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded text-[11px] bg-amber-950 text-amber-300 border border-amber-700 font-bold">
+                <span className="px-2 py-0.5 rounded text-[11px] theme-warn-soft theme-warn-text border theme-warn-border font-bold">
                   {localize(state.language, 'PRERREQUISITO COGNITIVO', 'COGNITIVE PREREQUISITE')}
                 </span>
               </div>
 
-              <div className="bg-black/50 border border-amber-900/40 p-3 rounded text-xs space-y-2 text-zinc-300 leading-relaxed">
+              <div className="bg-black/50 border theme-warn-border p-3 rounded text-xs space-y-2 theme-text leading-relaxed">
                 <p>
                   {state.language === 'en'
                     ? <>To construct specialized domain datasets, your infrastructure needs an automated scraping and synthesis engine. <strong>You cannot access this initially</strong>: you must deploy an existing, sufficiently leveled general AI model to research and unlock this feature.</>
                     : <>Para construir datasets de dominios especializados, tu infraestructura necesita un motor autónomo de scraping y síntesis. <strong>No puedes acceder a este módulo inicialmente</strong>: debes desplegar un modelo general con suficiente nivel cognitivo para investigar y desbloquear esta tecnología.</>}
                 </p>
-                <div className="p-2.5 rounded bg-amber-950/30 border border-amber-800/40 text-[11px] space-y-1">
-                  <div className="font-bold text-amber-300">
+                <div className="p-2.5 rounded theme-warn-soft border theme-warn-border text-[11px] space-y-1">
+                  <div className="font-bold theme-warn-text">
                     {localize(state.language, 'Requisitos para Desbloquear:', 'Prerequisite Requirements to Unlock:')}
                   </div>
-                  <ul className="list-disc list-inside space-y-0.5 text-zinc-400">
+                  <ul className="list-disc list-inside space-y-0.5 mutating-text-muted">
                     <li>
                       {localize(state.language, '1x Modelo General desplegado con puntaje de evaluación ≥ 20', '1x Deployed General AI Model with Evaluation score ≥ 20')}
                     </li>
@@ -381,7 +381,7 @@ export const DataPipelineManager: React.FC = () => {
 
               {/* Status of Player's Models */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-zinc-300">
+                <h4 className="text-xs font-bold theme-text">
                   {localize(state.language, 'ESTADO DE TUS MODELOS GENERALES:', 'STATUS OF YOUR GENERAL MODELS:')}
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -392,16 +392,16 @@ export const DataPipelineManager: React.FC = () => {
                         key={m.id}
                         className={`p-2.5 rounded border flex items-center justify-between text-xs ${
                           isQualified
-                            ? 'bg-emerald-950/40 border-emerald-500/60 text-emerald-200'
-                            : 'bg-zinc-950 border-zinc-800 text-zinc-400'
+                            ? 'theme-success-soft theme-success-border theme-success-text'
+                            : 'theme-sub-bg theme-border mutating-text-muted'
                         }`}
                       >
                         <div>
                           <div className="font-bold flex items-center gap-1.5">
                             <span>{m.name}</span>
-                            {isQualified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                            {isQualified && <CheckCircle2 className="w-3.5 h-3.5 theme-success-text" />}
                           </div>
-                          <span className="text-[11px] text-zinc-500">
+                          <span className="text-[11px] mutating-text-muted">
                             {state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} / {DATA_SCRAPING_MIN_SCORE} {localize(state.language, 'requerido', 'required')}
                           </span>
                         </div>
@@ -409,12 +409,12 @@ export const DataPipelineManager: React.FC = () => {
                         {isQualified ? (
                           <button
                             onClick={() => unlockDataScrapingModule(m.id)}
-                            className="px-3 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all"
+                            className="px-3 py-1 rounded theme-btn-success theme-on-accent font-bold text-xs transition-all"
                           >
                             {localize(state.language, 'DESPLEGAR Y DESBLOQUEAR', 'DEPLOY & UNLOCK')}
                           </button>
                         ) : (
-                          <span className="text-[11px] text-amber-400 font-bold">
+                          <span className="text-[11px] theme-warn-text font-bold">
                             {localize(state.language, 'Falta entrenamiento', 'Needs more training')}
                           </span>
                         )}
@@ -426,16 +426,16 @@ export const DataPipelineManager: React.FC = () => {
 
               {/* Progressive Complexity Tree Preview */}
               <div className="mutating-panel border p-3 rounded-lg text-xs space-y-2">
-                <h4 className="font-bold text-cyan-300 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <h4 className="font-bold mutating-accent-text flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 mutating-accent-text" />
                   {localize(state.language, 'ÁRBOL DE COMPLEJIDAD PROGRESIVA DE DATASETS (VISTA PREVIA)', 'PROGRESSIVE DATASET COMPLEXITY TREE (PREVIEW)')}
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
                   {Object.values(DATASET_TIER_CONFIGS).map(tc => (
-                    <div key={tc.tier} className="p-2 rounded bg-zinc-950/80 border border-zinc-800">
-                      <div className="font-bold text-zinc-200">{state.language === 'en' ? tc.name : tc.nameEs}</div>
-                      <div className="text-zinc-500 mt-1">{localize(state.language, 'Req: puntaje del modelo ≥', 'Req: model score ≥')} {tc.minModelIQ}</div>
-                      <div className="text-cyan-400 mt-0.5">{tc.targetTokensMillions}M tokens · {tc.computePflopsRequired} PF</div>
+                    <div key={tc.tier} className="p-2 rounded theme-sub-bg border theme-border">
+                      <div className="font-bold theme-text">{state.language === 'en' ? tc.name : tc.nameEs}</div>
+                      <div className="mutating-text-muted mt-1">{localize(state.language, 'Req: puntaje del modelo ≥', 'Req: model score ≥')} {tc.minModelIQ}</div>
+                      <div className="mutating-accent-text mt-0.5">{tc.targetTokensMillions}M tokens · {tc.computePflopsRequired} PF</div>
                     </div>
                   ))}
                 </div>
@@ -446,34 +446,34 @@ export const DataPipelineManager: React.FC = () => {
             <div className="space-y-4">
               {/* Active Scrape Job Monitor */}
               {state.activeScrapeJob && (
-                <div className="rounded-lg border border-purple-500/80 bg-purple-950/20 p-3 space-y-2.5 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+                <div className="rounded-lg border theme-accent-border theme-accent-soft p-3 space-y-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
-                    <div className="flex items-center gap-2 text-purple-300">
-                      <Search className="w-4 h-4 animate-spin text-purple-400" />
+                    <div className="flex items-center gap-2 mutating-accent-text">
+                      <Search className="w-4 h-4 animate-spin mutating-accent-text" />
                       <span>
                         {localize(state.language, 'SÍNTESIS DE DATASET EN PROGRESO:', 'DATASET SYNTHESIS IN PROGRESS:')} {state.activeScrapeJob.domainLabel} (Tier {state.activeScrapeJob.tier})
                       </span>
                     </div>
                     <button
                       onClick={cancelDatasetScraping}
-                      className="px-2 py-0.5 rounded bg-red-950 border border-red-700 text-red-300 text-[11px] hover:bg-red-900 transition-colors"
+                      className="px-2 py-0.5 rounded theme-danger-soft border theme-danger-border theme-danger-text text-[11px] transition-colors"
                     >
                       {localize(state.language, 'CANCELAR SCRAPING', 'CANCEL SCRAPING')}
                     </button>
                   </div>
 
-                  <div className="w-full h-2.5 bg-zinc-950 rounded-full border border-purple-900 overflow-hidden relative">
+                  <div className="w-full h-2.5 theme-sub-bg rounded-full border theme-accent-border overflow-hidden relative">
                     <div
-                      className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400 transition-all duration-300 rounded-full"
+                      className="h-full theme-gradient transition-all duration-300 rounded-full"
                       style={{ width: `${state.activeScrapeJob.progressPercent}%` }}
                     />
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between text-[11px] text-zinc-400">
+                  <div className="flex flex-wrap items-center justify-between text-[11px] mutating-text-muted">
                     <span>{localize(state.language, 'Progreso:', 'Progress:')} {state.activeScrapeJob.progressPercent}%</span>
-                    <span>{localize(state.language, 'Modelo Asignado:', 'Assigned Model:')} <strong className="text-zinc-200">{state.activeScrapeJob.assignedModelName}</strong></span>
+                    <span>{localize(state.language, 'Modelo Asignado:', 'Assigned Model:')} <strong className="theme-text">{state.activeScrapeJob.assignedModelName}</strong></span>
                     <span>{localize(state.language, 'Cómputo Dedicado:', 'Compute Dedicated:')} {state.activeScrapeJob.computeRequiredPflops} PFLOPS</span>
-                    <span className="text-purple-300">
+                    <span className="mutating-accent-text">
                       {localize(state.language, 'Tiempo estimado:', 'Estimated time:')}{' '}
                       {state.activeScrapeJob.timeRemainingSeconds === null
                         ? '...'
@@ -485,22 +485,22 @@ export const DataPipelineManager: React.FC = () => {
 
               {/* Generator Console */}
               <form onSubmit={handleStartScraping} className="rounded-lg border mutating-panel p-3 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-accent-border pb-2">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-cyan-400" />
-                    <h3 className="font-bold text-xs text-cyan-300 tracking-wider">
+                    <Sparkles className="w-4 h-4 mutating-accent-text" />
+                    <h3 className="font-bold text-xs mutating-accent-text tracking-wider">
                       {localize(state.language, 'CONSOLA DE GENERACIÓN Y SCRAPING DE DATASETS ESPECIALIZADOS', 'SPECIALIZED DATASET SCRAPING & GENERATION CONSOLE')}
                     </h3>
                   </div>
-                  <span className="text-[11px] text-zinc-500">
+                  <span className="text-[11px] mutating-text-muted">
                     {localize(state.language, 'ÁRBOL DE COMPLEJIDAD TIERS 1 A 4', 'COMPLEXITY TREE TIERS 1 TO 4')}
                   </span>
                 </div>
 
                 {/* Step 1: Select Domain Preset or Custom Input */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                    <Search className="w-3.5 h-3.5 text-cyan-400" />
+                  <label className="text-xs font-bold theme-text flex items-center gap-1.5">
+                    <Search className="w-3.5 h-3.5 mutating-accent-text" />
                     <span>{localize(state.language, '1. SELECCIONA EL DOMINIO OBJETIVO:', '1. SELECT TARGET DOMAIN:')}</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -516,8 +516,8 @@ export const DataPipelineManager: React.FC = () => {
                           }}
                           className={`p-2 rounded text-left border transition-all ${
                             isSelected
-                              ? 'bg-cyan-950/80 border-cyan-400 text-cyan-200 shadow-[0_0_8px_rgba(0,255,200,0.15)]'
-                              : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                              ? 'theme-accent-soft theme-accent-border mutating-accent-text'
+                              : 'theme-sub-bg theme-border mutating-text-muted'
                           }`}
                         >
                           <div className="flex items-center justify-between text-xs font-bold">
@@ -525,9 +525,9 @@ export const DataPipelineManager: React.FC = () => {
                               {getDomainIcon(preset.iconName)}
                               {state.language === 'en' ? preset.name : preset.nameEs}
                             </span>
-                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />}
+                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 mutating-accent-text" />}
                           </div>
-                          <p className="text-[11px] text-zinc-500 mt-1 line-clamp-2">
+                          <p className="text-[11px] mutating-text-muted mt-1 line-clamp-2">
                             {state.language === 'en' ? preset.description : preset.descriptionEs}
                           </p>
                         </button>
@@ -539,20 +539,20 @@ export const DataPipelineManager: React.FC = () => {
                       onClick={() => setSelectedDomain('custom')}
                       className={`p-2 rounded border cursor-pointer transition-all ${
                         selectedDomain === 'custom'
-                          ? 'bg-cyan-950/80 border-cyan-400 text-cyan-200'
-                          : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                          ? 'theme-accent-soft theme-accent-border mutating-accent-text'
+                          : 'theme-sub-bg theme-border mutating-text-muted'
                       }`}
                     >
                       <div className="text-xs font-bold flex items-center justify-between">
                         <span>{localize(state.language, 'Dominio Personalizado (Write-in)', 'Custom Domain (Write-in)')}</span>
-                        {selectedDomain === 'custom' && <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />}
+                        {selectedDomain === 'custom' && <CheckCircle2 className="w-3.5 h-3.5 mutating-accent-text" />}
                       </div>
                       <input
                         type="text"
                         value={customDomainInput}
                         onChange={e => setCustomDomainInput(e.target.value)}
                         placeholder={localize(state.language, 'ej. Quantum Cryptanalysis', 'e.g. Quantum Cryptanalysis')}
-                        className="mt-1.5 w-full bg-black/60 border border-zinc-700 rounded px-2 py-1 text-[11px] text-zinc-200 outline-none focus:border-cyan-400"
+                        className="mt-1.5 w-full bg-black/60 border theme-border rounded px-2 py-1 text-[11px] theme-text outline-none"
                       />
                     </div>
                   </div>
@@ -560,8 +560,8 @@ export const DataPipelineManager: React.FC = () => {
 
                 {/* Step 2: Progressive Complexity Tier */}
                 <div className="space-y-1.5 pt-1">
-                  <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                    <Sliders className="w-3.5 h-3.5 text-purple-400" />
+                  <label className="text-xs font-bold theme-text flex items-center gap-1.5">
+                    <Sliders className="w-3.5 h-3.5 mutating-accent-text" />
                     <span>{localize(state.language, '2. NIVEL DE COMPLEJIDAD PROGRESIVA (TIER 1 - 4):', '2. PROGRESSIVE COMPLEXITY TIER (TIER 1 - 4):')}</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -579,24 +579,24 @@ export const DataPipelineManager: React.FC = () => {
                           }}
                           className={`p-2 rounded text-left border transition-all ${
                             isTierSelected
-                              ? 'bg-purple-950/80 border-purple-400 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
-                              : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                              ? 'theme-accent-soft theme-accent-border mutating-accent-text'
+                              : 'theme-sub-bg theme-border mutating-text-muted'
                           } ${!modelMeetsIQ ? 'opacity-60' : ''}`}
                         >
                           <div className="flex items-center justify-between text-xs font-bold">
                             <span>{state.language === 'en' ? tc.name.split(':')[0] : tc.nameEs.split(':')[0]}</span>
                             {!modelMeetsIQ ? (
-                              <span className="text-[11px] text-amber-400 flex items-center gap-0.5">
+                              <span className="text-[11px] theme-warn-text flex items-center gap-0.5">
                                 <Lock className="w-2.5 h-2.5" /> {state.language === 'es' ? 'Puntaje' : 'Score'} ≥ {tc.minModelIQ}
                               </span>
                             ) : (
-                              <span className="text-[11px] text-emerald-400 font-bold">✓ APTO</span>
+                              <span className="text-[11px] theme-success-text font-bold">✓ APTO</span>
                             )}
                           </div>
-                          <div className="text-[11px] text-cyan-300 font-bold mt-1">
+                          <div className="text-[11px] mutating-accent-text font-bold mt-1">
                             {tc.targetTokensMillions}M tok · {tc.computePflopsRequired} PF
                           </div>
-                          <p className="text-[11px] text-zinc-500 mt-1 line-clamp-2">
+                          <p className="text-[11px] mutating-text-muted mt-1 line-clamp-2">
                             {state.language === 'en' ? tc.description : tc.descriptionEs}
                           </p>
                         </button>
@@ -608,13 +608,13 @@ export const DataPipelineManager: React.FC = () => {
                 {/* Step 3: Assign Qualified Model */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="text-xs font-bold text-zinc-300 block mb-1">
+                    <label className="text-xs font-bold theme-text block mb-1">
                       {localize(state.language, '3. MODELO ASIGNADO PARA EL RASTREO Y SÍNTESIS:', '3. ASSIGNED MODEL FOR CRAWLING & SYNTHESIS:')}
                     </label>
                     <select
                       value={assignedModelId}
                       onChange={e => setAssignedModelId(e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-cyan-400 font-mono"
+                      className="w-full theme-sub-bg border theme-border rounded px-2.5 py-1.5 text-xs theme-text outline-none font-mono"
                     >
                       {state.savedModels.map(m => (
                         <option key={m.id} value={m.id}>
@@ -622,7 +622,7 @@ export const DataPipelineManager: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    <span className="text-[11px] text-zinc-500 mt-1 block">
+                    <span className="text-[11px] mutating-text-muted mt-1 block">
                       {localize(state.language, 'Modelos con mayor puntaje pueden generar tiers superiores de datos con mayor pureza.', 'Higher-scoring models can scrape higher tiers with greater dataset purity.')}
                     </span>
                   </div>
@@ -633,8 +633,8 @@ export const DataPipelineManager: React.FC = () => {
                       disabled={!!state.activeScrapeJob || !isModelQualifiedForTier || (selectedDomain === 'custom' && !customDomainInput.trim())}
                       className={`w-full py-2 px-3 rounded text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                         !state.activeScrapeJob && isModelQualifiedForTier && (selectedDomain !== 'custom' || !!customDomainInput.trim())
-                          ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] cursor-pointer'
-                          : 'bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed'
+                          ? 'mutating-btn-primary text-white cursor-pointer'
+                          : 'theme-raised-bg mutating-text-muted border theme-border cursor-not-allowed'
                       }`}
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
@@ -643,7 +643,7 @@ export const DataPipelineManager: React.FC = () => {
                       </span>
                     </button>
                     {!isModelQualifiedForTier && (
-                      <span className="text-[11px] text-amber-400 mt-1 text-center font-bold">
+                      <span className="text-[11px] theme-warn-text mt-1 text-center font-bold">
                         {localize(state.language, `El modelo asignado necesita puntaje ≥ ${tierConfig.minModelIQ} para este nivel.`, `Assigned model needs score ≥ ${tierConfig.minModelIQ} for this tier.`)}
                       </span>
                     )}
@@ -654,11 +654,11 @@ export const DataPipelineManager: React.FC = () => {
               {/* Generated Datasets Library */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                    <Database className="w-3.5 h-3.5 text-cyan-400" />
+                  <h4 className="text-xs font-bold theme-text flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 mutating-accent-text" />
                     <span>{localize(state.language, 'REPOSITORIO DE DATASETS ESPECIALIZADOS Y BASELINE GENERAL:', 'SPECIALIZED DATASETS & GENERAL BASELINE REPOSITORY:')}</span>
                   </h4>
-                  <span className="text-[11px] text-zinc-500">
+                  <span className="text-[11px] mutating-text-muted">
                     {state.customDatasets.length} {localize(state.language, 'disponibles', 'available')}
                   </span>
                 </div>
@@ -671,47 +671,47 @@ export const DataPipelineManager: React.FC = () => {
                         key={ds.id}
                         className={`p-3 rounded-lg border flex flex-col justify-between ${
                           isGeneral
-                            ? 'bg-cyan-950/20 border-cyan-800/60'
-                            : 'bg-[#09111c] border-purple-900/60'
+                            ? 'theme-accent-soft theme-accent-border'
+                            : 'theme-panel-bg theme-accent-border'
                         }`}
                       >
                         <div>
                           <div className="flex items-start justify-between gap-1.5">
                             <div>
-                              <h5 className="font-bold text-xs text-zinc-200">{ds.name}</h5>
-                              <span className="text-[11px] text-cyan-400 font-mono block">
+                              <h5 className="font-bold text-xs theme-text">{ds.name}</h5>
+                              <span className="text-[11px] mutating-accent-text font-mono block">
                                 {ds.domainLabel} · Tier {ds.tier}
                               </span>
                             </div>
                             <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                              isGeneral ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'bg-purple-950 text-purple-300 border border-purple-800'
+                              isGeneral ? 'theme-accent-soft mutating-accent-text border theme-accent-border' : 'theme-accent-soft mutating-accent-text border theme-accent-border'
                             }`}>
                               {isGeneral ? 'BASELINE' : `TIER ${ds.tier}`}
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-1 my-2 text-[11px] text-zinc-400 border-y border-zinc-800/80 py-1.5">
+                          <div className="grid grid-cols-3 gap-1 my-2 text-[11px] mutating-text-muted border-y theme-border py-1.5">
                             <div>
-                              <span className="text-zinc-500 block text-[11px]">VOLUMEN</span>
-                              <span className="text-zinc-200 font-bold">{ds.tokensCount}M tok</span>
+                              <span className="mutating-text-muted block text-[11px]">VOLUMEN</span>
+                              <span className="theme-text font-bold">{ds.tokensCount}M tok</span>
                             </div>
                             <div>
-                              <span className="text-zinc-500 block text-[11px]">{localize(state.language, 'PUREZA', 'PURITY')}</span>
-                              <span className="text-emerald-400 font-bold">{ds.qualityScore}%</span>
+                              <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'PUREZA', 'PURITY')}</span>
+                              <span className="theme-success-text font-bold">{ds.qualityScore}%</span>
                             </div>
                             <div>
-                              <span className="text-zinc-500 block text-[11px]">CÓMPUTO</span>
-                              <span className="text-yellow-300 font-bold">{ds.computeSpentPflops} PF</span>
+                              <span className="mutating-text-muted block text-[11px]">CÓMPUTO</span>
+                              <span className="theme-warn-text font-bold">{ds.computeSpentPflops} PF</span>
                             </div>
                           </div>
 
-                          <p className="text-[11px] text-zinc-400 leading-snug line-clamp-2">
+                          <p className="text-[11px] mutating-text-muted leading-snug line-clamp-2">
                             {ds.description}
                           </p>
                         </div>
 
-                        <div className="mt-3 pt-2 border-t border-zinc-800/80 flex items-center justify-between">
-                          <span className="text-[11px] text-zinc-500 truncate max-w-36">
+                        <div className="mt-3 pt-2 border-t theme-border flex items-center justify-between">
+                          <span className="text-[11px] mutating-text-muted truncate max-w-36">
                             {ds.generatedByModelName ? `Por ${ds.generatedByModelName}` : 'Baseline Abierto'}
                           </span>
                           <button
@@ -719,8 +719,8 @@ export const DataPipelineManager: React.FC = () => {
                             disabled={!!state.activeTraining}
                             className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all ${
                               !isGeneral
-                                ? 'bg-purple-950 hover:bg-purple-900 border border-purple-500 text-purple-200'
-                                : 'bg-cyan-950 hover:bg-cyan-900 border border-cyan-500 text-cyan-200'
+                                ? 'theme-accent-soft border theme-accent-border mutating-accent-text'
+                                : 'theme-accent-soft border theme-accent-border mutating-accent-text'
                             } disabled:opacity-40 disabled:cursor-not-allowed`}
                           >
                             {localize(

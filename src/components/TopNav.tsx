@@ -86,10 +86,10 @@ export const TopNav: React.FC<TopNavProps> = ({
   const p = VERSION_PROFILES[lang][ver];
 
   const getBrandIcon = () => {
-    if (ver === 4) return <Skull className="w-4 h-4 text-rose-500" />;
-    if (ver === 3) return <ShieldAlert className="w-4 h-4 text-cyan-400" />;
-    if (ver === 2) return <Cpu className="w-4 h-4 text-indigo-400" />;
-    return <Sparkles className="w-4 h-4 text-blue-400" />;
+    if (ver === 4) return <Skull className="w-4 h-4 theme-danger-text" />;
+    if (ver === 3) return <ShieldAlert className="w-4 h-4 mutating-accent-text" />;
+    if (ver === 2) return <Cpu className="w-4 h-4 mutating-accent-text" />;
+    return <Sparkles className="w-4 h-4 mutating-accent-text" />;
   };
 
   return (
@@ -125,7 +125,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           <button
             onClick={() => setGameSpeed(state.gameSpeed === 0 ? 1 : 0)}
             className={`px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer ${
-              state.gameSpeed === 0 ? 'bg-amber-500 text-slate-950 font-black' : 'mutating-text-muted hover:opacity-100'
+              state.gameSpeed === 0 ? 'theme-btn-warn theme-on-accent font-black' : 'mutating-text-muted hover:opacity-100'
             }`}
             title="Pause / Resume Simulation (Space)"
           >
@@ -171,7 +171,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-xl mutating-sub hover:opacity-90 border text-xs font-medium transition cursor-pointer"
             title="Download PDF Systems Manual"
           >
-            <FileText className="w-3.5 h-3.5 text-amber-500" />
+            <FileText className="w-3.5 h-3.5 theme-warn-text" />
             <span>PDF</span>
           </a>
 
@@ -181,7 +181,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             className="p-1.5 rounded-xl mutating-sub hover:opacity-90 border transition cursor-pointer"
             title={soundMuted ? 'Unmute Sound FX' : 'Mute Sound FX'}
           >
-            {soundMuted ? <VolumeX className="w-3.5 h-3.5 text-rose-500" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-500" />}
+            {soundMuted ? <VolumeX className="w-3.5 h-3.5 theme-danger-text" /> : <Volume2 className="w-3.5 h-3.5 theme-success-text" />}
           </button>
 
           {/* Cloud Save Button */}
@@ -190,12 +190,12 @@ export const TopNav: React.FC<TopNavProps> = ({
             disabled={isSaving}
             className={`px-2.5 py-1 rounded-xl border text-xs font-mono font-semibold flex items-center gap-1.5 transition cursor-pointer ${
               savingAnim
-                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600'
+                ? 'theme-success-soft theme-success-border theme-success-text'
                 : 'mutating-sub hover:opacity-90'
             }`}
             title="Sync & Save Progress"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSaving || savingAnim ? 'animate-spin text-emerald-500' : 'mutating-text-muted'}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isSaving || savingAnim ? 'animate-spin theme-success-text' : 'mutating-text-muted'}`} />
             <span className="hidden sm:inline">{isSaving ? (lang === 'es' ? 'Guardando...' : 'Saving...') : (lang === 'es' ? 'Guardar' : 'Save')}</span>
           </button>
 
@@ -204,11 +204,11 @@ export const TopNav: React.FC<TopNavProps> = ({
             onClick={() => { sound.playKeyClick(); onOpenAuth(); }}
             className={`px-2.5 py-1 rounded-xl border text-xs font-mono font-semibold flex items-center gap-1.5 transition cursor-pointer ${
               user
-                ? 'bg-blue-500/20 border-blue-500/60 text-blue-600'
+                ? 'theme-accent-soft theme-accent-border mutating-accent-text'
                 : 'mutating-sub hover:opacity-90'
             }`}
           >
-            {user ? <User className="w-3.5 h-3.5 text-blue-500" /> : <CloudOff className="w-3.5 h-3.5 text-amber-500" />}
+            {user ? <User className="w-3.5 h-3.5 mutating-accent-text" /> : <CloudOff className="w-3.5 h-3.5 theme-warn-text" />}
             <span className="hidden md:inline truncate max-w-[90px]">{user ? user.displayName?.split(' ')[0] || 'Operative' : (lang === 'es' ? 'Cuenta' : 'Account')}</span>
           </button>
         </div>

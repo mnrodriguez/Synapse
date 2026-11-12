@@ -206,7 +206,7 @@ const MainGameScreen: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center gap-2.5 truncate">
-                    <Icon className={`w-4 h-4 shrink-0 ${item.pulse ? 'text-rose-400 animate-pulse' : ''}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${item.pulse ? 'theme-danger-text animate-pulse' : ''}`} />
                     <span className="nav-label truncate">{item.label}</span>
                   </div>
                   {item.badge && (
@@ -237,7 +237,7 @@ const MainGameScreen: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center gap-2.5 truncate">
-                    <Icon className={`w-4 h-4 shrink-0 ${item.pulse ? 'text-rose-400 animate-pulse' : ''}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${item.pulse ? 'theme-danger-text animate-pulse' : ''}`} />
                     <span className="nav-label truncate">{item.label}</span>
                   </div>
                   {item.badge && (
@@ -254,14 +254,14 @@ const MainGameScreen: React.FC = () => {
           <div className="p-2.5 mutating-sub text-xs space-y-2 mt-3">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-[11px] nav-label">{p.safetyLabel}</span>
-              <ShieldAlert className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <ShieldAlert className="w-3.5 h-3.5 theme-success-text shrink-0" />
             </div>
             <button 
               onClick={attemptEmergencyReset} 
               className={`w-full py-1.5 px-2 rounded font-semibold text-[11px] flex items-center justify-center gap-1.5 transition cursor-pointer ${
                 ver === 4 
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse' 
-                  : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-500 border border-rose-500/30'
+                  ? 'theme-danger-soft theme-danger-text border theme-danger-border animate-pulse' 
+                  : 'theme-danger-soft theme-danger-text border theme-danger-border'
               }`}
             >
               {ver === 4 ? <Lock className="w-3.5 h-3.5 shrink-0" /> : <Power className="w-3.5 h-3.5 shrink-0" />}

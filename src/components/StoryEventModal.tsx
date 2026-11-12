@@ -20,7 +20,7 @@ export const StoryEventModal: React.FC = () => {
   const ev = storyEventText(state.language, id);
   const remaining = (state.pendingStoryEvents?.length ?? 1) - 1;
   const Icon = ev.tone === 'danger' ? ShieldAlert : ev.tone === 'warning' ? AlertTriangle : Mail;
-  const iconColor = ev.tone === 'danger' ? 'text-rose-500' : ev.tone === 'warning' ? 'text-amber-500' : 'mutating-accent-text';
+  const iconColor = ev.tone === 'danger' ? 'theme-danger-text' : ev.tone === 'warning' ? 'theme-warn-text' : 'mutating-accent-text';
 
   return (
     <div
