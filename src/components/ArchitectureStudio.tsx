@@ -410,7 +410,7 @@ export const ArchitectureStudio: React.FC = () => {
           <span className="text-[11px] mutating-text-muted font-mono block">
             {estimatedTrainingSeconds === null
               ? ''
-              : `(~${formatTrainingDuration(estimatedTrainingSeconds / estimateSpeed)} @ ${estimateSpeed}x)`}
+              : `(~${formatTrainingDuration(estimatedTrainingSeconds / estimateSpeed)} ${localize(state.language, 'reales', 'real')} @ ${estimateSpeed}x)`}
           </span>
           {state.gameSpeed === 0 && (
             <span className="text-[11px] theme-warn-text block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>

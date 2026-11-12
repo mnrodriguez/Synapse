@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { AgentRole, ContractGig, BotGroup } from '../types/game';
+import { AgentRole, ContractGig, BotGroup, CapabilityFactor } from '../types/game';
 import { 
   Briefcase, 
   CheckCircle2, 
@@ -40,8 +40,8 @@ import { localize, t } from '../utils/i18n';
 import { localizedContract } from '../utils/gameContentI18n';
 import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from '../utils/constants';
 import { generateDynamicContracts } from '../services/aiService';
-import { evaluateMissionTeam, isContractEligibleForTeam } from '../utils/missionEvaluation';
-import { formatCompute } from '../utils/training';
+import { evaluateMissionTeam, isContractEligibleForTeam, modelRequirementCheck } from '../utils/missionEvaluation';
+import { formatCompute, formatGameTime } from '../utils/training';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 
 // Squad colours identify the player's squads, so they stay distinct in every version.
@@ -67,6 +67,15 @@ const getRequiredUiVersionForTier = (tier: string) => {
   if (tier === 'tier3_blackops') return { nameEn: 'Blackbox OS (v3.0)', nameEs: 'Blackbox OS (v3.0)', ver: 3 };
   if (tier === 'tier4_singularity') return { nameEn: 'Sovereign Core (v4.0)', nameEs: 'Sovereign Core (v4.0)', ver: 4 };
   return { nameEn: 'Synapse Home Lab (v1.0)', nameEs: 'Synapse Home Lab (v1.0)', ver: 1 };
+};
+
+// Names and advice for each capability factor, shown when a mission fails.
+const FACTOR_HELP: Record<CapabilityFactor, { es: string; en: string; tipEs: string; tipEn: string }> = {
+  reasoning: { es: 'Razonamiento', en: 'Reasoning', tipEs: 'entrena el modelo para subir su puntaje o usa uno más grande', tipEn: 'train the model to raise its score or use a bigger one' },
+  specialization: { es: 'Especialización', en: 'Specialization', tipEs: 'usa un micro-modelo del dominio o una topología acorde al rol', tipEn: 'use a domain micro-model or a topology that suits the role' },
+  dataReadiness: { es: 'Datos', en: 'Data', tipEs: 'conecta al modelo las fuentes de datos que pide el contrato', tipEn: 'connect the data sources the contract asks for to the model' },
+  reliability: { es: 'Confiabilidad', en: 'Reliability', tipEs: 'baja la temperatura de inferencia del agente o usa menos cuantización', tipEn: 'lower the agent inference temperature or use less quantization' },
+  safety: { es: 'Seguridad', en: 'Safety', tipEs: 'sube la rigurosidad de los guardrails o suma un supervisor', tipEn: 'raise guardrail strictness or add an overseer' }
 };
 
 export const ContractBoard: React.FC = () => {
@@ -283,10 +292,11 @@ export const ContractBoard: React.FC = () => {
       .map(a => state.savedModels.find(m => m.id === a.modelId))
       .filter(m => m !== undefined);
 
-    const hasRequiredParams = assignedModels.some(m => m.parametersCount >= contract.requiredParams);
-    const hasRequiredReasoning = assignedModels.some(m => m.reasoningScore >= contract.requiredMinReasoning);
-    const hasRequiredTopology = !contract.requiredTopology ||
-      assignedModels.some(m => m.topology === contract.requiredTopology);
+    // One model has to meet params, score and topology together (the same rule the mission start uses).
+    const modelCheck = modelRequirementCheck(contract, assignedModels);
+    const hasRequiredParams = modelCheck.params;
+    const hasRequiredReasoning = modelCheck.reasoning;
+    const hasRequiredTopology = modelCheck.topology;
 
     // Data sources check
     const hasRequiredData = (contract.requiredDataTypes || []).every(reqType =>
@@ -333,6 +343,7 @@ export const ContractBoard: React.FC = () => {
       hasMinAgents,
       hasRoles,
       missingRoles,
+      candidateModel: modelCheck.model,
       hasRequiredParams,
       hasRequiredReasoning,
       hasRequiredTopology,
@@ -475,7 +486,7 @@ export const ContractBoard: React.FC = () => {
                     <div className="text-right shrink-0">
                       <span className="text-xs font-bold theme-warn-text flex items-center justify-end gap-1">
                         <Clock className="w-3 h-3 theme-warn-text" />
-                        {gig.timeRemaining}s
+                        {formatGameTime(gig.timeRemaining)}
                       </span>
                       <span className="text-[11px] theme-success-text">
                         {Math.round((gig.successProbability ?? 0) * 100)}% {localize(state.language, 'éxito', 'chance')}
@@ -536,11 +547,29 @@ export const ContractBoard: React.FC = () => {
                       : `Reward: +$${state.lastMissionOutcome.rewardCredits.toLocaleString()} CR. Suspicion: +${state.lastMissionOutcome.suspicionAdded}%.`}
                   </p>
                 ) : (
-                  <p>
-                    {state.language === 'es'
-                      ? `La inferencia falló (Tirada: ${Math.round(state.lastMissionOutcome.roll * 100)}%). El contrato sigue disponible para reintento.`
-                      : `Inference failed (Roll: ${Math.round(state.lastMissionOutcome.roll * 100)}%). Mission remains ready to retry.`}
-                  </p>
+                  <div className="space-y-1">
+                    <p>
+                      {localize(
+                        state.language,
+                        `La misión tenía ${Math.round(state.lastMissionOutcome.successProbability * 100)}% de probabilidad de éxito y la tirada fue ${Math.round(state.lastMissionOutcome.roll * 100)}%. El contrato sigue disponible para reintentar.`,
+                        `The mission had a ${Math.round(state.lastMissionOutcome.successProbability * 100)}% chance of success and the roll was ${Math.round(state.lastMissionOutcome.roll * 100)}%. The contract is still available to retry.`
+                      )}
+                    </p>
+                    {(state.lastMissionOutcome.weakestFactors ?? []).length > 0 && (
+                      <>
+                        <p className="font-bold">{localize(state.language, 'Por qué falló: los puntos más débiles del equipo', 'Why it failed: the team\'s weakest points')}</p>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          {state.lastMissionOutcome.weakestFactors!.map(f => (
+                            <li key={f.factor}>
+                              <strong>{localize(state.language, FACTOR_HELP[f.factor].es, FACTOR_HELP[f.factor].en)} {f.score}/100</strong>
+                              {': '}
+                              {localize(state.language, FACTOR_HELP[f.factor].tipEs, FACTOR_HELP[f.factor].tipEn)}.
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -721,7 +750,7 @@ export const ContractBoard: React.FC = () => {
                           </span>
                           <span className="text-[11px] mutating-text-muted flex items-center justify-end gap-1">
                             <Clock className="w-2.5 h-2.5" />
-                            {contract.durationSeconds}s
+                            {formatGameTime(contract.durationSeconds)}
                           </span>
                         </div>
                       </div>
@@ -900,6 +929,11 @@ export const ContractBoard: React.FC = () => {
 
                       {/* Requirements Checklist */}
                       <div className="mt-2.5 space-y-1 text-[11px] pt-2 border-t theme-border">
+                        {readiness.candidateModel && (
+                          <div className="mutating-text-muted">
+                            {localize(state.language, 'Requisitos de modelo evaluados sobre', 'Model requirements checked against')}: <strong className="theme-text">{readiness.candidateModel.name}</strong>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between">
                           <span className="mutating-text-muted text-[11px]">{t(state.language, 'minimum_parameters')}:</span>
                           <span className={readiness.hasRequiredParams ? 'theme-success-text font-bold' : 'theme-danger-text'}>
@@ -979,7 +1013,7 @@ export const ContractBoard: React.FC = () => {
                             </div>
                             <div>
                               <span className="mutating-text-muted">{localize(state.language, 'Tiempo est.:', 'Est. Time:')} </span>
-                              <span className="font-bold theme-text">{readiness.assessment.estimatedDurationSeconds}s</span>
+                              <span className="font-bold theme-text">{formatGameTime(readiness.assessment.estimatedDurationSeconds)}</span>
                             </div>
                           </div>
                         </div>

@@ -34,8 +34,9 @@ import { HARDWARE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { isProgressionUnlocked } from '../utils/progression';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
-import { formatCompute, externalComputePflops, COVERT_NODE_PFLOPS, UNIVERSITY_LOAN_PFLOPS } from '../utils/training';
+import { formatCompute, externalComputePflops, COVERT_NODE_PFLOPS, UNIVERSITY_LOAN_PFLOPS, formatGameTime } from '../utils/training';
 import { PHASE_SCALES, toDisplayProgress, type UiVersion } from '../utils/singularityGoals';
+import { HARDWARE_SPEC_NOTES, specSourceLabel } from '../utils/hardwareSpecs';
 
 type HardwareMenuTab = 'compute' | 'thermal_power' | 'facility';
 
@@ -336,7 +337,12 @@ export const HardwareRack: React.FC = () => {
                     <div className="flex flex-wrap gap-2 mt-2.5 text-[11px]">
                       {item.computeTflops > 0 && (
                         <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text">
-                          +{item.computeTflops} TFLOPS
+                          +{item.computeTflops} TFLOPS{HARDWARE_SPEC_NOTES[item.id]?.precision ? ` ${HARDWARE_SPEC_NOTES[item.id]?.precision}` : ''}
+                        </span>
+                      )}
+                      {HARDWARE_SPEC_NOTES[item.id] && HARDWARE_SPEC_NOTES[item.id].source !== 'spec' && (
+                        <span className={`px-2 py-0.5 rounded border font-bold ${HARDWARE_SPEC_NOTES[item.id].source === 'fiction' ? 'theme-danger-soft theme-danger-border theme-danger-text' : 'theme-warn-soft theme-warn-border theme-warn-text'}`}>
+                          {specSourceLabel(state.language, HARDWARE_SPEC_NOTES[item.id].source)}
                         </span>
                       )}
                       {item.vramGb > 0 && (
@@ -414,7 +420,7 @@ export const HardwareRack: React.FC = () => {
             <div>
               <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Estado del Disyuntor', 'Circuit Breaker')}</span>
               <span className={`font-bold text-sm ${state.powerTripSeconds > 0 ? 'theme-danger-text animate-pulse' : 'theme-success-text'}`}>
-                {state.powerTripSeconds > 0 ? `${state.powerTripSeconds}s (DISPARADO)` : 'NOMINAL (OK)'}
+                {state.powerTripSeconds > 0 ? `${formatGameTime(state.powerTripSeconds)} (${localize(state.language, 'DISPARADO', 'TRIPPED')})` : 'NOMINAL (OK)'}
               </span>
             </div>
           </div>
@@ -669,12 +675,12 @@ export const HardwareRack: React.FC = () => {
                   {t(state.language, 'shadow_compute_description')} Riesgo de detección: <strong className="theme-warn-text">{shadowDetectionChance.toFixed(0)}%</strong>. 
                   {state.borrowedComputeSeconds > 0 && (
                     <span className="mutating-accent-text ml-1">
-                      {t(state.language, 'temporary_capacity')}: {formatCompute(state.borrowedComputePflops)} · {state.borrowedComputeSeconds}s restantes.
+                      {t(state.language, 'temporary_capacity')}: {formatCompute(state.borrowedComputePflops)} · {formatGameTime(state.borrowedComputeSeconds)} {localize(state.language, 'restantes', 'left')}.
                     </span>
                   )}
                   {state.detentionSeconds > 0 && (
                     <span className="theme-danger-text font-bold ml-1">
-                      {t(state.language, 'operative_detained')} · {state.detentionSeconds}s de bloqueo.
+                      {t(state.language, 'operative_detained')} · {formatGameTime(state.detentionSeconds)} {localize(state.language, 'de bloqueo', 'blocked')}.
                     </span>
                   )}
                 </p>

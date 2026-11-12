@@ -268,7 +268,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
   },
   {
     id: 'power_solar_array',
-    name: 'Residential Solar Micro-Inverter (3.0 kW)',
+    name: 'Second Household Circuit (3.0 kW total)',
     category: 'power',
     price: 55,
     computeTflops: 0,
@@ -276,7 +276,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     powerKw: 0,
     heatGen: 0,
     powerCapacityKw: 3.0,
-    description: 'Auxiliary solar panels. Doubles your power capacity without overloading household circuit breakers.',
+    description: 'A heavy extension cord to another circuit of the house. Doubles the power you can draw without tripping the breaker.',
     count: 0,
     isStarterChoice: true,
     minSingularityRequired: 0

@@ -12,7 +12,10 @@ import {
   LOAN_TRIAL_DAYS
 } from '../src/utils/training';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, LOAN_WARNING_DAY } from '../src/utils/storyEvents';
-import type { GameState } from '../src/types/game';
+import type { GameState, ModelArchitecture, ContractGig, AgentInstance, GuardrailConfig } from '../src/types/game';
+import { formatGameTime, GAME_HOURS_PER_TICK } from '../src/utils/training';
+import { modelRequirementCheck, meetsModelRequirements, weakestTeamFactors } from '../src/utils/missionEvaluation';
+import { HARDWARE_SPEC_NOTES } from '../src/utils/hardwareSpecs';
 import { planTrainingRun, lossAt, vramForRun, sanitizeTrainingConfig, DEFAULT_TRAINING_CONFIG, MAX_EPOCHS } from '../src/utils/trainingRun';
 import { buildEpilogue, canAttemptContainment, endingTitle, CONTAINMENT_MAX_SUBVERSION } from '../src/utils/epilogue';
 import { agentChatter, AGENT_DIALOGUE_ROLES, STORY_LINES_FOR_TESTS, COVERT_LINES_FOR_TESTS } from '../src/utils/agentDialogues';
@@ -295,5 +298,40 @@ describe('training runs (validation, overfitting, learning rate)', () => {
   test('saved settings are sanitized', () => {
     expect(sanitizeTrainingConfig({ epochs: 99, learningRate: 'turbo', batchSize: 'large' })).toEqual({ ...DEFAULT_TRAINING_CONFIG, epochs: MAX_EPOCHS, batchSize: 'large' });
     expect(sanitizeTrainingConfig(undefined)).toEqual(DEFAULT_TRAINING_CONFIG);
+  });
+});
+
+describe('one clock, hardware notes and mission evaluation', () => {
+  test('a tick is 30 game minutes for everything; 48 ticks are a day', () => {
+    expect(formatGameTime(1)).toBe('30 min');
+    expect(formatGameTime(7)).toBe('3 h 30 min');
+    expect(formatGameTime(48)).toBe('1 d');
+    expect(formatGameTime(48 * 7 + 4)).toBe('7 d 2 h');
+    expect(GAME_HOURS_PER_TICK * 48).toBe(24);
+  });
+
+  const model = (id: string, params: number, score: number, topology = 'transformer') =>
+    ({ id, name: id, parametersCount: params, reasoningScore: score, topology, activeDataSources: [] }) as unknown as ModelArchitecture;
+  const contract = { requiredParams: 100e6, requiredMinReasoning: 30, requiredTopology: undefined } as unknown as ContractGig;
+
+  test('model requirements must be met by one model, on the board and at launch', () => {
+    const split = modelRequirementCheck(contract, [model('big', 200e6, 10), model('smart', 10e6, 40)]);
+    expect(meetsModelRequirements(split)).toBe(false);
+    const one = modelRequirementCheck(contract, [model('small', 10e6, 10), model('both', 200e6, 35)]);
+    expect(meetsModelRequirements(one)).toBe(true);
+    expect(one.model?.id).toBe('both');
+  });
+
+  test('a failed mission reports the weakest capabilities first', () => {
+    const agent = { id: 'a', role: 'researcher', modelId: 'm', alignmentScore: 90, inferenceParams: { temperature: 0.6, topP: 0.9, maxTokens: 512 } } as unknown as AgentInstance;
+    const factors = weakestTeamFactors([agent], [model('m', 50e6, 20)], [], { constitutionalStrictness: 80, sandboxIsolation: 'container', outputFiltering: 'none', rewardHackingAudit: true, redTeamingFrequencySec: 60 } as GuardrailConfig);
+    expect(factors.length).toBe(2);
+    expect(factors[0].score).toBeLessThanOrEqual(factors[1].score);
+  });
+
+  test('fictional and estimated hardware is labelled', () => {
+    expect(HARDWARE_SPEC_NOTES.quantum_photonic_asic.source).toBe('fiction');
+    expect(HARDWARE_SPEC_NOTES.tpu_v5p_pod.source).toBe('estimate');
+    expect(HARDWARE_SPEC_NOTES.gpu_h100_sxm5.precision).toBe('BF16 tensor');
   });
 });

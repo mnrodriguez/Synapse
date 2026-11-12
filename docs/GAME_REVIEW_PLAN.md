@@ -47,7 +47,10 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 3 | H-1 (repaso) títulos de Agentes, Portal, Hardware, ranking y manual por versión; la v1 y la v2 ya no nombran la Singularidad, el enjambre ni el control global | Aplicado |
 | 3 | UI-1 migración de todos los componentes al tema (unas 2.000 clases), remapeos de v1 borrados (123 selectores) y chequeo en CI (`tests/theme.test.ts`) · textos del onboarding sin spoilers | Aplicado |
 | 4 | R-2 corridas con épocas, learning rate, batch y early stopping; curvas de entrenamiento y validación; sobreajuste (puede bajar el puntaje), divergencia, calidad de datos y repetición del dataset; costo de energía antes de lanzar e informe con la lección de cada resultado (`trainingRun.ts`) | Aplicado |
-| 4 | R-4 un solo reloj · R-5 fichas de hardware · R-7 explicación de fallos de misión · H-4 cancelar la v4 falla a la vista | Pendiente (próximo PR) |
+| 4 | R-4 un solo reloj: un tick son 30 minutos de juego para calendario, entrenamiento, misiones, datos y eventos; la energía de cada corrida coincide con la factura | Aplicado |
+| 4 | R-5 fichas de hardware con precisión (FP32, BF16, FP8) y fuente (dato, estimado, proyección, ficción); el kit solar de $55 pasa a un segundo circuito de la casa | Aplicado |
+| 4 | R-7 el tablero y el inicio exigen un solo modelo que cumpla parámetros, puntaje y topología; una misión fallida explica la probabilidad, la tirada y los dos puntos más débiles del equipo | Aplicado |
+| 4 | H-4 cancelar la v4 falla a la vista (alerta de acceso denegado, también en pantallas táctiles) | Aplicado |
 | 5 | Base técnica | Pendiente |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).

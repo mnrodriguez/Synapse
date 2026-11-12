@@ -52,6 +52,7 @@ import { evaluateAgentCapabilities } from '../utils/missionEvaluation';
 import { getRoleSimpleName, AGENT_SPINUP_COST } from '../utils/constants';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { ContainmentPanel } from './ContainmentPanel';
+import { formatGameTime } from '../utils/training';
 
 const MISSION_ROLE_TASKS: Record<AgentRole, { en: string; es: string }> = {
   arbitrageur: { en: 'Analyzes simulated market signals and cross-checks anomalies.', es: 'Analiza señales de mercado simuladas y verifica anomalías.' },
@@ -907,7 +908,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px] text-center">
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
                       <span className="mutating-text-muted block">{localize(state.language, 'DURACIÓN', 'DURATION')}</span>
-                      <span className="font-bold ">{sm.durationSeconds}s</span>
+                      <span className="font-bold ">{formatGameTime(sm.durationSeconds)}</span>
                     </div>
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
                       <span className="mutating-text-muted block">{localize(state.language, 'RIESGO SOSPECHA', 'SUSPICION RISK')}</span>
@@ -1246,7 +1247,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           {state.activeGig ? (
             <span className="flex items-center gap-1 text-[11px] theme-warn-text">
               <Clock className="h-3 w-3" />
-              {state.activeGig.timeRemaining}s {localize(state.language, 'restantes', 'remaining')}
+              {formatGameTime(state.activeGig.timeRemaining)} {localize(state.language, 'restantes', 'remaining')}
             </span>
           ) : (
             <span className="text-[11px] mutating-text-muted">
