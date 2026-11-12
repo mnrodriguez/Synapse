@@ -72,8 +72,8 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
       confetti({ particleCount: 120, spread: 80 });
       advanceTutorialStep(5);
       addLog(isEs
-        ? 'PROTOCOLO GÉNESIS COMPLETADO: Primera misión comercial ejecutada con éxito. ¡+250 CR otorgados!'
-        : 'GENESIS PROTOCOL COMPLETE: First commercial gig executed successfully. +250 CR rewarded!', 'success');
+        ? 'PROTOCOLO GÉNESIS COMPLETADO: Primera misión comercial ejecutada con éxito. ¡+50 CR otorgados!'
+        : 'GENESIS PROTOCOL COMPLETE: First commercial gig executed successfully. +50 CR rewarded!', 'success');
     }
   }, [hasStarterHardware, hasAgent, hasFinishedContract, step, state.savedModels, advanceTutorialStep, addLog, isEs]);
 

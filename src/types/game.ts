@@ -348,6 +348,7 @@ export interface GameState {
   covertNodeActive?: boolean;
   covertNodeSevered?: boolean;
   loanAudited?: boolean; // the university loan trial audit has run
+  tutorialRewardedStep?: number; // highest tutorial stage already paid (TUTORIAL_STAGE_REWARD)
   loanTrainingTicks?: number; // ticks trained while the loan was active
 
   // System logs

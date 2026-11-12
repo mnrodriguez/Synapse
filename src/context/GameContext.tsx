@@ -48,6 +48,8 @@ import {
   EMERGENCY_LOAN_REPAYMENT,
   ELECTRICITY_RATE_PER_KWH,
   AGENT_COMPUTE_DEMAND_PFLOPS,
+  AGENT_SPINUP_COST,
+  TUTORIAL_STAGE_REWARD,
   AGENT_POWER_DRAW_KW,
   DAYS_PER_GAME_MONTH,
   DEFAULT_GENERAL_DATASET,
@@ -95,6 +97,11 @@ import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePf
 
 // Used when a run predates per-run token counts: the general corpus.
 const DEFAULT_TRAINING_TOKENS = 50_000_000;
+
+// Agent income and autonomy follow the evaluation score of the model the agent runs on.
+const agentReasoningFactor = (score: number): number => Math.max(0.5, score / 80);
+const agentParamBonus = (params: number): number => Math.min(2.5, 1 + params / 50_000_000);
+const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 30)));
 import { evaluateMissionTeam, findAutonomousMission } from '../utils/missionEvaluation';
 
 interface GameContextType {
@@ -141,6 +148,7 @@ interface GameContextType {
   claimGoal: (goalId: string, reward: number) => void;
   fetchLeaderboard: () => Promise<OperativeLeaderboard[]>;
   createAgent: (name: string, role: AgentRole, modelId: string, tools: string[], inferenceParams?: Partial<InferenceParams>) => boolean;
+  reassignAgentModel: (agentId: string, modelId: string) => boolean;
   deleteAgent: (agentId: string) => void;
   quarantineAgent: (agentId: string) => void;
   updateGuardrails: (updates: Partial<GuardrailConfig>) => void;
@@ -1178,6 +1186,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           contracts
         } = prev;
         let tutorialStep = prev.tutorialStep ?? 0;
+        // Saves without a record start from their current stage, so no stage is paid retroactively.
+        const tutorialRewardedFrom = prev.tutorialRewardedStep ?? (prev.tutorialStep ?? 0);
         let tutorialCompleted = prev.tutorialCompleted ?? false;
         let completedContractsCount = prev.completedContractsCount ?? 0;
 
@@ -1383,9 +1393,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             singularityProgress = Math.min(100, singularityProgress + singInc);
             reasoningIndex = Math.max(reasoningIndex, upgradedModelReasoning);
 
-            if (tutorialStep <= 2) {
-              tutorialStep = 3;
-            }
 
             if (isMicroModel) {
               addLog(
@@ -2071,6 +2078,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? recalculateMetrics(finalHardware, prev.facilityTier)
           : metrics;
 
+        const tutorialStageReward = Math.max(0, tutorialStep - tutorialRewardedFrom) * TUTORIAL_STAGE_REWARD;
+
         return {
           ...prev,
           hardware: finalHardware,
@@ -2091,7 +2100,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           unlockedTabs,
           activeTradingDesk: updatedTradingDesk,
           researchTree: updatedResearchTree,
-          credits: Math.round(credits),
+          credits: Math.round(credits + tutorialStageReward),
+          tutorialRewardedStep: Math.max(tutorialRewardedFrom, tutorialStep),
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
           watchdogSuspicion: Number(watchdogSuspicion.toFixed(1)),
           totalComputePflops: currentMetrics.totalComputePflops + borrowedComputePflops,
@@ -2943,7 +2953,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     inferenceParams?: Partial<InferenceParams>
   ): boolean => {
     const model = stateRef.current.savedModels.find(m => m.id === modelId) || stateRef.current.currentModel;
-    const spinupCost = 75;
+    const spinupCost = stateRef.current.agents.length === 0 ? 0 : AGENT_SPINUP_COST;
     const activeAgentDemand = stateRef.current.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
     if (stateRef.current.totalComputePflops - activeAgentDemand < AGENT_COMPUTE_DEMAND_PFLOPS) {
       sound.playWarning();
@@ -2957,8 +2967,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    const reasoningFactor = Math.max(0.5, model.reasoningScore / 80);
-    const paramBonus = Math.min(2.5, 1 + (model.parametersCount / 50_000_000));
+    const reasoningFactor = agentReasoningFactor(model.reasoningScore);
+    const paramBonus = agentParamBonus(model.parametersCount);
 
     let baseRev = 10;
     let baseSusp = 0.2;
@@ -3050,7 +3060,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       modelName: model.name,
       status: 'active',
       alignmentScore: initialAlignment,
-      autonomyLevel: Math.min(5, Math.max(1, Math.floor(model.reasoningScore / 30))),
+      autonomyLevel: agentAutonomyFor(model.reasoningScore),
       revenuePerSec,
       suspicionPerSec,
       toolsGranted: tools.length > 0 ? tools : ['web_search'],
@@ -3065,7 +3075,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sound.playCredit();
     setState(prev => ({
       ...prev,
-      tutorialStep: (prev.tutorialStep ?? 0) <= 3 ? 4 : prev.tutorialStep,
+      tutorialStep: (prev.tutorialStep ?? 0) === 3 ? 4 : prev.tutorialStep,
       credits: prev.credits - spinupCost,
       agents: [...prev.agents, newAgent]
     }));
@@ -4290,6 +4300,32 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     }
   }, [addLog]);
 
+  // Rebinds an agent to another saved model (for example the one just trained). Agents keep the model they
+  // were created with until reassigned, so a retrained or new model does not reach them automatically.
+  const reassignAgentModel = useCallback((agentId: string, modelId: string): boolean => {
+    const current = stateRef.current;
+    const agent = current.agents.find(a => a.id === agentId);
+    const model = current.savedModels.find(m => m.id === modelId);
+    if (!agent || !model || agent.modelId === modelId) return false;
+    const oldModel = current.savedModels.find(m => m.id === agent.modelId);
+    const income = (m?: ModelArchitecture) => m ? agentReasoningFactor(m.reasoningScore) * agentParamBonus(m.parametersCount) : 1;
+    const ratio = income(model) / income(oldModel);
+    setState(prev => ({
+      ...prev,
+      agents: prev.agents.map(a => a.id === agentId ? {
+        ...a,
+        modelId: model.id,
+        modelName: model.name,
+        autonomyLevel: agentAutonomyFor(model.reasoningScore),
+        revenuePerSec: Math.max(1, Math.round(a.revenuePerSec * ratio))
+      } : a)
+    }));
+    addLog(localize(current.language,
+      `Agente "${agent.name}" reasignado al modelo "${model.name}".`,
+      `Agent "${agent.name}" reassigned to model "${model.name}".`), 'success');
+    return true;
+  }, [addLog]);
+
   // Operative confirms the training report; clearing it lets the next run start normally.
   const dismissTrainingReport = useCallback(() => {
     setState(prev => (prev.lastTrainingReport ? { ...prev, lastTrainingReport: null } : prev));
@@ -4370,7 +4406,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       difficulty: chosenDifficulty,
       hasCompletedOnboarding: true,
       tutorialCompleted: false, // Active for Stage 4 (Deploy Agent) and Stage 5 (First Contract Mission)
-      tutorialStep: 3, // Stage 4: Deploy your First Agent
+      tutorialStep: 2, // Stage 3: train the first model up to the first mission's score
       unlockedTabs: initialTabs,
       unlockedAllTabs: chosenDifficulty === 'engineer',
       gameDay: 1,
@@ -4636,6 +4672,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       claimGoal,
       fetchLeaderboard,
       createAgent,
+      reassignAgentModel,
       deleteAgent,
       quarantineAgent,
       createBotGroup,

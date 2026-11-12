@@ -1435,6 +1435,8 @@ export const EMERGENCY_LOAN_REPAYMENT = 2875; // 15% interest
 
 export const ELECTRICITY_RATE_PER_KWH = 0.18;
 export const AGENT_COMPUTE_DEMAND_PFLOPS = 0.0002;
+export const AGENT_SPINUP_COST = 75; // the first agent is free (tutorial)
+export const TUTORIAL_STAGE_REWARD = 50; // credits per completed tutorial stage
 export const AGENT_POWER_DRAW_KW = 0.025;
 
 export const FACILITY_TIERS: FacilityTier[] = [

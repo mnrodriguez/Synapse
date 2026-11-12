@@ -49,7 +49,7 @@ import { localize, t } from '../utils/i18n';
 import { INFERENCE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { evaluateAgentCapabilities } from '../utils/missionEvaluation';
-import { getRoleSimpleName } from '../utils/constants';
+import { getRoleSimpleName, AGENT_SPINUP_COST } from '../utils/constants';
 
 const MISSION_ROLE_TASKS: Record<AgentRole, { en: string; es: string }> = {
   arbitrageur: { en: 'Analyzes simulated market signals and cross-checks anomalies.', es: 'Analiza señales de mercado simuladas y verifica anomalías.' },
@@ -92,6 +92,7 @@ export const AgentSandbox: React.FC = () => {
     launchProposedMission,
     triggerWorldTakeover,
     addLog,
+    reassignAgentModel,
     setAgentAutoMission,
     setAllAgentsAutoMission,
     updateAutonomySettings,
@@ -100,6 +101,8 @@ export const AgentSandbox: React.FC = () => {
     withdrawTradingDeskCapital,
     closeTradingDesk
   } = useGame();
+  // The first agent is free so the tutorial cannot dead-end on credits.
+  const deployCost = state.agents.length === 0 ? 0 : AGENT_SPINUP_COST;
 
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AgentRole>('arbitrageur');
@@ -413,15 +416,15 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
             <button
               onClick={() => { sound.playKeyClick(); setIsDeployModalOpen(true); }}
-              disabled={state.credits < 75}
+              disabled={state.credits < deployCost}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded border font-bold text-xs transition-colors cursor-pointer ${
-                state.credits >= 75
+                state.credits >= deployCost
                   ? 'mutating-sub border-current/15 hover:bg-cyan-900 mutating-accent-text shadow-[0_0_10px_rgba(0,255,200,0.2)]'
                   : 'mutating-sub border-current/15 mutating-text-muted cursor-not-allowed'
               }`}
             >
               <Plus className="w-3.5 h-3.5 mutating-accent-text" />
-              <span>{localize(state.language, '+ INSTANCIAR AGENTE ($75 CR)', '+ DEPLOY AGENT ($75 CR)')}</span>
+              <span>{localize(state.language, `+ INSTANCIAR AGENTE ($${deployCost} CR)`, `+ DEPLOY AGENT ($${deployCost} CR)`)}</span>
             </button>
           </div>
         </div>
@@ -1408,10 +1411,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 </p>
                 <button
                   onClick={() => setIsDeployModalOpen(true)}
-                  disabled={state.credits < 75}
+                  disabled={state.credits < deployCost}
                   className="mt-4 px-3 py-1.5 rounded mutating-sub border border-current/15/60 hover:bg-cyan-900 mutating-accent-text text-xs font-bold transition-colors"
                 >
-                  {localize(state.language, '+ Instanciar Primer Agente ($75 CR)', '+ Deploy First Agent ($75 CR)')}
+                  {localize(state.language, `+ Instanciar Primer Agente ($${deployCost} CR)`, `+ Deploy First Agent ($${deployCost} CR)`)}
                 </button>
               </div>
             ) : (
@@ -1493,9 +1496,20 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
                         {/* Model Binding Badge */}
                         <div className="flex items-center justify-between text-[10px] px-2 py-1 rounded mutating-sub border border-current/15 mb-1.5">
-                          <span className="mutating-text-muted flex items-center gap-1">
-                            <Cpu className="w-3 h-3 mutating-accent-text" />
-                            {localize(state.language, 'Modelo:', 'Model:')} <strong className="mutating-accent-text truncate max-w-[110px]">{agent.modelName}</strong>
+                          <span className="mutating-text-muted flex items-center gap-1 min-w-0">
+                            <Cpu className="w-3 h-3 mutating-accent-text shrink-0" />
+                            {localize(state.language, 'Modelo:', 'Model:')}
+                            {/* Agents keep their model until reassigned; pick the trained one here. */}
+                            <select
+                              value={agent.modelId}
+                              onChange={(e) => reassignAgentModel(agent.id, e.target.value)}
+                              aria-label={localize(state.language, `Modelo de ${agent.name}`, `Model of ${agent.name}`)}
+                              className="mutating-sub border border-current/15 rounded px-1 py-0.5 text-[10px] mutating-accent-text font-bold max-w-[160px] cursor-pointer"
+                            >
+                              {state.savedModels.map(m => (
+                                <option key={m.id} value={m.id}>{m.name} · {m.reasoningScore}</option>
+                              ))}
+                            </select>
                           </span>
                           <span className="mutating-accent-text font-bold">{localize(state.language, 'Lv.', 'Lv.')} {agent.autonomyLevel}</span>
                         </div>
@@ -2107,7 +2121,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               {/* Submit Buttons */}
               <div className="flex items-center justify-between pt-3 border-t border-current/15">
                 <div className="text-xs mutating-text-muted">
-                  {localize(state.language, 'Costo de despliegue:', 'Deployment cost:')} <strong className="text-amber-600 font-bold">$75 CR</strong>
+                  {localize(state.language, 'Costo de despliegue:', 'Deployment cost:')} <strong className="text-amber-600 font-bold">${deployCost} CR</strong>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -2120,7 +2134,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   </button>
                   <button
                     type="submit"
-                    disabled={state.credits < 75}
+                    disabled={state.credits < deployCost}
                     className="px-4 py-1.5 rounded mutating-btn-primary hover:brightness-110 text-xs font-bold border border-[var(--accent-primary)] shadow-[0_0_10px_rgba(0,255,200,0.2)]"
                   >
                     {localize(state.language, 'Desplegar agente', 'Deploy agent')}
