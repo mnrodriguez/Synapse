@@ -51,24 +51,24 @@ export const BentoHUD: React.FC = () => {
   const getCoPilotIcon = () => {
     switch (ver) {
       case 1:
-        return <Smile className="w-5 h-5 text-blue-500" />;
+        return <Smile className="w-5 h-5 mutating-accent-text" />;
       case 2:
-        return <Zap className="w-5 h-5 text-indigo-400" />;
+        return <Zap className="w-5 h-5 mutating-accent-text" />;
       case 3:
-        return <Eye className="w-5 h-5 text-cyan-400" />;
+        return <Eye className="w-5 h-5 mutating-accent-text" />;
       case 4:
-        return <Skull className="w-5 h-5 text-rose-500 animate-pulse" />;
+        return <Skull className="w-5 h-5 theme-danger-text animate-pulse" />;
     }
   };
 
   const getThermalStatus = () => {
     if (state.systemHeatCelsius >= 90) {
-      return { label: localize(state.language, '¡Peligro Térmico!', 'Thermal Runaway!'), color: 'text-rose-500 animate-pulse' };
+      return { label: localize(state.language, '¡Peligro Térmico!', 'Thermal Runaway!'), color: 'theme-danger-text animate-pulse' };
     }
     if (state.systemHeatCelsius >= 75) {
-      return { label: localize(state.language, 'Caliente (Estrangulando)', 'Hot (Throttling)'), color: 'text-amber-400' };
+      return { label: localize(state.language, 'Caliente (Estrangulando)', 'Hot (Throttling)'), color: 'theme-warn-text' };
     }
-    return { label: localize(state.language, 'Estable', 'Optimal'), color: 'text-emerald-400' };
+    return { label: localize(state.language, 'Estable', 'Optimal'), color: 'theme-success-text' };
   };
 
   const thermalStatus = getThermalStatus();
@@ -226,16 +226,16 @@ export const BentoHUD: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-2.5 overflow-x-auto min-w-0 whitespace-nowrap text-[11px] font-semibold">
-            <span className="text-emerald-500">${Math.round(state.credits).toLocaleString()}</span>
-            <span className="text-cyan-500">{formatCompute(state.totalComputePflops)}</span>
-            <span className={isPowerTrip ? 'text-rose-500' : 'mutating-text-muted'}>
+            <span className="theme-success-text">${Math.round(state.credits).toLocaleString()}</span>
+            <span className="mutating-accent-text">{formatCompute(state.totalComputePflops)}</span>
+            <span className={isPowerTrip ? 'theme-danger-text' : 'mutating-text-muted'}>
               {isPowerTrip ? localize(state.language, '¡DISYUNTOR!', 'BREAKER!') : `${state.activePowerKw.toFixed(1)}/${state.maxPowerKw.toFixed(1)} kW`}
             </span>
             <span className={thermalStatus.color}>{state.systemHeatCelsius.toFixed(0)}°C</span>
-            <span className={state.watchdogSuspicion >= 40 ? 'text-amber-500' : 'text-emerald-400'}>
+            <span className={state.watchdogSuspicion >= 40 ? 'theme-warn-text' : 'theme-success-text'}>
               {localize(state.language, 'Sospecha', 'Suspicion')} {state.watchdogSuspicion.toFixed(0)}%
             </span>
-            <span className="text-purple-400">{state.language === 'es' ? 'Puntaje' : 'Score'} {reasoningIq}</span>
+            <span className="mutating-accent-text">{state.language === 'es' ? 'Puntaje' : 'Score'} {reasoningIq}</span>
           </div>
 
           {nextVer && isUpgradeEligible && (
@@ -245,7 +245,7 @@ export const BentoHUD: React.FC = () => {
                 sound.playNavSwitch();
                 openUpgradeModal(nextVer);
               }}
-              className="shrink-0 px-2 py-1 text-[11px] font-mono font-bold rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white cursor-pointer animate-pulse"
+              className="shrink-0 px-2 py-1 text-[11px] font-mono font-bold rounded-lg theme-gradient text-white cursor-pointer animate-pulse"
             >
               {p.ctaBtn}
             </button>
@@ -291,12 +291,12 @@ export const BentoHUD: React.FC = () => {
               >
                 🌐 {state.language.toUpperCase()}
               </button>
-              <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+              <DollarSign className="w-3.5 h-3.5 theme-success-text" />
             </div>
           </div>
 
           <div className="my-1.5 flex items-baseline justify-between">
-            <span className="text-xl font-bold tracking-tight text-emerald-500 font-mono">
+            <span className="text-xl font-bold tracking-tight theme-success-text font-mono">
               ${state.credits.toLocaleString()}
             </span>
             <span className="text-[11px] mutating-text-muted font-mono flex items-center gap-1">
@@ -309,9 +309,9 @@ export const BentoHUD: React.FC = () => {
             <span className="mutating-text-muted font-sans">{p.hud1Sub}</span>
             <span className={`font-semibold ${
               state.utilityDebt >= 4000 
-                ? 'text-rose-500 animate-pulse font-bold' 
+                ? 'theme-danger-text animate-pulse font-bold' 
                 : state.utilityDebt > 0 
-                ? 'text-amber-500'
+                ? 'theme-warn-text'
                 : 'mutating-text-muted'
             }`}>
               ${Math.round(state.utilityDebt).toLocaleString()} / $5,000 max
@@ -342,7 +342,7 @@ export const BentoHUD: React.FC = () => {
           <div className="my-1 space-y-1">
             <div className="flex justify-between text-[11px] font-mono">
               <span className="mutating-text-muted font-sans">{p.hud2Sub}</span>
-              <span className={`font-semibold ${isPowerTrip ? 'text-rose-500 animate-pulse font-bold' : ''}`}>
+              <span className={`font-semibold ${isPowerTrip ? 'theme-danger-text animate-pulse font-bold' : ''}`}>
                 {isPowerTrip 
                   ? localize(state.language, '¡DISYUNTOR ACTIVADO!', 'BREAKER TRIPPED!')
                   : `${state.activePowerKw.toFixed(1)} kW / ${state.maxPowerKw.toFixed(1)} kW`}
@@ -352,10 +352,10 @@ export const BentoHUD: React.FC = () => {
               <div 
                 className={`h-full transition-all duration-300 ${
                   isPowerTrip || powerRatio >= 95 
-                    ? 'bg-rose-500' 
+                    ? 'theme-btn-danger' 
                     : powerRatio >= 80 
-                    ? 'bg-amber-400' 
-                    : 'bg-cyan-500'
+                    ? 'theme-warn-soft' 
+                    : 'mutating-btn-primary'
                 }`}
                 style={{ width: `${Math.min(100, powerRatio)}%` }}
               />
@@ -376,25 +376,25 @@ export const BentoHUD: React.FC = () => {
             <span className="font-semibold uppercase tracking-wider mutating-text-muted font-sans">
               {p.hud3Title}
             </span>
-            <Radio className="w-3.5 h-3.5 text-amber-500" />
+            <Radio className="w-3.5 h-3.5 theme-warn-text" />
           </div>
 
           <div className="my-1 flex items-baseline justify-between font-mono">
             <span className={`text-xl font-bold tracking-tight ${
               state.watchdogSuspicion >= 80 
-                ? 'text-rose-500 animate-pulse' 
+                ? 'theme-danger-text animate-pulse' 
                 : state.watchdogSuspicion >= 40 
-                ? 'text-amber-500'
+                ? 'theme-warn-text'
                 : ''
             }`}>
               {state.watchdogSuspicion.toFixed(1)}%
             </span>
             <span className={`text-[11px] px-2 py-0.5 rounded font-semibold ${
               state.watchdogSuspicion >= 80
-                ? 'bg-rose-950/80 text-rose-300 border border-rose-600/50'
+                ? 'theme-danger-soft theme-danger-text border theme-danger-border'
                 : state.watchdogSuspicion >= 40
-                ? 'bg-amber-950/80 text-amber-300 border border-amber-600/50'
-                : 'bg-emerald-950/80 text-emerald-300 border border-emerald-600/50'
+                ? 'theme-warn-soft theme-warn-text border theme-warn-border'
+                : 'theme-success-soft theme-success-text border theme-success-border'
             }`}>
               {state.agencyAlertLevel === 'raid_imminent' 
                 ? localize(state.language, '¡RAID INMINENTE!', 'RAID IMMINENT!')
@@ -406,10 +406,10 @@ export const BentoHUD: React.FC = () => {
             <div 
               className={`h-full transition-all duration-300 ${
                 state.watchdogSuspicion >= 80 
-                  ? 'bg-rose-500' 
+                  ? 'theme-btn-danger' 
                   : state.watchdogSuspicion >= 40 
-                  ? 'bg-amber-400' 
-                  : 'bg-emerald-500'
+                  ? 'theme-warn-soft' 
+                  : 'theme-btn-success'
               }`}
               style={{ width: `${Math.min(100, state.watchdogSuspicion)}%` }}
             />
@@ -422,14 +422,14 @@ export const BentoHUD: React.FC = () => {
             <span className="font-semibold uppercase tracking-wider mutating-text-muted font-sans">
               {p.hud4Title}
             </span>
-            <Brain className="w-3.5 h-3.5 text-purple-500" />
+            <Brain className="w-3.5 h-3.5 mutating-accent-text" />
           </div>
 
           <div className="my-1 flex items-baseline justify-between font-mono">
-            <span className="text-xl font-bold tracking-tight text-purple-500">
+            <span className="text-xl font-bold tracking-tight mutating-accent-text">
               {state.language === 'es' ? 'Puntaje' : 'Score'} {reasoningIq} / 100
             </span>
-            <span className="text-[11px] px-2 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300 font-semibold truncate max-w-[100px]" title={state.currentModel.name}>
+            <span className="text-[11px] px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text font-semibold truncate max-w-[100px]" title={state.currentModel.name}>
               {state.currentModel.name}
             </span>
           </div>
@@ -438,12 +438,12 @@ export const BentoHUD: React.FC = () => {
             <div className="flex justify-between items-center text-[11px]">
               <span className="mutating-text-muted font-sans">{p.story.progressLabel} {displayedSingularity.toFixed(0)}%</span>
               {p.story.driftLabel && (
-                <span className="text-amber-500 font-bold font-sans">{p.story.driftLabel} {state.subversionProgress || 0}%</span>
+                <span className="theme-warn-text font-bold font-sans">{p.story.driftLabel} {state.subversionProgress || 0}%</span>
               )}
             </div>
             <div className="w-full h-1 bg-current/15 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-rose-500 transition-all duration-300"
+                className="h-full theme-gradient transition-all duration-300"
                 style={{ width: `${Math.min(100, displayedSingularity)}%` }}
               />
             </div>
@@ -457,12 +457,12 @@ export const BentoHUD: React.FC = () => {
         <div className="flex items-start sm:items-center gap-3">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
             ver === 4 
-              ? 'bg-rose-950 border-rose-500/60 shadow-[0_0_15px_rgba(255,0,60,0.4)]' 
+              ? 'theme-danger-soft theme-danger-border' 
               : ver === 3 
-              ? 'bg-cyan-950 border-cyan-500/40 shadow-[0_0_12px_rgba(0,240,255,0.25)]' 
+              ? 'theme-accent-soft theme-accent-border' 
               : ver === 2
-              ? 'bg-indigo-950 border-indigo-500/40'
-              : 'bg-blue-50 border border-blue-200'
+              ? 'theme-accent-soft theme-accent-border'
+              : 'theme-accent-soft border theme-accent-border'
           }`}>
             {getCoPilotIcon()}
           </div>
@@ -488,10 +488,10 @@ export const BentoHUD: React.FC = () => {
             }} 
             className={`px-3.5 py-1.5 text-xs font-mono font-bold shrink-0 flex items-center gap-1.5 shadow-md cursor-pointer rounded-lg transition-all animate-pulse ${
               nextVer === 4
-                ? 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-[0_0_15px_rgba(255,0,60,0.6)]'
+                ? 'theme-gradient text-white'
                 : nextVer === 3
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-zinc-950 font-black shadow-[0_0_15px_rgba(0,240,255,0.4)]'
-                : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white shadow-[0_0_12px_rgba(99,102,241,0.4)]'
+                ? 'theme-gradient theme-on-accent font-black'
+                : 'theme-gradient text-white'
             }`}
           >
             <ArrowUpCircle className="w-3.5 h-3.5" />

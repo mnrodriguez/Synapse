@@ -44,13 +44,14 @@ import { evaluateMissionTeam, isContractEligibleForTeam } from '../utils/mission
 import { formatCompute } from '../utils/training';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 
+// Squad colours identify the player's squads, so they stay distinct in every version.
 const SQUAD_COLORS = [
-  { name: 'Cyan', hex: '#06b6d4', bgClass: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
-  { name: 'Emerald', hex: '#10b981', bgClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
-  { name: 'Amber', hex: '#f59e0b', bgClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
-  { name: 'Violet', hex: '#8b5cf6', bgClass: 'bg-violet-500/20 text-violet-300 border-violet-500/40' },
-  { name: 'Rose', hex: '#f43f5e', bgClass: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
-  { name: 'Sky', hex: '#0284c7', bgClass: 'bg-sky-500/20 text-sky-300 border-sky-500/40' }
+  { name: 'Cyan', hex: '#06b6d4' },
+  { name: 'Emerald', hex: '#10b981' },
+  { name: 'Amber', hex: '#f59e0b' },
+  { name: 'Violet', hex: '#8b5cf6' },
+  { name: 'Rose', hex: '#f43f5e' },
+  { name: 'Sky', hex: '#0284c7' }
 ];
 
 const isContractTierUnlocked = (tier: string, uiVersion: number = 1): boolean => {
@@ -190,7 +191,7 @@ export const ContractBoard: React.FC = () => {
   const getTierBadge = (tier: string, contract?: ContractGig) => {
     if (contract?.isMandatory || (state.uiVersion === 4 && tier === 'tier4_singularity')) {
       return (
-        <span className="px-2 py-0.5 rounded text-[11px] bg-red-600/30 text-red-300 border border-red-500 font-bold animate-pulse shadow-[0_0_8px_rgba(255,0,60,0.4)]">
+        <span className="px-2 py-0.5 rounded text-[11px] theme-danger-soft theme-danger-text border theme-danger-border font-bold animate-pulse">
           {localize(state.language, '🚨 DIRECTIVA OBLIGATORIA', '🚨 MANDATORY DIRECTIVE')}
         </span>
       );
@@ -198,18 +199,18 @@ export const ContractBoard: React.FC = () => {
     switch (tier) {
       case 'tier1_micro':
         return (
-          <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[11px] border border-zinc-700">
+          <span className="px-2 py-0.5 rounded theme-raised-bg theme-text text-[11px] border theme-border">
             {state.uiVersion === 1
               ? localize(state.language, 'T1: AFICIONADO', 'T1: HOBBYIST')
               : t(state.language, 'micro_script')}
           </span>
         );
       case 'tier2_corporate':
-        return <span className="px-2 py-0.5 rounded bg-blue-950/70 text-blue-300 text-[11px] border border-blue-600/50">{t(state.language, 'corporate')}</span>;
+        return <span className="px-2 py-0.5 rounded theme-accent-soft mutating-accent-text text-[11px] border theme-accent-border">{t(state.language, 'corporate')}</span>;
       case 'tier3_blackops':
-        return <span className="px-2 py-0.5 rounded bg-red-950/70 text-red-300 text-[11px] border border-red-600/50 font-bold">{t(state.language, 'black_ops')}</span>;
+        return <span className="px-2 py-0.5 rounded theme-danger-soft theme-danger-text text-[11px] border theme-danger-border font-bold">{t(state.language, 'black_ops')}</span>;
       case 'tier4_singularity':
-        return <span className="px-2 py-0.5 rounded bg-purple-950/70 text-purple-200 text-[11px] border border-purple-500/60 font-bold animate-pulse">{t(state.language, 'tier_singularity')}</span>;
+        return <span className="px-2 py-0.5 rounded theme-accent-soft mutating-accent-text text-[11px] border theme-accent-border font-bold animate-pulse">{t(state.language, 'tier_singularity')}</span>;
       default:
         return null;
     }
@@ -370,7 +371,7 @@ export const ContractBoard: React.FC = () => {
             {story.contractsTitle}
           </h2>
           {activeGigsList.length > 0 && (
-            <span className="text-[11px] px-2 py-0.5 rounded font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+            <span className="text-[11px] px-2 py-0.5 rounded font-bold theme-warn-soft theme-warn-text border theme-warn-border animate-pulse">
               {activeGigsList.length} {localize(state.language, 'EN CURSO', 'RUNNING')}
             </span>
           )}
@@ -413,21 +414,21 @@ export const ContractBoard: React.FC = () => {
 
       {/* ACTIVE OPERATIONS MONITOR (Multi-Contract Live Status) */}
       {activeGigsList.length > 0 && (
-        <section className="rounded-lg border border-amber-500/50 bg-[#091018] p-3 space-y-2.5 shadow-[0_0_15px_rgba(245,158,11,0.08)]">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
+        <section className="rounded-lg border theme-warn-border theme-panel-bg p-3 space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-warn-border pb-2">
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-amber-400 animate-spin" />
-              <h3 className="text-xs font-bold tracking-wider text-amber-300 uppercase">
+              <Activity className="w-4 h-4 theme-warn-text animate-spin" />
+              <h3 className="text-xs font-bold tracking-wider theme-warn-text uppercase">
                 {localize(state.language, 'Operaciones Simultáneas en Ejecución', 'Simultaneous Active Operations')} ({activeGigsList.length})
               </h3>
             </div>
-            <div className="flex items-center gap-3 text-[11px] text-zinc-400">
-              <span className="flex items-center gap-1 text-cyan-300">
-                <Cpu className="w-3 h-3 text-cyan-400" />
+            <div className="flex items-center gap-3 text-[11px] mutating-text-muted">
+              <span className="flex items-center gap-1 mutating-accent-text">
+                <Cpu className="w-3 h-3 mutating-accent-text" />
                 <span>{formatCompute(runningCompute)} {localize(state.language, 'asignados', 'allocated')}</span>
               </span>
-              <span className="flex items-center gap-1 text-amber-300">
-                <Zap className="w-3 h-3 text-amber-400" />
+              <span className="flex items-center gap-1 theme-warn-text">
+                <Zap className="w-3 h-3 theme-warn-text" />
                 <span>+{runningPower.toFixed(2)} kW</span>
               </span>
             </div>
@@ -440,16 +441,16 @@ export const ContractBoard: React.FC = () => {
               const squad = gig.squadId ? botGroups.find(g => g.id === gig.squadId) : null;
 
               return (
-                <div key={gig.runId || gig.contractId} className="p-2.5 rounded bg-zinc-950/80 border border-amber-500/30 space-y-1.5">
+                <div key={gig.runId || gig.contractId} className="p-2.5 rounded theme-sub-bg border theme-warn-border space-y-1.5">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {contract && getTierBadge(contract.tier, contract)}
-                        <span className="font-bold text-xs text-zinc-100 truncate max-w-[200px]">
+                        <span className="font-bold text-xs theme-text truncate max-w-[200px]">
                           {contract?.title ?? gig.contractId}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] text-zinc-400 mt-1">
+                      <div className="flex items-center gap-1 text-[11px] mutating-text-muted mt-1">
                         {squad ? (
                           <span 
                             className="px-1.5 py-0.2 rounded font-bold"
@@ -458,12 +459,12 @@ export const ContractBoard: React.FC = () => {
                             {squad.name}
                           </span>
                         ) : (
-                          <span className="text-zinc-400">
+                          <span className="mutating-text-muted">
                             {localize(state.language, 'Agentes Libres', 'Free Agents')}: {assignedAgents.map(a => a.name).join(', ')}
                           </span>
                         )}
                         {gig.isAutonomous && (
-                          <span className="text-cyan-300 flex items-center gap-0.5 text-[11px] bg-cyan-950/60 px-1 py-0.2 rounded border border-cyan-800/40">
+                          <span className="mutating-accent-text flex items-center gap-0.5 text-[11px] theme-accent-soft px-1 py-0.2 rounded border theme-accent-border">
                             <Bot className="w-2.5 h-2.5" />
                             <span>{localize(state.language, 'Autónomo', 'Autonomous')}</span>
                           </span>
@@ -472,20 +473,20 @@ export const ContractBoard: React.FC = () => {
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-xs font-bold text-amber-300 flex items-center justify-end gap-1">
-                        <Clock className="w-3 h-3 text-amber-400" />
+                      <span className="text-xs font-bold theme-warn-text flex items-center justify-end gap-1">
+                        <Clock className="w-3 h-3 theme-warn-text" />
                         {gig.timeRemaining}s
                       </span>
-                      <span className="text-[11px] text-emerald-400">
+                      <span className="text-[11px] theme-success-text">
                         {Math.round((gig.successProbability ?? 0) * 100)}% {localize(state.language, 'éxito', 'chance')}
                       </span>
                     </div>
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full theme-sub-bg rounded-full h-1.5 overflow-hidden">
                     <div 
-                      className="bg-gradient-to-r from-amber-500 to-emerald-400 h-1.5 rounded-full transition-all duration-300"
+                      className="theme-gradient h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${Math.min(100, Math.max(0, gig.progressPercent ?? 0))}%` }}
                     />
                   </div>
@@ -501,33 +502,33 @@ export const ContractBoard: React.FC = () => {
         <div
           className={`p-3 rounded-lg border text-xs flex items-start justify-between gap-3 animate-in fade-in duration-200 ${
             state.lastMissionOutcome.success
-              ? 'bg-emerald-950/40 border-emerald-500/60 text-emerald-200'
-              : 'bg-red-950/50 border-red-500/70 text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.25)]'
+              ? 'theme-success-soft theme-success-border theme-success-text'
+              : 'theme-danger-soft theme-danger-border theme-danger-text'
           }`}
         >
           <div className="flex items-start gap-2.5">
             {state.lastMissionOutcome.success ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 theme-success-text shrink-0 mt-0.5" />
             ) : (
-              <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5 animate-pulse" />
+              <AlertTriangle className="w-5 h-5 theme-danger-text shrink-0 mt-0.5 animate-pulse" />
             )}
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`font-bold tracking-wider uppercase text-[11px] px-1.5 py-0.5 rounded ${
                   state.lastMissionOutcome.success
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    : 'bg-red-500/20 text-red-300 border border-red-500/40'
+                    ? 'theme-success-soft theme-success-text border theme-success-border'
+                    : 'theme-danger-soft theme-danger-text border theme-danger-border'
                 }`}>
                   {state.lastMissionOutcome.success
                     ? (state.language === 'es' ? 'MISIÓN EXITOSA' : 'MISSION COMPLETED')
                     : (state.language === 'es' ? 'MISIÓN FALLIDA' : 'MISSION FAILED')}
                 </span>
-                <span className="text-[11px] text-zinc-500">{state.lastMissionOutcome.timestamp}</span>
+                <span className="text-[11px] mutating-text-muted">{state.lastMissionOutcome.timestamp}</span>
               </div>
-              <div className="font-semibold text-zinc-100 mt-1">
+              <div className="font-semibold theme-text mt-1">
                 {state.lastMissionOutcome.contractTitle}
               </div>
-              <div className="mt-1 text-[11px] text-zinc-300">
+              <div className="mt-1 text-[11px] theme-text">
                 {state.lastMissionOutcome.success ? (
                   <p>
                     {state.language === 'es'
@@ -546,7 +547,7 @@ export const ContractBoard: React.FC = () => {
           </div>
           <button
             onClick={dismissMissionOutcome}
-            className="text-zinc-400 hover:text-zinc-200 p-1 rounded hover:bg-zinc-800/60 cursor-pointer"
+            className="mutating-text-muted p-1 rounded cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -685,9 +686,9 @@ export const ContractBoard: React.FC = () => {
                       contract.completed
                         ? 'mutating-sub opacity-60'
                         : readiness.isRunning
-                        ? 'bg-amber-500/15 border-amber-500/60 shadow-sm'
+                        ? 'theme-warn-soft theme-warn-border shadow-sm'
                         : readiness.isEligible
-                        ? 'mutating-card border-blue-500/40 shadow-sm'
+                        ? 'mutating-card theme-accent-border shadow-sm'
                         : 'mutating-sub opacity-80'
                     }`}
                   >
@@ -697,28 +698,28 @@ export const ContractBoard: React.FC = () => {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             {getTierBadge(contract.tier, contract)}
-                            <span className="text-[11px] text-zinc-500 font-mono">{t(state.language, 'client')}: {contract.client}</span>
+                            <span className="text-[11px] mutating-text-muted font-mono">{t(state.language, 'client')}: {contract.client}</span>
                             {contract.lastAttemptFailed && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold text-amber-300 bg-amber-950/80 border border-amber-500/60 animate-pulse">
-                                <AlertTriangle className="w-2.5 h-2.5 text-amber-400" />
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold theme-warn-text theme-warn-soft border theme-warn-border animate-pulse">
+                                <AlertTriangle className="w-2.5 h-2.5 theme-warn-text" />
                                 <span>{state.language === 'es' ? 'FALLÓ · LISTO PARA REINTENTO' : 'FAILED · READY TO RETRY'}</span>
                               </span>
                             )}
                             {contract.fromAgentSwarm && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono text-cyan-300 bg-cyan-950/80 border border-cyan-500/60">
-                                <Bot className="w-2.5 h-2.5 text-cyan-400" />
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono mutating-accent-text theme-accent-soft border theme-accent-border">
+                                <Bot className="w-2.5 h-2.5 mutating-accent-text" />
                                 <span>{state.language === 'es' ? 'MISIÓN SYNAPSE' : 'SYNAPSE MISSION'}</span>
                               </span>
                             )}
                           </div>
-                          <h3 className="font-bold text-xs text-zinc-100 mt-1">{displayContract.title}</h3>
+                          <h3 className="font-bold text-xs theme-text mt-1">{displayContract.title}</h3>
                         </div>
 
                         <div className="text-right shrink-0">
-                          <span className="text-xs font-bold text-amber-300 block">
+                          <span className="text-xs font-bold theme-warn-text block">
                             +${contract.rewardCredits.toLocaleString()} CR
                           </span>
-                          <span className="text-[11px] text-zinc-500 flex items-center justify-end gap-1">
+                          <span className="text-[11px] mutating-text-muted flex items-center justify-end gap-1">
                             <Clock className="w-2.5 h-2.5" />
                             {contract.durationSeconds}s
                           </span>
@@ -726,21 +727,21 @@ export const ContractBoard: React.FC = () => {
                       </div>
 
                       {/* Lore description */}
-                      <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                      <p className="text-xs mutating-text-muted mt-2 leading-relaxed">
                         {displayContract.loreDescription}
                       </p>
 
-                      <div className="mt-2 p-2 rounded bg-[#060a10] border border-cyan-950/80 text-[11px] text-zinc-500">
-                        <span className="text-cyan-400 font-semibold block">{t(state.language, 'technical_objective')}:</span>
+                      <div className="mt-2 p-2 rounded theme-panel-bg border theme-accent-border text-[11px] mutating-text-muted">
+                        <span className="mutating-accent-text font-semibold block">{t(state.language, 'technical_objective')}:</span>
                         {displayContract.technicalObjective}
                       </div>
 
                       {/* TEAM ASSIGNMENT SELECTOR (Squad OR Unassigned Agents) */}
                       {!contract.completed && (
-                        <div className="mt-3 p-2.5 rounded bg-[#050911] border border-cyan-900/40 space-y-2">
+                        <div className="mt-3 p-2.5 rounded theme-panel-bg border theme-accent-border space-y-2">
                           <div className="flex items-center justify-between text-[11px]">
-                            <span className="font-bold text-cyan-300 flex items-center gap-1.5">
-                              <Users className="w-3.5 h-3.5 text-cyan-400" />
+                            <span className="font-bold mutating-accent-text flex items-center gap-1.5">
+                              <Users className="w-3.5 h-3.5 mutating-accent-text" />
                               {story.assignLabel}
                             </span>
                             <div className="flex items-center gap-1">
@@ -755,8 +756,8 @@ export const ContractBoard: React.FC = () => {
                                 }))}
                                 className={`px-2 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
                                   readiness.mode === 'group'
-                                    ? 'bg-cyan-500 text-zinc-950 font-bold'
-                                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                                    ? 'mutating-btn-primary theme-on-accent font-bold'
+                                    : 'theme-sub-bg mutating-text-muted border theme-border'
                                 }`}
                               >
                                 {localize(state.language, 'Escuadrón', 'Squad')}
@@ -772,8 +773,8 @@ export const ContractBoard: React.FC = () => {
                                 }))}
                                 className={`px-2 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
                                   readiness.mode === 'unassigned'
-                                    ? 'bg-cyan-500 text-zinc-950 font-bold'
-                                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                                    ? 'mutating-btn-primary theme-on-accent font-bold'
+                                    : 'theme-sub-bg mutating-text-muted border theme-border'
                                 }`}
                               >
                                 {localize(state.language, 'Agentes Libres', 'Free Agents')}
@@ -795,7 +796,7 @@ export const ContractBoard: React.FC = () => {
                                         squadId: e.target.value
                                       }
                                     }))}
-                                    className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 focus:outline-none focus:border-cyan-500"
+                                    className="w-full theme-sub-bg border theme-border rounded px-2 py-1 text-xs theme-text focus:outline-none"
                                   >
                                     {botGroups.map(group => {
                                       const isBusy = group.agentIds.some(id => busyAgentIds.has(id));
@@ -808,13 +809,13 @@ export const ContractBoard: React.FC = () => {
                                   </select>
 
                                   {readiness.squad && (
-                                    <div className="text-[11px] text-zinc-400 flex items-center justify-between">
+                                    <div className="text-[11px] mutating-text-muted flex items-center justify-between">
                                       <span>
                                         {localize(state.language, 'Integrantes:', 'Members:')}{' '}
                                         {readiness.agents.map(a => a.name).join(', ') || localize(state.language, 'Sin agentes asignados', 'No agents in squad')}
                                       </span>
                                       {readiness.isTeamBusy && (
-                                        <span className="text-amber-400 font-semibold">
+                                        <span className="theme-warn-text font-semibold">
                                           ⚠️ {localize(state.language, 'Escuadrón ocupado en otra misión activa', 'Squad busy on another mission')}
                                         </span>
                                       )}
@@ -822,12 +823,12 @@ export const ContractBoard: React.FC = () => {
                                   )}
                                 </div>
                               ) : (
-                                <div className="flex items-center justify-between text-[11px] text-amber-300/90 py-1">
+                                <div className="flex items-center justify-between text-[11px] theme-warn-text py-1">
                                   <span>{localize(state.language, 'Aún no has creado ningún escuadrón.', 'No squads created yet.')}</span>
                                   <button
                                     type="button"
                                     onClick={openCreateSquadModal}
-                                    className="text-cyan-400 underline hover:text-cyan-300 cursor-pointer"
+                                    className="mutating-accent-text underline cursor-pointer"
                                   >
                                     {localize(state.language, '+ Crear escuadrón', '+ Create squad')}
                                   </button>
@@ -841,7 +842,7 @@ export const ContractBoard: React.FC = () => {
                             <div>
                               {unassignedAgents.length > 0 ? (
                                 <div className="space-y-1">
-                                  <p className="text-[11px] text-zinc-400">
+                                  <p className="text-[11px] mutating-text-muted">
                                     {localize(state.language, 'Selecciona agentes no asignados para este contrato:', 'Select unassigned agents for this contract:')}
                                   </p>
                                   <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
@@ -855,10 +856,10 @@ export const ContractBoard: React.FC = () => {
                                           key={agent.id}
                                           className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] border cursor-pointer transition-colors ${
                                             isBusy
-                                              ? 'border-zinc-800 bg-zinc-950 text-zinc-600 cursor-not-allowed opacity-50'
+                                              ? 'theme-border theme-sub-bg mutating-text-muted cursor-not-allowed opacity-50'
                                               : isSelected
-                                              ? 'border-cyan-500 bg-cyan-950/60 text-cyan-200'
-                                              : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
+                                              ? 'theme-accent-border theme-accent-soft mutating-accent-text'
+                                              : 'theme-border theme-sub-bg mutating-text-muted'
                                           }`}
                                         >
                                           <input
@@ -878,18 +879,17 @@ export const ContractBoard: React.FC = () => {
                                                 }
                                               }));
                                             }}
-                                            className="accent-cyan-500"
                                           />
                                           <span>{agent.name}</span>
-                                          <span className="text-zinc-500 text-[11px]">({getRoleSimpleName(agent.role, state.language)})</span>
-                                          {isBusy && <span className="text-amber-500 text-[11px]">[Ocupado]</span>}
+                                          <span className="mutating-text-muted text-[11px]">({getRoleSimpleName(agent.role, state.language)})</span>
+                                          {isBusy && <span className="theme-warn-text text-[11px]">[Ocupado]</span>}
                                         </label>
                                       );
                                     })}
                                   </div>
                                 </div>
                               ) : (
-                                <p className="text-[11px] text-zinc-500 py-1">
+                                <p className="text-[11px] mutating-text-muted py-1">
                                   {localize(state.language, 'No hay agentes libres sin escuadrón. Todos están asignados a un grupo.', 'No unassigned agents. All agents belong to squads.')}
                                 </p>
                               )}
@@ -899,18 +899,18 @@ export const ContractBoard: React.FC = () => {
                       )}
 
                       {/* Requirements Checklist */}
-                      <div className="mt-2.5 space-y-1 text-[11px] pt-2 border-t border-zinc-800/80">
+                      <div className="mt-2.5 space-y-1 text-[11px] pt-2 border-t theme-border">
                         <div className="flex items-center justify-between">
-                          <span className="text-zinc-500 text-[11px]">{t(state.language, 'minimum_parameters')}:</span>
-                          <span className={readiness.hasRequiredParams ? 'text-emerald-400 font-bold' : 'text-red-400'}>
+                          <span className="mutating-text-muted text-[11px]">{t(state.language, 'minimum_parameters')}:</span>
+                          <span className={readiness.hasRequiredParams ? 'theme-success-text font-bold' : 'theme-danger-text'}>
                             {(contract.requiredParams / 1_000_000).toFixed(0)}M {readiness.hasRequiredParams ? '✓' : '✗'}
                           </span>
                         </div>
 
                         {(contract.minimumAgents ?? 1) > 1 && (
                           <div className="flex items-center justify-between">
-                            <span className="text-zinc-500 text-[11px]">{localize(state.language, 'Equipo mínimo:', 'Minimum team:')}</span>
-                            <span className={readiness.hasMinAgents ? 'text-emerald-400 font-bold' : 'text-amber-300'}>
+                            <span className="mutating-text-muted text-[11px]">{localize(state.language, 'Equipo mínimo:', 'Minimum team:')}</span>
+                            <span className={readiness.hasMinAgents ? 'theme-success-text font-bold' : 'theme-warn-text'}>
                               {contract.minimumAgents} {localize(state.language, 'agentes', 'agents')} ({readiness.activeAgents.length} {localize(state.language, 'asignados', 'assigned')}) {readiness.hasMinAgents ? '✓' : '✗'}
                             </span>
                           </div>
@@ -918,12 +918,12 @@ export const ContractBoard: React.FC = () => {
 
                         {(contract.requiredAgentRoles ?? []).length > 0 && (
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-zinc-500 text-[11px] shrink-0">{localize(state.language, 'Especialidades:', 'Required roles:')}</span>
+                            <span className="mutating-text-muted text-[11px] shrink-0">{localize(state.language, 'Especialidades:', 'Required roles:')}</span>
                             <span className="text-right text-[11px]">
                               {(contract.requiredAgentRoles ?? []).map(role => {
                                 const isAssigned = readiness.activeAgents.some(a => a.role === role);
                                 return (
-                                  <span key={role} className={`ml-1 ${isAssigned ? 'text-emerald-400 font-bold' : 'text-amber-300'}`}>
+                                  <span key={role} className={`ml-1 ${isAssigned ? 'theme-success-text font-bold' : 'theme-warn-text'}`}>
                                     {getRoleSimpleName(role, state.language)}{isAssigned ? ' ✓' : ' ·'}
                                   </span>
                                 );
@@ -933,28 +933,28 @@ export const ContractBoard: React.FC = () => {
                         )}
 
                         <div className="flex items-center justify-between">
-                          <span className="text-zinc-500 text-[11px]">{t(state.language, 'minimum_reasoning')}:</span>
-                          <span className={readiness.hasRequiredReasoning ? 'text-emerald-400 font-bold' : 'text-red-400'}>
+                          <span className="mutating-text-muted text-[11px]">{t(state.language, 'minimum_reasoning')}:</span>
+                          <span className={readiness.hasRequiredReasoning ? 'theme-success-text font-bold' : 'theme-danger-text'}>
                             {contract.requiredMinReasoning} / 100 {readiness.hasRequiredReasoning ? '✓' : '✗'}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <span className="text-zinc-500 text-[11px]">{localize(state.language, 'Demanda de Clúster:', 'Cluster Demand:')}</span>
-                          <span className={readiness.hasClusterCompute && readiness.hasClusterPower ? 'text-cyan-300' : 'text-red-400 font-bold'}>
+                          <span className="mutating-text-muted text-[11px]">{localize(state.language, 'Demanda de Clúster:', 'Cluster Demand:')}</span>
+                          <span className={readiness.hasClusterCompute && readiness.hasClusterPower ? 'mutating-accent-text' : 'theme-danger-text font-bold'}>
                             {formatCompute(readiness.computeRequired)} · +{readiness.missionPowerKw.toFixed(2)} kW
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <span className="text-zinc-500 text-[11px]">
+                          <span className="mutating-text-muted text-[11px]">
                             {state.uiVersion === 1
                               ? localize(state.language, 'Tráfico ISP:', 'ISP Bandwidth Load:')
                               : state.uiVersion === 4
                               ? localize(state.language, 'Huella de Rastreo:', 'Trace Footprint:')
                               : localize(state.language, 'Riesgo de Sospecha:', 'Suspicion Risk:')}
                           </span>
-                          <span className={contract.suspicionRisk > 40 ? 'text-red-400 font-bold' : contract.suspicionRisk > 0 ? 'text-amber-300' : 'text-emerald-400 font-semibold'}>
+                          <span className={contract.suspicionRisk > 40 ? 'theme-danger-text font-bold' : contract.suspicionRisk > 0 ? 'theme-warn-text' : 'theme-success-text font-semibold'}>
                             {contract.suspicionRisk === 0 ? localize(state.language, '0% (Indetectable)', '0% (Undetected)') : `+${contract.suspicionRisk}%`}
                           </span>
                         </div>
@@ -962,24 +962,24 @@ export const ContractBoard: React.FC = () => {
 
                       {/* AI Team Assessment preview if eligible */}
                       {readiness.assessment && (
-                        <div className="mt-2 rounded border border-purple-800/60 bg-[#0c0916] p-2 text-[11px] text-purple-200 space-y-1">
+                        <div className="mt-2 rounded border theme-accent-border theme-panel-bg p-2 text-[11px] mutating-accent-text space-y-1">
                           <div className="font-bold flex items-center justify-between">
-                            <span className="flex items-center gap-1.5 text-purple-300">
-                              <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
+                            <span className="flex items-center gap-1.5 mutating-accent-text">
+                              <BrainCircuit className="w-3.5 h-3.5 mutating-accent-text" />
                               {localize(state.language, 'EVALUACIÓN IA DEL EQUIPO', 'AI TEAM ASSESSMENT')}
                             </span>
-                            <span className="text-emerald-400 font-bold">
+                            <span className="theme-success-text font-bold">
                               {Math.round(readiness.assessment.successProbability * 100)}% {localize(state.language, 'ÉXITO', 'SUCCESS')}
                             </span>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-zinc-300 pt-1 text-[11px]">
+                          <div className="grid grid-cols-2 gap-2 theme-text pt-1 text-[11px]">
                             <div>
-                              <span className="text-zinc-500">{localize(state.language, 'Eficiencia:', 'Efficiency:')} </span>
-                              <span className="font-bold text-cyan-300">{readiness.assessment.efficiencyPercent}%</span>
+                              <span className="mutating-text-muted">{localize(state.language, 'Eficiencia:', 'Efficiency:')} </span>
+                              <span className="font-bold mutating-accent-text">{readiness.assessment.efficiencyPercent}%</span>
                             </div>
                             <div>
-                              <span className="text-zinc-500">{localize(state.language, 'Tiempo est.:', 'Est. Time:')} </span>
-                              <span className="font-bold text-zinc-200">{readiness.assessment.estimatedDurationSeconds}s</span>
+                              <span className="mutating-text-muted">{localize(state.language, 'Tiempo est.:', 'Est. Time:')} </span>
+                              <span className="font-bold theme-text">{readiness.assessment.estimatedDurationSeconds}s</span>
                             </div>
                           </div>
                         </div>
@@ -987,16 +987,16 @@ export const ContractBoard: React.FC = () => {
                     </div>
 
                     {/* Launch Action Button */}
-                    <div className="mt-3 pt-2 border-t border-zinc-800 flex items-center justify-between gap-2">
+                    <div className="mt-3 pt-2 border-t theme-border flex items-center justify-between gap-2">
                       <div>
                         {contract.docsUrl && (
                           <a
                             href={contract.docsUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-700/50 hover:border-cyan-400 transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono mutating-accent-text theme-accent-soft border theme-accent-border transition-colors"
                           >
-                            <BookOpen className="w-3 h-3 text-cyan-400" />
+                            <BookOpen className="w-3 h-3 mutating-accent-text" />
                             <span>{localize(state.language, 'GUÍA', 'DOCS')}</span>
                             <ExternalLink className="w-2.5 h-2.5 opacity-70" />
                           </a>
@@ -1004,7 +1004,7 @@ export const ContractBoard: React.FC = () => {
                       </div>
 
                       {!readiness.isTierUnlocked && (
-                        <div className="mt-2 p-2 rounded mutating-sub border text-[11px] text-amber-500 font-bold flex items-center gap-1.5 font-mono">
+                        <div className="mt-2 p-2 rounded mutating-sub border text-[11px] theme-warn-text font-bold flex items-center gap-1.5 font-mono">
                           <Lock className="w-3.5 h-3.5 shrink-0" />
                           <span>
                             {state.language === 'es'
@@ -1015,12 +1015,12 @@ export const ContractBoard: React.FC = () => {
                       )}
 
                       {contract.completed ? (
-                        <span className="flex items-center gap-1 text-emerald-400 text-xs font-bold">
+                        <span className="flex items-center gap-1 theme-success-text text-xs font-bold">
                           <Check className="w-3.5 h-3.5" />
                           {t(state.language, 'completed_contract')}
                         </span>
                       ) : readiness.isRunning ? (
-                        <span className="text-amber-300 text-xs font-bold animate-pulse flex items-center gap-1.5">
+                        <span className="theme-warn-text text-xs font-bold animate-pulse flex items-center gap-1.5">
                           <Activity className="w-3.5 h-3.5 animate-spin" />
                           {localize(state.language, 'MISIÓN EN CURSO...', 'MISSION IN PROGRESS...')}
                         </span>
@@ -1032,11 +1032,11 @@ export const ContractBoard: React.FC = () => {
                           className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
                             readiness.isEligible
                               ? (contract.isMandatory || state.uiVersion === 4)
-                                ? 'bg-red-600 hover:bg-red-500 text-white cursor-pointer shadow-[0_0_12px_rgba(255,0,60,0.5)]'
+                                ? 'theme-btn-danger text-white cursor-pointer'
                                 : contract.lastAttemptFailed
-                                ? 'bg-amber-500 hover:bg-amber-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(245,158,11,0.4)]'
-                                : 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(0,255,200,0.3)]'
-                              : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                                ? 'theme-btn-warn theme-on-accent cursor-pointer'
+                                : 'mutating-btn-primary theme-on-accent cursor-pointer'
+                              : 'theme-raised-bg mutating-text-muted cursor-not-allowed border theme-border'
                           }`}
                         >
                           {contract.lastAttemptFailed ? (
@@ -1066,12 +1066,12 @@ export const ContractBoard: React.FC = () => {
       {/* ========================================================================= */}
       {activeBoardView === 'squads' && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg bg-[#050911] border border-cyan-900/40">
+          <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg theme-panel-bg border theme-accent-border">
             <div>
-              <h3 className="text-sm font-bold text-cyan-300">
+              <h3 className="text-sm font-bold mutating-accent-text">
                 {localize(state.language, 'Gestión de Escuadrones y Agentes Libres', 'Bot Squads & Free Agents Manager')}
               </h3>
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <p className="text-xs mutating-text-muted mt-0.5">
                 {localize(
                   state.language,
                   'Crea escuadrones con agentes específicos o mantén agentes libres sin asignar. Cada contrato puede lanzarse con un escuadrón completo o agentes libres.',
@@ -1081,7 +1081,7 @@ export const ContractBoard: React.FC = () => {
             </div>
             <button
               onClick={openCreateSquadModal}
-              className="px-3 py-1.5 rounded bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,255,200,0.3)]"
+              className="px-3 py-1.5 rounded mutating-btn-primary theme-on-accent text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>{localize(state.language, 'Crear Nuevo Escuadrón', 'Create New Squad')}</span>
@@ -1090,8 +1090,8 @@ export const ContractBoard: React.FC = () => {
 
           {/* Grid of Created Squads */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-cyan-400" />
+            <h4 className="text-xs font-bold theme-text flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 mutating-accent-text" />
               <span>{localize(state.language, 'Escuadrones Activos', 'Active Squads')} ({botGroups.length})</span>
             </h4>
 
@@ -1106,7 +1106,7 @@ export const ContractBoard: React.FC = () => {
                   return (
                     <div
                       key={squad.id}
-                      className="p-3.5 rounded-lg border bg-[#080d16] border-zinc-800 space-y-2.5 relative overflow-hidden"
+                      className="p-3.5 rounded-lg border theme-panel-bg theme-border space-y-2.5 relative overflow-hidden"
                     >
                       <div 
                         className="absolute top-0 left-0 right-0 h-1" 
@@ -1120,17 +1120,17 @@ export const ContractBoard: React.FC = () => {
                               className="w-2.5 h-2.5 rounded-full shrink-0" 
                               style={{ backgroundColor: squad.color || '#06b6d4' }}
                             />
-                            <h5 className="font-bold text-sm text-zinc-100">{squad.name}</h5>
-                            <span className="text-[11px] text-zinc-400">({squadAgents.length} {localize(state.language, 'agentes', 'agents')})</span>
+                            <h5 className="font-bold text-sm theme-text">{squad.name}</h5>
+                            <span className="text-[11px] mutating-text-muted">({squadAgents.length} {localize(state.language, 'agentes', 'agents')})</span>
                           </div>
 
                           <div className="mt-1">
                             {isBusy ? (
-                              <span className="text-[11px] font-bold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/40 animate-pulse">
+                              <span className="text-[11px] font-bold theme-warn-text theme-warn-soft px-2 py-0.5 rounded border theme-warn-border animate-pulse">
                                 {localize(state.language, 'EN MISIÓN:', 'IN MISSION:')} {runningContract?.title ?? runningGig?.contractId}
                               </span>
                             ) : (
-                              <span className="text-[11px] font-semibold text-emerald-300 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-500/40">
+                              <span className="text-[11px] font-semibold theme-success-text theme-success-soft px-2 py-0.5 rounded border theme-success-border">
                                 ✓ {localize(state.language, 'DISPONIBLE PARA CONTRATOS', 'AVAILABLE FOR CONTRACTS')}
                               </span>
                             )}
@@ -1140,7 +1140,7 @@ export const ContractBoard: React.FC = () => {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => openEditSquadModal(squad)}
-                            className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
+                            className="p-1 rounded mutating-text-muted transition-colors cursor-pointer"
                             title={localize(state.language, 'Editar escuadrón', 'Edit squad')}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -1150,8 +1150,8 @@ export const ContractBoard: React.FC = () => {
                             disabled={isBusy}
                             className={`p-1 rounded transition-colors ${
                               isBusy 
-                                ? 'text-zinc-600 cursor-not-allowed' 
-                                : 'text-zinc-400 hover:text-red-400 hover:bg-red-950/40 cursor-pointer'
+                                ? 'mutating-text-muted cursor-not-allowed' 
+                                : 'mutating-text-muted cursor-pointer'
                             }`}
                             title={localize(state.language, 'Disolver escuadrón', 'Dissolve squad')}
                           >
@@ -1161,7 +1161,7 @@ export const ContractBoard: React.FC = () => {
                       </div>
 
                       {/* Agents in this squad */}
-                      <div className="space-y-1 pt-1 border-t border-zinc-800/80">
+                      <div className="space-y-1 pt-1 border-t theme-border">
                         {squadAgents.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
                             {squadAgents.map(agent => {
@@ -1169,13 +1169,13 @@ export const ContractBoard: React.FC = () => {
                               return (
                                 <div 
                                   key={agent.id}
-                                  className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px] flex items-center gap-1.5"
+                                  className="px-2 py-1 rounded theme-sub-bg border theme-border text-[11px] flex items-center gap-1.5"
                                 >
-                                  <span className="font-semibold text-zinc-200">{agent.name}</span>
-                                  <span className="text-cyan-400 text-[11px] uppercase font-mono">
+                                  <span className="font-semibold theme-text">{agent.name}</span>
+                                  <span className="mutating-accent-text text-[11px] uppercase font-mono">
                                     {getRoleSimpleName(agent.role, state.language)}
                                   </span>
-                                  <span className="text-zinc-500 text-[11px]">
+                                  <span className="mutating-text-muted text-[11px]">
                                     ({model ? `${(model.parametersCount / 1e6).toFixed(0)}M` : '?'})
                                   </span>
                                 </div>
@@ -1183,7 +1183,7 @@ export const ContractBoard: React.FC = () => {
                             })}
                           </div>
                         ) : (
-                          <p className="text-[11px] text-zinc-500 italic">
+                          <p className="text-[11px] mutating-text-muted italic">
                             {localize(state.language, 'Sin agentes asignados. Edita el escuadrón para añadir bots.', 'No agents assigned. Edit squad to add bots.')}
                           </p>
                         )}
@@ -1193,19 +1193,19 @@ export const ContractBoard: React.FC = () => {
                 })}
               </div>
             ) : (
-              <div className="p-4 rounded-lg border border-dashed border-zinc-800 text-center text-xs text-zinc-500">
+              <div className="p-4 rounded-lg border border-dashed theme-border text-center text-xs mutating-text-muted">
                 {localize(state.language, 'No has creado ningún escuadrón todavía. Haz clic en "+ Crear Nuevo Escuadrón" para comenzar.', 'No squads created yet. Click "+ Create New Squad" to begin.')}
               </div>
             )}
           </div>
 
           {/* Section: Unassigned Free Agents */}
-          <div className="space-y-2 pt-2 border-t border-zinc-800">
-            <h4 className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-              <Bot className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="space-y-2 pt-2 border-t theme-border">
+            <h4 className="text-xs font-bold theme-text flex items-center gap-1.5">
+              <Bot className="w-3.5 h-3.5 theme-success-text" />
               <span>{localize(state.language, 'Agentes Libres No Asignados', 'Unassigned Free Agents')} ({unassignedAgents.length})</span>
             </h4>
-            <p className="text-[11px] text-zinc-400">
+            <p className="text-[11px] mutating-text-muted">
               {localize(
                 state.language,
                 'Estos agentes no pertenecen a ningún escuadrón y pueden seleccionarse libremente en cualquier contrato individual.',
@@ -1222,24 +1222,24 @@ export const ContractBoard: React.FC = () => {
                   return (
                     <div 
                       key={agent.id}
-                      className="p-2.5 rounded bg-zinc-950 border border-zinc-800 flex items-center justify-between text-xs"
+                      className="p-2.5 rounded theme-sub-bg border theme-border flex items-center justify-between text-xs"
                     >
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-zinc-200">{agent.name}</span>
-                          <span className="text-[11px] text-cyan-400 font-mono">
+                          <span className="font-bold theme-text">{agent.name}</span>
+                          <span className="text-[11px] mutating-accent-text font-mono">
                             {getRoleSimpleName(agent.role, state.language)}
                           </span>
                         </div>
-                        <p className="text-[11px] text-zinc-500 mt-0.5">
+                        <p className="text-[11px] mutating-text-muted mt-0.5">
                           {model?.name ?? 'Modelo'} · {model ? `${(model.parametersCount / 1e6).toFixed(0)}M` : ''} · {state.language === 'es' ? 'Puntaje' : 'Score'} {model?.reasoningScore ?? 0}
                         </p>
                       </div>
 
                       <span className={`text-[11px] px-1.5 py-0.5 rounded font-bold ${
                         isBusy 
-                          ? 'bg-amber-950 text-amber-300 border border-amber-500/30'
-                          : 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                          ? 'theme-warn-soft theme-warn-text border theme-warn-border'
+                          : 'theme-success-soft theme-success-text border theme-success-border'
                       }`}>
                         {isBusy ? localize(state.language, 'EN MISIÓN', 'IN MISSION') : localize(state.language, 'LIBRE', 'FREE')}
                       </span>
@@ -1248,7 +1248,7 @@ export const ContractBoard: React.FC = () => {
                 })}
               </div>
             ) : (
-              <p className="text-xs text-zinc-500 italic p-2 bg-zinc-950 rounded border border-zinc-900">
+              <p className="text-xs mutating-text-muted italic p-2 theme-sub-bg rounded border theme-border">
                 {localize(state.language, 'Todos los agentes del clúster están actualmente asignados a un escuadrón.', 'All cluster agents are currently assigned to a squad.')}
               </p>
             )}
@@ -1261,10 +1261,10 @@ export const ContractBoard: React.FC = () => {
       {/* ========================================================================= */}
       {isSquadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="bg-[#090f19] border border-cyan-800 rounded-lg max-w-lg w-full p-4 space-y-4 shadow-[0_0_30px_rgba(0,255,200,0.15)] font-mono">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-              <h3 className="text-sm font-bold text-cyan-300 flex items-center gap-2">
-                <Users className="w-4 h-4 text-cyan-400" />
+          <div className="theme-panel-bg border theme-accent-border rounded-lg max-w-lg w-full p-4 space-y-4 font-mono">
+            <div className="flex items-center justify-between border-b theme-border pb-2">
+              <h3 className="text-sm font-bold mutating-accent-text flex items-center gap-2">
+                <Users className="w-4 h-4 mutating-accent-text" />
                 <span>
                   {editingSquadId 
                     ? localize(state.language, 'Editar Escuadrón de Bots', 'Edit Bot Squad')
@@ -1273,7 +1273,7 @@ export const ContractBoard: React.FC = () => {
               </h3>
               <button
                 onClick={() => setIsSquadModalOpen(false)}
-                className="text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                className="mutating-text-muted cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1281,7 +1281,7 @@ export const ContractBoard: React.FC = () => {
 
             <form onSubmit={handleSaveSquad} className="space-y-3">
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">
+                <label className="block text-xs mutating-text-muted mb-1">
                   {localize(state.language, 'Nombre del Escuadrón:', 'Squad Name:')}
                 </label>
                 <input
@@ -1289,13 +1289,13 @@ export const ContractBoard: React.FC = () => {
                   value={squadName}
                   onChange={e => setSquadName(e.target.value)}
                   placeholder="e.g. Escuadrón Alfa, Trading Task Force..."
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-cyan-500"
+                  className="w-full theme-sub-bg border theme-border rounded px-2.5 py-1.5 text-xs theme-text focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">
+                <label className="block text-xs mutating-text-muted mb-1">
                   {localize(state.language, 'Color Identificador:', 'Squad Accent Color:')}
                 </label>
                 <div className="flex items-center gap-2">
@@ -1305,7 +1305,7 @@ export const ContractBoard: React.FC = () => {
                       type="button"
                       onClick={() => setSquadColor(c.hex)}
                       className={`w-7 h-7 rounded-full border-2 transition-transform cursor-pointer ${
-                        squadColor === c.hex ? 'scale-110 border-white shadow-lg' : 'border-transparent opacity-70 hover:opacity-100'
+                        squadColor === c.hex ? 'scale-110 theme-border shadow-lg' : 'border-transparent opacity-70 hover:opacity-100'
                       }`}
                       style={{ backgroundColor: c.hex }}
                       title={c.name}
@@ -1316,15 +1316,15 @@ export const ContractBoard: React.FC = () => {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs text-zinc-400">
+                  <label className="text-xs mutating-text-muted">
                     {localize(state.language, 'Seleccionar Agentes Miembros:', 'Select Agent Members:')}
                   </label>
-                  <span className="text-[11px] text-zinc-500">
+                  <span className="text-[11px] mutating-text-muted">
                     {squadMemberIds.length} {localize(state.language, 'seleccionados', 'selected')}
                   </span>
                 </div>
 
-                <div className="p-2 bg-zinc-950 border border-zinc-800 rounded max-h-48 overflow-y-auto space-y-1">
+                <div className="p-2 theme-sub-bg border theme-border rounded max-h-48 overflow-y-auto space-y-1">
                   {state.agents.length > 0 ? (
                     state.agents.map(agent => {
                       const currentSquad = botGroups.find(g => g.agentIds.includes(agent.id) && g.id !== editingSquadId);
@@ -1336,8 +1336,8 @@ export const ContractBoard: React.FC = () => {
                           key={agent.id}
                           className={`flex items-center justify-between p-1.5 rounded text-xs border cursor-pointer transition-colors ${
                             isSelected
-                              ? 'border-cyan-500 bg-cyan-950/40 text-cyan-200'
-                              : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
+                              ? 'theme-accent-border theme-accent-soft mutating-accent-text'
+                              : 'theme-border theme-sub-bg mutating-text-muted'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1351,21 +1351,20 @@ export const ContractBoard: React.FC = () => {
                                     : prev.filter(id => id !== agent.id)
                                 );
                               }}
-                              className="accent-cyan-500"
                             />
-                            <span className="font-bold text-zinc-200">{agent.name}</span>
-                            <span className="text-[11px] text-cyan-400">
+                            <span className="font-bold theme-text">{agent.name}</span>
+                            <span className="text-[11px] mutating-accent-text">
                               {getRoleSimpleName(agent.role, state.language)}
                             </span>
                           </div>
 
                           <div className="text-[11px] text-right">
                             {currentSquad ? (
-                              <span className="text-amber-400">
+                              <span className="theme-warn-text">
                                 ↺ {localize(state.language, `Se moverá desde "${currentSquad.name}"`, `Will move from "${currentSquad.name}"`)}
                               </span>
                             ) : (
-                              <span className="text-zinc-500">
+                              <span className="mutating-text-muted">
                                 {model?.name ?? 'Modelo'} ({(model?.parametersCount ?? 0) / 1e6}M)
                               </span>
                             )}
@@ -1374,25 +1373,25 @@ export const ContractBoard: React.FC = () => {
                       );
                     })
                   ) : (
-                    <p className="text-xs text-zinc-500 italic p-1 text-center">
+                    <p className="text-xs mutating-text-muted italic p-1 text-center">
                       {localize(state.language, 'No hay agentes creados en el clúster todavía.', 'No agents created in cluster yet.')}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t theme-border">
                 <button
                   type="button"
                   onClick={() => setIsSquadModalOpen(false)}
-                  className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold cursor-pointer"
+                  className="px-3 py-1.5 rounded theme-raised-bg theme-text text-xs font-semibold cursor-pointer"
                 >
                   {localize(state.language, 'Cancelar', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={!squadName.trim()}
-                  className="px-4 py-1.5 rounded bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold cursor-pointer disabled:opacity-50"
+                  className="px-4 py-1.5 rounded mutating-btn-primary theme-on-accent text-xs font-bold cursor-pointer disabled:opacity-50"
                 >
                   {localize(state.language, 'Guardar Escuadrón', 'Save Squad')}
                 </button>

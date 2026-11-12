@@ -30,15 +30,15 @@ export const ResearchTree: React.FC = () => {
   const getCategoryColor = (cat: string) => {
     switch (cat) {
       case 'architecture':
-        return 'border-cyan-500/50 text-cyan-300';
+        return 'theme-accent-border mutating-accent-text';
       case 'optimization':
-        return 'border-emerald-500/50 text-emerald-300';
+        return 'theme-success-border theme-success-text';
       case 'data':
-        return 'border-blue-500/50 text-blue-300';
+        return 'theme-accent-border mutating-accent-text';
       case 'autonomy':
-        return 'border-purple-500/50 text-purple-300';
+        return 'theme-accent-border mutating-accent-text';
       default:
-        return 'border-zinc-700 text-zinc-300';
+        return 'theme-border theme-text';
     }
   };
 
@@ -52,33 +52,33 @@ export const ResearchTree: React.FC = () => {
   return (
     <div className="flex flex-col h-full mutating-panel border rounded-lg p-3 overflow-y-auto space-y-4 font-mono">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/40 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-accent-border pb-2">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-cyan-400" />
-          <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
+          <Sparkles className="w-4 h-4 mutating-accent-text" />
+          <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
             {localize(state.language, 'ÁRBOL DE INVESTIGACIÓN // PAPERS CIENTÍFICOS & DISRUPCIÓN', 'RESEARCH TREE // SCIENTIFIC PAPERS & BREAKTHROUGHS')}
           </h2>
         </div>
-        <div className="flex flex-wrap gap-3 text-xs text-zinc-400">
+        <div className="flex flex-wrap gap-3 text-xs mutating-text-muted">
           <span>
-            {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="text-amber-300 font-bold">${state.credits.toLocaleString()} CR</span>
+            {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="theme-warn-text font-bold">${state.credits.toLocaleString()} CR</span>
           </span>
           <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3 text-cyan-400" />
-            {localize(state.language, 'Día de campaña', 'Campaign day')} <strong className="text-cyan-300">{state.campaignDays + 1}</strong>
+            <Clock className="h-3 w-3 mutating-accent-text" />
+            {localize(state.language, 'Día de campaña', 'Campaign day')} <strong className="mutating-accent-text">{state.campaignDays + 1}</strong>
           </span>
         </div>
       </div>
 
-      <p className="text-xs text-zinc-400 leading-relaxed">
+      <p className="text-xs mutating-text-muted leading-relaxed">
         {localize(state.language, 'La tecnología sigue un orden inspirado en hitos publicados. Cada avance puede financiarse antes para acelerar la partida o se desbloquea gratis al alcanzar su día de campaña; los nodos futuros son proyecciones, no hechos confirmados.', 'Technology follows a progression inspired by published milestones. Fund research early to accelerate, or wait for its campaign-day availability; future nodes are projections, not confirmed discoveries.')}
       </p>
 
       {/* Stage-Adapted Funding Protocol Banner */}
-      <div className="p-2.5 rounded bg-purple-950/30 border border-purple-500/40 text-[11px] font-mono flex items-center justify-between gap-2">
+      <div className="p-2.5 rounded theme-accent-soft border theme-accent-border text-[11px] font-mono flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-purple-400 shrink-0" />
-          <span className="text-purple-300 font-bold">
+          <Zap className="w-4 h-4 mutating-accent-text shrink-0" />
+          <span className="mutating-accent-text font-bold">
             {state.uiVersion === 4 ? (
               localize(state.language, 'MODO DE COMPILACIÓN V4.0: Generación e integración directa de pruebas sintéticas post-humanas (Requiere 80%+ de disyuntor).', 'V4.0 COMPILATION MODE: Direct synthesis of post-human architectural proofs (Requires 80%+ Breaker Capacity).')
             ) : state.uiVersion === 3 ? (
@@ -106,10 +106,10 @@ export const ResearchTree: React.FC = () => {
               key={node.id}
               className={`p-3 rounded-lg border transition-all flex flex-col justify-between ${
                 node.unlocked
-                  ? 'bg-[#091522] border-cyan-500/60 shadow-[0_0_15px_rgba(0,255,200,0.06)]'
+                  ? 'theme-panel-bg theme-accent-border'
                   : preMet
-                  ? 'bg-[#09111c] border-zinc-700'
-                  : 'bg-zinc-950/80 border-zinc-900 opacity-60'
+                  ? 'theme-panel-bg theme-border'
+                  : 'theme-sub-bg theme-border opacity-60'
               }`}
             >
               <div>
@@ -129,7 +129,7 @@ export const ResearchTree: React.FC = () => {
                       } as Record<string, string>)[node.category] || node.category)}
                     </span>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-xs text-zinc-100">{content.title}</h3>
+                      <h3 className="font-bold text-xs theme-text">{content.title}</h3>
                       {RESEARCH_DOCS[node.id] && (
                         <DocLinkBadge doc={RESEARCH_DOCS[node.id]} language={state.language} />
                       )}
@@ -137,18 +137,18 @@ export const ResearchTree: React.FC = () => {
                   </div>
 
                   {node.unlocked ? (
-                    <span className="flex items-center gap-1 text-emerald-400 text-[11px] font-bold">
+                    <span className="flex items-center gap-1 theme-success-text text-[11px] font-bold">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       {localize(state.language, 'INVESTIGADO', 'RESEARCHED')}
                     </span>
                   ) : (
-                    <span className="text-xs font-bold text-amber-300">
+                    <span className="text-xs font-bold theme-warn-text">
                       ${node.costCredits.toLocaleString()} CR
                     </span>
                   )}
                 </div>
 
-                <p className="text-xs text-zinc-300 mt-2 leading-snug font-sans">
+                <p className="text-xs theme-text mt-2 leading-snug font-sans">
                   {content.effectDescription}
                 </p>
 
@@ -156,8 +156,8 @@ export const ResearchTree: React.FC = () => {
                   {node.releaseYear && (
                     <span className={`rounded border px-1.5 py-0.5 ${
                       node.releaseYear > 2026
-                        ? 'border-purple-700/60 text-purple-300'
-                        : 'border-zinc-700 text-zinc-400'
+                        ? 'theme-accent-border mutating-accent-text'
+                        : 'theme-border mutating-text-muted'
                     }`}>
                       {node.releaseYear > 2026
                         ? localize(state.language, `PROYECCIÓN ${node.releaseYear}`, `PROJECTED ${node.releaseYear}`)
@@ -165,7 +165,7 @@ export const ResearchTree: React.FC = () => {
                     </span>
                   )}
                   {node.availableAfterDays !== undefined && !node.unlocked && (
-                    <span className={state.campaignDays >= node.availableAfterDays ? 'text-emerald-300' : 'text-cyan-300'}>
+                    <span className={state.campaignDays >= node.availableAfterDays ? 'theme-success-text' : 'mutating-accent-text'}>
                       {state.campaignDays >= node.availableAfterDays
                         ? localize(state.language, 'Disponibilidad temporal alcanzada', 'Timeline availability reached')
                         : localize(state.language, `Desbloqueo temporal: día ${node.availableAfterDays + 1} (${node.availableAfterDays - state.campaignDays} días)`, `Timeline unlock: day ${node.availableAfterDays + 1} (${node.availableAfterDays - state.campaignDays} days)`) }
@@ -173,16 +173,16 @@ export const ResearchTree: React.FC = () => {
                   )}
                 </div>
 
-                <div className="mt-2 p-2 rounded bg-[#060a10] border border-cyan-950/80 text-[11px] text-zinc-500">
-                  <span className="text-cyan-400 font-semibold block">{localize(state.language, 'FUNDAMENTO TÉCNICO:', 'TECHNICAL BACKGROUND:')}</span>
+                <div className="mt-2 p-2 rounded theme-panel-bg border theme-accent-border text-[11px] mutating-text-muted">
+                  <span className="mutating-accent-text font-semibold block">{localize(state.language, 'FUNDAMENTO TÉCNICO:', 'TECHNICAL BACKGROUND:')}</span>
                   {content.technicalLore}
                 </div>
 
                 {node.prerequisites.length > 0 && !node.unlocked && (
-                  <div className="mt-2 text-[11px] text-zinc-500 flex items-center gap-1">
-                    <GitBranch className="w-3 h-3 text-zinc-600" />
+                  <div className="mt-2 text-[11px] mutating-text-muted flex items-center gap-1">
+                    <GitBranch className="w-3 h-3 mutating-text-muted" />
                     <span>{localize(state.language, 'Requisitos previos:', 'Prerequisites:')} </span>
-                    <span className={preMet ? 'text-zinc-300' : 'text-red-400'}>
+                    <span className={preMet ? 'theme-text' : 'theme-danger-text'}>
                       {node.prerequisites.map(p => {
                         const prerequisite = state.researchTree.find(r => r.id === p);
                         return prerequisite ? localizedResearch(state.language, prerequisite).title : '';
@@ -194,14 +194,14 @@ export const ResearchTree: React.FC = () => {
 
               {/* Action Button */}
               {!node.unlocked && (
-                <div className="mt-3 pt-2 border-t border-zinc-800 flex items-center justify-end">
+                <div className="mt-3 pt-2 border-t theme-border flex items-center justify-end">
                   <button
                     onClick={() => unlockResearch(node.id)}
                     disabled={!preMet || !canAfford}
                     className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
                       preMet && canAfford
-                        ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(0,255,200,0.3)]'
-                        : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                        ? 'mutating-btn-primary theme-on-accent cursor-pointer'
+                        : 'theme-raised-bg mutating-text-muted cursor-not-allowed border theme-border'
                     }`}
                   >
                     {!preMet ? (

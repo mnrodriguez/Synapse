@@ -109,17 +109,17 @@ export const Terminal: React.FC = () => {
   const getLogStyle = (type: string) => {
     switch (type) {
       case 'success':
-        return 'text-emerald-400';
+        return 'theme-success-text';
       case 'warning':
-        return 'text-amber-400 font-semibold';
+        return 'theme-warn-text font-semibold';
       case 'danger':
-        return 'text-red-400 font-bold bg-red-950/20 px-1 rounded';
+        return 'theme-danger-text font-bold theme-danger-soft px-1 rounded';
       case 'system':
-        return 'text-cyan-300 font-mono opacity-90';
+        return 'mutating-accent-text font-mono opacity-90';
       case 'lore':
-        return 'text-purple-300 italic';
+        return 'mutating-accent-text italic';
       default:
-        return 'text-zinc-300';
+        return 'theme-text';
     }
   };
 
@@ -137,31 +137,31 @@ export const Terminal: React.FC = () => {
         <div className="flex items-center gap-1.5 overflow-x-auto">
           <button 
             onClick={() => runShortcut('status')}
-            className="px-1.5 py-0.5 text-[11px] bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 rounded border border-cyan-800/40 transition-colors"
+            className="px-1.5 py-0.5 text-[11px] theme-accent-soft mutating-accent-text rounded border theme-accent-border transition-colors"
           >
             status
           </button>
           <button 
             onClick={() => runShortcut('train')}
-            className="px-1.5 py-0.5 text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 rounded border border-emerald-800/40 transition-colors"
+            className="px-1.5 py-0.5 text-[11px] theme-success-soft theme-success-text rounded border theme-success-border transition-colors"
           >
             train
           </button>
           <button 
             onClick={() => runShortcut('contracts')}
-            className="px-1.5 py-0.5 text-[11px] bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 rounded border border-amber-800/40 transition-colors"
+            className="px-1.5 py-0.5 text-[11px] theme-warn-soft theme-warn-text rounded border theme-warn-border transition-colors"
           >
             gigs
           </button>
           <button 
             onClick={() => runShortcut('singularity')}
-            className="px-1.5 py-0.5 text-[11px] bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 rounded border border-purple-800/40 transition-colors"
+            className="px-1.5 py-0.5 text-[11px] theme-accent-soft mutating-accent-text rounded border theme-accent-border transition-colors"
           >
             {story.progressShort}
           </button>
           <button 
             onClick={() => runShortcut('clear')}
-            className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="p-1 mutating-text-muted transition-colors"
             title={localize(state.language, 'Limpiar terminal', 'Clear terminal')}
           >
             <Trash2 className="w-3 h-3" />
@@ -175,14 +175,14 @@ export const Terminal: React.FC = () => {
         className="flex-1 p-3 overflow-y-auto space-y-1.5 text-xs select-text scrollbar-thin scrollbar-thumb-cyan-950 scrollbar-track-transparent"
         style={{ scrollBehavior: 'smooth' }}
       >
-        <div className="text-[11px] text-cyan-500/80 mb-2 border-b border-cyan-950/80 pb-2">
+        <div className="text-[11px] mutating-accent-text mb-2 border-b theme-accent-border pb-2">
           === SYNAPSE NEURAL COMPUTING KERNEL v4.19 (x86_64-quantum-arch) ===<br />
-          {localize(state.language, 'Escribe', 'Type')} <span className="text-cyan-300 font-bold">help</span> {localize(state.language, 'para ver todos los comandos disponibles o utiliza los paneles modulares superiores.', 'to see all available commands, or use the modules above.')}
+          {localize(state.language, 'Escribe', 'Type')} <span className="mutating-accent-text font-bold">help</span> {localize(state.language, 'para ver todos los comandos disponibles o utiliza los paneles modulares superiores.', 'to see all available commands, or use the modules above.')}
         </div>
 
         {state.logs.slice().reverse().map(log => (
           <div key={log.id} className="flex items-start gap-2 leading-relaxed break-words font-mono">
-            <span className="text-zinc-600 text-[11px] select-none shrink-0 font-mono">[{log.timestamp}]</span>
+            <span className="mutating-text-muted text-[11px] select-none shrink-0 font-mono">[{log.timestamp}]</span>
             <span className={`flex-1 whitespace-pre-wrap ${getLogStyle(log.type)}`}>
               {getLogMessage(log)}
             </span>

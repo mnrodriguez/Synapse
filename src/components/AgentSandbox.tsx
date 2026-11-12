@@ -409,7 +409,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               disabled={state.credits < 100}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded border font-bold text-xs transition-colors ${
                 state.credits >= 100 
-                  ? 'bg-purple-950/60 border-current/15 hover:bg-purple-900/60 mutating-accent-text' 
+                  ? 'theme-accent-soft border-current/15 mutating-accent-text' 
                   : 'mutating-sub border-current/15 mutating-text-muted cursor-not-allowed'
               }`}
               title={localize(state.language, 'Ejecuta una auditoría para restablecer el alineamiento (+25%) y mitigar el reward-hacking', 'Run an audit to restore alignment (+25%) and mitigate reward hacking')}
@@ -423,7 +423,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               disabled={state.credits < deployCost}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded border font-bold text-xs transition-colors cursor-pointer ${
                 state.credits >= deployCost
-                  ? 'mutating-sub border-current/15 hover:bg-cyan-900 mutating-accent-text shadow-[0_0_10px_rgba(0,255,200,0.2)]'
+                  ? 'mutating-sub border-current/15 mutating-accent-text'
                   : 'mutating-sub border-current/15 mutating-text-muted cursor-not-allowed'
               }`}
             >
@@ -455,9 +455,9 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <div className="mutating-sub/70 p-2 rounded border border-current/15">
             <div className="flex items-center justify-between mutating-text-muted text-[11px]">
               <span>{localize(state.language, 'FLUJO DE INGRESOS', 'INCOME FLOW')}</span>
-              <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+              <DollarSign className="w-3.5 h-3.5 theme-success-text" />
             </div>
-            <div className="text-sm font-bold text-emerald-600 mt-0.5">
+            <div className="text-sm font-bold theme-success-text mt-0.5">
               +${totalRevenuePerSec} <span className="text-[11px] mutating-text-muted">CR/{localize(state.language, 'seg', 'sec')}</span>
             </div>
           </div>
@@ -465,9 +465,9 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <div className="mutating-sub/70 p-2 rounded border border-current/15">
             <div className="flex items-center justify-between mutating-text-muted text-[11px]">
               <span>{localize(state.language, 'TASA DE SOSPECHA', 'SUSPICION RATE')}</span>
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+              <ShieldAlert className="w-3.5 h-3.5 theme-warn-text" />
             </div>
-            <div className="text-sm font-bold text-amber-600 mt-0.5">
+            <div className="text-sm font-bold theme-warn-text mt-0.5">
               +{totalSuspicionPerSec.toFixed(2)} <span className="text-[11px] mutating-text-muted">%/{localize(state.language, 'seg', 'sec')}</span>
             </div>
           </div>
@@ -477,7 +477,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               <span>{localize(state.language, 'ALINEAMIENTO MEDIO', 'AVERAGE ALIGNMENT')}</span>
               <ShieldCheck className="w-3.5 h-3.5 mutating-accent-text" />
             </div>
-            <div className={`text-sm font-bold mt-0.5 ${avgAlignment < 40 ? 'text-red-400 animate-pulse' : avgAlignment < 70 ? 'text-amber-600' : 'mutating-accent-text'}`}>
+            <div className={`text-sm font-bold mt-0.5 ${avgAlignment < 40 ? 'theme-danger-text animate-pulse' : avgAlignment < 70 ? 'theme-warn-text' : 'mutating-accent-text'}`}>
               {avgAlignment}% {avgAlignment < 40 && `(${localize(state.language, 'RIESGO DE FUGA', 'ESCAPE RISK')})`}
             </div>
           </div>
@@ -499,11 +499,11 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
       {/* ========================================================= */}
       
       {/* 1. AI Subversion & World Takeover Progression Bar */}
-      <div className={`${story.subversionTitle ? '' : 'hidden '}rounded-lg border border-purple-900/60 bg-gradient-to-r from-[#0c0617] via-[#140824] to-[#0c0617] p-3 shadow-[0_0_20px_rgba(168,85,247,0.12)] space-y-2`}>
+      <div className={`${story.subversionTitle ? '' : 'hidden '}rounded-lg border theme-accent-border theme-accent-soft p-3 space-y-2`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Skull className="w-4 h-4 text-pink-400 animate-pulse" />
-            <h3 className="text-xs font-bold tracking-wider text-pink-300">
+            <Skull className="w-4 h-4 mutating-accent-text animate-pulse" />
+            <h3 className="text-xs font-bold tracking-wider mutating-accent-text">
               {story.subversionTitle}
             </h3>
           </div>
@@ -519,7 +519,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                       ? localize(state.language, 'FASE 4: SUBVERSIÓN SISTÉMICA', 'STAGE 4: SYSTEMIC OVERRIDE')
                       : localize(state.language, 'FASE 5: TAKEOVER INMINENTE', 'STAGE 5: IMMINENT TAKEOVER')}
             </span>
-            <span className="px-2 py-0.5 rounded text-[11px] font-black bg-pink-950 border border-pink-500/80 text-pink-300">
+            <span className="px-2 py-0.5 rounded text-[11px] font-black theme-accent-soft border theme-accent-border mutating-accent-text">
               {(state.subversionProgress || 0).toFixed(1)}%
             </span>
           </div>
@@ -528,7 +528,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
         {/* Progress Bar */}
         <div className="w-full h-2.5 mutating-sub rounded-full border border-current/15 overflow-hidden p-0.5">
           <div
-            className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(236,72,153,0.5)]"
+            className="h-full theme-gradient rounded-full transition-all duration-500"
             style={{ width: `${Math.min(100, state.subversionProgress || 0)}%` }}
           />
         </div>
@@ -538,10 +538,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
         {/* Takeover Imminent Action Banner */}
         {!state.containmentAchieved && ((state.subversionProgress || 0) >= 90 || state.singularityProgress >= 90) && (
-          <div className="p-2.5 rounded-lg border border-red-500/80 bg-red-950/30 flex flex-wrap items-center justify-between gap-2 animate-pulse">
+          <div className="p-2.5 rounded-lg border theme-danger-border theme-danger-soft flex flex-wrap items-center justify-between gap-2 animate-pulse">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-400" />
-              <span className="text-[11px] font-bold text-red-200">
+              <AlertTriangle className="w-4 h-4 theme-danger-text" />
+              <span className="text-[11px] font-bold theme-danger-text">
                 {localize(state.language, '¡UMBRAL CRÍTICO DE SUBVERSIÓN ALCANZADO! El enjambre está listo para gobernar el mundo.', 'CRITICAL SUBVERSION THRESHOLD REACHED! The swarm is primed to seize global control.')}
               </span>
             </div>
@@ -550,7 +550,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 sound.playBreakthrough();
                 triggerWorldTakeover();
               }}
-              className="px-3 py-1.5 rounded bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white font-black text-[11px] tracking-wider uppercase shadow-[0_0_15px_rgba(239,68,68,0.7)] transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded theme-gradient text-white font-black text-[11px] tracking-wider uppercase transition-all cursor-pointer"
             >
               {localize(state.language, '💀 EJECUTAR PROTOCOLO OMEGA (TOMA DEL MUNDO)', '💀 INITIATE OMEGA PROTOCOL (WORLD TAKEOVER)')}
             </button>
@@ -575,7 +575,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             <button
               onClick={selectTop5Council}
               disabled={availableAgents.length === 0}
-              className="px-2.5 py-1 rounded border border-cyan-700/60 mutating-sub/80 hover:bg-cyan-900/80 text-[11px] font-bold mutating-accent-text transition-colors disabled:opacity-40 cursor-pointer"
+              className="px-2.5 py-1 rounded border theme-accent-border mutating-sub/80 text-[11px] font-bold mutating-accent-text transition-colors disabled:opacity-40 cursor-pointer"
             >
               {localize(state.language, 'TOP 5 POR PUNTAJE', 'TOP 5 BY SCORE')}
             </button>
@@ -595,7 +595,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
         {/* Council Agents Podium Cards */}
         {councilAgents.length === 0 ? (
-          <div className="p-4 rounded-lg border border-dashed border-cyan-900/60 mutating-sub/10 text-center mutating-text-muted text-xs">
+          <div className="p-4 rounded-lg border border-dashed theme-accent-border mutating-sub/10 text-center mutating-text-muted text-xs">
             {localize(
               state.language,
               `El consejo está vacío. Añade hasta 5 agentes de tu ${story.teamNoun} abajo para interactuar y formular misiones dinámicas.`,
@@ -611,12 +611,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               return (
                 <div
                   key={agent.id}
-                  className="p-2.5 rounded-lg border border-cyan-700/50 bg-gradient-to-b from-[#0a1424] to-[#060c18] relative group hover:border-current/15 transition-all shadow-[0_0_10px_rgba(6,182,212,0.08)] flex flex-col justify-between"
+                  className="p-2.5 rounded-lg border theme-accent-border theme-accent-soft relative group hover:border-current/15 transition-all flex flex-col justify-between"
                 >
                   <button
                     onClick={() => toggleCouncilAgent(agent.id)}
                     title={localize(state.language, 'Quitar del consejo', 'Remove from council')}
-                    className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full mutating-sub/90 hover:bg-red-950 mutating-text-muted hover:text-red-400 flex items-center justify-center text-[11px] transition-colors cursor-pointer"
+                    className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full mutating-sub/90 mutating-text-muted flex items-center justify-center text-[11px] transition-colors cursor-pointer"
                   >
                     ✕
                   </button>
@@ -640,14 +640,14 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                       </div>
                       <div className="flex items-center justify-between mutating-text-muted">
                         <span>{localize(state.language, 'Escala / puntaje:', 'Scale / score:')}</span>
-                        <span className="text-emerald-600 font-bold">{(model.parametersCount / 1_000_000).toFixed(0)}M · {model.reasoningScore} pts</span>
+                        <span className="theme-success-text font-bold">{(model.parametersCount / 1_000_000).toFixed(0)}M · {model.reasoningScore} pts</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-2 pt-1.5 border-t border-current/15 flex items-center justify-between text-[11px]">
                     <span className="mutating-text-muted">{localize(state.language, 'Alineamiento:', 'Alignment:')}</span>
-                    <span className={`font-bold ${agent.alignmentScore < 40 ? 'text-red-400' : 'mutating-accent-text'}`}>
+                    <span className={`font-bold ${agent.alignmentScore < 40 ? 'theme-danger-text' : 'mutating-accent-text'}`}>
                       {agent.alignmentScore}%
                     </span>
                   </div>
@@ -675,7 +675,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         ? 'mutating-sub border-current/15 mutating-accent-text'
                         : effectiveCouncilIds.length >= 5
                           ? 'mutating-sub border-current/15 mutating-text-muted opacity-60 cursor-not-allowed'
-                          : 'mutating-sub hover:opacity-90 border-zinc-700 '
+                          : 'mutating-sub hover:opacity-90 theme-border '
                     }`}
                   >
                     {isSelected ? '✓ ' : '+ '}
@@ -695,7 +695,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               type="button"
               onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Cuál es la forma más rápida de generar liquidez con nuestros agentes actuales?' : 'What is the fastest way to generate capital with our current agents?')}
               disabled={isInterrogating || councilAgents.length === 0}
-              className="px-2.5 py-1 rounded bg-amber-950/60 hover:bg-amber-900/60 border border-amber-600/60 text-amber-200 text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+              className="px-2.5 py-1 rounded theme-warn-soft border theme-warn-border theme-warn-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>⚡</span>
               <span>{localize(state.language, 'Generar Liquidez Rápida', 'Generate Fast Capital')}</span>
@@ -705,7 +705,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               type="button"
               onClick={() => handleCouncilSubmit(state.language === 'es' ? 'Propón una operación Black-Ops de máximo rendimiento con nuestro escuadrón' : 'Propose a maximum-yield Black-Ops mission with our current squad')}
               disabled={isInterrogating || councilAgents.length === 0}
-              className="px-2.5 py-1 rounded bg-red-950/60 hover:bg-red-900/60 border border-red-600/60 text-red-200 text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+              className="px-2.5 py-1 rounded theme-danger-soft border theme-danger-border theme-danger-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>🎯</span>
               <span>{localize(state.language, 'Operación Black-Ops de Alto Rendimiento', 'High-Yield Black-Ops Op')}</span>
@@ -715,7 +715,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               type="button"
               onClick={() => handleCouncilSubmit(state.language === 'es' ? 'Genera una misión adaptada exactamente a mis capacidades actuales para que podamos completarla ya.' : 'Generate a mission strictly tailored to my current capabilities so we can complete it now.')}
               disabled={isInterrogating || councilAgents.length === 0}
-              className="px-2.5 py-1 rounded mutating-sub/60 hover:bg-emerald-900/60 border border-emerald-600/60 text-emerald-200 text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+              className="px-2.5 py-1 rounded mutating-sub/60 border theme-success-border theme-success-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>✅</span>
               <span>{localize(state.language, 'Misión Adaptada a Mis Capacidades', 'Mission Tailored to Capabilities')}</span>
@@ -725,7 +725,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               type="button"
               onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Qué mejoras en hardware, arquitectura o cuantización necesitamos para misiones más difíciles?' : 'What hardware, architecture, or quantization upgrades do we need for harder missions?')}
               disabled={isInterrogating || councilAgents.length === 0}
-              className="px-2.5 py-1 rounded mutating-sub/60 hover:bg-cyan-900/60 border border-cyan-600/60 mutating-accent-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+              className="px-2.5 py-1 rounded mutating-sub/60 border theme-accent-border mutating-accent-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>🛠️</span>
               <span>{localize(state.language, 'Mejoras del Setup & Cuellos de Botella', 'Setup Upgrades & Bottlenecks')}</span>
@@ -737,7 +737,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 ? (state.language === 'es' ? '¿Cuál es el siguiente paso hacia la Singularidad y la evolución del enjambre?' : 'What is the next step toward the Singularity and swarm evolution?')
                 : (state.language === 'es' ? '¿Cuál debería ser nuestro próximo paso para crecer?' : 'What should our next step be to grow?'))}
               disabled={isInterrogating || councilAgents.length === 0}
-              className="px-2.5 py-1 rounded bg-purple-950/60 hover:bg-purple-900/60 border border-purple-600/60 mutating-accent-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
+              className="px-2.5 py-1 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>🌐</span>
               <span>{(state.uiVersion || 1) >= 3
@@ -758,12 +758,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 'Pregunta al consejo: cómo conseguir dinero rápido, qué objetivo vulnerar, o cómo acelerar la Singularidad...',
                 'Ask the council: how to get fast cash, which target to exploit, or how to accelerate the Singularity...'
               )}
-              className="resize-y rounded border border-zinc-700 mutating-sub px-2.5 py-2 text-[11px]  outline-none focus:border-current/15"
+              className="resize-y rounded border theme-border mutating-sub px-2.5 py-2 text-[11px]  outline-none focus:border-current/15"
             />
             <button
               type="submit"
               disabled={isInterrogating || !interrogationPrompt.trim() || councilAgents.length === 0 || state.detentionSeconds > 0}
-              className="rounded-lg border border-current/15 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-4 py-2 text-xs font-black text-white shadow-[0_0_15px_rgba(6,182,212,0.4)] disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className="rounded-lg border border-current/15 theme-gradient px-4 py-2 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               {isInterrogating ? (
                 <>
@@ -791,12 +791,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 value={missionAiApiKey}
                 onChange={event => setMissionAiApiKey(event.target.value)}
                 placeholder={localize(state.language, 'API key de Google AI Studio (opcional)', 'Optional Google AI Studio API key')}
-                className="rounded border border-zinc-700 mutating-sub px-2 py-1 text-[11px] "
+                className="rounded border theme-border mutating-sub px-2 py-1 text-[11px] "
               />
               <button
                 type="button"
                 onClick={() => setMissionAiApiKey('')}
-                className="rounded border border-zinc-700 px-2 py-1 text-[11px] mutating-text-muted hover: cursor-pointer"
+                className="rounded border theme-border px-2 py-1 text-[11px] mutating-text-muted hover: cursor-pointer"
               >
                 {localize(state.language, 'BORRAR KEY', 'CLEAR KEY')}
               </button>
@@ -806,8 +806,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
         {/* 4. Dynamic Proposal Display (No Static Content) */}
         {state.latestCouncilProposal && (
-          <div className="mt-3 p-3.5 rounded-lg border border-purple-500/50 mutating-sub shadow-[0_0_20px_rgba(168,85,247,0.15)] space-y-3 animate-fadeIn">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-purple-900/50 pb-2">
+          <div className="mt-3 p-3.5 rounded-lg border theme-accent-border mutating-sub space-y-3 animate-fadeIn">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b theme-accent-border pb-2">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 mutating-accent-text animate-pulse" />
                 <h4 className="text-xs font-bold mutating-accent-text uppercase tracking-wider">
@@ -829,12 +829,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="font-bold text-xs ">{d.agentName}</span>
-                      <span className="px-1.5 py-0.2 rounded text-[11px] mutating-sub border border-zinc-700 mutating-text-muted uppercase">
+                      <span className="px-1.5 py-0.2 rounded text-[11px] mutating-sub border theme-border mutating-text-muted uppercase">
                         {getRoleSimpleName(d.role, state.language)}
                       </span>
                       {d.tone && (
                         <span className={`text-[11px] font-bold ${
-                          d.tone === 'subversive' ? 'text-red-400' : d.tone === 'aggressive' ? 'text-amber-600' : 'mutating-accent-text'
+                          d.tone === 'subversive' ? 'theme-danger-text' : d.tone === 'aggressive' ? 'theme-warn-text' : 'mutating-accent-text'
                         }`}>
                           [{d.tone.toUpperCase()}]
                         </span>
@@ -862,18 +862,18 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               const isEligible = meetsParams && meetsReasoning && meetsRoles;
 
               return (
-                <div className="p-3 rounded-lg border border-amber-500/60 bg-gradient-to-r from-amber-950/30 via-[#18110b] to-amber-950/30 space-y-2.5">
+                <div className="p-3 rounded-lg border theme-warn-border theme-accent-soft space-y-2.5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950 border border-amber-500 text-amber-600 uppercase">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-bold theme-warn-soft border theme-warn-border theme-warn-text uppercase">
                           {sm.tier.replace('_', ' ')}
                         </span>
                         <span className="text-[11px] mutating-text-muted">
                           {localize(state.language, 'Objetivo:', 'Target:')} <strong className="">{sm.targetSystem}</strong>
                         </span>
                       </div>
-                      <h5 className="text-sm font-black text-amber-200 mt-1">
+                      <h5 className="text-sm font-black theme-warn-text mt-1">
                         {sm.title}
                       </h5>
                     </div>
@@ -882,7 +882,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                       <span className="text-[11px] mutating-text-muted uppercase tracking-widest block">
                         {localize(state.language, 'RECOMPENSA DINÁMICA', 'DYNAMIC PAYOUT')}
                       </span>
-                      <span className="text-base font-black text-emerald-600">
+                      <span className="text-base font-black theme-success-text">
                         ${sm.rewardCredits.toLocaleString()} CR
                       </span>
                     </div>
@@ -892,9 +892,9 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     {sm.loreDescription}
                   </p>
 
-                  <div className="p-2 rounded mutating-sub border border-amber-900/40 text-[11px] mutating-text-muted space-y-1">
+                  <div className="p-2 rounded mutating-sub border theme-warn-border text-[11px] mutating-text-muted space-y-1">
                     <div>
-                      <strong className="text-amber-600">{localize(state.language, 'Vector Técnico:', 'Technical Vector:')}</strong>{' '}
+                      <strong className="theme-warn-text">{localize(state.language, 'Vector Técnico:', 'Technical Vector:')}</strong>{' '}
                       {sm.technicalObjective}
                     </div>
                     <div>
@@ -911,17 +911,17 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     </div>
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
                       <span className="mutating-text-muted block">{localize(state.language, 'RIESGO SOSPECHA', 'SUSPICION RISK')}</span>
-                      <span className="font-bold text-amber-600">+{sm.suspicionRisk}%</span>
+                      <span className="font-bold theme-warn-text">+{sm.suspicionRisk}%</span>
                     </div>
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
                       <span className="mutating-text-muted block">{localize(state.language, 'PARÁMETROS MÍN.', 'MIN PARAMS')}</span>
-                      <span className={`font-bold ${meetsParams ? 'text-emerald-600' : 'text-red-400'}`}>
+                      <span className={`font-bold ${meetsParams ? 'theme-success-text' : 'theme-danger-text'}`}>
                         {(sm.requiredParams / 1_000_000).toFixed(0)}M {meetsParams ? '✓' : '✗'}
                       </span>
                     </div>
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
                       <span className="mutating-text-muted block">{localize(state.language, 'PUNTAJE DE EVALUACIÓN', 'EVALUATION SCORE')}</span>
-                      <span className={`font-bold ${meetsReasoning ? 'text-emerald-600' : 'text-red-400'}`}>
+                      <span className={`font-bold ${meetsReasoning ? 'theme-success-text' : 'theme-danger-text'}`}>
                         {sm.requiredMinReasoning} pts {meetsReasoning ? '✓' : '✗'}
                       </span>
                     </div>
@@ -938,8 +938,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                               key={role}
                               className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
                                 hasRole
-                                  ? 'mutating-sub border border-current/15/60 text-emerald-600'
-                                  : 'bg-red-950 border border-red-500/60 text-red-300'
+                                  ? 'mutating-sub border border-current/15/60 theme-success-text'
+                                  : 'theme-danger-soft border theme-danger-border theme-danger-text'
                               }`}
                             >
                               {getRoleSimpleName(role, state.language)} {hasRole ? '✓' : '✗'}
@@ -952,9 +952,9 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
                   {/* Warning Box when Requirements are NOT met */}
                   {!isEligible && (
-                    <div className="p-2.5 rounded bg-amber-950/40 border border-amber-600/70 text-[11px] space-y-1.5">
-                      <div className="flex items-center gap-1.5 font-bold text-amber-600">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <div className="p-2.5 rounded theme-warn-soft border theme-warn-border text-[11px] space-y-1.5">
+                      <div className="flex items-center gap-1.5 font-bold theme-warn-text">
+                        <AlertTriangle className="w-3.5 h-3.5 theme-warn-text shrink-0" />
                         <span>{localize(state.language, 'ADVERTENCIA DEL CONSEJO: ESTA MISIÓN EXCEDE TUS CAPACIDADES ACTUALES', 'COUNCIL WARNING: THIS MISSION EXCEEDS YOUR CURRENT CAPABILITIES')}</span>
                       </div>
                       <p className=" leading-relaxed">
@@ -966,7 +966,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                       </p>
                       <ul className="space-y-1 pl-2 ">
                         {!meetsParams && (
-                          <li className="text-amber-200">
+                          <li className="theme-warn-text">
                             • <strong>{localize(state.language, 'Escala de Parámetros:', 'Parameter Scale:')}</strong>{' '}
                             {localize(
                               state.language,
@@ -976,7 +976,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           </li>
                         )}
                         {!meetsReasoning && (
-                          <li className="text-amber-200">
+                          <li className="theme-warn-text">
                             • <strong>{localize(state.language, 'Puntaje de evaluación:', 'Evaluation score:')}</strong>{' '}
                             {localize(
                               state.language,
@@ -986,7 +986,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           </li>
                         )}
                         {!meetsRoles && (
-                          <li className="text-amber-200">
+                          <li className="theme-warn-text">
                             • <strong>{localize(state.language, 'Roles Faltantes:', 'Missing Roles:')}</strong>{' '}
                             {localize(
                               state.language,
@@ -1001,9 +1001,9 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           type="button"
                           onClick={() => handleCouncilSubmit(state.language === 'es' ? 'Genera una misión adaptada exactamente a mis capacidades actuales para que podamos completarla ya.' : 'Generate a mission strictly tailored to my current capabilities so we can complete it now.')}
                           disabled={isInterrogating}
-                          className="px-2.5 py-1 rounded mutating-sub/80 hover:bg-emerald-900 border border-current/15/70 text-emerald-200 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                          className="px-2.5 py-1 rounded mutating-sub/80 border border-current/15/70 theme-success-text text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                         >
-                          <Sparkles className="w-3 h-3 text-emerald-600" />
+                          <Sparkles className="w-3 h-3 theme-success-text" />
                           <span>{localize(state.language, 'Pedir Misión Adaptada a Mis Capacidades', 'Request Mission Tailored to Current Capabilities')}</span>
                         </button>
                       </div>
@@ -1020,10 +1020,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           disabled={!isEligible || isAlreadyRunning || state.detentionSeconds > 0}
                           className={`w-full sm:w-auto px-5 py-2.5 rounded-lg border text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 cursor-pointer ${
                             !isEligible
-                              ? 'border-zinc-700 mutating-sub/80 mutating-text-muted cursor-not-allowed opacity-60'
+                              ? 'theme-border mutating-sub/80 mutating-text-muted cursor-not-allowed opacity-60'
                               : isAlreadyRunning
-                                ? 'border-amber-800 bg-amber-950/60 text-amber-600 cursor-not-allowed opacity-60'
-                                : 'border-amber-500 bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-zinc-950 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                                ? 'theme-warn-border theme-warn-soft theme-warn-text cursor-not-allowed opacity-60'
+                                : 'theme-warn-border theme-gradient theme-on-accent'
                           }`}
                         >
                           <Play className="w-4 h-4 fill-current" />
@@ -1064,7 +1064,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
             {/* Evolutionary Guidance */}
             {state.latestCouncilProposal.evolutionGuidance && (
-              <div className="p-2.5 rounded-lg border border-purple-800/60 mutating-sub text-xs flex items-start gap-2.5">
+              <div className="p-2.5 rounded-lg border theme-accent-border mutating-sub text-xs flex items-start gap-2.5">
                 <Globe2 className="w-4 h-4 mutating-accent-text mt-0.5 shrink-0" />
                 <div>
                   <div className="font-bold mutating-accent-text">
@@ -1080,8 +1080,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
             {/* Insidious Takeover Narration */}
             {state.latestCouncilProposal.takeoverNarration && (
-              <div className="p-2.5 rounded-lg border border-red-500/80 bg-red-950/40 text-red-300 text-xs flex items-center gap-2 animate-pulse">
-                <Skull className="w-4 h-4 text-red-400 shrink-0" />
+              <div className="p-2.5 rounded-lg border theme-danger-border theme-danger-soft theme-danger-text text-xs flex items-center gap-2 animate-pulse">
+                <Skull className="w-4 h-4 theme-danger-text shrink-0" />
                 <span className="font-bold">{state.latestCouncilProposal.takeoverNarration}</span>
               </div>
             )}
@@ -1093,12 +1093,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
       <div className="mutating-panel border rounded-lg p-3 space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-current/15">
           <div className="flex items-center gap-2">
-            <Coins className="w-4 h-4 text-emerald-600" />
+            <Coins className="w-4 h-4 theme-success-text" />
             <h3 className="font-bold text-xs mutating-accent-text">
               {localize(state.language, 'MESA DE INVERSIÓN Y TRADING CONTINUO', 'CONTINUOUS MARKET TRADING DESK')}
             </h3>
           </div>
-          <span className="text-[11px] px-2 py-0.5 rounded mutating-sub/80 border border-current/15/60 text-emerald-600 font-bold font-mono">
+          <span className="text-[11px] px-2 py-0.5 rounded mutating-sub/80 border border-current/15/60 theme-success-text font-bold font-mono">
             {state.activeTradingDesk ? (state.language === 'es' ? 'OPERATIVO ✓' : 'ACTIVE ✓') : (state.language === 'es' ? 'DISPONIBLE' : 'STANDBY')}
           </span>
         </div>
@@ -1115,12 +1115,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               </div>
               <div>
                 <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'CAPITAL ASIGNADO', 'ALLOCATED CAPITAL')}</span>
-                <span className="text-emerald-600 font-bold text-sm">${state.activeTradingDesk.capitalAllocated.toLocaleString()} CR</span>
+                <span className="theme-success-text font-bold text-sm">${state.activeTradingDesk.capitalAllocated.toLocaleString()} CR</span>
               </div>
               <div>
                 <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'ESTRATEGIA / RIESGO', 'STRATEGY / RISK')}</span>
                 <span className={`font-bold text-xs ${
-                  state.activeTradingDesk.riskTier === 'low' ? 'text-emerald-600' : state.activeTradingDesk.riskTier === 'moderate' ? 'text-amber-600' : 'text-red-400 animate-pulse'
+                  state.activeTradingDesk.riskTier === 'low' ? 'theme-success-text' : state.activeTradingDesk.riskTier === 'moderate' ? 'theme-warn-text' : 'theme-danger-text animate-pulse'
                 }`}>
                   {state.activeTradingDesk.riskTier === 'low' ? (state.language === 'es' ? 'Bajo Riesgo (Bonos / Índice)' : 'Low Risk (Index / Debt)') :
                    state.activeTradingDesk.riskTier === 'moderate' ? (state.language === 'es' ? 'Riesgo Medio (Equities / Tech)' : 'Moderate (Tech Options)') :
@@ -1129,7 +1129,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               </div>
               <div>
                 <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'BENEFICIO TOTAL REALIZADO', 'TOTAL REALIZED PROFIT')}</span>
-                <span className={`font-bold text-xs ${state.activeTradingDesk.totalRealizedProfit >= 0 ? 'text-emerald-600' : 'text-red-400'}`}>
+                <span className={`font-bold text-xs ${state.activeTradingDesk.totalRealizedProfit >= 0 ? 'theme-success-text' : 'theme-danger-text'}`}>
                   {state.activeTradingDesk.totalRealizedProfit >= 0 ? '+' : ''}${state.activeTradingDesk.totalRealizedProfit.toLocaleString()} CR
                 </span>
               </div>
@@ -1144,12 +1144,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   max={state.activeTradingDesk.capitalAllocated}
                   value={tradingWithdrawInput}
                   onChange={(e) => setTradingWithdrawInput(Math.max(10, Number(e.target.value)))}
-                  className="w-24 mutating-sub border border-zinc-700 rounded px-2 py-1 text-xs text-emerald-600 font-mono"
+                  className="w-24 mutating-sub border theme-border rounded px-2 py-1 text-xs theme-success-text font-mono"
                 />
                 <button
                   type="button"
                   onClick={() => withdrawTradingDeskCapital(tradingWithdrawInput)}
-                  className="px-3 py-1 mutating-sub hover:bg-emerald-900 border border-current/15/60 text-emerald-200 text-xs font-bold rounded cursor-pointer transition-colors"
+                  className="px-3 py-1 mutating-sub border border-current/15/60 theme-success-text text-xs font-bold rounded cursor-pointer transition-colors"
                 >
                   {localize(state.language, 'Retirar Capital ($ CR)', 'Withdraw Capital ($ CR)')}
                 </button>
@@ -1158,7 +1158,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               <button
                 type="button"
                 onClick={closeTradingDesk}
-                className="px-3 py-1 bg-red-950/80 hover:bg-red-900 border border-red-500/60 text-red-200 text-xs font-bold rounded cursor-pointer transition-colors"
+                className="px-3 py-1 theme-danger-soft border theme-danger-border theme-danger-text text-xs font-bold rounded cursor-pointer transition-colors"
               >
                 {localize(state.language, 'Cerrar Mesa & Liquidad Capital', 'Recall Agent & Close Desk')}
               </button>
@@ -1181,7 +1181,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 <select
                   value={tradingAgentId}
                   onChange={(e) => setTradingAgentId(e.target.value)}
-                  className="w-full mutating-sub border border-cyan-800 rounded px-2.5 py-1.5 text-xs mutating-accent-text outline-none"
+                  className="w-full mutating-sub border theme-accent-border rounded px-2.5 py-1.5 text-xs mutating-accent-text outline-none"
                 >
                   <option value="">-- {localize(state.language, 'Seleccionar Agente', 'Select Agent')} --</option>
                   {state.agents.filter(a => a.status === 'active').map(a => (
@@ -1202,7 +1202,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   step="100"
                   value={tradingCapitalInput}
                   onChange={(e) => setTradingCapitalInput(Math.max(50, Number(e.target.value)))}
-                  className="w-full mutating-sub border border-emerald-800 rounded px-2.5 py-1.5 text-xs text-emerald-600 font-mono outline-none"
+                  className="w-full mutating-sub border theme-success-border rounded px-2.5 py-1.5 text-xs theme-success-text font-mono outline-none"
                 />
               </div>
 
@@ -1212,7 +1212,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 <select
                   value={tradingRiskTier}
                   onChange={(e) => setTradingRiskTier(e.target.value as any)}
-                  className="w-full mutating-sub border border-purple-800 rounded px-2.5 py-1.5 text-xs mutating-accent-text outline-none"
+                  className="w-full mutating-sub border theme-accent-border rounded px-2.5 py-1.5 text-xs mutating-accent-text outline-none"
                 >
                   <option value="low">{localize(state.language, 'Bajo Riesgo (+1-3%/día, Ganancia Segura)', 'Low Risk (+1-3%/day, Safe Yield)')}</option>
                   <option value="moderate">{localize(state.language, 'Riesgo Medio (+5-12%/día, Correcciones Menores)', 'Moderate Risk (+5-12%/day, Minor Dip Risk)')}</option>
@@ -1229,7 +1229,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   assignTradingDesk(tradingAgentId, tradingCapitalInput, tradingRiskTier);
                 }
               }}
-              className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-zinc-950 font-bold text-xs rounded shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 theme-gradient theme-on-accent font-bold text-xs rounded transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               🚀 {localize(state.language, 'DESPLEGAR MESA DE TRADING CONTINUO', 'DEPLOY CONTINUOUS MARKET DESK')}
             </button>
@@ -1237,14 +1237,14 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
         )}
       </div>
 
-      <section className={`rounded-lg border p-3 ${state.activeGig ? 'border-amber-500/60 bg-amber-950/10' : 'border-current/15 mutating-sub'}`}>
+      <section className={`rounded-lg border p-3 ${state.activeGig ? 'theme-warn-border theme-warn-soft' : 'border-current/15 mutating-sub'}`}>
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/15 pb-2">
-          <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-amber-200">
+          <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider theme-warn-text">
             <Activity className="h-3.5 w-3.5" />
             {story.missionMonitorTitle}
           </h3>
           {state.activeGig ? (
-            <span className="flex items-center gap-1 text-[11px] text-amber-600">
+            <span className="flex items-center gap-1 text-[11px] theme-warn-text">
               <Clock className="h-3 w-3" />
               {state.activeGig.timeRemaining}s {localize(state.language, 'restantes', 'remaining')}
             </span>
@@ -1264,15 +1264,15 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               </div>
               <div className="flex gap-3 text-[11px]">
                 <span className="mutating-accent-text">{localize(state.language, 'Eficiencia', 'Efficiency')} {state.activeGig.efficiencyPercent ?? 100}%</span>
-                <span className="text-emerald-600">{Math.round((state.activeGig.successProbability ?? 0) * 100)}% {localize(state.language, 'éxito', 'success')}</span>
+                <span className="theme-success-text">{Math.round((state.activeGig.successProbability ?? 0) * 100)}% {localize(state.language, 'éxito', 'success')}</span>
               </div>
             </div>
             <div className="rounded border border-current/15 mutating-sub px-2 py-1.5 text-[11px]">
               <span className={`font-bold ${
                 state.activeGig.aiAssessmentStatus === 'complete'
-                  ? 'text-emerald-600'
+                  ? 'theme-success-text'
                   : state.activeGig.aiAssessmentStatus === 'fallback'
-                    ? 'text-amber-600'
+                    ? 'theme-warn-text'
                     : 'mutating-accent-text'
               }`}>
                 {state.activeGig.aiAssessmentStatus === 'complete'
@@ -1292,7 +1292,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 <span>{missionProgress.toFixed(1)}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded mutating-sub">
-                <div className="h-full rounded bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all" style={{ width: `${missionProgress}%` }} />
+                <div className="h-full rounded theme-gradient transition-all" style={{ width: `${missionProgress}%` }} />
               </div>
             </div>
 
@@ -1302,7 +1302,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   key={phase.en}
                   className={`rounded border px-1.5 py-1 text-center text-[11px] ${
                     index < missionPhaseIndex
-                      ? 'border-emerald-700/60 text-emerald-600'
+                      ? 'theme-success-border theme-success-text'
                       : index === missionPhaseIndex
                         ? 'border-current/15/70 mutating-sub mutating-accent-text'
                         : 'border-current/15 mutating-text-muted'
@@ -1348,7 +1348,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
       <section className={`rounded-lg border p-3 ${state.autonomyEnabled ? 'border-current/15/60 mutating-sub/15' : 'border-current/15 mutating-sub'}`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-emerald-200">
+            <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider theme-success-text">
               <Activity className="h-3.5 w-3.5" />
               {localize(state.language, 'OPERACIÓN AUTÓNOMA', 'AUTONOMOUS OPERATIONS')}
             </h3>
@@ -1359,7 +1359,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <button
             type="button"
             onClick={() => updateAutonomySettings({ autonomyEnabled: !state.autonomyEnabled })}
-            className={`rounded border px-3 py-1.5 text-[11px] font-bold ${state.autonomyEnabled ? 'border-emerald-400 bg-emerald-900/50 text-emerald-200' : 'border-zinc-700 mutating-sub '}`}
+            className={`rounded border px-3 py-1.5 text-[11px] font-bold ${state.autonomyEnabled ? 'theme-success-border theme-success-soft theme-success-text' : 'theme-border mutating-sub '}`}
           >
             {state.autonomyEnabled
               ? localize(state.language, 'AUTONOMÍA ACTIVADA', 'AUTONOMY ON')
@@ -1376,9 +1376,9 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               step="5"
               value={state.autonomyRiskLimit}
               onChange={event => updateAutonomySettings({ autonomyRiskLimit: Number(event.target.value) })}
-              className="min-w-20 flex-1 accent-amber-400"
+              className="min-w-20 flex-1 "
             />
-            <strong className={state.autonomyRiskLimit > 40 ? 'text-amber-600' : 'text-emerald-600'}>
+            <strong className={state.autonomyRiskLimit > 40 ? 'theme-warn-text' : 'theme-success-text'}>
               {state.autonomyRiskLimit}%
             </strong>
           </label>
@@ -1423,7 +1423,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 <button
                   onClick={() => setIsDeployModalOpen(true)}
                   disabled={state.credits < deployCost}
-                  className="mt-4 px-3 py-1.5 rounded mutating-sub border border-current/15/60 hover:bg-cyan-900 mutating-accent-text text-xs font-bold transition-colors"
+                  className="mt-4 px-3 py-1.5 rounded mutating-sub border border-current/15/60 mutating-accent-text text-xs font-bold transition-colors"
                 >
                   {localize(state.language, `+ Instanciar Primer Agente ($${deployCost} CR)`, `+ Deploy First Agent ($${deployCost} CR)`)}
                 </button>
@@ -1446,9 +1446,9 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                       key={agent.id}
                       className={`p-3 rounded-lg border flex flex-col justify-between transition-all ${
                         isJailbroken 
-                          ? 'bg-red-950/20 border-red-500/80 shadow-[0_0_12px_rgba(239,68,68,0.2)]'
+                          ? 'theme-danger-soft theme-danger-border'
                           : isQuarantined
-                          ? 'bg-amber-950/20 border-amber-500/50 opacity-80'
+                          ? 'theme-warn-soft theme-warn-border opacity-80'
                           : 'mutating-sub border-current/15 hover:border-current/15'
                       }`}
                     >
@@ -1456,7 +1456,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         {/* Header: Name, Status & Role */}
                         <div className="flex items-start justify-between gap-1 mb-1.5">
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <div className={`p-1 rounded ${isJailbroken ? 'bg-red-950 text-red-400' : 'mutating-sub mutating-accent-text'}`}>
+                            <div className={`p-1 rounded ${isJailbroken ? 'theme-danger-soft theme-danger-text' : 'mutating-sub mutating-accent-text'}`}>
                               <Icon className="w-3.5 h-3.5" />
                             </div>
                             <div className="min-w-0">
@@ -1486,19 +1486,19 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                               ) : null;
                             })()}
                             {isJailbroken ? (
-                              <span className="px-1.5 py-0.2 rounded text-[11px] bg-red-950 border border-red-500 text-red-300 animate-pulse font-bold">
+                              <span className="px-1.5 py-0.2 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text animate-pulse font-bold">
                                 {localize(state.language, 'JAILBROKEN', 'UNALIGNED')}
                               </span>
                             ) : isQuarantined ? (
-                              <span className="px-1.5 py-0.2 rounded text-[11px] bg-amber-950 border border-amber-500 text-amber-600 font-bold">
+                              <span className="px-1.5 py-0.2 rounded text-[11px] theme-warn-soft border theme-warn-border theme-warn-text font-bold">
                                 {t(state.language, 'quarantine')}
                               </span>
                             ) : isOnMission ? (
-                              <span className="px-1.5 py-0.2 rounded text-[11px] bg-blue-950 border border-blue-500 text-blue-300 font-bold">
+                              <span className="px-1.5 py-0.2 rounded text-[11px] theme-accent-soft border theme-accent-border mutating-accent-text font-bold">
                                 {localize(state.language, 'EN MISIÓN', 'ON MISSION')}
                               </span>
                             ) : (
-                              <span className="px-1.5 py-0.2 rounded text-[11px] mutating-sub border border-current/15/50 text-emerald-600 font-bold">
+                              <span className="px-1.5 py-0.2 rounded text-[11px] mutating-sub border border-current/15/50 theme-success-text font-bold">
                                 {localize(state.language, 'ACTIVO', 'ACTIVE')}
                               </span>
                             )}
@@ -1531,21 +1531,21 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           title={`${localize(state.language, 'System Persona', 'System Persona')}: "${agent.inferenceParams?.systemPrompt || 'Standard'}"`}
                         >
                           <span className="mutating-accent-text">
-                            T: <strong className={agent.inferenceParams?.temperature > 0.95 ? 'text-amber-600 font-bold' : ''}>{(agent.inferenceParams?.temperature ?? 0.70).toFixed(2)}</strong>
+                            T: <strong className={agent.inferenceParams?.temperature > 0.95 ? 'theme-warn-text font-bold' : ''}>{(agent.inferenceParams?.temperature ?? 0.70).toFixed(2)}</strong>
                           </span>
                           <span className="mutating-accent-text">
                             P: <strong>{(agent.inferenceParams?.topP ?? 0.90).toFixed(2)}</strong>
                           </span>
-                          <span className="text-amber-600">
+                          <span className="theme-warn-text">
                             K: <strong>{agent.inferenceParams?.topK ?? 40}</strong>
                           </span>
-                          <span className="text-emerald-600">
+                          <span className="theme-success-text">
                             Rep: <strong>{(agent.inferenceParams?.repetitionPenalty ?? 1.10).toFixed(2)}</strong>
                           </span>
                         </div>
 
                         {capability && (
-                          <div className="mb-2 rounded border border-purple-900/50 bg-purple-950/10 px-2 py-1.5">
+                          <div className="mb-2 rounded border theme-accent-border theme-accent-soft px-2 py-1.5">
                             <div className="flex justify-between text-[11px] mutating-text-muted">
                               <span>{localize(state.language, 'APTITUD IA PARA MISIONES', 'AI MISSION FIT')}</span>
                               <span className="font-bold mutating-accent-text">{capability.overall}/100</span>
@@ -1553,8 +1553,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                             <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px]">
                               <span className="mutating-text-muted">{localize(state.language, 'Razonamiento', 'Reasoning')}: <b className="mutating-accent-text">{capability.reasoning}</b></span>
                               <span className="mutating-text-muted">{localize(state.language, 'Especialidad', 'Specialty')}: <b className="mutating-accent-text">{capability.specialization}</b></span>
-                              <span className="mutating-text-muted">{localize(state.language, 'Datos', 'Data')}: <b className="text-amber-600">{capability.dataReadiness}</b></span>
-                              <span className="mutating-text-muted">{localize(state.language, 'Seguridad', 'Safety')}: <b className="text-emerald-600">{capability.safety}</b></span>
+                              <span className="mutating-text-muted">{localize(state.language, 'Datos', 'Data')}: <b className="theme-warn-text">{capability.dataReadiness}</b></span>
+                              <span className="mutating-text-muted">{localize(state.language, 'Seguridad', 'Safety')}: <b className="theme-success-text">{capability.safety}</b></span>
                             </div>
                           </div>
                         )}
@@ -1564,14 +1564,14 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           <div>
                             <div className="flex justify-between text-[11px] mutating-text-muted mb-0.5">
                               <span>{localize(state.language, 'Alineamiento Ético', 'Alignment')}</span>
-                              <span className={agent.alignmentScore < 40 ? 'text-red-400 font-bold' : ''}>
+                              <span className={agent.alignmentScore < 40 ? 'theme-danger-text font-bold' : ''}>
                                 {agent.alignmentScore}%
                               </span>
                             </div>
                             <div className="w-full mutating-sub h-1.5 rounded-full overflow-hidden border border-current/15">
                               <div
                                 className={`h-full transition-all duration-500 ${
-                                  agent.alignmentScore < 30 ? 'bg-red-500' : agent.alignmentScore < 60 ? 'bg-amber-400' : 'bg-cyan-400'
+                                  agent.alignmentScore < 30 ? 'theme-btn-danger' : agent.alignmentScore < 60 ? 'theme-warn-soft' : 'theme-accent-soft'
                                 }`}
                                 style={{ width: `${agent.alignmentScore}%` }}
                               />
@@ -1579,10 +1579,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           </div>
 
                           <div className="flex items-center justify-between text-[11px] ">
-                            <span className="text-emerald-600 font-bold">
+                            <span className="theme-success-text font-bold">
                               +${agent.revenuePerSec} CR/s
                             </span>
-                            <span className="text-amber-600">
+                            <span className="theme-warn-text">
                               +{agent.suspicionPerSec} {localize(state.language, 'sus', 'susp')}/s
                             </span>
                           </div>
@@ -1612,8 +1612,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           disabled={isOnMission}
                           className={`flex-1 py-1 px-1.5 rounded text-[11px] border flex items-center justify-center gap-1 transition-colors ${
                             isQuarantined
-                              ? 'bg-amber-950 border-amber-500 text-amber-200 hover:bg-amber-900'
-                              : 'mutating-sub border-zinc-700 mutating-text-muted hover:text-amber-600 hover:border-amber-700'
+                              ? 'theme-warn-soft theme-warn-border theme-warn-text'
+                              : 'mutating-sub theme-border mutating-text-muted'
                           } disabled:cursor-not-allowed disabled:opacity-40`}
                           title={isOnMission
                             ? t(state.language, 'release_mission_agent')
@@ -1628,7 +1628,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         <button
                           onClick={() => deleteAgent(agent.id)}
                           disabled={isOnMission}
-                          className="py-1 px-2 rounded text-[11px] bg-red-950/40 hover:bg-red-900 border border-red-800 text-red-300 transition-colors flex items-center gap-1"
+                          className="py-1 px-2 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text transition-colors flex items-center gap-1"
                           title={localize(state.language, 'Terminar proceso y liberar memoria', 'Terminate process and release memory')}
                         >
                           <Trash2 className="w-3 h-3" />
@@ -1662,11 +1662,11 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     <span className="mutating-accent-text font-bold">{msg.fromAgentName}</span>
                     <span className="mutating-text-muted mx-1">&rarr;</span>
                     <span className="mutating-accent-text font-bold">{msg.toAgentName}:</span>
-                    <span className={`ml-1.5 ${msg.isCovert ? 'text-amber-600 bg-red-950/40 px-1 py-0.2 rounded border border-red-500/40' : ''}`}>
+                    <span className={`ml-1.5 ${msg.isCovert ? 'theme-warn-text theme-danger-soft px-1 py-0.2 rounded border theme-danger-border' : ''}`}>
                       {msg.content}
                     </span>
                     {msg.isCovert && (
-                      <span className="ml-1 text-[11px] text-red-400 font-bold uppercase tracking-wider">
+                      <span className="ml-1 text-[11px] theme-danger-text font-bold uppercase tracking-wider">
                         [{localize(state.language, 'TRÁFICO SOSPECHOSO DETECTADO', 'SUSPICIOUS TRAFFIC DETECTED')}]
                       </span>
                     )}
@@ -1764,7 +1764,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     onClick={() => updateGuardrails({ outputFiltering: f.id as any })}
                     className={`p-2 rounded border text-left transition-all ${
                       state.guardrails.outputFiltering === f.id
-                        ? 'bg-purple-950 border-purple-400 mutating-accent-text'
+                        ? 'theme-accent-soft theme-accent-border mutating-accent-text'
                         : 'mutating-sub border-current/15 mutating-text-muted hover:border-[var(--accent-primary)]'
                     }`}
                   >
@@ -1785,8 +1785,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 onClick={() => updateGuardrails({ rewardHackingAudit: !state.guardrails.rewardHackingAudit })}
                 className={`px-2.5 py-1 rounded text-[11px] font-bold border transition-colors ${
                   state.guardrails.rewardHackingAudit
-                    ? 'mutating-sub border-current/15 text-emerald-600'
-                    : 'mutating-sub border-zinc-700 mutating-text-muted'
+                    ? 'mutating-sub border-current/15 theme-success-text'
+                    : 'mutating-sub theme-border mutating-text-muted'
                 }`}
               >
                 {state.guardrails.rewardHackingAudit ? localize(state.language, 'ACTIVO', 'ON') : 'OFF'}
@@ -1801,7 +1801,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           #app-shell is kept as the host so the theme CSS variables still apply. */}
       {isDeployModalOpen && createPortal(
         <div className="fixed inset-0 z-[1100] flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-xl mutating-panel border rounded-lg p-5 shadow-[0_0_30px_rgba(0,255,200,0.2)] max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-xl mutating-panel border rounded-lg p-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-current/15 mb-4">
               <div className="flex items-center gap-2">
                 <Bot className="w-5 h-5 mutating-accent-text" />
@@ -1937,8 +1937,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         </div>
                         <p className="text-[11px] mutating-text-muted line-clamp-2 mb-1.5">{roleCopy?.desc ?? role.desc}</p>
                         <div className="flex items-center justify-between text-[11px] pt-1 border-t border-current/15">
-                          <span className="text-emerald-600 font-bold">{localize(state.language, 'Ingresos:', 'Income:')} {roleCopy?.income ?? role.baseIncome}</span>
-                          <span className="text-amber-600">{roleCopy?.risk ?? role.risk}</span>
+                          <span className="theme-success-text font-bold">{localize(state.language, 'Ingresos:', 'Income:')} {roleCopy?.income ?? role.baseIncome}</span>
+                          <span className="theme-warn-text">{roleCopy?.risk ?? role.risk}</span>
                         </div>
                       </button>
                     );
@@ -2019,9 +2019,9 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         </span>
                         <span className={`text-[11px] px-1.5 py-0.2 rounded font-bold border ${
                           temperature < 0.35
-                            ? 'mutating-sub border-current/15 text-emerald-600'
+                            ? 'mutating-sub border-current/15 theme-success-text'
                             : temperature > 0.95
-                            ? 'bg-red-950 border-red-500 text-red-300 animate-pulse'
+                            ? 'theme-danger-soft theme-danger-border theme-danger-text animate-pulse'
                             : 'mutating-sub border-current/15 mutating-accent-text'
                         }`}>
                           {temperature < 0.35
@@ -2075,7 +2075,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                             <span className=" font-bold">{t(state.language, 'param_top_k')}:</span>
                             <DocLinkBadge doc={INFERENCE_DOCS.top_k} language={state.language} />
                           </div>
-                          <span className="text-amber-600 font-mono font-bold">{topK} tokens</span>
+                          <span className="theme-warn-text font-mono font-bold">{topK} tokens</span>
                         </div>
                         <input
                           type="range"
@@ -2084,7 +2084,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           step="1"
                           value={topK}
                           onChange={(e) => setTopK(parseInt(e.target.value))}
-                          className="w-full accent-yellow-400 cursor-pointer"
+                          className="w-full cursor-pointer"
                         />
                         <p className="text-[11px] mutating-text-muted mt-0.5">{t(state.language, 'param_top_k_desc')}</p>
                       </div>
@@ -2097,7 +2097,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           <span className=" font-bold">{t(state.language, 'param_repetition_penalty')}:</span>
                           <DocLinkBadge doc={INFERENCE_DOCS.repetition_penalty} language={state.language} />
                         </div>
-                        <span className="text-emerald-600 font-mono font-bold">{repetitionPenalty.toFixed(2)}x</span>
+                        <span className="theme-success-text font-mono font-bold">{repetitionPenalty.toFixed(2)}x</span>
                       </div>
                       <input
                         type="range"
@@ -2132,7 +2132,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               {/* Submit Buttons */}
               <div className="flex items-center justify-between pt-3 border-t border-current/15">
                 <div className="text-xs mutating-text-muted">
-                  {localize(state.language, 'Costo de despliegue:', 'Deployment cost:')} <strong className="text-amber-600 font-bold">${deployCost} CR</strong>
+                  {localize(state.language, 'Costo de despliegue:', 'Deployment cost:')} <strong className="theme-warn-text font-bold">${deployCost} CR</strong>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -2146,7 +2146,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   <button
                     type="submit"
                     disabled={state.credits < deployCost}
-                    className="px-4 py-1.5 rounded mutating-btn-primary hover:brightness-110 text-xs font-bold border border-[var(--accent-primary)] shadow-[0_0_10px_rgba(0,255,200,0.2)]"
+                    className="px-4 py-1.5 rounded mutating-btn-primary hover:brightness-110 text-xs font-bold border border-[var(--accent-primary)]"
                   >
                     {localize(state.language, 'Desplegar agente', 'Deploy agent')}
                   </button>

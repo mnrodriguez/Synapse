@@ -80,7 +80,7 @@ export const TrainingMonitor: React.FC = () => {
           <div className="flex items-center gap-2 text-[11px] mutating-text-muted">
             <span>{localize(state.language, 'Cómputo:', 'Compute:')} <strong>{formatCompute((gpuComputePflops(state.hardware) + state.borrowedComputePflops + externalComputePflops(state)))}</strong></span>
             <span>•</span>
-            <span>{localize(state.language, 'VRAM Total:', 'Total VRAM:')} <strong className="text-emerald-500">{totalClusterVram} GB</strong></span>
+            <span>{localize(state.language, 'VRAM Total:', 'Total VRAM:')} <strong className="theme-success-text">{totalClusterVram} GB</strong></span>
           </div>
         </div>
 
@@ -134,11 +134,11 @@ export const TrainingMonitor: React.FC = () => {
                   </div>
 
                   <div className="pt-1 border-t border-current/10 flex items-center justify-between text-[11px]">
-                    <span className="text-purple-400 font-bold flex items-center gap-1">
-                      <Brain className="w-3 h-3 text-purple-400" />
+                    <span className="mutating-accent-text font-bold flex items-center gap-1">
+                      <Brain className="w-3 h-3 mutating-accent-text" />
                       {state.language === 'es' ? 'Puntaje' : 'Score'} {model.reasoningScore ?? 0}
                     </span>
-                    <span className={`text-[11px] ${hasVram ? 'mutating-text-muted' : 'text-rose-500 font-bold'}`}>
+                    <span className={`text-[11px] ${hasVram ? 'mutating-text-muted' : 'theme-danger-text font-bold'}`}>
                       {model.vramRequiredGb} GB VRAM
                     </span>
                   </div>
@@ -202,11 +202,11 @@ export const TrainingMonitor: React.FC = () => {
           <div className="p-3 rounded-lg border border-current/15 mutating-card flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-emerald-500" />
+                <Cpu className="w-4 h-4 theme-success-text" />
                 <span className="font-bold">
                   {localize(state.language, 'Verificación de Memoria VRAM:', 'VRAM Memory Audit:')}
                 </span>
-                <span className={isVramSufficient ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}>
+                <span className={isVramSufficient ? 'theme-success-text font-bold' : 'theme-danger-text font-bold'}>
                   {current.vramRequiredGb} GB {localize(state.language, 'requeridos', 'required')} / {totalClusterVram} GB {localize(state.language, 'disponibles', 'available')}
                 </span>
               </div>
@@ -227,7 +227,7 @@ export const TrainingMonitor: React.FC = () => {
               className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-md ${
                 isVramSufficient && !isBreakerTripped && !isDetained
                   ? 'mutating-btn-primary cursor-pointer hover:shadow-lg'
-                  : 'bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed opacity-50'
+                  : 'theme-raised-bg mutating-text-muted border theme-border cursor-not-allowed opacity-50'
               }`}
             >
               <Play className="w-4 h-4 fill-current" />
@@ -260,7 +260,7 @@ export const TrainingMonitor: React.FC = () => {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/10 pb-2">
         <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
+          <Activity className="w-4 h-4 theme-success-text animate-pulse" />
           <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
             {localize(state.language, 'MONITOR DE CONVERGENCIA // TELEMETRÍA DE ENTRENAMIENTO', 'CONVERGENCE MONITOR // TRAINING TELEMETRY')}
           </h2>
@@ -268,7 +268,7 @@ export const TrainingMonitor: React.FC = () => {
 
         <button
           onClick={() => { sound.playWarning(); cancelTraining(); }}
-          className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-500 rounded text-xs transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1 theme-danger-soft border theme-danger-border theme-danger-text rounded text-xs transition-colors cursor-pointer"
         >
           <AlertCircle className="w-3.5 h-3.5" />
           <span>{localize(state.language, 'CANCELAR CORRIDA', 'CANCEL RUN')}</span>
@@ -282,15 +282,15 @@ export const TrainingMonitor: React.FC = () => {
             <span className="mutating-accent-text">
               {localize(state.language, 'PROGRESO TOTAL:', 'TOTAL PROGRESS:')} {Math.floor(job.progressPercent)}%
             </span>
-            <span className="px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-500 text-[11px] font-bold">
+            <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px] font-bold">
               {job.modelName}
             </span>
             {job.targetModelType === 'micro_model' ? (
-              <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-purple-400 text-[11px] font-bold">
+              <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px] font-bold">
                 MICRO-MODEL ({job.datasetDomain || 'SPECIALIST'})
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 text-[11px]">
+              <span className="px-2 py-0.5 rounded theme-success-soft border theme-success-border theme-success-text text-[11px]">
                 {localize(state.language, 'MODELO GENERAL', 'GENERAL MODEL')}
               </span>
             )}
@@ -300,19 +300,19 @@ export const TrainingMonitor: React.FC = () => {
               </span>
             )}
           </div>
-          <span className="text-amber-500 font-mono">
+          <span className="theme-warn-text font-mono">
             {localize(state.language, 'Época', 'Epoch')} {job.currentEpoch} / {job.totalEpochs} ({localize(state.language, 'Paso', 'Step')} #{job.step})
           </span>
         </div>
 
-        <div className="w-full h-3 bg-slate-500/20 rounded-full border border-current/15 overflow-hidden relative">
+        <div className="w-full h-3 theme-raised-bg rounded-full border border-current/15 overflow-hidden relative">
           <div 
-            className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-300"
+            className="h-full theme-gradient transition-all duration-300"
             style={{ width: `${Math.min(100, Math.max(0, job.progressPercent))}%` }}
           />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between text-xs pt-1 text-slate-400 gap-2">
+        <div className="flex flex-wrap items-center justify-between text-xs pt-1 mutating-text-muted gap-2">
           <div>
             <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'CÓMPUTO ASIGNADO A LA CORRIDA:', 'COMPUTE ALLOCATED TO RUN:')}</span>
             <span className="mutating-accent-text font-bold">
@@ -321,7 +321,7 @@ export const TrainingMonitor: React.FC = () => {
           </div>
           <div>
             <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'PREDICCIÓN EN DÍAS CON HARDWARE ACTUAL:', 'ESTIMATED DAYS WITH CURRENT HARDWARE:')}</span>
-            <span className="text-emerald-500 font-bold">
+            <span className="theme-success-text font-bold">
               {job.timeRemainingSeconds === null
                 ? localize(state.language, 'N/A', 'N/A')
                 : formatTrainingTime(job.timeRemainingSeconds, state.language)}
@@ -337,7 +337,7 @@ export const TrainingMonitor: React.FC = () => {
             <TrendingDown className="w-3.5 h-3.5" />
             {localize(state.language, 'CURVA DE PÉRDIDA EN TIEMPO REAL (CROSS-ENTROPY LOSS)', 'REAL-TIME LOSS CURVE (CROSS-ENTROPY)')}
           </span>
-          <span className="text-emerald-500 font-bold font-mono">
+          <span className="theme-success-text font-bold font-mono">
             {localize(state.language, 'Pérdida actual:', 'Current loss:')} {job.currentLoss.toFixed(4)}
           </span>
         </div>
@@ -380,13 +380,13 @@ export const TrainingMonitor: React.FC = () => {
 
         <div className="p-3 rounded-lg mutating-sub">
           <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'NORMA DE GRADIENTE', 'GRADIENT NORM')}</span>
-          <span className="text-amber-500 font-bold text-sm">{job.gradientNorm}</span>
+          <span className="theme-warn-text font-bold text-sm">{job.gradientNorm}</span>
           <span className="text-[11px] mutating-text-muted block mt-0.5">Clip: 1.0</span>
         </div>
 
         <div className="p-3 rounded-lg mutating-sub">
           <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'TEMPERATURA GPU', 'GPU TEMPERATURE')}</span>
-          <span className={`font-bold text-sm ${state.systemHeatCelsius > 80 ? 'text-rose-500' : 'text-emerald-500'}`}>
+          <span className={`font-bold text-sm ${state.systemHeatCelsius > 80 ? 'theme-danger-text' : 'theme-success-text'}`}>
             {state.systemHeatCelsius}°C
           </span>
           <span className="text-[11px] mutating-text-muted block mt-0.5">{localize(state.language, 'Disipación', 'Cooling')} {state.maxCoolingKw} kW</span>
@@ -394,7 +394,7 @@ export const TrainingMonitor: React.FC = () => {
 
         <div className="p-3 rounded-lg mutating-sub">
           <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'TOPOLOGÍA ACTIVA', 'ACTIVE TOPOLOGY')}</span>
-          <span className="text-purple-500 font-bold text-xs truncate block">{current.topology}</span>
+          <span className="mutating-accent-text font-bold text-xs truncate block">{current.topology}</span>
           <span className="text-[11px] mutating-text-muted block mt-0.5">{current.quantization.toUpperCase()}</span>
         </div>
       </div>

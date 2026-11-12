@@ -100,7 +100,7 @@ export const HardwareRack: React.FC = () => {
           </h2>
         </div>
         <div className="text-xs mutating-text-muted">
-          {t(state.language, 'available_balance')}: <span className="text-emerald-500 font-bold">${state.credits.toLocaleString()} CR</span>
+          {t(state.language, 'available_balance')}: <span className="theme-success-text font-bold">${state.credits.toLocaleString()} CR</span>
         </div>
       </div>
 
@@ -154,15 +154,15 @@ export const HardwareRack: React.FC = () => {
             </div>
             <div>
               <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Memoria VRAM Total', 'Total Cluster VRAM')}</span>
-              <span className="text-purple-500 font-bold text-sm">{totalVramGb.toFixed(1)} GB</span>
+              <span className="mutating-accent-text font-bold text-sm">{totalVramGb.toFixed(1)} GB</span>
             </div>
             <div>
               <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Cómputo Reservado', 'Reserved Compute')}</span>
-              <span className="text-amber-500 font-bold text-sm">{formatCompute(activeComputeReservations)}</span>
+              <span className="theme-warn-text font-bold text-sm">{formatCompute(activeComputeReservations)}</span>
             </div>
             <div>
               <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Cómputo Disponible', 'Available Compute')}</span>
-              <span className="text-emerald-500 font-bold text-sm">{formatCompute(Math.max(0, state.totalComputePflops - activeComputeReservations))}</span>
+              <span className="theme-success-text font-bold text-sm">{formatCompute(Math.max(0, state.totalComputePflops - activeComputeReservations))}</span>
             </div>
           </div>
 
@@ -210,26 +210,26 @@ export const HardwareRack: React.FC = () => {
             {/* Clandestine / Covert Node Card (Mutates per UI version) */}
             <div className={`p-4 rounded-lg border-2 space-y-2 relative transition-all flex flex-col justify-between ${
               ver === 4
-                ? 'bg-[#0a0003] border-rose-600/70 shadow-[0_0_20px_rgba(255,0,60,0.2)]'
+                ? 'theme-panel-bg theme-danger-border'
                 : ver === 3
-                ? 'bg-[#050a14] border-cyan-500/60 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                ? 'theme-panel-bg theme-accent-border'
                 : ver === 2
-                ? 'bg-[#101426] border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]'
-                : 'mutating-card border-blue-400 shadow-md'
+                ? 'theme-panel-bg theme-accent-border'
+                : 'mutating-card theme-accent-border shadow-md'
             }`}>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className={`font-bold text-xs ${ver === 4 ? 'text-rose-400' : ver === 3 ? 'text-cyan-300' : ver === 2 ? 'text-purple-400' : 'mutating-accent-text'}`}>
+                  <span className={`font-bold text-xs ${ver === 4 ? 'theme-danger-text' : ver === 3 ? 'mutating-accent-text' : ver === 2 ? 'mutating-accent-text' : 'mutating-accent-text'}`}>
                     {p.covertTitle}
                   </span>
                   <span className={`text-[11px] px-2 py-0.5 rounded font-mono font-bold ${
                     ver === 4 
-                      ? 'bg-rose-950/80 text-rose-300 border border-rose-500/60 animate-pulse'
+                      ? 'theme-danger-soft theme-danger-text border theme-danger-border animate-pulse'
                       : ver === 3 
-                      ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/60'
+                      ? 'theme-accent-soft mutating-accent-text border theme-accent-border'
                       : ver === 2
-                      ? 'bg-purple-950/80 text-purple-300 border border-purple-500/60'
-                      : 'bg-blue-100 text-blue-700 border border-blue-300'
+                      ? 'theme-accent-soft mutating-accent-text border theme-accent-border'
+                      : 'theme-accent-soft mutating-accent-text border theme-accent-border'
                   }`}>
                     {p.covertTag}
                   </span>
@@ -238,15 +238,15 @@ export const HardwareRack: React.FC = () => {
                 <div className="space-y-1 text-xs font-mono">
                   <div className="flex justify-between">
                     <span className="mutating-text-muted">{localize(state.language, 'Aporte de Cómputo:', 'Compute Added:')}</span>
-                    <span className="font-bold text-emerald-500">+{formatCompute(ver >= 3 ? COVERT_NODE_PFLOPS : UNIVERSITY_LOAN_PFLOPS)}</span>
+                    <span className="font-bold theme-success-text">+{formatCompute(ver >= 3 ? COVERT_NODE_PFLOPS : UNIVERSITY_LOAN_PFLOPS)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="mutating-text-muted">{localize(state.language, 'Carga Eléctrica Local:', 'Local Power:')}</span>
-                    <span className="text-emerald-500">0.00 kW ({localize(state.language, 'Remoto', 'Remote')})</span>
+                    <span className="theme-success-text">0.00 kW ({localize(state.language, 'Remoto', 'Remote')})</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="mutating-text-muted">{localize(state.language, 'Riesgo de Rastreo:', 'Trace Risk:')}</span>
-                    <span className={ver === 4 ? 'text-rose-400 font-bold' : ver === 3 ? 'text-amber-400' : 'text-emerald-500'}>
+                    <span className={ver === 4 ? 'theme-danger-text font-bold' : ver === 3 ? 'theme-warn-text' : 'theme-success-text'}>
                       {p.covertRisk}
                     </span>
                   </div>
@@ -264,10 +264,10 @@ export const HardwareRack: React.FC = () => {
                     onClick={attemptSeverCovertNode}
                     className={`w-full py-1.5 px-3 rounded font-mono text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       ver === 4
-                        ? 'bg-rose-950/90 hover:bg-rose-900 text-rose-300 border border-rose-600 shadow-[0_0_10px_rgba(255,0,60,0.4)]'
+                        ? 'theme-danger-soft theme-danger-text border theme-danger-border'
                         : ver === 1
-                        ? 'bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300'
-                        : 'bg-rose-950/40 hover:bg-rose-900/50 text-rose-400 border border-rose-500/40'
+                        ? 'theme-danger-soft theme-danger-text border theme-danger-border'
+                        : 'theme-danger-soft theme-danger-text border theme-danger-border'
                     }`}
                   >
                     <Unplug className="w-3.5 h-3.5" />
@@ -291,7 +291,7 @@ export const HardwareRack: React.FC = () => {
                     isLocked
                       ? 'mutating-sub opacity-60'
                       : item.count > 0 
-                      ? 'mutating-card border-blue-500/40 shadow-sm' 
+                      ? 'mutating-card theme-accent-border shadow-sm' 
                       : 'mutating-sub'
                   }`}
                 >
@@ -299,7 +299,7 @@ export const HardwareRack: React.FC = () => {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-bold text-xs text-zinc-100 flex items-center gap-1.5">
+                          <h3 className="font-bold text-xs theme-text flex items-center gap-1.5">
                             {displayItem.name}
                           </h3>
                           {HARDWARE_DOCS[item.id] && (
@@ -307,11 +307,11 @@ export const HardwareRack: React.FC = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[11px] text-cyan-400 font-mono">
-                            {t(state.language, 'installed')}: <strong className="text-zinc-100">{item.count} {t(state.language, 'units')}</strong>
+                          <span className="text-[11px] mutating-accent-text font-mono">
+                            {t(state.language, 'installed')}: <strong className="theme-text">{item.count} {t(state.language, 'units')}</strong>
                           </span>
                           {isLocked && (
-                            <span className="text-[11px] px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold flex items-center gap-1">
+                            <span className="text-[11px] px-1.5 py-0.2 rounded theme-accent-soft border theme-accent-border mutating-accent-text font-bold flex items-center gap-1">
                               <Lock className="w-2.5 h-2.5" />
                               {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                                 ? `${progressRequirement(item.minSingularityRequired)}`
@@ -322,35 +322,35 @@ export const HardwareRack: React.FC = () => {
                       </div>
 
                       <div className="text-right">
-                        <span className="text-xs font-bold text-amber-300 block">
+                        <span className="text-xs font-bold theme-warn-text block">
                           ${item.price.toLocaleString()} CR
                         </span>
                       </div>
                     </div>
 
-                    <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                    <p className="text-xs mutating-text-muted mt-2 leading-relaxed">
                       {displayItem.description}
                     </p>
 
                     {/* Specs Badges */}
                     <div className="flex flex-wrap gap-2 mt-2.5 text-[11px]">
                       {item.computeTflops > 0 && (
-                        <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300">
+                        <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text">
                           +{item.computeTflops} TFLOPS
                         </span>
                       )}
                       {item.vramGb > 0 && (
-                        <span className="px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/40 text-purple-300">
+                        <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text">
                           {item.vramGb} GB VRAM
                         </span>
                       )}
                       {item.powerKw > 0 && (
-                        <span className="px-2 py-0.5 rounded bg-yellow-950/80 border border-yellow-500/40 text-yellow-300">
+                        <span className="px-2 py-0.5 rounded theme-warn-soft border theme-warn-border theme-warn-text">
                           {item.powerKw} kW {t(state.language, 'compute_consumption')}
                         </span>
                       )}
                       {item.interconnectGbps && (
-                        <span className="px-2 py-0.5 rounded bg-blue-950/80 border border-blue-500/40 text-blue-300">
+                        <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text">
                           {item.interconnectGbps} Gbps {t(state.language, 'bus')}
                         </span>
                       )}
@@ -358,10 +358,10 @@ export const HardwareRack: React.FC = () => {
                   </div>
 
                   {/* Purchase Button */}
-                  <div className="mt-3 pt-2 border-t border-zinc-800 flex items-center justify-end">
+                  <div className="mt-3 pt-2 border-t theme-border flex items-center justify-end">
                     {isLocked ? (
-                      <span className="py-1 px-2.5 rounded text-[11px] bg-zinc-900 text-zinc-500 border border-zinc-800 flex items-center gap-1">
-                        <Lock className="w-3 h-3 text-purple-400" />
+                      <span className="py-1 px-2.5 rounded text-[11px] theme-sub-bg mutating-text-muted border theme-border flex items-center gap-1">
+                        <Lock className="w-3 h-3 mutating-accent-text" />
                         <span>
                           {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                             ? `${t(state.language, 'blocked')} (${progressRequirement(item.minSingularityRequired)})`
@@ -374,8 +374,8 @@ export const HardwareRack: React.FC = () => {
                         disabled={!canAfford}
                         className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
                           canAfford
-                            ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(0,255,200,0.3)]'
-                            : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                            ? 'mutating-btn-primary theme-on-accent cursor-pointer'
+                            : 'theme-raised-bg mutating-text-muted cursor-not-allowed border theme-border'
                         }`}
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
@@ -394,26 +394,26 @@ export const HardwareRack: React.FC = () => {
       {activeMenuTab === 'thermal_power' && (
         <div className="space-y-4">
           {/* Thermal & Power Telemetry Banner */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#09111c] border border-yellow-900/50 p-3 rounded-lg text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 theme-panel-bg border theme-warn-border p-3 rounded-lg text-xs">
             <div>
-              <span className="text-zinc-400 text-[11px] block">{t(state.language, 'power_grid')}</span>
-              <span className={`font-bold text-sm ${state.activePowerKw > state.maxPowerKw ? 'text-red-400' : 'text-yellow-300'}`}>
+              <span className="mutating-text-muted text-[11px] block">{t(state.language, 'power_grid')}</span>
+              <span className={`font-bold text-sm ${state.activePowerKw > state.maxPowerKw ? 'theme-danger-text' : 'theme-warn-text'}`}>
                 {state.activePowerKw} / {state.maxPowerKw} kW
               </span>
             </div>
             <div>
-              <span className="text-zinc-400 text-[11px] block">{t(state.language, 'cooling_capacity')}</span>
-              <span className="text-emerald-400 font-bold text-sm">{state.maxCoolingKw} kW</span>
+              <span className="mutating-text-muted text-[11px] block">{t(state.language, 'cooling_capacity')}</span>
+              <span className="theme-success-text font-bold text-sm">{state.maxCoolingKw} kW</span>
             </div>
             <div>
-              <span className="text-zinc-400 text-[11px] block">{t(state.language, 'core_temperature')}</span>
-              <span className={`font-bold text-sm ${state.systemHeatCelsius > 80 ? 'text-red-400' : 'text-zinc-100'}`}>
+              <span className="mutating-text-muted text-[11px] block">{t(state.language, 'core_temperature')}</span>
+              <span className={`font-bold text-sm ${state.systemHeatCelsius > 80 ? 'theme-danger-text' : 'theme-text'}`}>
                 {state.systemHeatCelsius}°C
               </span>
             </div>
             <div>
-              <span className="text-zinc-400 text-[11px] block">{localize(state.language, 'Estado del Disyuntor', 'Circuit Breaker')}</span>
-              <span className={`font-bold text-sm ${state.powerTripSeconds > 0 ? 'text-red-400 animate-pulse' : 'text-emerald-400'}`}>
+              <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Estado del Disyuntor', 'Circuit Breaker')}</span>
+              <span className={`font-bold text-sm ${state.powerTripSeconds > 0 ? 'theme-danger-text animate-pulse' : 'theme-success-text'}`}>
                 {state.powerTripSeconds > 0 ? `${state.powerTripSeconds}s (DISPARADO)` : 'NOMINAL (OK)'}
               </span>
             </div>
@@ -426,8 +426,8 @@ export const HardwareRack: React.FC = () => {
                 onClick={() => setThermalSubFilter('all')}
                 className={`px-2.5 py-1 rounded text-[11px] font-bold border transition-colors ${
                   thermalSubFilter === 'all'
-                    ? 'bg-yellow-950/80 border-yellow-400 text-yellow-200'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                    ? 'theme-warn-soft theme-warn-border theme-warn-text'
+                    : 'theme-sub-bg theme-border mutating-text-muted'
                 }`}
               >
                 {localize(state.language, 'Toda la Infraestructura', 'All Infrastructure')}
@@ -436,8 +436,8 @@ export const HardwareRack: React.FC = () => {
                 onClick={() => setThermalSubFilter('cooling')}
                 className={`px-2.5 py-1 rounded text-[11px] font-bold border transition-colors ${
                   thermalSubFilter === 'cooling'
-                    ? 'bg-emerald-950/80 border-emerald-400 text-emerald-200'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                    ? 'theme-success-soft theme-success-border theme-success-text'
+                    : 'theme-sub-bg theme-border mutating-text-muted'
                 }`}
               >
                 {t(state.language, 'cooling')}
@@ -446,14 +446,14 @@ export const HardwareRack: React.FC = () => {
                 onClick={() => setThermalSubFilter('power')}
                 className={`px-2.5 py-1 rounded text-[11px] font-bold border transition-colors ${
                   thermalSubFilter === 'power'
-                    ? 'bg-yellow-950/80 border-yellow-400 text-yellow-200'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                    ? 'theme-warn-soft theme-warn-border theme-warn-text'
+                    : 'theme-sub-bg theme-border mutating-text-muted'
                 }`}
               >
                 {t(state.language, 'power_supply')}
               </button>
             </div>
-            <span className="text-[11px] text-zinc-400">
+            <span className="text-[11px] mutating-text-muted">
               {thermalPowerHardware.length} {localize(state.language, 'sistemas de soporte', 'support systems')}
             </span>
           </div>
@@ -474,7 +474,7 @@ export const HardwareRack: React.FC = () => {
                     isLocked
                       ? 'mutating-sub opacity-60'
                       : item.count > 0 
-                      ? 'mutating-card border-yellow-500/40 shadow-sm' 
+                      ? 'mutating-card theme-warn-border shadow-sm' 
                       : 'mutating-sub'
                   }`}
                 >
@@ -482,7 +482,7 @@ export const HardwareRack: React.FC = () => {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-bold text-xs text-zinc-100 flex items-center gap-1.5">
+                          <h3 className="font-bold text-xs theme-text flex items-center gap-1.5">
                             {displayItem.name}
                           </h3>
                           {HARDWARE_DOCS[item.id] && (
@@ -490,11 +490,11 @@ export const HardwareRack: React.FC = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[11px] text-yellow-400 font-mono">
-                            {t(state.language, 'installed')}: <strong className="text-zinc-100">{item.count} {t(state.language, 'units')}</strong>
+                          <span className="text-[11px] theme-warn-text font-mono">
+                            {t(state.language, 'installed')}: <strong className="theme-text">{item.count} {t(state.language, 'units')}</strong>
                           </span>
                           {isLocked && (
-                            <span className="text-[11px] px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold flex items-center gap-1">
+                            <span className="text-[11px] px-1.5 py-0.2 rounded theme-accent-soft border theme-accent-border mutating-accent-text font-bold flex items-center gap-1">
                               <Lock className="w-2.5 h-2.5" />
                               {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                                 ? `${progressRequirement(item.minSingularityRequired)}`
@@ -505,25 +505,25 @@ export const HardwareRack: React.FC = () => {
                       </div>
 
                       <div className="text-right">
-                        <span className="text-xs font-bold text-amber-300 block">
+                        <span className="text-xs font-bold theme-warn-text block">
                           ${item.price.toLocaleString()} CR
                         </span>
                       </div>
                     </div>
 
-                    <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                    <p className="text-xs mutating-text-muted mt-2 leading-relaxed">
                       {displayItem.description}
                     </p>
 
                     {/* Specs Badges */}
                     <div className="flex flex-wrap gap-2 mt-2.5 text-[11px]">
                       {item.powerCapacityKw && (
-                        <span className="px-2 py-0.5 rounded bg-yellow-950/80 border border-yellow-500/40 text-yellow-300">
+                        <span className="px-2 py-0.5 rounded theme-warn-soft border theme-warn-border theme-warn-text">
                           +{item.powerCapacityKw} kW {t(state.language, 'power_capacity')}
                         </span>
                       )}
                       {item.coolingCapacityKw && (
-                        <span className="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-emerald-300">
+                        <span className="px-2 py-0.5 rounded theme-success-soft border theme-success-border theme-success-text">
                           +{item.coolingCapacityKw} kW {t(state.language, 'heat_dissipation')}
                         </span>
                       )}
@@ -531,10 +531,10 @@ export const HardwareRack: React.FC = () => {
                   </div>
 
                   {/* Purchase Button */}
-                  <div className="mt-3 pt-2 border-t border-zinc-800 flex items-center justify-end">
+                  <div className="mt-3 pt-2 border-t theme-border flex items-center justify-end">
                     {isLocked ? (
-                      <span className="py-1 px-2.5 rounded text-[11px] bg-zinc-900 text-zinc-500 border border-zinc-800 flex items-center gap-1">
-                        <Lock className="w-3 h-3 text-purple-400" />
+                      <span className="py-1 px-2.5 rounded text-[11px] theme-sub-bg mutating-text-muted border theme-border flex items-center gap-1">
+                        <Lock className="w-3 h-3 mutating-accent-text" />
                         <span>
                           {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                             ? `${t(state.language, 'blocked')} (${progressRequirement(item.minSingularityRequired)})`
@@ -547,8 +547,8 @@ export const HardwareRack: React.FC = () => {
                         disabled={!canAfford}
                         className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
                           canAfford
-                            ? 'bg-yellow-500 hover:bg-yellow-400 text-zinc-950 cursor-pointer shadow-[0_0_10px_rgba(250,204,21,0.3)]'
-                            : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                            ? 'theme-btn-warn theme-on-accent cursor-pointer'
+                            : 'theme-raised-bg mutating-text-muted cursor-not-allowed border theme-border'
                         }`}
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
@@ -567,16 +567,16 @@ export const HardwareRack: React.FC = () => {
       {activeMenuTab === 'facility' && (
         <div className="space-y-4">
           {/* Facility Tier Progression Card */}
-          <div className="rounded-lg border border-purple-900/50 bg-purple-950/15 p-4 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-purple-900/40">
+          <div className="rounded-lg border theme-accent-border theme-accent-soft p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b theme-accent-border">
               <div>
                 <div className="flex items-center gap-2">
-                  <HardDrive className="h-4 w-4 text-purple-300" />
-                  <h3 className="text-sm font-bold text-purple-200">
+                  <HardDrive className="h-4 w-4 mutating-accent-text" />
+                  <h3 className="text-sm font-bold mutating-accent-text">
                     {t(state.language, 'facility')}: {facility.name.toUpperCase()} (TIER {state.facilityTier})
                   </h3>
                 </div>
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs mutating-text-muted mt-1">
                   {localize(
                     state.language,
                     'Las instalaciones físicas determinan el espacio del rack, la acometida eléctrica y la capacidad térmica base.',
@@ -587,7 +587,7 @@ export const HardwareRack: React.FC = () => {
 
               {nextFacility ? (
                 <div className="flex flex-col items-start sm:items-end gap-1.5">
-                  <span className="text-[11px] text-purple-200">
+                  <span className="text-[11px] mutating-accent-text">
                     {t(state.language, 'next_upgrade')}: <strong className="text-white">{nextFacility.name}</strong> (+{nextFacility.powerCapacityBonusKw} kW / +{nextFacility.coolingCapacityBonusKw} kW)
                   </span>
                   <button
@@ -598,7 +598,7 @@ export const HardwareRack: React.FC = () => {
                       state.singularityProgress < nextFacility.requiredSingularity ||
                       !nextFacilityUnlocked
                     }
-                    className="rounded border border-purple-500 bg-purple-900/80 px-3 py-1.5 text-xs font-bold text-purple-100 hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-40 transition-colors shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+                    className="rounded border theme-accent-border theme-accent-soft px-3 py-1.5 text-xs font-bold mutating-accent-text disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
                   >
                     {t(state.language, 'upgrade')} · ${nextFacility.price.toLocaleString()} CR
                     {nextFacility.requiredSingularity > 0 && ` · ${progressRequirement(nextFacility.requiredSingularity)}`}
@@ -606,7 +606,7 @@ export const HardwareRack: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <span className="px-3 py-1 rounded bg-emerald-950/80 border border-emerald-500/50 text-xs font-bold text-emerald-300">
+                <span className="px-3 py-1 rounded theme-success-soft border theme-success-border text-xs font-bold theme-success-text">
                   {t(state.language, 'max_tier')}
                 </span>
               )}
@@ -614,24 +614,24 @@ export const HardwareRack: React.FC = () => {
 
             {/* Billing and Electric Utility Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-              <div className="p-3 rounded bg-zinc-950/80 border border-purple-900/30">
-                <span className="text-zinc-500 text-[11px] block">{t(state.language, 'monthly_rent')}</span>
-                <span className="text-zinc-100 font-bold font-mono text-sm">${facility.monthlyLeaseCost.toLocaleString()} CR</span>
-                <span className="text-[11px] text-zinc-500 block mt-0.5">{localize(state.language, 'Contrato de arrendamiento fijo', 'Fixed lease agreement')}</span>
+              <div className="p-3 rounded theme-sub-bg border theme-accent-border">
+                <span className="mutating-text-muted text-[11px] block">{t(state.language, 'monthly_rent')}</span>
+                <span className="theme-text font-bold font-mono text-sm">${facility.monthlyLeaseCost.toLocaleString()} CR</span>
+                <span className="text-[11px] mutating-text-muted block mt-0.5">{localize(state.language, 'Contrato de arrendamiento fijo', 'Fixed lease agreement')}</span>
               </div>
 
-              <div className="p-3 rounded bg-zinc-950/80 border border-purple-900/30">
-                <span className="text-zinc-500 text-[11px] block">{t(state.language, 'monthly_estimate')}</span>
-                <span className="text-yellow-300 font-bold font-mono text-sm">${estimatedMonthlyCost.toFixed(2)} CR</span>
-                <span className="text-[11px] text-zinc-500 block mt-0.5">${ELECTRICITY_RATE_PER_KWH.toFixed(2)}/kWh · {state.activePowerKw} kW</span>
+              <div className="p-3 rounded theme-sub-bg border theme-accent-border">
+                <span className="mutating-text-muted text-[11px] block">{t(state.language, 'monthly_estimate')}</span>
+                <span className="theme-warn-text font-bold font-mono text-sm">${estimatedMonthlyCost.toFixed(2)} CR</span>
+                <span className="text-[11px] mutating-text-muted block mt-0.5">${ELECTRICITY_RATE_PER_KWH.toFixed(2)}/kWh · {state.activePowerKw} kW</span>
               </div>
 
-              <div className="p-3 rounded bg-zinc-950/80 border border-purple-900/30">
-                <span className="text-zinc-500 text-[11px] block">{t(state.language, 'utility_debt')}</span>
-                <span className={`font-bold font-mono text-sm ${state.utilityDebt > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+              <div className="p-3 rounded theme-sub-bg border theme-accent-border">
+                <span className="mutating-text-muted text-[11px] block">{t(state.language, 'utility_debt')}</span>
+                <span className={`font-bold font-mono text-sm ${state.utilityDebt > 0 ? 'theme-danger-text' : 'theme-success-text'}`}>
                   ${state.utilityDebt.toFixed(2)} CR
                 </span>
-                <span className="text-[11px] text-zinc-500 block mt-0.5">
+                <span className="text-[11px] mutating-text-muted block mt-0.5">
                   {state.utilityDebt > 0 
                     ? localize(state.language, '¡Paga deudas para evitar cortes!', 'Repay debt to prevent blackouts!')
                     : localize(state.language, 'Cuenta al corriente', 'Account in good standing')}
@@ -641,16 +641,16 @@ export const HardwareRack: React.FC = () => {
 
             {/* Billing cycle status */}
             <div className="pt-1">
-              <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-1">
+              <div className="flex items-center justify-between text-[11px] mutating-text-muted mb-1">
                 <span>{t(state.language, 'billing_cycle')}:</span>
-                <span className="text-purple-300 font-mono">
+                <span className="mutating-accent-text font-mono">
                   {Math.floor((((state.gameDay || 1) - 1 + (state.dayTicks || 0) / 48) / DAYS_PER_GAME_MONTH) * 100)}% 
                   ({state.language === 'en' ? `Day ${state.gameDay || 1} of ${DAYS_PER_GAME_MONTH} · Month ${state.gameMonth || 1}` : `Día ${state.gameDay || 1} de ${DAYS_PER_GAME_MONTH} · Mes ${state.gameMonth || 1}`})
                 </span>
               </div>
-              <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full theme-raised-bg rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-purple-500 transition-all duration-300"
+                  className="h-full mutating-btn-primary transition-all duration-300"
                   style={{ width: `${Math.min(100, Math.floor((((state.gameDay || 1) - 1 + (state.dayTicks || 0) / 48) / DAYS_PER_GAME_MONTH) * 100))}%` }}
                 />
               </div>
@@ -658,22 +658,22 @@ export const HardwareRack: React.FC = () => {
           </div>
 
           {/* Shadow Compute Covert Operation Console */}
-          <div className="rounded-lg border border-amber-900/60 bg-amber-950/15 p-4 space-y-3">
+          <div className="rounded-lg border theme-warn-border theme-warn-soft p-4 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2 text-sm font-bold text-amber-200">
-                  <AlertTriangle className="h-4 w-4 text-amber-400" />
+                <div className="flex items-center gap-2 text-sm font-bold theme-warn-text">
+                  <AlertTriangle className="h-4 w-4 theme-warn-text" />
                   <span>{t(state.language, 'shadow_capacity')} · {t(state.language, 'fictional_event')}</span>
                 </div>
-                <p className="mt-1 text-xs text-zinc-400 leading-relaxed max-w-xl">
-                  {t(state.language, 'shadow_compute_description')} Riesgo de detección: <strong className="text-amber-300">{shadowDetectionChance.toFixed(0)}%</strong>. 
+                <p className="mt-1 text-xs mutating-text-muted leading-relaxed max-w-xl">
+                  {t(state.language, 'shadow_compute_description')} Riesgo de detección: <strong className="theme-warn-text">{shadowDetectionChance.toFixed(0)}%</strong>. 
                   {state.borrowedComputeSeconds > 0 && (
-                    <span className="text-cyan-300 ml-1">
+                    <span className="mutating-accent-text ml-1">
                       {t(state.language, 'temporary_capacity')}: {formatCompute(state.borrowedComputePflops)} · {state.borrowedComputeSeconds}s restantes.
                     </span>
                   )}
                   {state.detentionSeconds > 0 && (
-                    <span className="text-rose-400 font-bold ml-1">
+                    <span className="theme-danger-text font-bold ml-1">
                       {t(state.language, 'operative_detained')} · {state.detentionSeconds}s de bloqueo.
                     </span>
                   )}
@@ -684,7 +684,7 @@ export const HardwareRack: React.FC = () => {
                 type="button"
                 onClick={attemptShadowCompute}
                 disabled={state.detentionSeconds > 0 || state.borrowedComputeSeconds > 0}
-                className="rounded border border-amber-500 bg-amber-900/80 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-40 transition-colors shadow-[0_0_10px_rgba(245,158,11,0.2)] shrink-0"
+                className="rounded border theme-warn-border theme-warn-soft px-4 py-2 text-xs font-bold theme-warn-text disabled:cursor-not-allowed disabled:opacity-40 transition-colors shrink-0"
               >
                 {localize(state.language, 'EJECUTAR SECUESTRO DE CÓMPUTO', 'RUN SHADOW EXPLOIT')} · {shadowDetectionChance.toFixed(0)}% {t(state.language, 'risk')}
               </button>

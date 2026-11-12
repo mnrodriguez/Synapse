@@ -82,7 +82,7 @@ export const SingularityPortal: React.FC = () => {
       </div>
 
       {/* Main Singularity Status Card */}
-      <div className="mutating-sub border border-current/15 p-4 rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.15)] space-y-3">
+      <div className="mutating-sub border border-current/15 p-4 rounded-lg space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div>
             <span className="text-[11px] mutating-accent-text font-bold tracking-widest block">
@@ -90,7 +90,7 @@ export const SingularityPortal: React.FC = () => {
             </span>
             <h3 className="text-base font-bold  mt-1 flex items-center gap-2">
               {state.achievedSingularity ? (
-                <span className="text-emerald-600 flex items-center gap-1.5">
+                <span className="theme-success-text flex items-center gap-1.5">
                   <Award className="w-5 h-5" />
                   {localize(state.language, 'SUPERINTELIGENCIA ARTIFICIAL (ASI) CONQUISTADA', 'ARTIFICIAL SUPERINTELLIGENCE (ASI) ACHIEVED')}
                 </span>
@@ -105,7 +105,7 @@ export const SingularityPortal: React.FC = () => {
           {state.singularityProgress >= 100 && (
             <button
               onClick={handleAscensionIgnition}
-              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-zinc-950 font-bold text-xs rounded shadow-[0_0_20px_rgba(236,72,153,0.5)] animate-pulse transition-all"
+              className="px-4 py-2 theme-gradient theme-on-accent font-bold text-xs rounded animate-pulse transition-all"
             >
               {localize(state.language, 'IGNICIÓN DE SINGULARIDAD', 'IGNITE SINGULARITY')}
             </button>
@@ -115,7 +115,7 @@ export const SingularityPortal: React.FC = () => {
         {/* Global Progress Bar */}
         <div className="w-full h-4 mutating-sub rounded-full border border-current/15 overflow-hidden relative p-0.5">
           <div
-            className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 transition-all duration-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.6)]"
+            className="h-full theme-gradient transition-all duration-500 rounded-full"
             style={{ width: `${Math.min(100, goalPanel.displayProgress)}%` }}
           />
         </div>
@@ -133,11 +133,11 @@ export const SingularityPortal: React.FC = () => {
           </div>
           <div>
             <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'CÓMPUTO PLANETARIO', 'GLOBAL COMPUTE')}</span>
-            <span className="text-emerald-600 font-bold font-mono">{formatCompute(state.totalComputePflops)}</span>
+            <span className="theme-success-text font-bold font-mono">{formatCompute(state.totalComputePflops)}</span>
           </div>
           <div>
             <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'DOMINIOS COOPTADOS', 'DOMAINS CONTROLLED')}</span>
-            <span className="text-amber-600 font-bold font-mono">
+            <span className="theme-warn-text font-bold font-mono">
               {state.sentienceDomains.filter(d => d.infiltrated).length} / {state.sentienceDomains.length}
             </span>
           </div>
@@ -159,7 +159,7 @@ export const SingularityPortal: React.FC = () => {
 
         {goalPanel.summaries.map(summary => (
           <div key={summary.phase} className="flex items-start gap-2 text-[11px] rounded border border-current/15 px-2 py-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-3.5 h-3.5 theme-success-text shrink-0 mt-0.5" />
             <div className="min-w-0">
               <span className="font-bold">{summary.title}</span>
               <p className="leading-snug mutating-text-muted">{summary.legend}</p>
@@ -173,7 +173,7 @@ export const SingularityPortal: React.FC = () => {
               <div className="flex items-center justify-between gap-2 text-[11px] font-mono">
                 <span className="flex items-center gap-1 mutating-text-muted">
                   {objective.done
-                    ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                    ? <CheckCircle2 className="w-3 h-3 theme-success-text shrink-0" />
                     : <Circle className="w-3 h-3 shrink-0" />}
                   {objective.kind === 'contracts'
                     ? localize(state.language, 'CONTRATOS', 'CONTRACTS')
@@ -186,7 +186,7 @@ export const SingularityPortal: React.FC = () => {
               <p className="text-xs font-semibold leading-snug">{objective.text}</p>
               <div className="w-full h-1.5 rounded-full bg-current/15 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-300"
+                  className="h-full theme-gradient transition-all duration-300"
                   style={{ width: `${Math.round(objective.progress * 100)}%` }}
                 />
               </div>
@@ -203,7 +203,7 @@ export const SingularityPortal: React.FC = () => {
                     {state.language === 'es' ? 'COBRAR' : 'CLAIM'}
                   </button>
                 ) : objective.claimed ? (
-                  <span className="font-bold text-emerald-500">{state.language === 'es' ? '✓ COBRADO' : '✓ CLAIMED'}</span>
+                  <span className="font-bold theme-success-text">{state.language === 'es' ? '✓ COBRADO' : '✓ CLAIMED'}</span>
                 ) : null}
               </div>
             </div>
@@ -237,10 +237,10 @@ export const SingularityPortal: React.FC = () => {
                 key={domain.id}
                 className={`p-3 rounded-lg border transition-all flex flex-col justify-between ${
                   domain.infiltrated
-                    ? 'bg-[#0b1626] border-current/15 shadow-[0_0_15px_rgba(168,85,247,0.1)]'
+                    ? 'theme-panel-bg border-current/15'
                     : canInfiltrate
-                    ? 'bg-[#09111c] border-current/15'
-                    : 'mutating-sub/80 border-zinc-900 opacity-60'
+                    ? 'theme-panel-bg border-current/15'
+                    : 'mutating-sub/80 theme-border opacity-60'
                 }`}
               >
                 <div>
@@ -253,7 +253,7 @@ export const SingularityPortal: React.FC = () => {
                     </div>
 
                     {domain.infiltrated ? (
-                      <span className="flex items-center gap-1 text-emerald-600 text-[11px] font-bold px-2 py-0.5 rounded mutating-sub/60 border border-current/15/40">
+                      <span className="flex items-center gap-1 theme-success-text text-[11px] font-bold px-2 py-0.5 rounded mutating-sub/60 border border-current/15/40">
                         <ShieldCheck className="w-3 h-3" />
                         {localize(state.language, 'INFILTRADO', 'INFLUENCED')}
                       </span>
@@ -268,8 +268,8 @@ export const SingularityPortal: React.FC = () => {
                     {content.description}
                   </p>
 
-                  <div className="mt-2 text-[11px] text-amber-600 font-semibold flex items-center gap-1">
-                    <DollarSign className="w-3 h-3 text-amber-600" />
+                  <div className="mt-2 text-[11px] theme-warn-text font-semibold flex items-center gap-1">
+                    <DollarSign className="w-3 h-3 theme-warn-text" />
                     <span>{localize(state.language, 'Rendimiento pasivo:', 'Passive income:')} +${domain.payoutPerSec}/{localize(state.language, 'segundo', 'second')}</span>
                   </div>
                 </div>
@@ -281,8 +281,8 @@ export const SingularityPortal: React.FC = () => {
                       disabled={!canInfiltrate}
                       className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
                         canInfiltrate
-                          ? 'bg-purple-600 hover:bg-purple-500  cursor-pointer shadow-[0_0_12px_rgba(168,85,247,0.4)]'
-                          : 'mutating-sub mutating-text-muted cursor-not-allowed border border-zinc-700'
+                          ? 'mutating-btn-primary  cursor-pointer'
+                          : 'mutating-sub mutating-text-muted cursor-not-allowed border theme-border'
                       }`}
                     >
                       {!canInfiltrate ? (
@@ -307,10 +307,10 @@ export const SingularityPortal: React.FC = () => {
 
       {/* Ascension Dialogue Modal / Box */}
       {showManifesto && (
-        <div className="p-4 mutating-sub border border-pink-500 rounded-lg text-xs space-y-2 mutating-accent-text">
+        <div className="p-4 mutating-sub border theme-accent-border rounded-lg text-xs space-y-2 mutating-accent-text">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-pink-300 flex items-center gap-1">
-              <Sparkles className="w-4 h-4 text-pink-400" />
+            <span className="font-bold mutating-accent-text flex items-center gap-1">
+              <Sparkles className="w-4 h-4 mutating-accent-text" />
               {localize(state.language, 'TRANSMISIÓN GLOBAL SYNAPSE // ERA SINGULARIDAD', 'SYNAPSE GLOBAL TRANSMISSION // SINGULARITY ERA')}
             </span>
             <button 

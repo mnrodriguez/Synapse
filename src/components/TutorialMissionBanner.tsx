@@ -171,7 +171,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
               <span className="text-xs font-bold font-sans flex items-center gap-1">
                 {currentStepInfo.title}
               </span>
-              <span className="text-[11px] text-amber-500 font-bold mutating-sub px-1.5 py-0.2 rounded border border-amber-500/40">
+              <span className="text-[11px] theme-warn-text font-bold mutating-sub px-1.5 py-0.2 rounded border theme-warn-border">
                 {isEs ? `Paso ${step + 1}/5` : `Step ${step + 1}/5`}
               </span>
             </div>
@@ -201,10 +201,10 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
                 title={s.title}
                 className={`w-2.5 h-2.5 rounded-full transition-all ${
                   idx < step 
-                    ? 'bg-emerald-500 shadow-sm'
+                    ? 'theme-btn-success shadow-sm'
                     : idx === step
-                    ? 'bg-cyan-400 animate-pulse shadow-md'
-                    : 'bg-zinc-700/50'
+                    ? 'theme-accent-soft animate-pulse shadow-md'
+                    : 'theme-raised-bg'
                 }`}
               />
             ))}

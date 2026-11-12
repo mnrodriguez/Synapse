@@ -19,9 +19,9 @@ export const TrainingReportModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center p-3 bg-black/70 backdrop-blur-sm font-mono">
-      <div className="w-full max-w-md mutating-panel border rounded-lg p-5 shadow-[0_0_30px_rgba(0,255,200,0.15)] space-y-4">
+      <div className="w-full max-w-md mutating-panel border rounded-lg p-5 space-y-4">
         <div className="flex items-center gap-2 border-b border-current/15 pb-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+          <CheckCircle2 className="w-5 h-5 theme-success-text" />
           <h3 className="font-bold text-sm mutating-accent-text">
             {localize(state.language, 'ENTRENAMIENTO COMPLETADO', 'TRAINING COMPLETE')}
           </h3>
@@ -44,7 +44,7 @@ export const TrainingReportModal: React.FC = () => {
             <span className="mutating-text-muted">{localize(state.language, 'Puntaje de evaluación', 'Evaluation score')}</span>
             <span className="font-bold">
               {report.reasoningBefore} → {report.reasoningAfter}
-              <span className={delta > 0 ? 'text-emerald-500 ml-2' : 'mutating-text-muted ml-2'}>
+              <span className={delta > 0 ? 'theme-success-text ml-2' : 'mutating-text-muted ml-2'}>
                 {delta > 0 ? `+${delta}` : '+0'}
               </span>
             </span>
@@ -54,7 +54,7 @@ export const TrainingReportModal: React.FC = () => {
             <span className="font-bold">{report.reasoningCeiling}</span>
           </div>
           {delta === 0 && (
-            <p className="text-[11px] text-amber-500 leading-snug">
+            <p className="text-[11px] theme-warn-text leading-snug">
               {localize(
                 state.language,
                 'Sin mejora: el modelo está cerca del techo de su tamaño. Para subir más necesitas más parámetros (Arquitectura) o más datos.',
