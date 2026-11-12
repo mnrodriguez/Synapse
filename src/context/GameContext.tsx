@@ -96,7 +96,7 @@ import { canAttemptContainment } from '../utils/epilogue';
 import { planTrainingRun, lossAt, sanitizeTrainingConfig, vramForRun, BATCH_SIZES, DEFAULT_TRAINING_CONFIG, type TrainingConfig } from '../utils/trainingRun';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, storyEventText, LOAN_WARNING_DAY } from '../utils/storyEvents';
 import type { StoryEventId } from '../types/game';
-import { SIMULATED_SECONDS_PER_TICK } from '../utils/training';
+import { GAME_HOURS_PER_TICK, formatGameTime } from '../utils/training';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, migrateLegacyScore, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
@@ -106,7 +106,7 @@ const DEFAULT_TRAINING_TOKENS = 50_000_000;
 const agentReasoningFactor = (score: number): number => Math.max(0.5, score / 20);
 const agentParamBonus = (params: number): number => Math.min(2.5, 1 + params / 50_000_000);
 const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 7.5)));
-import { evaluateMissionTeam, findAutonomousMission } from '../utils/missionEvaluation';
+import { evaluateMissionTeam, findAutonomousMission, weakestTeamFactors } from '../utils/missionEvaluation';
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
 
 interface GameContextType {
@@ -983,7 +983,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
         });
         addLog(
-          `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${totalDuration}s, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`,
+          `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${formatGameTime(totalDuration)}, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`,
           'info'
         );
       }).catch(error => {
@@ -1357,8 +1357,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             storyEvents.push('first_power_trip');
             addLog(
               prev.language === 'en'
-                ? 'Electrical overload: circuit breaker tripped. Training and missions paused for 15s.'
-                : 'Sobrecarga eléctrica: el interruptor de protección pausó entrenamiento y misiones durante 15s.',
+                ? `Electrical overload: circuit breaker tripped. Training and missions paused for ${formatGameTime(15)}.`
+                : `Sobrecarga eléctrica: el interruptor de protección pausó entrenamiento y misiones durante ${formatGameTime(15)}.`,
               'danger'
             );
           }
@@ -1444,7 +1444,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const upgradedModelReasoning = Math.max(0, Math.round((prev.currentModel.reasoningScore + bonusReasoning) * 10) / 10);
             const runDatasetId = activeTraining.datasetId || 'dataset_general_corpus';
             const gpuPowerKw = prev.hardware.reduce((sum, h) => h.category === 'gpu' ? sum + h.powerKw * h.count : sum, 0);
-            const runHours = (newStep * SIMULATED_SECONDS_PER_TICK) / 3600;
+            const runHours = newStep * GAME_HOURS_PER_TICK;
             const energyKwh = Number((gpuPowerKw * runHours).toFixed(2));
             
             const isMicroModel = activeTraining.targetModelType === 'micro_model';
@@ -1703,7 +1703,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   roll: Number((activeGig.outcomeRoll ?? 0).toFixed(3)),
                   successProbability: Number(effectiveSuccessProbability.toFixed(3)),
                   timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                  isAutonomous
+                  isAutonomous,
+                  // What to improve: the assigned team's weakest capabilities.
+                  weakestFactors: weakestTeamFactors(
+                    prev.agents.filter(agent => activeGig.agentIds?.includes(agent.id)),
+                    prev.savedModels,
+                    prev.dataSources,
+                    prev.guardrails
+                  )
                 };
               }
             }
@@ -1782,8 +1789,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const botContractTitle = localizedContractTitle(prev.language, plan.contract);
               addLog(
                 prev.language === 'en'
-                  ? `Autonomous bot swarm accepted [${botContractTitle}] (${autonomousEfficiency}% efficiency [autonomous balance], ${autonomousDuration}s duration, ${Math.round(teamAssessment.successProbability * 100)}% base success, 40% delegation fee).`
-                  : `El enjambre autónomo aceptó [${botContractTitle}] (${autonomousEfficiency}% eficiencia [balance autónomo], ${autonomousDuration}s duración, ${Math.round(teamAssessment.successProbability * 100)}% éxito base, 40% tasa de delegación).`,
+                  ? `Autonomous bot swarm accepted [${botContractTitle}] (${autonomousEfficiency}% efficiency [autonomous balance], ${formatGameTime(autonomousDuration)} duration, ${Math.round(teamAssessment.successProbability * 100)}% base success, 40% delegation fee).`
+                  : `El enjambre autónomo aceptó [${botContractTitle}] (${autonomousEfficiency}% eficiencia [balance autónomo], ${formatGameTime(autonomousDuration)} duración, ${Math.round(teamAssessment.successProbability * 100)}% éxito base, 40% tasa de delegación).`,
                 plan.contract.suspicionRisk >= 40 ? 'warning' : 'info'
               );
             }
@@ -2527,11 +2534,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (currentState.powerTripSeconds > 0) {
-      addLog(localize(currentState.language, `El interruptor está disparado. Espera ${currentState.powerTripSeconds}s antes de entrenar.`, `Circuit breaker is tripped. Wait ${currentState.powerTripSeconds}s before training.`), 'warning');
+      addLog(localize(currentState.language, `El interruptor está disparado. Espera ${formatGameTime(currentState.powerTripSeconds)} antes de entrenar.`, `Circuit breaker is tripped. Wait ${formatGameTime(currentState.powerTripSeconds)} before training.`), 'warning');
       return false;
     }
     if (currentState.detentionSeconds > 0) {
-      addLog(localize(currentState.language, `Operativo detenido. Espera ${currentState.detentionSeconds}s antes de entrenar.`, `Operative detained. Wait ${currentState.detentionSeconds}s before training.`), 'warning');
+      addLog(localize(currentState.language, `Operativo detenido. Espera ${formatGameTime(currentState.detentionSeconds)} antes de entrenar.`, `Operative detained. Wait ${formatGameTime(currentState.detentionSeconds)} before training.`), 'warning');
       return false;
     }
     if (currentState.activeTraining) {
@@ -2794,7 +2801,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
     if (stateRef.current.detentionSeconds > 0) {
-      addLog(localize(stateRef.current.language, `Operativo detenido. Espera ${stateRef.current.detentionSeconds}s antes de asignar una misión.`, `Operative detained. Wait ${stateRef.current.detentionSeconds}s before launching a mission.`), 'warning');
+      addLog(localize(stateRef.current.language, `Operativo detenido. Espera ${formatGameTime(stateRef.current.detentionSeconds)} antes de asignar una misión.`, `Operative detained. Wait ${formatGameTime(stateRef.current.detentionSeconds)} before launching a mission.`), 'warning');
       return false;
     }
 
@@ -2968,8 +2975,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addLog(
       localize(
         stateRef.current.language,
-        `Misión asignada: [${contractTitle}] a ${assignedLabel}. Eficiencia: ${teamAssessment.efficiencyPercent}%, tiempo: ${teamAssessment.estimatedDurationSeconds}s, éxito: ${Math.round(teamAssessment.successProbability * 100)}%.`,
-        `Mission deployed: [${contractTitle}] assigned to ${assignedLabel}. Efficiency: ${teamAssessment.efficiencyPercent}%, duration: ${teamAssessment.estimatedDurationSeconds}s, success chance: ${Math.round(teamAssessment.successProbability * 100)}%.`
+        `Misión asignada: [${contractTitle}] a ${assignedLabel}. Eficiencia: ${teamAssessment.efficiencyPercent}%, tiempo: ${formatGameTime(teamAssessment.estimatedDurationSeconds)}, éxito: ${Math.round(teamAssessment.successProbability * 100)}%.`,
+        `Mission deployed: [${contractTitle}] assigned to ${assignedLabel}. Efficiency: ${teamAssessment.efficiencyPercent}%, duration: ${formatGameTime(teamAssessment.estimatedDurationSeconds)}, success chance: ${Math.round(teamAssessment.successProbability * 100)}%.`
       ),
       'info'
     );
@@ -3883,7 +3890,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const current = stateRef.current;
     const lang = current.language;
     if (current.detentionSeconds > 0) {
-      addLog(localize(lang, `Operativo detenido. Espera ${current.detentionSeconds}s antes de intentarlo de nuevo.`, `Operative detained. Wait ${current.detentionSeconds}s before attempting again.`), 'danger');
+      addLog(localize(lang, `Operativo detenido. Espera ${formatGameTime(current.detentionSeconds)} antes de intentarlo de nuevo.`, `Operative detained. Wait ${formatGameTime(current.detentionSeconds)} before attempting again.`), 'danger');
       return false;
     }
     if (current.borrowedComputeSeconds > 0) {

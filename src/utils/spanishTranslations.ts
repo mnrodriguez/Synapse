@@ -78,8 +78,8 @@ export const SPANISH_HARDWARE: Record<string, HardwareTranslation> = {
     description: 'Enchufe estándar de pared. Si la suma de tu hardware supera 1.5 kW, el interruptor diferencial de tu casa saltará.'
   },
   power_solar_array: {
-    name: 'Micro-Inversor Solar Residencial (3.0 kW)',
-    description: 'Paneles solares de azotea con inversor híbrido. Duplica la capacidad eléctrica sin depender de contratos industriales.'
+    name: 'Segundo circuito de la casa (3.0 kW en total)',
+    description: 'Un alargue grueso hasta otro circuito de la casa. Duplica la potencia disponible sin hacer saltar el disyuntor.'
   },
   power_industrial_3phase: {
     name: 'Acometida Eléctrica Industrial Trifásica (400V - 25 kW)',

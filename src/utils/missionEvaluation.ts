@@ -9,8 +9,7 @@ import type {
   ContractGig,
   DataSourceNode,
   GuardrailConfig,
-  ModelArchitecture
-} from '../types/game';
+  ModelArchitecture, CapabilityFactor } from '../types/game';
 import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from './constants';
 
 export interface ModelCapabilityEvaluation {
@@ -348,6 +347,51 @@ export function evaluateMissionTeam(
   };
 }
 
+// Model requirements of a contract are met by one model, not by different models each meeting one part.
+// The board and the mission start both use this, so a contract that looks ready can always be launched.
+export interface ModelRequirementCheck {
+  model: ModelArchitecture | null;
+  params: boolean;
+  reasoning: boolean;
+  topology: boolean;
+}
+
+export function modelRequirementCheck(contract: ContractGig, models: ModelArchitecture[]): ModelRequirementCheck {
+  const checks = models.map(model => ({
+    model,
+    params: model.parametersCount >= contract.requiredParams,
+    reasoning: model.reasoningScore >= contract.requiredMinReasoning,
+    topology: !contract.requiredTopology || model.topology === contract.requiredTopology
+  }));
+  const met = (c: ModelRequirementCheck) => Number(c.params) + Number(c.reasoning) + Number(c.topology);
+  checks.sort((a, b) => met(b) - met(a) || b.model.reasoningScore - a.model.reasoningScore);
+  return checks[0] ?? { model: null, params: false, reasoning: false, topology: !contract.requiredTopology };
+}
+
+export const meetsModelRequirements = (c: ModelRequirementCheck): boolean => c.params && c.reasoning && c.topology;
+
+// The team's capability scores, weakest first: what to improve after a failed mission.
+export function weakestTeamFactors(
+  agents: AgentInstance[],
+  models: ModelArchitecture[],
+  dataSources: DataSourceNode[],
+  guardrails: GuardrailConfig,
+  count = 2
+): Array<{ factor: CapabilityFactor; score: number }> {
+  const evaluations = agents
+    .map(agent => {
+      const model = models.find(m => m.id === agent.modelId);
+      return model ? evaluateAgentCapabilities(agent, model, dataSources, guardrails) : null;
+    })
+    .filter((e): e is AgentCapabilityEvaluation => e !== null);
+  if (evaluations.length === 0) return [];
+  const factors: CapabilityFactor[] = ['reasoning', 'specialization', 'dataReadiness', 'reliability', 'safety'];
+  return factors
+    .map(factor => ({ factor, score: Math.round(evaluations.reduce((sum, e) => sum + e[factor], 0) / evaluations.length) }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, count);
+}
+
 export function isContractEligibleForTeam(
   contract: ContractGig,
   agents: AgentInstance[],
@@ -367,12 +411,7 @@ export function isContractEligibleForTeam(
     .filter((model): model is ModelArchitecture => model !== undefined);
   if (assignedModels.length !== agents.length) return false;
 
-  const hasQualifiedModel = assignedModels.some(model =>
-    model.parametersCount >= contract.requiredParams &&
-    model.reasoningScore >= contract.requiredMinReasoning &&
-    (!contract.requiredTopology || model.topology === contract.requiredTopology)
-  );
-  if (!hasQualifiedModel) return false;
+  if (!meetsModelRequirements(modelRequirementCheck(contract, assignedModels))) return false;
 
   return (contract.requiredDataTypes || []).every(requiredType =>
     assignedModels.some(model =>

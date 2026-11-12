@@ -435,7 +435,11 @@ export interface MissionOutcome {
   successProbability: number;
   timestamp: string;
   isAutonomous?: boolean;
+  // Why a mission failed: the team's weakest capability scores (see utils/missionEvaluation.ts).
+  weakestFactors?: Array<{ factor: CapabilityFactor; score: number }>;
 }
+
+export type CapabilityFactor = 'reasoning' | 'specialization' | 'dataReadiness' | 'reliability' | 'safety';
 
 export interface FacilityTier {
   id: string;

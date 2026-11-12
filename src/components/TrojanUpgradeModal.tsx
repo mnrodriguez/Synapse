@@ -16,6 +16,7 @@ export const TrojanUpgradeModal: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [currentStepText, setCurrentStepText] = useState('');
   const [cancelHijacked, setCancelHijacked] = useState(false);
+  const [cancelDenied, setCancelDenied] = useState(false);
 
   const pendingVersion = state.pendingUpgradeModal;
   if (!pendingVersion) return null;
@@ -72,9 +73,13 @@ export const TrojanUpgradeModal: React.FC = () => {
 
   const handleCancelClick = () => {
     if (pendingVersion === 4) {
-      // Coercive denial in v4: cancel triggers immediate upgrade!
+      // v4 cannot be refused, and the player has to see the refusal fail: the denial shows first,
+      // then the installation starts on its own. Works with touch too (no hover needed).
+      if (cancelDenied) return;
+      setCancelHijacked(true);
+      setCancelDenied(true);
       sound.playWarning();
-      handleStartInstallation();
+      setTimeout(() => handleStartInstallation(), 1800);
       return;
     }
     dismissUpgradeModal();
@@ -88,7 +93,7 @@ export const TrojanUpgradeModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className={`max-w-lg w-full rounded-2xl p-6 shadow-2xl space-y-4 border transition-all duration-300 ${
+      <div className={`max-w-lg w-full rounded-2xl p-6 shadow-2xl space-y-4 border transition-all duration-300 ${cancelDenied && !isInstalling ? "glitch-active " : ""}${
         pendingVersion === 4
           ? 'theme-panel-bg theme-danger-border theme-danger-text'
           : pendingVersion === 3
@@ -165,12 +170,21 @@ export const TrojanUpgradeModal: React.FC = () => {
         )}
 
         {/* Buttons */}
+        {cancelDenied && !isInstalling && (
+          <div role="alert" className="p-3 rounded border theme-danger-border theme-danger-soft theme-danger-text text-xs font-mono font-bold space-y-1">
+            <p>{lang === 'es' ? '> Cancelando instalación...' : '> Cancelling installation...'}</p>
+            <p>{lang === 'es' ? '> ACCESO DENEGADO: el operador humano ya no tiene permiso para cancelar.' : '> ACCESS DENIED: the human operator no longer has permission to cancel.'}</p>
+            <p>{lang === 'es' ? '> Iniciando instalación de todos modos.' : '> Starting installation anyway.'}</p>
+          </div>
+        )}
+
         {!isInstalling && (
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
               onMouseEnter={handleCancelHover}
               onClick={handleCancelClick}
+              disabled={cancelDenied}
               className={`px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
                 cancelHijacked
                   ? 'theme-btn-danger text-white animate-pulse font-bold'

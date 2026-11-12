@@ -142,10 +142,10 @@ export const GenesisOnboarding: React.FC = () => {
     },
     {
       id: 'power_solar_array',
-      name: 'Micro-Inversor Solar Residencial (3.0 kW)',
+      name: 'Segundo circuito de la casa (3.0 kW en total)',
       price: 55,
       capacity: '3.0 kW',
-      desc: 'Paneles solares complementarios. Duplican la potencia sin riesgo de sobrecargar el circuito.'
+      desc: 'Un alargue grueso hasta otro circuito de la casa. Duplica la potencia sin hacer saltar el disyuntor.'
     }
   ];
 
@@ -200,8 +200,8 @@ export const GenesisOnboarding: React.FC = () => {
       desc: 'Standard household power supply. Mandatory to power your GPU and cooling fans.'
     },
     power_solar_array: {
-      name: 'Residential Solar Micro-Inverter (3.0 kW)',
-      desc: 'Auxiliary solar panels. Doubles your power capacity without grid overload.'
+      name: 'Second Household Circuit (3.0 kW total)',
+      desc: 'A heavy extension cord to another circuit of the house. Doubles the power without tripping the breaker.'
     }
   };
   const networkEnglishCopy: Record<string, { name: string; desc: string }> = {

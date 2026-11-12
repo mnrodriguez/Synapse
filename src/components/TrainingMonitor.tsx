@@ -344,7 +344,7 @@ export const TrainingMonitor: React.FC = () => {
             </span>
           </div>
           <div>
-            <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'PREDICCIÓN EN DÍAS CON HARDWARE ACTUAL:', 'ESTIMATED DAYS WITH CURRENT HARDWARE:')}</span>
+            <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'TIEMPO RESTANTE (TIEMPO DE JUEGO):', 'TIME LEFT (GAME TIME):')}</span>
             <span className="theme-success-text font-bold">
               {job.timeRemainingSeconds === null
                 ? localize(state.language, 'N/A', 'N/A')

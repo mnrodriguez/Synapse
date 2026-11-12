@@ -1,14 +1,19 @@
 // Training work is estimated with the usual rule of thumb for dense transformers: about 6 FLOPs per
 // parameter per training token. A run is complete when that work has been done.
 //
-// Time is measured in simulated training minutes, and one game tick is one simulated minute. At 1x
-// speed a tick is one real second, so a starter run lasts about as long as its real hardware would need
-// in minutes, and the speed controls scale playback. The covert node bonus is not part of this: only
-// installed GPUs and temporary borrowed cluster capacity do the work.
+// One clock for the whole game: a tick is 30 game minutes (48 ticks per day), for the calendar,
+// training, missions, data jobs and events alike. At 1x a tick is one real second.
+//
+// Training throughput is scaled to that clock: per tick, game hardware does the work a real GPU does in
+// one minute (TRAINING_WORK_SECONDS_PER_TICK). Real FLOPs at a 30-minute tick would finish early runs
+// instantly; with the scale a starter run takes a few game hours and bigger models take days. The covert
+// node bonus is not part of this: only installed GPUs and temporary borrowed cluster capacity do the work.
 
 // Share of peak FLOPS a small transformer sustains in practice (memory bound, data loading, optimizer).
 export const TRAINING_EFFICIENCY = 0.35;
-export const SIMULATED_SECONDS_PER_TICK = 60;
+export const TRAINING_WORK_SECONDS_PER_TICK = 60;
+export const GAME_MINUTES_PER_TICK = 30;
+export const GAME_HOURS_PER_TICK = GAME_MINUTES_PER_TICK / 60;
 
 export const trainingWorkFlops = (parametersCount: number, tokensCount: number): number =>
   6 * parametersCount * tokensCount;
@@ -42,7 +47,7 @@ export const calculateTrainingProgressPerTick = ({
   const flopsPerSecond = availableCompute * 1e15 * TRAINING_EFFICIENCY * thermalThrottle;
   const work = trainingWorkFlops(parametersCount, Math.max(1, tokensCount));
   if (work <= 0) return 0;
-  return ((flopsPerSecond * SIMULATED_SECONDS_PER_TICK) / work) * 100;
+  return ((flopsPerSecond * TRAINING_WORK_SECONDS_PER_TICK) / work) * 100;
 };
 
 export const estimateTrainingSeconds = (
@@ -114,15 +119,24 @@ export const formatTrainingDuration = (seconds: number): string => {
   return `${Math.floor(totalHours / 24)}d ${totalHours % 24}h`;
 };
 
-// Training time in simulated minutes (one tick is one simulated minute). At 1x speed a tick is one real
-// second, so the same number of minutes is also the real time the run takes at 1x.
-export const formatTrainingTime = (ticks: number | null, language: 'en' | 'es' = 'en'): string => {
-  if (ticks === null) return 'N/A';
-  const minutes = Math.max(0, Math.round(ticks));
+// A number of ticks as game time: "30 min", "3 h 30 min", "2 d 4 h".
+export const formatGameTime = (ticks: number): string => {
+  const minutes = Math.max(0, Math.round(ticks)) * GAME_MINUTES_PER_TICK;
+  if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  const duration = hours > 0 ? `${hours} h ${rest} min` : `${minutes} min`;
-  return language === 'es' ? `${duration} de entrenamiento` : `${duration} of training`;
+  if (hours < 24) return rest ? `${hours} h ${rest} min` : `${hours} h`;
+  const days = Math.floor(hours / 24);
+  const restHours = hours % 24;
+  return restHours ? `${days} d ${restHours} h` : `${days} d`;
+};
+
+// Training time in game time. At 1x a tick is one real second, so the tick count is also the real
+// seconds the run takes at 1x.
+export const formatTrainingTime = (ticks: number | null, language: 'en' | 'es' = 'en'): string => {
+  if (ticks === null) return 'N/A';
+  const duration = formatGameTime(Math.ceil(ticks));
+  return language === 'es' ? `${duration} de juego` : `${duration} of game time`;
 };
 
 // Evaluation score: one scale from 0 to 100, the share of the game's evaluation suite a model solves.

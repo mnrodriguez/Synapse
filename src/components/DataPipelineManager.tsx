@@ -36,7 +36,7 @@ import { DATA_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { isDataSourceProgressionUnlocked } from '../utils/progression';
 import { DATASET_TIER_CONFIGS, DOMAIN_PRESETS, dataSourceUpgradeCost } from '../utils/constants';
-import { formatTrainingDuration } from '../utils/training';
+import { formatGameTime } from '../utils/training';
 import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 
@@ -477,7 +477,7 @@ export const DataPipelineManager: React.FC = () => {
                       {localize(state.language, 'Tiempo estimado:', 'Estimated time:')}{' '}
                       {state.activeScrapeJob.timeRemainingSeconds === null
                         ? '...'
-                        : `${formatTrainingDuration(state.activeScrapeJob.timeRemainingSeconds / Math.max(1, state.gameSpeed))} @ ${state.gameSpeed}x`}
+                        : formatGameTime(state.activeScrapeJob.timeRemainingSeconds)}
                     </span>
                   </div>
                 </div>

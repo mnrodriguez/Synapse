@@ -8,7 +8,7 @@ import { SlidersHorizontal, AlertTriangle, Info, Zap } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { localize } from '../utils/i18n';
 import { ELECTRICITY_RATE_PER_KWH } from '../utils/constants';
-import { calculateTrainingProgressPerTick, gpuComputePflops, externalComputePflops, SIMULATED_SECONDS_PER_TICK, formatTrainingTime } from '../utils/training';
+import { calculateTrainingProgressPerTick, gpuComputePflops, externalComputePflops, GAME_HOURS_PER_TICK, formatTrainingTime } from '../utils/training';
 import {
   planTrainingRun,
   sanitizeTrainingConfig,
@@ -56,7 +56,7 @@ export const TrainingConfigPanel: React.FC<Props> = ({ datasetId, datasetTokensM
   });
   const fullTicks = perTick > 0 ? 100 / perTick : null;
   const gpuPowerKw = state.hardware.reduce((sum, h) => (h.category === 'gpu' ? sum + h.powerKw * h.count : sum), 0);
-  const energyKwh = fullTicks === null ? null : (gpuPowerKw * fullTicks * SIMULATED_SECONDS_PER_TICK) / 3600;
+  const energyKwh = fullTicks === null ? null : gpuPowerKw * fullTicks * GAME_HOURS_PER_TICK;
   const runVram = vramForRun(model.vramRequiredGb, config.batchSize);
 
   const warnings: Array<{ tone: 'danger' | 'warn' | 'info'; text: string }> = [];
