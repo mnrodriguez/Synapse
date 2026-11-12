@@ -24,3 +24,6 @@ export function lowestOpenIqForVersion(contracts: ContractGig[], uiVersion: numb
   if (open.length === 0) return null;
   return Math.min(...open.map(c => c.requiredMinReasoning));
 }
+
+// Reasoning IQ the first model needs before the first mission can be run with a deployed agent.
+export const FIRST_MISSION_IQ = 50;

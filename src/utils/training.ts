@@ -148,3 +148,9 @@ export const iqGainForRun = ({
   const dataFactor = Math.min(1, 0.5 + 0.5 * Math.log10(1 + tokensPerParam) / Math.log10(21));
   return Math.floor(gap * 0.15 * dataFactor);
 };
+
+// Temporary university loan that gives the starter cluster extra compute. It counts toward training while
+// the node is active, and stops counting if it is severed.
+export const COVERT_LOAN_PFLOPS = 80;
+export const covertLoanPflops = (s: { covertNodeActive?: boolean; covertNodeSevered?: boolean }): number =>
+  s.covertNodeActive !== false && !s.covertNodeSevered ? COVERT_LOAN_PFLOPS : 0;

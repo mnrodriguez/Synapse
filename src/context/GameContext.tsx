@@ -91,7 +91,7 @@ import {
   localizedResearch, 
   localizedDomain 
 } from '../utils/gameContentI18n';
-import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor } from '../utils/training';
+import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, covertLoanPflops, COVERT_LOAN_PFLOPS } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
 const DEFAULT_TRAINING_TOKENS = 50_000_000;
@@ -1105,7 +1105,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     const isCovertActive = stateRef.current?.covertNodeActive !== false && !stateRef.current?.covertNodeSevered;
-    const covertBonusPflops = isCovertActive ? 80.0 : 0;
+    const covertBonusPflops = isCovertActive ? COVERT_LOAN_PFLOPS : 0;
     const totalPflops = (totalTflops / 1000) + covertBonusPflops;
     return {
       totalComputePflops: Math.max(0.001, Number(totalPflops.toFixed(2))),
@@ -1305,7 +1305,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             parametersCount: prev.currentModel.parametersCount,
             tokensCount: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS,
             gpuPflops: gpuComputePflops(prev.hardware),
-            borrowedPflops: borrowedComputePflops,
+            borrowedPflops: borrowedComputePflops + covertLoanPflops(prev),
             agentComputeDemand,
             reservedComputePflops: reservedForMissions,
             systemHeatCelsius
@@ -2436,7 +2436,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       parametersCount: currentState.currentModel.parametersCount,
       tokensCount: runTokens,
       gpuPflops: gpuComputePflops(currentState.hardware),
-      borrowedPflops: currentState.borrowedComputePflops,
+      borrowedPflops: currentState.borrowedComputePflops + covertLoanPflops(currentState),
       agentComputeDemand,
       reservedComputePflops: reservedForMission,
       systemHeatCelsius: currentState.systemHeatCelsius
