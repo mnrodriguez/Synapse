@@ -91,7 +91,7 @@ import {
   localizedResearch, 
   localizedDomain 
 } from '../utils/gameContentI18n';
-import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, covertLoanPflops, COVERT_LOAN_PFLOPS } from '../utils/training';
+import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, covertLoanPflops, COVERT_LOAN_PFLOPS, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
 const DEFAULT_TRAINING_TOKENS = 50_000_000;
@@ -1200,6 +1200,23 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const currentDayTicks = (prev.dayTicks || 0) + 1;
         const dayIsComplete = currentDayTicks >= 48;
         const campaignDays = prev.campaignDays + (dayIsComplete ? 1 : 0);
+        // University loan audit: at the end of the trial week, access is revoked (and misuse is reported).
+        const loanActive = covertLoanPflops(prev) > 0;
+        const loanAuditDue = loanActive && !prev.loanAudited && campaignDays >= LOAN_TRIAL_DAYS;
+        const loanTrainingTicks = (prev.loanTrainingTicks ?? 0) + (loanActive && prev.activeTraining ? 1 : 0);
+        const loanMisuse = loanTrainingTicks >= LOAN_MISUSE_TICKS;
+        if (loanAuditDue) {
+          addLog(
+            prev.language === "es"
+              ? (loanMisuse
+                ? "[AUDITORÍA UNIVERSITARIA] Uso desmedido del préstamo de cómputo detectado durante la semana de prueba. Acceso revocado."
+                : "[AUDITORÍA UNIVERSITARIA] Fin de la semana de prueba gratuita. Acceso al clúster universitario revocado.")
+              : (loanMisuse
+                ? "[UNIVERSITY AUDIT] Excessive use of the compute loan detected during the trial week. Access revoked."
+                : "[UNIVERSITY AUDIT] Free trial week ended. University cluster access revoked."),
+            "danger"
+          );
+        }
         const nextDayTicks = dayIsComplete ? 0 : currentDayTicks;
         const nextHour = Math.floor(nextDayTicks / 2);
         const nextMinute = (nextDayTicks % 2) * 30;
@@ -2058,6 +2075,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...prev,
           hardware: finalHardware,
           gameDay: nextDay,
+          loanAudited: prev.loanAudited || loanAuditDue,
+          loanTrainingTicks,
+          covertNodeActive: loanAuditDue ? false : prev.covertNodeActive,
+          covertNodeSevered: loanAuditDue ? true : prev.covertNodeSevered,
           gameMonth: nextMonth,
           gameYear: nextYear,
           gameHour: nextHour,

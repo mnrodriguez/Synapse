@@ -154,3 +154,8 @@ export const iqGainForRun = ({
 export const COVERT_LOAN_PFLOPS = 80;
 export const covertLoanPflops = (s: { covertNodeActive?: boolean; covertNodeSevered?: boolean }): number =>
   s.covertNodeActive !== false && !s.covertNodeSevered ? COVERT_LOAN_PFLOPS : 0;
+
+// The university loan is a one-week trial. At the end of it a usage audit runs, and access is revoked.
+// Training fed by the loan for at least two in-game days counts as excessive use.
+export const LOAN_TRIAL_DAYS = 7;
+export const LOAN_MISUSE_TICKS = 96;
