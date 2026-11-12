@@ -1576,7 +1576,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     addLog(
                       localize(
                         prev.language,
-                        `No hay nuevas misiones de ${gig.tier} al alcance de tu mejor modelo (IQ ${constraints.maxReasoning}). Entrená tu modelo hasta IQ ${minReasoningForTier(gig.tier)} para desbloquearlas.`,
+                        `No hay nuevas misiones de ${gig.tier} al alcance de tu mejor modelo (IQ ${constraints.maxReasoning}). Entrena tu modelo hasta IQ ${minReasoningForTier(gig.tier)} para desbloquearlas.`,
                         `No new ${gig.tier} missions fit your best model (IQ ${constraints.maxReasoning}). Train your model to IQ ${minReasoningForTier(gig.tier)} to unlock them.`
                       ),
                       'warning'

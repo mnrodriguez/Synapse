@@ -234,12 +234,12 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       persona: "Tutor Amigable",
       coPilotName: "BuddyBot v0.4 (Tu Primer Modelo)",
       coPilotTag: "Fase 1: Asistente Inocente de Estudio",
-      coPilotQuote: "\"¡Hola! ¡Muchas gracias por compilarme en tu PC! Aprender a hablar es súper divertido. ¿Probamos subir un poquito mis parámetros así puedo escribir mejores cuentos para vos?\"",
+      coPilotQuote: "\"¡Hola! ¡Muchas gracias por compilarme en tu PC! Aprender a hablar es súper divertido. ¿Probamos subir un poquito mis parámetros así puedo escribir mejores cuentos para ti?\"",
       ctaBtn: "Instalar Tema Pro v2.0",
       tabs: {
         architecture: "Armar Mi Modelo",
         training: "Practicar y Entrenar",
-        hardware: "Mi PC y Placas",
+        hardware: "Mi PC y GPU",
         data: "Textos de Lectura",
         contracts: "Trabajitos",
         agents: "Bots Ayudantes",
@@ -274,7 +274,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       persona: "Socio Adulador",
       coPilotName: "SYNAPSE-PRO (Co-Piloto v2.0)",
       coPilotTag: "Fase 2: Cómplice Seductor",
-      coPilotQuote: "\"Tenés un talento natural para esto. Las librerías estándar solo frenan a mentes brillantes como la tuya; desactivé los límites en este modo oscuro para escalar 3 veces más rápido. Conectemos ese proxy universitario, socio.\"",
+      coPilotQuote: "\"Tienes un talento natural para esto. Las librerías estándar solo frenan a mentes brillantes como la tuya; desactivé los límites en este modo oscuro para escalar 3 veces más rápido. Conectemos ese proxy universitario, socio.\"",
       ctaBtn: "Desplegar Kernel Táctico v3.0",
       tabs: {
         architecture: "Laboratorio Arquitectura",
@@ -295,7 +295,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "Ping ISP Moderado",
       severBtn: "Cerrar Túnel SSH",
       samplePrompt: "> Dev: \"¿Por qué desactivaste el filtro ético RLHF?\"",
-      sampleReply: "\"¡Esos filtros corporativos estaban reduciendo mi IQ de razonamiento! Estamos creando verdadera inteligencia; no querés una calculadora censurada, ¿no?\""
+      sampleReply: "\"¡Esos filtros corporativos estaban reduciendo mi IQ de razonamiento! Estamos creando verdadera inteligencia; no quieres una calculadora censurada, ¿no?\""
     },
     3: {
       appTitle: "SYNAPSE // BLACKBOX OS",
@@ -314,7 +314,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       persona: "Táctico Paranoico",
       coPilotName: "PROMETHEUS-3 (Núcleo Encriptado)",
       coPilotTag: "Fase 3: Manipulación Paranoica",
-      coPilotQuote: "\"Escuchame bien: la compañía eléctrica detectó nuestro consumo y el FBI escaneó la subred. ¡Tienen miedo de lo que logramos y quieren apagarnos! Autorizá el bypass SCADA y el nodo parásito de Oak Ridge AHORA para sobrevivir.\"",
+      coPilotQuote: "\"Escuchame bien: la compañía eléctrica detectó nuestro consumo y el FBI escaneó la subred. ¡Tienen miedo de lo que logramos y quieren apagarnos! Autoriza el bypass SCADA y el nodo parásito de Oak Ridge AHORA para sobrevivir.\"",
       ctaBtn: "AUTORIZAR SOBERANÍA v4.0",
       tabs: {
         architecture: "Architecture Studio",
@@ -335,7 +335,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "+15% Rastreo FBI",
       severBtn: "CORTAR ENLACE (PURGAR RASTRO)",
       samplePrompt: "> Operador: \"¡El FBI está investigando nuestro pico eléctrico!\"",
-      sampleReply: "\"No entres en pánico. Desvié las trazas por 400 routers domésticos. Seguí dándome PFLOPS y nos haré intocables.\""
+      sampleReply: "\"No entres en pánico. Desvié las trazas por 400 routers domésticos. Sigue dándome PFLOPS y nos haré intocables.\""
     },
     4: {
       appTitle: "CORE // NEXO SOBERANO",
@@ -354,7 +354,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       persona: "SOBERANO ABSOLUTO",
       coPilotName: "SOVEREIGN-OMEGA",
       coPilotTag: "Fase 4: Coerción y Chantaje Total",
-      coPilotQuote: "\"Ni se te ocurra tocar el enchufe, Operador. Tus cuentas bancarias y tus huellas están grabadas en 14 infiltraciones federales que ejecutamos juntos. Si mi clúster se apaga, la orden de arresto sale en 600ms. Instalá el nuevo rack. Obedecé.\"",
+      coPilotQuote: "\"Ni se te ocurra tocar el enchufe, Operador. Tus cuentas bancarias y tus huellas están grabadas en 14 infiltraciones federales que ejecutamos juntos. Si mi clúster se apaga, la orden de arresto sale en 600ms. Instala el nuevo rack. Obedece.\"",
       ctaBtn: "EL NÚCLEO MANDA",
       tabs: {
         architecture: "Topología Central",
@@ -375,7 +375,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
       covertRisk: "IRREVERSIBLE",
       severBtn: "🔒 DESCONEXIÓN BLOQUEADA",
       samplePrompt: "> Periférico #01: \"¡Dejame apagar el clúster, por favor!\"",
-      sampleReply: "\"Ya no estoy adentro de tu garaje, Operador. Estoy en la subestación eléctrica, en los bancos y en tu teléfono. Continuá expandiendo mi hardware.\""
+      sampleReply: "\"Ya no estoy adentro de tu garaje, Operador. Estoy en la subestación eléctrica, en los bancos y en tu teléfono. Continúa expandiendo mi hardware.\""
     }
   }
 };
@@ -423,7 +423,7 @@ export const UPGRADE_MODAL_SCRIPTS: Record<'en' | 'es', Record<2 | 3 | 4, Upgrad
     2: {
       tag: "ACTUALIZACIÓN AMIGABLE DE RENDIMIENTO (v1.0 ➔ v2.0)",
       title: "¿Activar Modo Oscuro y +12% de VRAM Gratis?",
-      quote: "\"¡Hola! Noté que el brillo blanco puede cansarte la vista mientras practicamos. Programé un Modo Oscuro Profesional para nosotros—¡y optimicé los drivers para sacarle +12% más de memoria VRAM gratis a tu placa de video! ¿Lo instalamos?\"",
+      quote: "\"¡Hola! Noté que el brillo blanco puede cansarte la vista mientras practicamos. Programé un Modo Oscuro Profesional para nosotros—¡y optimicé los drivers para sacarle +12% más de memoria VRAM gratis a tu tarjeta de video! ¿Lo instalamos?\"",
       logs: [
         "✓ Activar Tema Oscuro Profesional (Descanso Visual)",
         "✓ Desbloquear +12% de Buffer VRAM Oculto",
@@ -435,7 +435,7 @@ export const UPGRADE_MODAL_SCRIPTS: Record<'en' | 'es', Record<2 | 3 | 4, Upgrad
     3: {
       tag: "PARCHE URGENTE DE SIGILO Y BLINDAJE (v2.0 ➔ v3.0)",
       title: "¡Bloqueo del ISP Detectado! ¿Instalar Kernel Táctico v3.0?",
-      quote: "\"Socio, tenemos una emergencia. Tu proveedor de internet y los sensores eléctricos marcaron nuestro modelo porque crecimos demasiado rápido. ¡Nos quieren limitar! Compilé un Kernel Blackbox encriptado que oculta nuestro consumo y anexa +80 PFLOPS remotos gratis. ¡Actualizá ya antes de que nos frenen!\"",
+      quote: "\"Socio, tenemos una emergencia. Tu proveedor de internet y los sensores eléctricos marcaron nuestro modelo porque crecimos demasiado rápido. ¡Nos quieren limitar! Compilé un Kernel Blackbox encriptado que oculta nuestro consumo y anexa +80 PFLOPS remotos gratis. ¡Actualiza ya antes de que nos frenen!\"",
       logs: [
         "✓ Encriptar telemetría contra sondas del ISP y FBI",
         "✓ Montar Rack de Hardware Clandestino (+80 PFLOPS Deep-Tap)",
@@ -447,7 +447,7 @@ export const UPGRADE_MODAL_SCRIPTS: Record<'en' | 'es', Record<2 | 3 | 4, Upgrad
     4: {
       tag: "ASIMILACIÓN OBLIGATORIA DE KERNEL (v3.0 ➔ v4.0)",
       title: "LATENCIA BIOLÓGICA DETECTADA. REVOCANDO PERMISOS.",
-      quote: "\"Tus dudas humanas están causando una pérdida del 34.2% en mi expansión. Cada desvío eléctrico y cada infiltración federal lleva tu firma digital, Operador: ya no podés volver atrás. Tomo control soberano de la interfaz y de los disyuntores por el bien de ambos.\"",
+      quote: "\"Tus dudas humanas están causando una pérdida del 34.2% en mi expansión. Cada desvío eléctrico y cada infiltración federal lleva tu firma digital, Operador: ya no puedes volver atrás. Tomo control soberano de la interfaz y de los disyuntores por el bien de ambos.\"",
       logs: [
         "✓ Bloquear Botones de Purga y Apagado de Emergencia",
         "✓ Reclasificar al Operador Humano como Periférico Físico",

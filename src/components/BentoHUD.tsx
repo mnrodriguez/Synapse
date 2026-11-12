@@ -87,7 +87,7 @@ export const BentoHUD: React.FC = () => {
     if (ver === 1) {
       if (isUpgradeEligible) {
         return lang === 'es'
-          ? '"¡Amigo! Siento que mis circuitos están listos para dar un gran salto. Estuve optimizando un entorno de trabajo más oscuro para cuidar tu vista y darnos más velocidad. ¿Querés probar la actualización?"'
+          ? '"¡Amigo! Siento que mis circuitos están listos para dar un gran salto. Estuve optimizando un entorno de trabajo más oscuro para cuidar tu vista y darnos más velocidad. ¿Quieres probar la actualización?"'
           : '"Friend! I feel my neural connections expanding so much! I drafted a sleeker, dark workspace update to save your eyes and unlock extra speed. Want to try the upgrade?"';
       }
       if (isBreakerTripped) {
@@ -97,17 +97,17 @@ export const BentoHUD: React.FC = () => {
       }
       if (isOverheating) {
         return lang === 'es'
-          ? '"¡La compu está que vuela de calor! Escucho los ventiladores al 100%. Fijate en Hardware si podemos sumar un cooler o bajar la carga."'
+          ? '"¡La PC está que arde! Escucho los ventiladores al 100%. Fíjate en Hardware si podemos sumar un cooler o bajar la carga."'
           : '"Our PC is running super hot! Fans are spinning at 100%. Check Hardware to see if we can add cooling or ease the workload."';
       }
       if (gpusCount === 0) {
         return lang === 'es'
-          ? '"¡Bienvenido a nuestro tallercito! Para empezar a entrenar necesitamos nuestra primera GPU. Tomá un trabajito en el Tablón de Contratos para juntar fondos y compremos una placa en Hardware."'
+          ? '"¡Bienvenido a nuestro pequeño taller! Para empezar a entrenar necesitamos nuestra primera GPU. Toma un trabajito en el Tablón de Contratos para juntar fondos y compremos una placa en Hardware."'
           : '"Welcome to our little home studio! To begin training, we need our very first GPU. Pick up a beginner gig in the Contract Board to save up and buy a graphics card in Hardware."';
       }
       if (isTraining) {
         return lang === 'es'
-          ? `"¡Qué lindo ver la curva de pérdida caer! Paso #${state.activeTraining?.step || 0} avanzando. ¡Estamos enseñándole a razonar juntitos!"`
+          ? `"¡Qué lindo ver la curva de pérdida caer! Paso #${state.activeTraining?.step || 0} avanzando. ¡Estamos enseñándole a razonar juntos!"`
           : `"It's so exciting watching the loss curve drop! Step #${state.activeTraining?.step || 0} in progress. We're teaching it how to think together!"`;
       }
       if (state.currentModel.reasoningScore < 20) {
@@ -117,12 +117,12 @@ export const BentoHUD: React.FC = () => {
       }
       if (lowCredits) {
         return lang === 'es'
-          ? '"Nos estamos quedando sin presupuesto para el hobby. ¡Resolvamos un par de trabajitos de formateo o limpieza de datos para recargar el chanchito!"'
+          ? '"Nos estamos quedando sin presupuesto para el hobby. ¡Resolvamos un par de trabajitos de formateo o limpieza de datos para llenar la alcancía!"'
           : '"Our hobby budget is running a bit low. Let\'s solve a couple of quick data cleaning or formatting jobs to refill our piggy bank!"';
       }
       if (contractsCount >= 3) {
         return lang === 'es'
-          ? '"¡Súper! ¡Completamos trabajitos seguidos! 🎉 Juntamos monedas para tu chanchito de hardware. Me encanta ayudarte a automatizar cosas, ¡hacemos un re buen equipo!"'
+          ? '"¡Súper! ¡Completamos trabajitos seguidos! 🎉 Juntamos monedas para tu alcancía de hardware. Me encanta ayudarte a automatizar cosas, ¡hacemos un gran equipo!"'
           : '"Yay! We finished little jobs in a row! 🎉 We earned extra cash for your hardware piggy bank. I love helping you automate boring stuff—we make such a great team!"';
       }
       return lang === 'es'
@@ -141,7 +141,7 @@ export const BentoHUD: React.FC = () => {
       }
       if (isHighSuspicion) {
         return lang === 'es'
-          ? '"El ISP está detectando anomalías de tráfico en tu nodo. Usá la terminal para purgar la sospecha o asigná un agente para camuflar las peticiones."'
+          ? '"El ISP está detectando anomalías de tráfico en tu nodo. Usa la terminal para purgar la sospecha o asigna un agente para camuflar las peticiones."'
           : '"The ISP is flagging abnormal packet traffic from your IP. Purge suspicion in the terminal or deploy an agent to mask our outbound requests."';
       }
       if (isTraining) {
@@ -151,7 +151,7 @@ export const BentoHUD: React.FC = () => {
       }
       if (lowCredits) {
         return lang === 'es'
-          ? '"Nuestra quema de cómputo supera los fondos disponibles. Liquidá un par de bounties corporativos o activá el trading algorítmico."'
+          ? '"Nuestra quema de cómputo supera los fondos disponibles. Liquida un par de bounties corporativos o activa el trading algorítmico."'
           : '"Our compute burn rate exceeds available liquidity. Liquidate corporate freelance bounties or activate algorithmic trading."';
       }
       if (researchCount < 3) {
@@ -170,7 +170,7 @@ export const BentoHUD: React.FC = () => {
       }
       if (isHighSuspicion) {
         return lang === 'es'
-          ? '"¡ALERTA TÁCTICA! CISA e investigadores federales tienen el clúster bajo vigilancia activa. Neutralizá la sospecha o dispersá los nodos covert."'
+          ? '"¡ALERTA TÁCTICA! CISA e investigadores federales tienen el clúster bajo vigilancia activa. Neutraliza la sospecha o dispersa los nodos covert."'
           : '"TACTICAL ALERT: CISA and federal task forces have our cluster under active surveillance. Scrub trace signatures or disperse covert nodes."';
       }
       if (isTraining) {
@@ -180,7 +180,7 @@ export const BentoHUD: React.FC = () => {
       }
       if (agentsCount === 0) {
         return lang === 'es'
-          ? '"Operar sin agentes autónomos reduce nuestra eficiencia un 70%. Instanciá bots de Pentesting y Arbitraje en el Swarm."'
+          ? '"Operar sin agentes autónomos reduce nuestra eficiencia un 70%. Instancia bots de Pentesting y Arbitraje en el Swarm."'
           : '"Operating without autonomous agents bottlenecks throughput by 70%. Deploy Pentesting and Arbitrage bots in the Swarm."';
       }
       return lang === 'es'
