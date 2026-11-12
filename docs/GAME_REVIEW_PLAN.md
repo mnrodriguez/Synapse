@@ -51,7 +51,11 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 4 | R-5 fichas de hardware con precisión (FP32, BF16, FP8) y fuente (dato, estimado, proyección, ficción); el kit solar de $55 pasa a un segundo circuito de la casa | Aplicado |
 | 4 | R-7 el tablero y el inicio exigen un solo modelo que cumpla parámetros, puntaje y topología; una misión fallida explica la probabilidad, la tirada y los dos puntos más débiles del equipo | Aplicado |
 | 4 | H-4 cancelar la v4 falla a la vista (alerta de acceso denegado, también en pantallas táctiles) | Aplicado |
-| 5 | Base técnica | Pendiente |
+| 5 | D-5 limpieza: paquete `synapse`, sin `express`/`dotenv`/`motion`/`tsx`/`esbuild`/`autoprefixer`, sin restos de AI Studio | Aplicado |
+| 5 | D-4 pestañas y diálogos grandes bajo demanda, SDK de Gemini solo con clave propia, Firebase y React en bloques propios: el código del juego al arrancar pasa de 2,0 MB a 448 kB | Aplicado |
+| 5 | L-7 guardado en `persistence/saveState.ts` con `SAVE_SCHEMA_VERSION`, historial de esquemas y tests de migración (encontraron un error con el modelo por defecto) | Aplicado |
+| 5 | T-2 mensajes en un solo idioma traducidos, con el nombre de la investigación en lugar de su id | Aplicado |
+| 5 | D-1 dividir `GameContext` (tick y acciones en módulos puros) · T-4 catálogo de textos | Pendiente |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).
 

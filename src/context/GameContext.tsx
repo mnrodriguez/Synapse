@@ -224,6 +224,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const localSaveTimerRef = useRef<number | null>(null);
   const lastLocalSaveAtRef = useRef(0);
 
+  // Names a locked item's research by its title, and counts campaign days from 1 like the HUD.
+  const researchName = (id: string | undefined, lang: 'es' | 'en'): string => {
+    const node = id ? stateRef.current.researchTree.find(n => n.id === id) : undefined;
+    if (node) return `"${localizedResearch(lang, node).title}"`;
+    return lang === 'es' ? 'la tecnología necesaria' : 'the required technology';
+  };
+  const campaignDayLabel = (days: number | undefined, lang: 'es' | 'en'): string =>
+    typeof days === 'number' ? String(days + 1) : (lang === 'es' ? 'indicado' : 'shown');
+
   const addLog = useCallback((message: string, type: TerminalLog['type'] = 'info') => {
     const newLog: TerminalLog = {
       id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -519,7 +528,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .map(agent => state.savedModels.find(model => model.id === agent.modelId))
         .filter((model): model is ModelArchitecture => !!model);
       if (!mission || team.length === 0 || teamModels.length !== team.length) {
-        addLog('Mission AI assessment unavailable: mission, team, or assigned model is missing. Keeping the local estimate.', 'warning');
+        addLog(localize(stateRef.current.language, 'Evaluación de la misión no disponible: falta la misión, el equipo o el modelo asignado. Se mantiene la estimación local.', 'Mission AI assessment unavailable: mission, team, or assigned model is missing. Keeping the local estimate.'), 'warning');
         setState(prev => {
           const prevGigs = prev.activeGigs || (prev.activeGig ? [prev.activeGig] : []);
           const updatedGigs = prevGigs.map(g => g.runId === missionRunId ? {
@@ -605,7 +614,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
         });
         addLog(
-          `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${formatGameTime(totalDuration)}, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`,
+          localize(stateRef.current.language,
+            `${providerLabel} evaluó [${mission.title}]: ${assessment.efficiencyPercent}% de eficiencia, ${formatGameTime(totalDuration)}, ${Math.round(assessment.successProbability * 100)}% de éxito. ${assessment.summary}`,
+            `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${formatGameTime(totalDuration)}, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`),
           'info'
         );
       }).catch(error => {
@@ -808,7 +819,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     if (!isProgressionUnlocked(facility, current)) {
       addLog(
-        `Facility upgrade locked: fund ${facility.requiredResearchId ?? 'the relevant technology'} or reach campaign day ${facility.availableAfterDays ?? 'later'}.`,
+        localize(stateRef.current.language,
+          `Mejora de instalación bloqueada: financia ${researchName(facility.requiredResearchId, 'es')} o espera al día ${campaignDayLabel(facility.availableAfterDays, 'es')} de campaña.`,
+          `Facility upgrade locked: fund ${researchName(facility.requiredResearchId, 'en')} or wait for campaign day ${campaignDayLabel(facility.availableAfterDays, 'en')}.`),
         'warning'
       );
       return false;
@@ -1880,7 +1893,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       !isProgressionUnlocked(item, stateRef.current)
     ) {
       addLog(
-        `Hardware locked: research ${item.requiredResearchId ?? 'the relevant technology'} or reach campaign day ${item.availableAfterDays ?? 'later'} and meet the Singularity requirement.`,
+        localize(stateRef.current.language,
+          `Hardware bloqueado: investiga ${researchName(item.requiredResearchId, 'es')} o espera al día ${campaignDayLabel(item.availableAfterDays, 'es')} de campaña, y alcanza el progreso requerido.`,
+          `Hardware locked: research ${researchName(item.requiredResearchId, 'en')} or wait for campaign day ${campaignDayLabel(item.availableAfterDays, 'en')}, and reach the required progress.`),
         'warning'
       );
       return false;
@@ -1924,7 +1939,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (ds.unlocked) return false;
     if (!isProgressionUnlocked(ds, stateRef.current)) {
       addLog(
-        `Data engine locked: research ${ds.requiredResearchId ?? 'the relevant technology'} or reach campaign day ${ds.availableAfterDays ?? 'later'}.`,
+        localize(stateRef.current.language,
+          `Motor de datos bloqueado: investiga ${researchName(ds.requiredResearchId, 'es')} o espera al día ${campaignDayLabel(ds.availableAfterDays, 'es')} de campaña.`,
+          `Data engine locked: research ${researchName(ds.requiredResearchId, 'en')} or wait for campaign day ${campaignDayLabel(ds.availableAfterDays, 'en')}.`),
         'warning'
       );
       return false;
@@ -2075,7 +2092,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         !isProgressionUnlocked(getModelOptionRequirement(field, value), stateRef.current)
       ) {
         addLog(
-          `Model setting locked: fund its prerequisite research or advance to campaign day ${getModelOptionRequirement(field, value).availableAfterDays}.`,
+          localize(stateRef.current.language,
+            `Opción del modelo bloqueada: financia la investigación previa o espera al día ${campaignDayLabel(getModelOptionRequirement(field, value).availableAfterDays, 'es')} de campaña.`,
+            `Model setting locked: fund its prerequisite research or wait for campaign day ${campaignDayLabel(getModelOptionRequirement(field, value).availableAfterDays, 'en')}.`),
           'warning'
         );
         return;
@@ -2086,7 +2105,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         !stateRef.current.dataSources.some(source => source.id === sourceId && source.unlocked)
       );
       if (unavailableSource) {
-        addLog(`Model setting rejected: data engine ${unavailableSource} is not unlocked.`, 'warning');
+        addLog(localize(stateRef.current.language, `Opción rechazada: el motor de datos ${unavailableSource} no está desbloqueado.`, `Model setting rejected: data engine ${unavailableSource} is not unlocked.`), 'warning');
         return;
       }
     }
@@ -2109,7 +2128,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           stateRef.current
         )
       ) {
-        addLog('Advanced sampling controls unlock with LoRA research or on campaign day 12.', 'warning');
+        addLog(localize(stateRef.current.language, 'Los controles avanzados de muestreo se desbloquean con la investigación LoRA o el día 31 de campaña.', 'Advanced sampling controls unlock with LoRA research or on campaign day 31.'), 'warning');
         return;
       }
     }
@@ -4081,7 +4100,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       };
     });
     if (claimed) {
-      addLog(`[OBJETIVO COBRADO] +$${reward.toLocaleString()} CR`, 'success');
+      addLog(localize(stateRef.current.language, `[OBJETIVO COBRADO] +$${reward.toLocaleString()} CR`, `[GOAL CLAIMED] +$${reward.toLocaleString()} CR`), 'success');
     }
   }, [addLog]);
 
