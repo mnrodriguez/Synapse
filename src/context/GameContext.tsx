@@ -103,7 +103,7 @@ const agentReasoningFactor = (score: number): number => Math.max(0.5, score / 20
 const agentParamBonus = (params: number): number => Math.min(2.5, 1 + params / 50_000_000);
 const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 7.5)));
 import { evaluateMissionTeam, findAutonomousMission } from '../utils/missionEvaluation';
-import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
+import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
 
 interface GameContextType {
   state: GameState;
@@ -1407,7 +1407,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
 
             // Calculate singularity progress jump
-            const singInc = Math.min(0.35, 0.12 + Math.log10(Math.max(1, prev.currentModel.parametersCount / 10_000_000)) * 0.04);
+            // Only real improvement moves the singularity: a run with no score gain adds nothing.
+            const singInc = Math.min(3, bonusReasoning * SINGULARITY_PER_SCORE_POINT);
             singularityProgress = Math.min(100, singularityProgress + singInc);
             reasoningIndex = Math.max(reasoningIndex, upgradedModelReasoning);
 
@@ -1531,6 +1532,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const suspicionAdded = Number((gig.suspicionRisk * 0.25).toFixed(1));
                 watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
                 completedContractsCount += 1;
+                singularityProgress = Math.min(100, singularityProgress + (MISSION_SINGULARITY[gig.tier] ?? 1));
                 if (tutorialStep <= 4) {
                   tutorialStep = 5;
                   tutorialCompleted = true;
@@ -2193,6 +2195,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...prev,
         credits: prev.credits - item.price,
         hardware: updatedHw,
+        // The first unit of each GPU model is a milestone of the build-out.
+        singularityProgress: item.category === 'gpu' && (prev.hardware.find(h => h.id === id)?.count ?? 0) === 0
+          ? Math.min(100, prev.singularityProgress + NEW_GPU_SINGULARITY)
+          : prev.singularityProgress,
         totalComputePflops: metrics.totalComputePflops + prev.borrowedComputePflops,
         activePowerKw: metrics.activePowerKw,
         maxPowerKw: metrics.maxPowerKw,

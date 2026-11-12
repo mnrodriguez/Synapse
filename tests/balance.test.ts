@@ -3,7 +3,7 @@
 import { describe, expect, test } from 'bun:test';
 import { INITIAL_CONTRACTS, DATASET_TIER_CONFIGS, STARTER_TRAINING_DATASET, INITIAL_MODEL } from '../src/utils/constants';
 import { PROCEDURAL_CONTRACT_TEMPLATES } from '../src/services/aiService';
-import { FIRST_MISSION_IQ, UPGRADE_SCORE } from '../src/utils/missionTiers';
+import { FIRST_MISSION_IQ, UPGRADE_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY } from '../src/utils/missionTiers';
 import {
   calculateTrainingProgressPerTick,
   iqGainForRun,
@@ -100,5 +100,11 @@ describe('progression', () => {
     const ticks = 100 / perTick;
     expect(ticks).toBeGreaterThanOrEqual(5);
     expect(ticks).toBeLessThanOrEqual(15);
+  });
+
+  test('v1 singularity budget: training to the v2 score plus ten tier-1 missions covers 80% of 25 points', () => {
+    const fromTraining = (UPGRADE_SCORE[2] - INITIAL_MODEL.reasoningScore) * SINGULARITY_PER_SCORE_POINT;
+    const fromMissions = 10 * MISSION_SINGULARITY.tier1_micro;
+    expect(fromTraining + fromMissions).toBeGreaterThanOrEqual(25 * 0.8);
   });
 });
