@@ -46,7 +46,9 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 3 | UI-6 tamaño mínimo de 11 px y respeto de `prefers-reduced-motion` · móvil: hoja "Más" con las pestañas que no entran en la barra inferior, sin desborde horizontal a 390 px | Aplicado |
 | 3 | H-1 (repaso) títulos de Agentes, Portal, Hardware, ranking y manual por versión; la v1 y la v2 ya no nombran la Singularidad, el enjambre ni el control global | Aplicado |
 | 3 | UI-1 migración de todos los componentes al tema (unas 2.000 clases), remapeos de v1 borrados (123 selectores) y chequeo en CI (`tests/theme.test.ts`) · textos del onboarding sin spoilers | Aplicado |
-| 4 y 5 | Resto del plan | Pendiente |
+| 4 | R-2 corridas con épocas, learning rate, batch y early stopping; curvas de entrenamiento y validación; sobreajuste (puede bajar el puntaje), divergencia, calidad de datos y repetición del dataset; costo de energía antes de lanzar e informe con la lección de cada resultado (`trainingRun.ts`) | Aplicado |
+| 4 | R-4 un solo reloj · R-5 fichas de hardware · R-7 explicación de fallos de misión · H-4 cancelar la v4 falla a la vista | Pendiente (próximo PR) |
+| 5 | Base técnica | Pendiente |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).
 

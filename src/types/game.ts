@@ -1,3 +1,4 @@
+import type { RunPlan, RunOutcome, LearningRatePreset, TrainingConfig } from '../utils/trainingRun';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -59,6 +60,7 @@ export interface ModelArchitecture {
   specializedDomain?: string;
   domainProficiency?: number;
   trainedOnDatasetId?: string;
+  datasetRuns?: Record<string, number>; // completed runs per dataset (more runs on the same data overfit sooner)
 }
 
 export type DatasetDomain = 
@@ -170,7 +172,7 @@ export interface TrainingJob {
   perplexity: number;
   gradientNorm: number;
   progressPercent: number;
-  lossHistory: number[]; // Last 30 data points
+  lossHistory: number[]; // last 80 points: enough for a whole short run
   step: number;
   tokensProcessed: number;
   timeRemainingSeconds: number | null;
@@ -178,6 +180,10 @@ export interface TrainingJob {
   datasetName?: string;
   datasetDomain?: string;
   targetModelType?: 'general' | 'micro_model';
+  // Planned outcome of the run (see utils/trainingRun.ts) and the validation curve it draws.
+  plan?: RunPlan;
+  valLossHistory?: number[];
+  currentValLoss?: number;
 }
 
 export interface SentienceDomain {
@@ -237,12 +243,22 @@ export interface TrainingReport {
   reasoningAfter: number;
   reasoningCeiling: number; // highest reasoning this model size can reach
   finalLoss: number;
+  finalValLoss?: number;
+  outcome?: RunOutcome;
+  epochsRun?: number;
+  epochsPlanned?: number;
+  bestEpoch?: number;
+  learningRate?: LearningRatePreset;
+  energyKwh?: number;
+  energyCost?: number;
 }
 
 // One-time story dialogs (see utils/storyEvents.ts).
 export type StoryEventId = 'loan_warning' | 'loan_audit' | 'loan_audit_misuse' | 'first_power_trip' | 'first_overheat';
 
 export interface GameState {
+  // Settings for the next training run (epochs, learning rate, batch, early stopping).
+  trainingConfig?: TrainingConfig;
   // Story dialogs waiting to be read (the first one is on screen) and the ones already shown.
   pendingStoryEvents?: StoryEventId[];
   seenStoryEvents?: StoryEventId[];

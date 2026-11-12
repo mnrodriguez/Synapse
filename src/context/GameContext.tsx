@@ -93,8 +93,10 @@ import {
 import { agentChatter } from '../utils/agentDialogues';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { canAttemptContainment } from '../utils/epilogue';
+import { planTrainingRun, lossAt, sanitizeTrainingConfig, vramForRun, BATCH_SIZES, DEFAULT_TRAINING_CONFIG, type TrainingConfig } from '../utils/trainingRun';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, storyEventText, LOAN_WARNING_DAY } from '../utils/storyEvents';
 import type { StoryEventId } from '../types/game';
+import { SIMULATED_SECONDS_PER_TICK } from '../utils/training';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, migrateLegacyScore, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
@@ -149,6 +151,7 @@ interface GameContextType {
   completeTutorial: (config: OnboardingConfig) => void;
   dismissTrainingReport: () => void;
   dismissStoryEvent: (alternative?: boolean) => void;
+  setTrainingConfig: (updates: Partial<TrainingConfig>) => void;
   claimGoal: (goalId: string, reward: number) => void;
   fetchLeaderboard: () => Promise<OperativeLeaderboard[]>;
   createAgent: (name: string, role: AgentRole, modelId: string, tools: string[], inferenceParams?: Partial<InferenceParams>) => boolean;
@@ -364,6 +367,7 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     seenStoryEvents: sanitizeStoryEvents(data.seenStoryEvents),
     speedBeforeStoryEvent: typeof data.speedBeforeStoryEvent === 'number' ? data.speedBeforeStoryEvent : null,
     storyChoices: sanitizeStoryEvents(data.storyChoices),
+    trainingConfig: sanitizeTrainingConfig(data.trainingConfig),
     language: isLegacyLanguagePreference
       ? 'en'
       : data.language === 'es' ? 'es' : 'en',
@@ -1379,7 +1383,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (activeTraining && activeTraining.active) {
           // Step progress based on compute PFLOPS vs parameters
           const reservedForMissions = currentActiveGigs.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
-          const progressPerTick = calculateTrainingProgressPerTick({
+          // Runs saved before run plans existed get the default plan.
+          const plan = activeTraining.plan ?? planTrainingRun({
+            currentScore: prev.currentModel.reasoningScore,
+            parametersCount: prev.currentModel.parametersCount,
+            datasetTokens: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS,
+            datasetQuality: 70,
+            priorRunsOnDataset: 0,
+            config: DEFAULT_TRAINING_CONFIG
+          });
+          const progressPerTick = BATCH_SIZES[plan.config.batchSize].speed * calculateTrainingProgressPerTick({
             parametersCount: prev.currentModel.parametersCount,
             tokensCount: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS,
             gpuPflops: gpuComputePflops(prev.hardware),
@@ -1395,12 +1408,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const newStep = activeTraining.step + (pausedByBreaker ? 0 : 1);
           const newProgress = Math.min(100, activeTraining.progressPercent + progressInc);
           
-          // Logarithmic decay of training loss with stochastic jitter
-          const decay = 0.985;
-          const jitter = (Math.random() - 0.48) * 0.04;
+          // Training and validation loss follow the plan's curves, with a little noise
+          // (more with a high learning rate).
+          const epochNow = (newProgress / 100) * plan.config.epochs;
+          const curve = lossAt(plan, epochNow);
+          const jitter = (Math.random() - 0.5) * 0.03 * (plan.config.learningRate === 'high' ? 3 : 1);
           const newLoss = pausedByBreaker
             ? activeTraining.currentLoss
-            : Math.max(0.018, activeTraining.currentLoss * decay + jitter);
+            : Math.max(0.018, curve.train + jitter);
+          const newValLoss = pausedByBreaker
+            ? (activeTraining.currentValLoss ?? newLoss)
+            : Math.max(0.018, curve.val + jitter / 2);
+          const newValHistory = pausedByBreaker
+            ? (activeTraining.valLossHistory ?? [])
+            : [...(activeTraining.valLossHistory ?? []).slice(-79), Number(newValLoss.toFixed(4))];
           const newPerplexity = Number(Math.exp(newLoss).toFixed(3));
           const newGradNorm = pausedByBreaker
             ? activeTraining.gradientNorm
@@ -1408,23 +1429,23 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           const newHistory = pausedByBreaker
             ? activeTraining.lossHistory
-            : [...activeTraining.lossHistory.slice(-24), Number(newLoss.toFixed(4))];
+            : [...activeTraining.lossHistory.slice(-79), Number(newLoss.toFixed(4))];
 
           if (!pausedByBreaker) sound.playEpochTick();
 
-          if (newProgress >= 100) {
-            // Training Converged & Completed!
-            sound.playBreakthrough();
-            
-            // Calculate new reasoning score bonus
-            // IQ gain: diminishing returns toward this model size's ceiling, scaled by data per parameter.
-            // Loss is the in-run signal; capability is limited by the architecture, not by repeated runs.
-            const bonusReasoning = iqGainForRun({
-              currentIq: prev.currentModel.reasoningScore,
-              parametersCount: prev.currentModel.parametersCount,
-              tokensCount: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS
-            });
-            const upgradedModelReasoning = prev.currentModel.reasoningScore + bonusReasoning;
+          // The run ends at the planned epoch: the full length, an early stop or a divergence.
+          if (newProgress >= 100 || (!pausedByBreaker && epochNow >= plan.stopEpoch)) {
+            if (plan.outcome === 'diverged' || plan.outcome === 'overfit') sound.playWarning();
+            else sound.playBreakthrough();
+
+            // Score change decided by the run plan: diminishing returns toward the size ceiling,
+            // scaled by data, epochs, learning rate and quality. Overfitting without early stopping loses points.
+            const bonusReasoning = plan.scoreChange;
+            const upgradedModelReasoning = Math.max(0, Math.round((prev.currentModel.reasoningScore + bonusReasoning) * 10) / 10);
+            const runDatasetId = activeTraining.datasetId || 'dataset_general_corpus';
+            const gpuPowerKw = prev.hardware.reduce((sum, h) => h.category === 'gpu' ? sum + h.powerKw * h.count : sum, 0);
+            const runHours = (newStep * SIMULATED_SECONDS_PER_TICK) / 3600;
+            const energyKwh = Number((gpuPowerKw * runHours).toFixed(2));
             
             const isMicroModel = activeTraining.targetModelType === 'micro_model';
             const matchedDataset = prev.customDatasets.find(d => d.id === activeTraining.datasetId);
@@ -1436,12 +1457,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               modelType: isMicroModel ? 'micro_model' : 'general',
               specializedDomain: isMicroModel ? (activeTraining.datasetDomain || matchedDataset?.domain) : undefined,
               domainProficiency: microProficiency,
-              trainedOnDatasetId: activeTraining.datasetId || 'dataset_general_corpus'
+              trainedOnDatasetId: runDatasetId,
+              datasetRuns: { ...(prev.currentModel.datasetRuns ?? {}), [runDatasetId]: (prev.currentModel.datasetRuns?.[runDatasetId] ?? 0) + 1 }
             };
 
             // Calculate singularity progress jump
             // Only real improvement moves the singularity: a run with no score gain adds nothing.
-            const singInc = Math.min(3, bonusReasoning * SINGULARITY_PER_SCORE_POINT);
+            const singInc = Math.min(3, Math.max(0, bonusReasoning) * SINGULARITY_PER_SCORE_POINT);
             singularityProgress = Math.min(100, singularityProgress + singInc);
             reasoningIndex = Math.max(reasoningIndex, upgradedModelReasoning);
 
@@ -1453,11 +1475,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   : `¡El micro-modelo convergió! [${newCurrentModel.name}] se especializó en [${newCurrentModel.specializedDomain}] con un multiplicador de pericia de ${microProficiency.toFixed(1)}x.`,
                 'success'
               );
+            } else if (plan.outcome === 'diverged') {
+              addLog(
+                localize(prev.language,
+                  `[DIVERGENCIA] La pérdida de [${newCurrentModel.name}] explotó: el learning rate es demasiado alto. La corrida se cortó y el modelo conserva su puntaje (${upgradedModelReasoning}).`,
+                  `[DIVERGENCE] The loss of [${newCurrentModel.name}] exploded: the learning rate is too high. The run was stopped and the model keeps its score (${upgradedModelReasoning}).`),
+                'danger'
+              );
+            } else if (plan.outcome === 'overfit') {
+              addLog(
+                localize(prev.language,
+                  `[SOBREAJUSTE] [${newCurrentModel.name}] memorizó el dataset: la pérdida de validación subió desde la época ${plan.overfitEpoch.toFixed(1)}. Puntaje ${bonusReasoning >= 0 ? '+' : ''}${bonusReasoning} (actual: ${upgradedModelReasoning}).`,
+                  `[OVERFITTING] [${newCurrentModel.name}] memorised the dataset: validation loss rose from epoch ${plan.overfitEpoch.toFixed(1)}. Score ${bonusReasoning >= 0 ? '+' : ''}${bonusReasoning} (now ${upgradedModelReasoning}).`),
+                'warning'
+              );
             } else {
               addLog(
-                prev.language === 'en'
-                  ? `Training converged for [${newCurrentModel.name}]! General evaluation score +${bonusReasoning} (Current: score ${upgradedModelReasoning}).`
-                  : `¡Entrenamiento convergido para [${newCurrentModel.name}]! puntaje de evaluación general +${bonusReasoning} (Actual: puntaje ${upgradedModelReasoning}).`,
+                plan.outcome === 'early_stopped'
+                  ? localize(prev.language,
+                    `[EARLY STOPPING] La validación empezó a subir en la época ${plan.overfitEpoch.toFixed(1)}: la corrida se detuvo y conservó el mejor checkpoint. Puntaje +${bonusReasoning} (actual: ${upgradedModelReasoning}).`,
+                    `[EARLY STOPPING] Validation started rising at epoch ${plan.overfitEpoch.toFixed(1)}: the run stopped and kept the best checkpoint. Score +${bonusReasoning} (now ${upgradedModelReasoning}).`)
+                  : localize(prev.language,
+                    `¡Entrenamiento completo para [${newCurrentModel.name}]! Puntaje de evaluación +${bonusReasoning} (actual: ${upgradedModelReasoning}).`,
+                    `Training complete for [${newCurrentModel.name}]! Evaluation score +${bonusReasoning} (now ${upgradedModelReasoning}).`),
                 'success'
               );
             }
@@ -1469,7 +1509,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               reasoningBefore: prev.currentModel.reasoningScore,
               reasoningAfter: upgradedModelReasoning,
               reasoningCeiling: Math.round(reasoningCeilingFor(prev.currentModel.parametersCount)),
-              finalLoss: Number(newLoss.toFixed(4))
+              finalLoss: Number(newLoss.toFixed(4)),
+              finalValLoss: Number(newValLoss.toFixed(4)),
+              outcome: plan.outcome,
+              epochsRun: Number(Math.min(plan.config.epochs, epochNow).toFixed(1)),
+              epochsPlanned: plan.config.epochs,
+              bestEpoch: Number(plan.bestEpoch.toFixed(1)),
+              learningRate: plan.config.learningRate,
+              energyKwh,
+              energyCost: Number((energyKwh * ELECTRICITY_RATE_PER_KWH).toFixed(2))
             };
             updatedTraining = null; // finished
           } else {
@@ -1481,8 +1529,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               gradientNorm: newGradNorm,
               progressPercent: Number(newProgress.toFixed(1)),
               lossHistory: newHistory,
+              valLossHistory: newValHistory,
+              currentValLoss: Number(newValLoss.toFixed(4)),
+              plan,
               tokensProcessed: activeTraining.tokensProcessed + (pausedByBreaker ? 0 : Math.floor((activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS) * progressInc / 100)),
-              currentEpoch: Math.min(activeTraining.totalEpochs, Math.floor((newProgress / 100) * activeTraining.totalEpochs) + 1),
+              currentEpoch: Math.min(plan.config.epochs, Math.floor(epochNow) + 1),
               timeRemainingSeconds: pausedByBreaker
                 ? activeTraining.timeRemainingSeconds
                 : estimateTrainingSeconds(100 - newProgress, progressInc)
@@ -2494,9 +2545,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       h.category === 'gpu' ? sum + (h.vramGb * h.count) : sum, 0
     );
 
-    if (totalVram < currentState.currentModel.vramRequiredGb) {
+    const runConfig = sanitizeTrainingConfig(currentState.trainingConfig);
+    const runVram = vramForRun(currentState.currentModel.vramRequiredGb, runConfig.batchSize);
+    if (totalVram < runVram) {
       sound.playWarning();
-      addLog(localize(currentState.language, `Error de memoria OOM (Out Of Memory): El modelo requiere ${currentState.currentModel.vramRequiredGb} GB VRAM pero tu clúster solo dispone de ${totalVram} GB. Aplica cuantización (INT8/FP4) o adquiere más GPUs.`, `Out of Memory (OOM) error: Model requires ${currentState.currentModel.vramRequiredGb} GB VRAM, but cluster has only ${totalVram} GB. Apply quantization (INT8/FP4) or acquire more GPUs.`), 'danger');
+      addLog(localize(currentState.language, `Error de memoria OOM (Out Of Memory): con este batch la corrida necesita ${runVram} GB de VRAM y tu clúster tiene ${totalVram} GB. Baja el batch, cuantiza el modelo (INT8/FP4) o compra más GPUs.`, `Out of Memory (OOM) error: with this batch the run needs ${runVram} GB VRAM and your cluster has ${totalVram} GB. Use a smaller batch, quantize the model (INT8/FP4) or buy more GPUs.`), 'danger');
       return false;
     }
 
@@ -2511,8 +2564,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const agentComputeDemand = currentState.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
     const runningActiveGigs = currentState.activeGigs ?? (currentState.activeGig ? [currentState.activeGig] : []);
     const reservedForMission = runningActiveGigs.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
-    const runTokens = targetDataset.tokensCount * 1_000_000;
-    const progressPerTick = calculateTrainingProgressPerTick({
+    const plan = planTrainingRun({
+      currentScore: currentState.currentModel.reasoningScore,
+      parametersCount: currentState.currentModel.parametersCount,
+      datasetTokens: targetDataset.tokensCount * 1_000_000,
+      datasetQuality: targetDataset.qualityScore ?? 70,
+      priorRunsOnDataset: currentState.currentModel.datasetRuns?.[targetDataset.id] ?? 0,
+      config: runConfig
+    });
+    // All epochs are work: tokens × epochs. A bigger batch processes them faster.
+    const runTokens = plan.totalTokens;
+    const progressPerTick = BATCH_SIZES[runConfig.batchSize].speed * calculateTrainingProgressPerTick({
       parametersCount: currentState.currentModel.parametersCount,
       tokensCount: runTokens,
       gpuPflops: gpuComputePflops(currentState.hardware),
@@ -2526,13 +2588,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       modelId: currentState.currentModel.id,
       modelName: currentState.currentModel.name,
       currentEpoch: 1,
-      totalEpochs: isMicro ? 5 : 8,
-      currentLoss: 4.82,
-      initialLoss: 4.82,
-      perplexity: 123.9,
+      totalEpochs: runConfig.epochs,
+      currentLoss: plan.initialLoss,
+      initialLoss: plan.initialLoss,
+      perplexity: Number(Math.exp(plan.initialLoss).toFixed(3)),
       gradientNorm: 1.45,
       progressPercent: 0,
-      lossHistory: [4.82],
+      lossHistory: [plan.initialLoss],
+      valLossHistory: [Number((plan.initialLoss + 0.08).toFixed(4))],
+      currentValLoss: Number((plan.initialLoss + 0.08).toFixed(4)),
+      plan,
       step: 0,
       tokensProcessed: 0,
       timeRemainingSeconds: estimateTrainingSeconds(100, progressPerTick),
@@ -4419,6 +4484,10 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
 
   // Operative confirms the training report; clearing it lets the next run start normally.
   // alternative = true when the player picks the dialog's second choice.
+  const setTrainingConfig = useCallback((updates: Partial<TrainingConfig>) => {
+    setState(prev => ({ ...prev, trainingConfig: sanitizeTrainingConfig({ ...sanitizeTrainingConfig(prev.trainingConfig), ...updates }) }));
+  }, []);
+
   const dismissStoryEvent = useCallback((alternative = false) => {
     sound.playKeyClick();
     const current = stateRef.current;
@@ -4777,6 +4846,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       completeTutorial,
       dismissTrainingReport,
       dismissStoryEvent,
+      setTrainingConfig,
       claimGoal,
       fetchLeaderboard,
       createAgent,
