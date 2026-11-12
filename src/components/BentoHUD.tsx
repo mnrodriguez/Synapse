@@ -146,7 +146,7 @@ export const BentoHUD: React.FC = () => {
       }
       if (isTraining) {
         return lang === 'es'
-          ? `"Optimizando gradientes neuronales (Loss: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). Con esta escala de parámetros, superaremos los modelos de las corporaciones."`
+          ? `"Optimizando gradientes neuronales (pérdida: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). Con esta escala de parámetros, superaremos los modelos de las corporaciones."`
           : `"Optimizing neural gradients (Loss: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). At this parameter scale, we will outperform corporate labs."`;
       }
       if (lowCredits) {

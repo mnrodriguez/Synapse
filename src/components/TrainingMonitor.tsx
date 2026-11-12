@@ -338,7 +338,7 @@ export const TrainingMonitor: React.FC = () => {
             {localize(state.language, 'CURVA DE PÉRDIDA EN TIEMPO REAL (CROSS-ENTROPY LOSS)', 'REAL-TIME LOSS CURVE (CROSS-ENTROPY)')}
           </span>
           <span className="text-emerald-500 font-bold font-mono">
-            {localize(state.language, 'Loss actual:', 'Current loss:')} {job.currentLoss.toFixed(4)}
+            {localize(state.language, 'Pérdida actual:', 'Current loss:')} {job.currentLoss.toFixed(4)}
           </span>
         </div>
 

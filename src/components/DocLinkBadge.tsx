@@ -54,7 +54,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
           } ${className}`}
         >
           <BookOpen className="w-2.5 h-2.5" />
-          <span>DOCS</span>
+          <span>{isEs ? 'GUÍA' : 'DOCS'}</span>
           <ExternalLink className="w-2.5 h-2.5 opacity-70" />
         </span>
       )}

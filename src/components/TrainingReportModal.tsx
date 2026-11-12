@@ -38,7 +38,7 @@ export const TrainingReportModal: React.FC = () => {
           </div>
           <div className="flex justify-between gap-3">
             <span className="mutating-text-muted">{localize(state.language, 'Tipo', 'Type')}</span>
-            <span className="font-bold">{report.isMicroModel ? 'Micro-Model' : 'General'}</span>
+            <span className="font-bold">{report.isMicroModel ? localize(state.language, 'Micro-modelo', 'Micro-model') : 'General'}</span>
           </div>
           <div className="flex justify-between gap-3">
             <span className="mutating-text-muted">{localize(state.language, 'Puntaje de evaluación', 'Evaluation score')}</span>
@@ -63,7 +63,7 @@ export const TrainingReportModal: React.FC = () => {
             </p>
           )}
           <div className="flex justify-between gap-3">
-            <span className="mutating-text-muted">Loss final</span>
+            <span className="mutating-text-muted">{localize(state.language, 'Pérdida final', 'Final loss')}</span>
             <span className="font-bold">{report.finalLoss.toFixed(4)}</span>
           </div>
         </div>

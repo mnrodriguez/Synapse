@@ -959,7 +959,7 @@ export const GenesisOnboarding: React.FC = () => {
                       {localize(state.language, 'PROGRESO DE OPTIMIZACIÓN:', 'OPTIMIZATION PROGRESS:')} {trainingProgress}%
                     </span>
                     <span className="text-emerald-400 font-bold font-mono">
-                      Loss: {simLoss} {simComplete ? localize(state.language, '(CONVERGENCIA OK)', '(CONVERGED)') : ''}
+                      {localize(state.language, 'Pérdida', 'Loss')}: {simLoss} {simComplete ? localize(state.language, '(CONVERGENCIA OK)', '(CONVERGED)') : ''}
                     </span>
                   </div>
 

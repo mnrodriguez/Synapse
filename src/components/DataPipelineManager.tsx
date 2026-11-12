@@ -618,7 +618,7 @@ export const DataPipelineManager: React.FC = () => {
                     >
                       {state.savedModels.map(m => (
                         <option key={m.id} value={m.id}>
-                          {m.name} ({state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} · {m.modelType === 'micro_model' ? 'Micro-Model' : 'General'})
+                          {m.name} ({state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} · {m.modelType === 'micro_model' ? (state.language === 'es' ? 'Micro-modelo' : 'Micro-model') : 'General'})
                         </option>
                       ))}
                     </select>

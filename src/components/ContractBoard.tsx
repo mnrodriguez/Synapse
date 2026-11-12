@@ -997,7 +997,7 @@ export const ContractBoard: React.FC = () => {
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-700/50 hover:border-cyan-400 transition-colors"
                           >
                             <BookOpen className="w-3 h-3 text-cyan-400" />
-                            <span>DOCS</span>
+                            <span>{localize(state.language, 'GUÍA', 'DOCS')}</span>
                             <ExternalLink className="w-2.5 h-2.5 opacity-70" />
                           </a>
                         )}

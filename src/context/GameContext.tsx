@@ -1446,7 +1446,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               addLog(
                 prev.language === 'en'
                   ? `Micro-Model converged! [${newCurrentModel.name}] specialized in [${newCurrentModel.specializedDomain}] with a ${microProficiency.toFixed(1)}x domain reasoning multiplier.`
-                  : `¡Micro-Modelo convergido! [${newCurrentModel.name}] se especializó en [${newCurrentModel.specializedDomain}] con un multiplicador de pericia de ${microProficiency.toFixed(1)}x.`,
+                  : `¡El micro-modelo convergió! [${newCurrentModel.name}] se especializó en [${newCurrentModel.specializedDomain}] con un multiplicador de pericia de ${microProficiency.toFixed(1)}x.`,
                 'success'
               );
             } else {
@@ -1522,7 +1522,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               addLog(
                 prev.language === 'en'
                   ? `[DATA MODULE] Custom dataset generated: "${newDataset.name}" (${newDataset.tokensCount}M tokens, ${newDataset.qualityScore}% purity). Ready for Micro-Model training!`
-                  : `[MOTOR DE DATOS] Dataset personalizado generado: "${newDataset.name}" (${newDataset.tokensCount}M tokens, ${newDataset.qualityScore}% pureza). ¡Listo para entrenar Micro-Modelos!`,
+                  : `[MOTOR DE DATOS] Dataset personalizado generado: "${newDataset.name}" (${newDataset.tokensCount}M tokens, ${newDataset.qualityScore}% pureza). ¡Listo para entrenar Micro-modelos!`,
                 'success'
               );
             } else {
@@ -2574,7 +2574,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addLog(
       currentState.language === 'en'
         ? `Initiating ${isMicro ? 'Micro-Model specialization' : 'pretraining'} for [${currentState.currentModel.name}] on dataset "${targetDataset.name}". Distributing tensors across cluster...`
-        : `Iniciando ${isMicro ? 'especialización de Micro-Modelo' : 'preentrenamiento'} para [${currentState.currentModel.name}] en dataset "${targetDataset.name}". Distribuyendo tensores en el clúster...`,
+        : `Iniciando ${isMicro ? 'especialización de micro-modelo' : 'preentrenamiento'} para [${currentState.currentModel.name}] en dataset "${targetDataset.name}". Distribuyendo tensores en el clúster...`,
       'info'
     );
     return true;
@@ -4072,7 +4072,7 @@ ${text('Singularidad', 'Singularity')}  : ${s.singularityProgress.toFixed(1)}% [
       case 'train':
         if (stateRef.current.activeTraining) {
           const t = stateRef.current.activeTraining;
-          return text(`Corrida en curso: Epoch ${t.currentEpoch}/${t.totalEpochs} | Loss: ${t.currentLoss} | Progreso: ${t.progressPercent}%`, `Training run: epoch ${t.currentEpoch}/${t.totalEpochs} | Loss: ${t.currentLoss} | Progress: ${t.progressPercent}%`);
+          return text(`Corrida en curso: Época ${t.currentEpoch}/${t.totalEpochs} | Pérdida: ${t.currentLoss} | Progreso: ${t.progressPercent}%`, `Training run: epoch ${t.currentEpoch}/${t.totalEpochs} | Loss: ${t.currentLoss} | Progress: ${t.progressPercent}%`);
         }
         startTraining();
         return text(`Iniciando entrenamiento del modelo ${stateRef.current.currentModel.name}...`, `Starting training for model ${stateRef.current.currentModel.name}...`);
