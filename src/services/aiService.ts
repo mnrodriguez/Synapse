@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GoogleGenAI } from '@google/genai';
 import type { AgentInstance, AgentRole, ContractGig, DataSourceNode, DynamicSwarmProposal, GameState, GuardrailConfig, ModelArchitecture, ModelTopology, DataSourceType } from '../types/game';
 import type { Language } from '../utils/i18n';
 import { evaluateAgentCapabilities, evaluateMissionTeam } from '../utils/missionEvaluation';
@@ -171,6 +170,8 @@ async function promptPlayerGemini(request: TextModelRequest, apiKey?: string): P
   if (!key || !consumeGeminiQuota()) return null;
 
   try {
+    // Loaded on demand: most players never use their own key.
+    const { GoogleGenAI } = await import('@google/genai');
     const client = new GoogleGenAI({ apiKey: key });
     const response = await client.models.generateContent({
       model: GEMINI_MODEL,

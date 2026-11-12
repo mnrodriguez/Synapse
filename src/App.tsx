@@ -3,31 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { GameProvider, useGame } from './context/GameContext';
 import { TopNav } from './components/TopNav';
 import { BentoHUD } from './components/BentoHUD';
 import { TrojanUpgradeModal } from './components/TrojanUpgradeModal';
-import { Terminal } from './components/Terminal';
-import { ArchitectureStudio } from './components/ArchitectureStudio';
-import { DataPipelineManager } from './components/DataPipelineManager';
-import { HardwareRack } from './components/HardwareRack';
-import { ContractBoard } from './components/ContractBoard';
-import { ResearchTree } from './components/ResearchTree';
-import { TrainingMonitor } from './components/TrainingMonitor';
-import { SingularityPortal } from './components/SingularityPortal';
-import { LeaderboardModal } from './components/LeaderboardModal';
 import { TrainingReportModal } from './components/TrainingReportModal';
 import { StoryEventModal } from './components/StoryEventModal';
 import { ContainmentEndingModal } from './components/ContainmentEndingModal';
-import { AuthModal } from './components/AuthModal';
-import { HelpManual } from './components/HelpManual';
-import { AgentSandbox } from './components/AgentSandbox';
 import { BreachModal } from './components/BreachModal';
 import { GameOverModal } from './components/GameOverModal';
 import { SingularityTakeoverModal } from './components/SingularityTakeoverModal';
 import { SingularityCrisisModal } from './components/SingularityCrisisModal';
-import { GenesisOnboarding } from './components/GenesisOnboarding';
 import { TutorialMissionBanner } from './components/TutorialMissionBanner';
 import {
   Layers, 
@@ -50,6 +37,23 @@ import { VERSION_PROFILES } from './utils/versionProfiles';
 import { tierForUiVersion } from './utils/missionTiers';
 import { toDisplayProgress, UiVersion } from './utils/singularityGoals';
 import { formatCompute } from './utils/training';
+
+// Tabs and large dialogs load on demand, so the first screen does not wait for the whole game.
+const lazyNamed = <K extends string>(loader: () => Promise<Record<K, React.ComponentType<any>>>, name: K) =>
+  lazy(() => loader().then(module => ({ default: module[name] })));
+const Terminal = lazyNamed(() => import('./components/Terminal'), 'Terminal');
+const ArchitectureStudio = lazyNamed(() => import('./components/ArchitectureStudio'), 'ArchitectureStudio');
+const DataPipelineManager = lazyNamed(() => import('./components/DataPipelineManager'), 'DataPipelineManager');
+const HardwareRack = lazyNamed(() => import('./components/HardwareRack'), 'HardwareRack');
+const ContractBoard = lazyNamed(() => import('./components/ContractBoard'), 'ContractBoard');
+const ResearchTree = lazyNamed(() => import('./components/ResearchTree'), 'ResearchTree');
+const TrainingMonitor = lazyNamed(() => import('./components/TrainingMonitor'), 'TrainingMonitor');
+const SingularityPortal = lazyNamed(() => import('./components/SingularityPortal'), 'SingularityPortal');
+const LeaderboardModal = lazyNamed(() => import('./components/LeaderboardModal'), 'LeaderboardModal');
+const AuthModal = lazyNamed(() => import('./components/AuthModal'), 'AuthModal');
+const HelpManual = lazyNamed(() => import('./components/HelpManual'), 'HelpManual');
+const AgentSandbox = lazyNamed(() => import('./components/AgentSandbox'), 'AgentSandbox');
+const GenesisOnboarding = lazyNamed(() => import('./components/GenesisOnboarding'), 'GenesisOnboarding');
 
 type WorkspaceTab = 
   | 'architecture' 
@@ -272,15 +276,17 @@ const MainGameScreen: React.FC = () => {
 
         {/* Central Workspace Module Panel */}
         <main className="workspace-container flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-4">
-          {activeTab === 'architecture' && <ArchitectureStudio />}
-          {activeTab === 'training' && <TrainingMonitor />}
-          {activeTab === 'hardware' && <HardwareRack />}
-          {activeTab === 'data' && <DataPipelineManager />}
-          {activeTab === 'contracts' && <ContractBoard />}
-          {activeTab === 'agents' && <AgentSandbox />}
-          {activeTab === 'research' && <ResearchTree />}
-          {activeTab === 'singularity' && <SingularityPortal />}
-          {activeTab === 'terminal' && <Terminal />}
+          <Suspense fallback={<div className="p-4 text-xs mutating-text-muted font-mono" role="status">{lang === 'es' ? 'Cargando…' : 'Loading…'}</div>}>
+            {activeTab === 'architecture' && <ArchitectureStudio />}
+            {activeTab === 'training' && <TrainingMonitor />}
+            {activeTab === 'hardware' && <HardwareRack />}
+            {activeTab === 'data' && <DataPipelineManager />}
+            {activeTab === 'contracts' && <ContractBoard />}
+            {activeTab === 'agents' && <AgentSandbox />}
+            {activeTab === 'research' && <ResearchTree />}
+            {activeTab === 'singularity' && <SingularityPortal />}
+            {activeTab === 'terminal' && <Terminal />}
+          </Suspense>
         </main>
       </div>
 
@@ -371,7 +377,7 @@ const MainGameScreen: React.FC = () => {
       <TrojanUpgradeModal />
 
       {/* Onboarding Genesis Protocol Screen */}
-      {!state.hasCompletedOnboarding && <GenesisOnboarding />}
+      {!state.hasCompletedOnboarding && <Suspense fallback={null}><GenesisOnboarding /></Suspense>}
 
       {/* Real-World AI Guardrail Breach Incident Popup */}
       <BreachModal />
@@ -386,12 +392,12 @@ const MainGameScreen: React.FC = () => {
       <GameOverModal />
 
       {/* Dialog Modals */}
-      <HelpManual isOpen={manualOpen} onClose={() => setManualOpen(false)} />
+      {manualOpen && <Suspense fallback={null}><HelpManual isOpen onClose={() => setManualOpen(false)} /></Suspense>}
       <TrainingReportModal />
       <StoryEventModal />
       <ContainmentEndingModal />
-      <LeaderboardModal isOpen={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+      {leaderboardOpen && <Suspense fallback={null}><LeaderboardModal isOpen onClose={() => setLeaderboardOpen(false)} /></Suspense>}
+      {authOpen && <Suspense fallback={null}><AuthModal isOpen onClose={() => setAuthOpen(false)} /></Suspense>}
     </div>
   );
 };
