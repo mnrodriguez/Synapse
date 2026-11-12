@@ -65,7 +65,7 @@ export const ResearchTree: React.FC = () => {
           </span>
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3 text-cyan-400" />
-            {localize(state.language, 'Día de campaña', 'Campaign day')} <strong className="text-cyan-300">{state.campaignDays}</strong>
+            {localize(state.language, 'Día de campaña', 'Campaign day')} <strong className="text-cyan-300">{state.campaignDays + 1}</strong>
           </span>
         </div>
       </div>
@@ -168,7 +168,7 @@ export const ResearchTree: React.FC = () => {
                     <span className={state.campaignDays >= node.availableAfterDays ? 'text-emerald-300' : 'text-cyan-300'}>
                       {state.campaignDays >= node.availableAfterDays
                         ? localize(state.language, 'Disponibilidad temporal alcanzada', 'Timeline availability reached')
-                        : localize(state.language, `Desbloqueo temporal: día ${node.availableAfterDays} (${node.availableAfterDays - state.campaignDays} días)`, `Timeline unlock: day ${node.availableAfterDays} (${node.availableAfterDays - state.campaignDays} days)`) }
+                        : localize(state.language, `Desbloqueo temporal: día ${node.availableAfterDays + 1} (${node.availableAfterDays - state.campaignDays} días)`, `Timeline unlock: day ${node.availableAfterDays + 1} (${node.availableAfterDays - state.campaignDays} days)`) }
                     </span>
                   )}
                 </div>

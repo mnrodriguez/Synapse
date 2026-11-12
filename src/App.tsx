@@ -46,6 +46,7 @@ import {
 import { sound } from './audio/soundManager';
 import { localize } from './utils/i18n';
 import { VERSION_PROFILES } from './utils/versionProfiles';
+import { tierForUiVersion } from './utils/missionTiers';
 import { toDisplayProgress, UiVersion } from './utils/singularityGoals';
 import { formatCompute } from './utils/training';
 
@@ -109,7 +110,8 @@ const MainGameScreen: React.FC = () => {
       id: 'contracts' as WorkspaceTab, 
       label: p.tabs.contracts, 
       icon: Briefcase, 
-      badge: `${state.contracts.filter(c => !c.completed).length}` 
+      // Same count as the board: open contracts of this version's tier.
+      badge: `${state.contracts.filter(c => !c.completed && c.tier === tierForUiVersion(ver)).length}` 
     },
     { 
       id: 'agents' as WorkspaceTab, 

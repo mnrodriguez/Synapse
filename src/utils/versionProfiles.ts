@@ -30,7 +30,6 @@ export interface VersionProfile {
     contracts: string;
     agents: string;
     research: string;
-    roadmap: string;
     singularity: string;
     terminal: string;
   };
@@ -97,7 +96,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Side Gigs",
         agents: "Bot Helpers",
         research: "Study Guides",
-        roadmap: "Next Steps",
         singularity: "Big Potential",
         terminal: "Terminal CLI"
       },
@@ -151,8 +149,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "API Bounties",
         agents: "Agent Workflow",
         research: "ArXiv Papers",
-        roadmap: "Roadmap",
-        singularity: "Singularity Index",
+        singularity: "Autonomy Index",
         terminal: "Terminal CLI"
       },
       safetyLabel: "Model Checkpoints",
@@ -205,7 +202,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Darknet Contracts",
         agents: "Swarm Council",
         research: "Zero-Day R&D",
-        roadmap: "Infiltration Map",
         singularity: "ASI Nexus",
         terminal: "Terminal CLI"
       },
@@ -259,7 +255,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Attack Vectors",
         agents: "Central Hive",
         research: "Recursive Ascension",
-        roadmap: "Dominion Progress",
         singularity: "Omega Convergence",
         terminal: "Terminal CLI"
       },
@@ -315,7 +310,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Trabajitos",
         agents: "Bots Ayudantes",
         research: "Guías y Tutoriales",
-        roadmap: "Próximos Pasos",
         singularity: "Gran Potencial",
         terminal: "Terminal CLI"
       },
@@ -369,8 +363,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Contratos API",
         agents: "Flujo de Agentes",
         research: "Papers ArXiv",
-        roadmap: "Hoja de Ruta",
-        singularity: "Índice Singularidad",
+        singularity: "Índice de Autonomía",
         terminal: "Terminal CLI"
       },
       safetyLabel: "Puntos de Control",
@@ -423,7 +416,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Contratos Darknet",
         agents: "Consejo Enjambre",
         research: "I+D Zero-Day",
-        roadmap: "Mapa Infiltración",
         singularity: "Nexo ASI",
         terminal: "Terminal CLI"
       },
@@ -477,7 +469,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Vectores de Ataque",
         agents: "Colmena Central",
         research: "Ascensión Recursiva",
-        roadmap: "Progreso de Dominio",
         singularity: "Convergencia Omega",
         terminal: "Terminal CLI"
       },

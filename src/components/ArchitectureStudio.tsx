@@ -40,6 +40,7 @@ import {
   LOSS_DOCS 
 } from '../utils/aiDocumentation';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
+import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime, externalComputePflops } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
@@ -576,8 +577,8 @@ export const ArchitectureStudio: React.FC = () => {
             <span className="text-[11px] text-amber-300">
               {localize(
                 state.language,
-                'Módulo de Scraping Bloqueado: Entrena tu modelo general a puntaje ≥ 20 para desbloquear la generación de datasets especializados en la pestaña "Datos & Grafos".',
-                'Data Scraping Locked: Level your general model to Evaluation score ≥ 20 to unlock custom specialized datasets in the "Data & Graphs" tab.'
+                `Módulo de Scraping Bloqueado: Entrena tu modelo general a puntaje ≥ ${DATA_SCRAPING_MIN_SCORE} para desbloquear la generación de datasets especializados en la pestaña "${VERSION_PROFILES.es[(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.data}".`,
+                `Data Scraping Locked: Level your general model to Evaluation score ≥ ${DATA_SCRAPING_MIN_SCORE} to unlock custom specialized datasets in the "${VERSION_PROFILES.en[(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.data}" tab.`
               )}
             </span>
           </div>

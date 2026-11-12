@@ -35,7 +35,7 @@ import { localizedDataSource } from '../utils/gameContentI18n';
 import { DATA_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { isDataSourceProgressionUnlocked } from '../utils/progression';
-import { DATASET_TIER_CONFIGS, DOMAIN_PRESETS } from '../utils/constants';
+import { DATASET_TIER_CONFIGS, DOMAIN_PRESETS, dataSourceUpgradeCost } from '../utils/constants';
 import { formatTrainingDuration } from '../utils/training';
 import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
@@ -183,7 +183,7 @@ export const DataPipelineManager: React.FC = () => {
             {state.dataSources.map(ds => {
               const content = localizedDataSource(state.language, ds);
               const isConnected = state.currentModel.activeDataSources.includes(ds.id);
-              const upgradeCost = Math.round(ds.cost * 1.5 * (ds.level || 1));
+              const upgradeCost = dataSourceUpgradeCost(ds);
               const technologyAvailable = isDataSourceProgressionUnlocked(ds, state);
               const requiredResearch = state.researchTree.find(node => node.id === ds.requiredResearchId);
 
