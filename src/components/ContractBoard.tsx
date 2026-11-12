@@ -41,6 +41,7 @@ import { localizedContract } from '../utils/gameContentI18n';
 import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from '../utils/constants';
 import { generateDynamicContracts } from '../services/aiService';
 import { evaluateMissionTeam, isContractEligibleForTeam } from '../utils/missionEvaluation';
+import { formatCompute } from '../utils/training';
 
 const SQUAD_COLORS = [
   { name: 'Cyan', hex: '#06b6d4', bgClass: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
@@ -420,7 +421,7 @@ export const ContractBoard: React.FC = () => {
             <div className="flex items-center gap-3 text-[11px] text-zinc-400">
               <span className="flex items-center gap-1 text-cyan-300">
                 <Cpu className="w-3 h-3 text-cyan-400" />
-                <span>{runningCompute.toFixed(3)} PFLOPS {localize(state.language, 'asignados', 'allocated')}</span>
+                <span>{formatCompute(runningCompute)} {localize(state.language, 'asignados', 'allocated')}</span>
               </span>
               <span className="flex items-center gap-1 text-amber-300">
                 <Zap className="w-3 h-3 text-amber-400" />
@@ -938,7 +939,7 @@ export const ContractBoard: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="text-zinc-500 text-[10px]">{localize(state.language, 'Demanda de Clúster:', 'Cluster Demand:')}</span>
                           <span className={readiness.hasClusterCompute && readiness.hasClusterPower ? 'text-cyan-300' : 'text-red-400 font-bold'}>
-                            {readiness.computeRequired.toFixed(3)} PFLOPS · +{readiness.missionPowerKw.toFixed(2)} kW
+                            {formatCompute(readiness.computeRequired)} · +{readiness.missionPowerKw.toFixed(2)} kW
                           </span>
                         </div>
 

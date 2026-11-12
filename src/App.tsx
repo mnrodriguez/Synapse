@@ -45,6 +45,7 @@ import { sound } from './audio/soundManager';
 import { localize } from './utils/i18n';
 import { VERSION_PROFILES } from './utils/versionProfiles';
 import { toDisplayProgress, UiVersion } from './utils/singularityGoals';
+import { formatCompute } from './utils/training';
 
 type WorkspaceTab = 
   | 'architecture' 
@@ -91,7 +92,7 @@ const MainGameScreen: React.FC = () => {
       id: 'hardware' as WorkspaceTab, 
       label: p.tabs.hardware, 
       icon: Server, 
-      badge: `${state.totalComputePflops.toFixed(1)}PF` 
+      badge: formatCompute(state.totalComputePflops, true) 
     },
     { 
       id: 'data' as WorkspaceTab, 

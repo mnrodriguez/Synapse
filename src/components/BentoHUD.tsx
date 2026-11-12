@@ -22,6 +22,7 @@ import {
 import { localize } from '../utils/i18n';
 import { sound } from '../audio/soundManager';
 import { toDisplayProgress, UiVersion } from '../utils/singularityGoals';
+import { formatCompute, universityLoanPflops, LOAN_TRIAL_DAYS } from '../utils/training';
 
 export const BentoHUD: React.FC = () => {
   const { state, openUpgradeModal, setLanguage } = useGame();
@@ -224,7 +225,7 @@ export const BentoHUD: React.FC = () => {
 
           <div className="flex items-center gap-2.5 overflow-x-auto min-w-0 whitespace-nowrap text-[11px] font-semibold">
             <span className="text-emerald-500">${Math.round(state.credits).toLocaleString()}</span>
-            <span className="text-cyan-500">{state.totalComputePflops.toFixed(1)} PF</span>
+            <span className="text-cyan-500">{formatCompute(state.totalComputePflops)}</span>
             <span className={isPowerTrip ? 'text-rose-500' : 'mutating-text-muted'}>
               {isPowerTrip ? localize(state.language, '¡DISYUNTOR!', 'BREAKER!') : `${state.activePowerKw.toFixed(1)}/${state.maxPowerKw.toFixed(1)} kW`}
             </span>
@@ -323,9 +324,18 @@ export const BentoHUD: React.FC = () => {
               {p.hud2Title}
             </span>
             <span className="font-mono font-bold mutating-accent-text">
-              {state.totalComputePflops.toFixed(1)} PFLOPS
+              {formatCompute(state.totalComputePflops)}
             </span>
           </div>
+
+          {/* The university loan is shown apart from the operative's own hardware, with the days it has left. */}
+          {universityLoanPflops(state) > 0 && (
+            <div className="text-[10px] font-mono mutating-text-muted">
+              {localize(state.language, 'Incluye nube universitaria', 'Includes university cloud')} +{formatCompute(universityLoanPflops(state))}
+              {' · '}
+              {localize(state.language, 'quedan', 'ends in')} {Math.max(0, LOAN_TRIAL_DAYS - (state.campaignDays || 0))} {localize(state.language, 'días', 'days')}
+            </div>
+          )}
 
           <div className="my-1 space-y-1">
             <div className="flex justify-between text-[11px] font-mono">

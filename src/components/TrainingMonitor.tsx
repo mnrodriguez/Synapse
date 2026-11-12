@@ -19,7 +19,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { gpuComputePflops, formatTrainingTime, covertLoanPflops } from '../utils/training';
+import { gpuComputePflops, formatTrainingTime, externalComputePflops, formatCompute } from '../utils/training';
 import { STARTER_TRAINING_DATASET } from '../utils/constants';
 import { localize } from '../utils/i18n';
 
@@ -78,7 +78,7 @@ export const TrainingMonitor: React.FC = () => {
             </h2>
           </div>
           <div className="flex items-center gap-2 text-[10px] mutating-text-muted">
-            <span>{localize(state.language, 'Cómputo:', 'Compute:')} <strong>{(gpuComputePflops(state.hardware) + state.borrowedComputePflops + covertLoanPflops(state)).toFixed(4)} PFLOPS</strong></span>
+            <span>{localize(state.language, 'Cómputo:', 'Compute:')} <strong>{formatCompute((gpuComputePflops(state.hardware) + state.borrowedComputePflops + externalComputePflops(state)))}</strong></span>
             <span>•</span>
             <span>{localize(state.language, 'VRAM Total:', 'Total VRAM:')} <strong className="text-emerald-500">{totalClusterVram} GB</strong></span>
           </div>
@@ -316,7 +316,7 @@ export const TrainingMonitor: React.FC = () => {
           <div>
             <span className="mutating-text-muted block text-[10px]">{localize(state.language, 'CÓMPUTO ASIGNADO A LA CORRIDA:', 'COMPUTE ALLOCATED TO RUN:')}</span>
             <span className="mutating-accent-text font-bold">
-              {(gpuComputePflops(state.hardware) + state.borrowedComputePflops + covertLoanPflops(state)).toFixed(4)} PFLOPS {localize(state.language, '(GPU instaladas + préstamo)', '(installed GPUs + loan)')}
+              {formatCompute((gpuComputePflops(state.hardware) + state.borrowedComputePflops + externalComputePflops(state)))} {localize(state.language, '(GPU instaladas + préstamo)', '(installed GPUs + loan)')}
             </span>
           </div>
           <div>

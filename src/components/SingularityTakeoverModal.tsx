@@ -21,6 +21,7 @@ import {
 import { sound } from '../audio/soundManager';
 import confetti from 'canvas-confetti';
 import { localize } from '../utils/i18n';
+import { formatCompute } from '../utils/training';
 
 export const SingularityTakeoverModal: React.FC = () => {
   const { state, dismissWorldTakeover, resetProgress } = useGame();
@@ -194,7 +195,7 @@ export const SingularityTakeoverModal: React.FC = () => {
           </div>
           <div>
             <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'Cómputo Máximo' : 'Peak Compute'}</span>
-            <span className="text-base font-bold text-purple-300">{state.totalComputePflops.toFixed(4)} PF</span>
+            <span className="text-base font-bold text-purple-300">{formatCompute(state.totalComputePflops)}</span>
           </div>
           <div>
             <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'IQ de Razonamiento' : 'Reasoning IQ'}</span>

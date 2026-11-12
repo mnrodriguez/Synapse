@@ -93,7 +93,7 @@ import {
   localizedResearch, 
   localizedDomain 
 } from '../utils/gameContentI18n';
-import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, covertLoanPflops, COVERT_LOAN_PFLOPS, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
+import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
 const DEFAULT_TRAINING_TOKENS = 50_000_000;
@@ -1112,11 +1112,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    const isCovertActive = stateRef.current?.covertNodeActive !== false && !stateRef.current?.covertNodeSevered;
-    const covertBonusPflops = isCovertActive ? COVERT_LOAN_PFLOPS : 0;
+    // University loan (v1-v2) or covert node (v3+); never part of the operative's own hardware.
+    const covertBonusPflops = stateRef.current ? externalComputePflops(stateRef.current) : 0;
     const totalPflops = (totalTflops / 1000) + covertBonusPflops;
     return {
-      totalComputePflops: Math.max(0.001, Number(totalPflops.toFixed(2))),
+      // Kept at full precision: a starter GPU is a few thousandths of a PFLOPS. Round only for display.
+      totalComputePflops: Math.max(1e-6, totalPflops),
       activePowerKw: Number(powerDraw.toFixed(2)),
       maxPowerKw: Number(maxPower.toFixed(2)),
       maxCoolingKw: Number(maxCooling.toFixed(2)),
@@ -1211,7 +1212,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const dayIsComplete = currentDayTicks >= 48;
         const campaignDays = prev.campaignDays + (dayIsComplete ? 1 : 0);
         // University loan audit: at the end of the trial week, access is revoked (and misuse is reported).
-        const loanActive = covertLoanPflops(prev) > 0;
+        const loanActive = universityLoanPflops(prev) > 0;
         const loanAuditDue = loanActive && !prev.loanAudited && campaignDays >= LOAN_TRIAL_DAYS;
         const loanTrainingTicks = (prev.loanTrainingTicks ?? 0) + (loanActive && prev.activeTraining ? 1 : 0);
         const loanMisuse = loanTrainingTicks >= LOAN_MISUSE_TICKS;
@@ -1332,7 +1333,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             parametersCount: prev.currentModel.parametersCount,
             tokensCount: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS,
             gpuPflops: gpuComputePflops(prev.hardware),
-            borrowedPflops: borrowedComputePflops + covertLoanPflops(prev),
+            borrowedPflops: borrowedComputePflops + externalComputePflops(prev),
             agentComputeDemand,
             reservedComputePflops: reservedForMissions,
             systemHeatCelsius
@@ -2086,8 +2087,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           gameDay: nextDay,
           loanAudited: prev.loanAudited || loanAuditDue,
           loanTrainingTicks,
-          covertNodeActive: loanAuditDue ? false : prev.covertNodeActive,
-          covertNodeSevered: loanAuditDue ? true : prev.covertNodeSevered,
           gameMonth: nextMonth,
           gameYear: nextYear,
           gameHour: nextHour,
@@ -2467,7 +2466,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       parametersCount: currentState.currentModel.parametersCount,
       tokensCount: runTokens,
       gpuPflops: gpuComputePflops(currentState.hardware),
-      borrowedPflops: currentState.borrowedComputePflops + covertLoanPflops(currentState),
+      borrowedPflops: currentState.borrowedComputePflops + externalComputePflops(currentState),
       agentComputeDemand,
       reservedComputePflops: reservedForMission,
       systemHeatCelsius: currentState.systemHeatCelsius
@@ -4513,7 +4512,9 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       ...prev,
       uiVersion: targetVersion,
       pendingUpgradeModal: null,
-      covertNodeActive: targetVersion >= 3 ? true : prev.covertNodeActive
+      covertNodeActive: targetVersion >= 3 ? true : prev.covertNodeActive,
+      // The v3 kernel brings a fresh covert link, even if the university loan was cut before.
+      covertNodeSevered: targetVersion === 3 ? false : prev.covertNodeSevered
     }));
   }, [addLog]);
 
@@ -4619,8 +4620,8 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     sound.playKeyClick();
     setState(prev => ({
       ...prev,
-      covertNodeActive: false,
-      covertNodeSevered: true,
+      // Before v3 the external compute is the university loan: disconnecting it ends the loan.
+      ...(prev.uiVersion >= 3 ? { covertNodeActive: false, covertNodeSevered: true } : { loanAudited: true }),
       watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 15)
     }));
     addLog(

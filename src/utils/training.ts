@@ -149,11 +149,36 @@ export const iqGainForRun = ({
   return Math.floor(gap * 0.15 * dataFactor);
 };
 
-// Temporary university loan that gives the starter cluster extra compute. It counts toward training while
-// the node is active, and stops counting if it is severed.
-export const COVERT_LOAN_PFLOPS = 80;
-export const covertLoanPflops = (s: { covertNodeActive?: boolean; covertNodeSevered?: boolean }): number =>
-  s.covertNodeActive !== false && !s.covertNodeSevered ? COVERT_LOAN_PFLOPS : 0;
+// External compute is not part of the operative's own hardware and comes in two story-specific forms:
+//  - University loan (v1-v2): a student cloud quota for the first week. The audit at the end of the week
+//    (or disconnecting it) ends it for good.
+//  - Covert node (v3+): an illicit high-capacity link that appears with the v3 kernel and carries trace risk.
+export const UNIVERSITY_LOAN_PFLOPS = 0.02; // 20 TFLOPS, about five starter GPUs
+export const COVERT_NODE_PFLOPS = 80;
+
+interface ExternalComputeState {
+  uiVersion?: number;
+  loanAudited?: boolean;
+  covertNodeActive?: boolean;
+  covertNodeSevered?: boolean;
+}
+
+export const universityLoanPflops = (s: ExternalComputeState): number =>
+  (s.uiVersion ?? 1) <= 2 && !s.loanAudited ? UNIVERSITY_LOAN_PFLOPS : 0;
+
+export const covertNodePflops = (s: ExternalComputeState): number =>
+  (s.uiVersion ?? 1) >= 3 && s.covertNodeActive !== false && !s.covertNodeSevered ? COVERT_NODE_PFLOPS : 0;
+
+export const externalComputePflops = (s: ExternalComputeState): number =>
+  universityLoanPflops(s) + covertNodePflops(s);
+
+// Compute shown with a unit that fits its size, so a starter GPU does not read as 0.0 PFLOPS.
+export const formatCompute = (pflops: number, short = false): string => {
+  const value = Math.max(0, pflops);
+  if (value >= 1000) return `${(value / 1000).toFixed(2)}${short ? 'EF' : ' EFLOPS'}`;
+  if (value >= 1) return `${value.toFixed(2)}${short ? 'PF' : ' PFLOPS'}`;
+  return `${(value * 1000).toFixed(1)}${short ? 'TF' : ' TFLOPS'}`;
+};
 
 // The university loan is a one-week trial. At the end of it a usage audit runs, and access is revoked.
 // Training fed by the loan for at least two in-game days counts as excessive use.

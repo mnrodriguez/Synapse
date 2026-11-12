@@ -34,6 +34,7 @@ import { HARDWARE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { isProgressionUnlocked } from '../utils/progression';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
+import { formatCompute, externalComputePflops, COVERT_NODE_PFLOPS, UNIVERSITY_LOAN_PFLOPS } from '../utils/training';
 
 type HardwareMenuTab = 'compute' | 'thermal_power' | 'facility';
 
@@ -141,7 +142,7 @@ export const HardwareRack: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mutating-sub p-3 rounded-lg text-xs">
             <div>
               <span className="mutating-text-muted text-[11px] block">{t(state.language, 'compute_power')}</span>
-              <span className="mutating-accent-text font-bold text-sm">{state.totalComputePflops.toFixed(4)} PFLOPS</span>
+              <span className="mutating-accent-text font-bold text-sm">{formatCompute(state.totalComputePflops)}</span>
             </div>
             <div>
               <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Memoria VRAM Total', 'Total Cluster VRAM')}</span>
@@ -149,11 +150,11 @@ export const HardwareRack: React.FC = () => {
             </div>
             <div>
               <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Cómputo Reservado', 'Reserved Compute')}</span>
-              <span className="text-amber-500 font-bold text-sm">{activeComputeReservations.toFixed(4)} PFLOPS</span>
+              <span className="text-amber-500 font-bold text-sm">{formatCompute(activeComputeReservations)}</span>
             </div>
             <div>
               <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Cómputo Disponible', 'Available Compute')}</span>
-              <span className="text-emerald-500 font-bold text-sm">{Math.max(0, state.totalComputePflops - activeComputeReservations).toFixed(4)} PFLOPS</span>
+              <span className="text-emerald-500 font-bold text-sm">{formatCompute(Math.max(0, state.totalComputePflops - activeComputeReservations))}</span>
             </div>
           </div>
 
@@ -229,7 +230,7 @@ export const HardwareRack: React.FC = () => {
                 <div className="space-y-1 text-xs font-mono">
                   <div className="flex justify-between">
                     <span className="mutating-text-muted">{localize(state.language, 'Aporte de Cómputo:', 'Compute Added:')}</span>
-                    <span className="font-bold text-emerald-500">+80.00 PFLOPS</span>
+                    <span className="font-bold text-emerald-500">+{formatCompute(ver >= 3 ? COVERT_NODE_PFLOPS : UNIVERSITY_LOAN_PFLOPS)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="mutating-text-muted">{localize(state.language, 'Carga Eléctrica Local:', 'Local Power:')}</span>
@@ -245,7 +246,7 @@ export const HardwareRack: React.FC = () => {
               </div>
 
               <div className="pt-2 border-t border-current/15">
-                {state.covertNodeSevered ? (
+                {externalComputePflops(state) === 0 ? (
                   <div className="p-2 rounded mutating-sub text-center text-xs font-mono mutating-text-muted">
                     {localize(state.language, '[NODO EXTERNO DESCONECTADO]', '[EXTERNAL NODE DISCONNECTED]')}
                   </div>
@@ -660,7 +661,7 @@ export const HardwareRack: React.FC = () => {
                   {t(state.language, 'shadow_compute_description')} Riesgo de detección: <strong className="text-amber-300">{shadowDetectionChance.toFixed(0)}%</strong>. 
                   {state.borrowedComputeSeconds > 0 && (
                     <span className="text-cyan-300 ml-1">
-                      {t(state.language, 'temporary_capacity')}: {state.borrowedComputePflops.toFixed(3)} PFLOPS · {state.borrowedComputeSeconds}s restantes.
+                      {t(state.language, 'temporary_capacity')}: {formatCompute(state.borrowedComputePflops)} · {state.borrowedComputeSeconds}s restantes.
                     </span>
                   )}
                   {state.detentionSeconds > 0 && (
