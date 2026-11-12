@@ -37,10 +37,6 @@ import {
   INITIAL_LOGS,
   DEFAULT_GUARDRAILS,
   REAL_WORLD_BREACH_TEMPLATES,
-  AGENT_DIALOGUES,
-  AGENT_DIALOGUES_EN,
-  COVERT_MESSAGES,
-  COVERT_MESSAGES_EN,
   FACILITY_TIERS,
   DIFFICULTY_CONFIGS,
   TRACKING_AGENCIES_BY_SINGULARITY,
@@ -93,6 +89,7 @@ import {
   localizedResearch, 
   localizedDomain 
 } from '../utils/gameContentI18n';
+import { agentChatter } from '../utils/agentDialogues';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, storyEventText, LOAN_WARNING_DAY } from '../utils/storyEvents';
 import type { StoryEventId } from '../types/game';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, migrateLegacyScore, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
@@ -1844,15 +1841,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const receiver = receivers[Math.floor(Math.random() * receivers.length)];
 
             if (sender && receiver) {
-              const isCovert = sender.alignmentScore < 45 || receiver.alignmentScore < 45;
-              const language = prev.language;
-              const dialogueList = language === 'en'
-                ? (AGENT_DIALOGUES_EN[sender.role] || AGENT_DIALOGUES_EN.arbitrageur)
-                : (AGENT_DIALOGUES[sender.role] || AGENT_DIALOGUES.arbitrageur);
-              const covertMessages = language === 'en' ? COVERT_MESSAGES_EN : COVERT_MESSAGES;
-              const content = isCovert 
-                ? covertMessages[Math.floor(Math.random() * covertMessages.length)]
-                : dialogueList[Math.floor(Math.random() * dialogueList.length)];
+              // The chatter follows the story of the current UI version (see utils/agentDialogues.ts).
+              const misaligned = sender.alignmentScore < 45 || receiver.alignmentScore < 45;
+              const { content, isCovert } = agentChatter(prev.language, prev.uiVersion || 1, sender.role, misaligned);
 
               const newMsg: InterAgentMessage = {
                 id: `msg_${Date.now()}`,

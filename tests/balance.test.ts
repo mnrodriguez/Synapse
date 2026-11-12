@@ -13,6 +13,7 @@ import {
 } from '../src/utils/training';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, LOAN_WARNING_DAY } from '../src/utils/storyEvents';
 import type { GameState } from '../src/types/game';
+import { agentChatter, AGENT_DIALOGUE_ROLES, STORY_LINES_FOR_TESTS, COVERT_LINES_FOR_TESTS } from '../src/utils/agentDialogues';
 
 const STARTER_GPU_PFLOPS = 0.0044; // GTX 1060
 
@@ -146,5 +147,40 @@ describe('story events', () => {
 
   test('the warning comes before the audit', () => {
     expect(LOAN_WARNING_DAY).toBeLessThan(LOAN_TRIAL_DAYS);
+  });
+});
+
+describe('agent dialogues by version', () => {
+  const always = () => 0; // first line of each list, and always below the story share
+  const never = () => 0.999;
+
+  test('every role has lines in both languages', () => {
+    for (const role of ['arbitrageur', 'social_engineer', 'exploit_synth', 'researcher', 'overseer', 'autonomous_coder', 'economist', 'software_engineer', 'network_analyst']) {
+      expect(AGENT_DIALOGUE_ROLES).toContain(role);
+      expect(agentChatter('es', 1, role, false, never).content.length).toBeGreaterThan(0);
+      expect(agentChatter('en', 1, role, false, never).content.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('v1 and v2 never show covert messages, only hints', () => {
+    for (const v of [1, 2]) {
+      for (const lang of ['es', 'en'] as const) {
+        const msg = agentChatter(lang, v, 'researcher', true, always);
+        expect(msg.isCovert).toBe(false);
+        expect(STORY_LINES_FOR_TESTS[lang][v as 1 | 2]).toContain(msg.content);
+      }
+    }
+  });
+
+  test('covert messages appear in v3 only', () => {
+    expect(agentChatter('es', 3, 'researcher', true, always).isCovert).toBe(true);
+    expect(COVERT_LINES_FOR_TESTS.es).toContain(agentChatter('es', 3, 'researcher', true, always).content);
+    expect(agentChatter('es', 4, 'researcher', true, always).isCovert).toBe(false);
+  });
+
+  test('both languages tell the same number of story beats', () => {
+    for (const v of [1, 2, 3, 4] as const) {
+      expect(STORY_LINES_FOR_TESTS.es[v].length).toBe(STORY_LINES_FOR_TESTS.en[v].length);
+    }
   });
 });
