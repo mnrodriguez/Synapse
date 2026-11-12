@@ -40,7 +40,8 @@ export const BentoHUD: React.FC = () => {
   const isPowerTrip = state.powerTripSeconds > 0;
 
   // Determine if next upgrade is available to offer via the Co-Pilot CTA
-  const nextVer = ver < 4 ? ((ver + 1) as 2 | 3 | 4) : null;
+  // After containment the swarm never becomes the Sovereign Core: there is no v4 to offer.
+  const nextVer = ver < 4 && !(ver === 3 && state.containmentAchieved) ? ((ver + 1) as 2 | 3 | 4) : null;
   const reasoningIq = Math.round(Math.min(100, Math.max(0, state.currentModel.reasoningScore ?? 0)) * 10) / 10;
   const isUpgradeEligible = 
     (ver === 1 && state.singularityProgress >= 25 && reasoningIq >= UPGRADE_SCORE[2]) ||
@@ -146,7 +147,7 @@ export const BentoHUD: React.FC = () => {
       }
       if (isTraining) {
         return lang === 'es'
-          ? `"Optimizando gradientes neuronales (Loss: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). Con esta escala de parámetros, superaremos los modelos de las corporaciones."`
+          ? `"Optimizando gradientes neuronales (pérdida: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). Con esta escala de parámetros, superaremos los modelos de las corporaciones."`
           : `"Optimizing neural gradients (Loss: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). At this parameter scale, we will outperform corporate labs."`;
       }
       if (lowCredits) {

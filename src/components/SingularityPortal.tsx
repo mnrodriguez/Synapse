@@ -173,7 +173,11 @@ export const SingularityPortal: React.FC = () => {
                   {objective.done
                     ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
                     : <Circle className="w-3 h-3 shrink-0" />}
-                  {objective.kind === 'contracts' ? 'CONTRACTS' : objective.kind === 'pflops' ? 'COMPUTE' : 'PROGRESS'}
+                  {objective.kind === 'contracts'
+                    ? localize(state.language, 'CONTRATOS', 'CONTRACTS')
+                    : objective.kind === 'pflops'
+                      ? localize(state.language, 'CÓMPUTO', 'COMPUTE')
+                      : localize(state.language, 'PROGRESO', 'PROGRESS')}
                 </span>
                 <span className="font-bold mutating-accent-text">{objective.requirementText}</span>
               </div>

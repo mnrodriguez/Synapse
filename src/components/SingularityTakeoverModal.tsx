@@ -22,6 +22,7 @@ import { sound } from '../audio/soundManager';
 import confetti from 'canvas-confetti';
 import { localize } from '../utils/i18n';
 import { formatCompute } from '../utils/training';
+import { EpilogueReport } from './EpilogueReport';
 
 export const SingularityTakeoverModal: React.FC = () => {
   const { state, dismissWorldTakeover, resetProgress } = useGame();
@@ -186,6 +187,9 @@ export const SingularityTakeoverModal: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* What the player decided, and which controls would have changed the outcome */}
+        <EpilogueReport kind="takeover" />
 
         {/* Final Career Stats */}
         <div className="rounded-lg border border-zinc-800 bg-[#070b12] p-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">

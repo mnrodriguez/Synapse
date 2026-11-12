@@ -321,6 +321,8 @@ export interface GameState {
   singularityCrisisTriggered?: boolean; // 75% crisis dilemma fork
   singularityCrisisResolved?: boolean;
   playerChoseResist?: boolean;
+  containmentAchieved?: boolean; // good ending reached (see utils/epilogue.ts)
+  containmentAcknowledged?: boolean; // the containment ending dialog was closed
   latestCouncilProposal: DynamicSwarmProposal | null;
   guardrails: GuardrailConfig;
   interAgentMessages: InterAgentMessage[];
@@ -515,6 +517,7 @@ export interface BreachIncident {
   options: BreachOption[];
   timestamp: string;
   resolved: boolean;
+  chosenAction?: BreachOption['actionType']; // response picked by the player, for the epilogue
 }
 
 export interface OnboardingConfig {

@@ -20,6 +20,7 @@ import {
 import { sound } from '../audio/soundManager';
 import { EMERGENCY_LOAN_AMOUNT, EMERGENCY_LOAN_REPAYMENT } from '../utils/constants';
 import { formatCompute } from '../utils/training';
+import { EpilogueReport } from './EpilogueReport';
 
 export const GameOverModal: React.FC = () => {
   const { state, takeEmergencyLoan, clearGameOver, resetProgress } = useGame();
@@ -175,6 +176,9 @@ export const GameOverModal: React.FC = () => {
               <span className="font-bold text-emerald-300 text-sm">{formatCompute(state.totalComputePflops)}</span>
             </div>
           </div>
+
+          {/* What the player decided, and which controls would have changed the outcome */}
+          {state.gameOverReason && <EpilogueReport kind={state.gameOverReason} />}
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center justify-end gap-3 pt-2">

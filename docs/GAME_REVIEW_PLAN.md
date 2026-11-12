@@ -37,7 +37,9 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 2 | H-1 títulos, rótulos y objetivo por versión en `VERSION_PROFILES.story`; la v1 y la v2 no nombran la Singularidad ni la subversión | Aplicado |
 | 2 | T-1 español neutro con tuteo · el "IQ" visible pasa a "puntaje de evaluación" | Aplicado |
 | 2 | H-3 ventanas de historia que pausan el juego: aviso del día 5 y auditoría del día 7 del préstamo, primer corte de luz, primer sobrecalentamiento | Aplicado |
-| 2 | H-2 diálogos y misiones por versión · H-5 finales y epílogo | Pendiente |
+| 2 | T-5 y T-3 glosario: "pérdida", "época", "micro-modelo" y tipos de objetivo traducidos en la interfaz en español | Aplicado |
+| 2 | H-2 charla de agentes por versión (`agentDialogues.ts`): pistas sutiles en v1 y v2, canal privado desde v3, reinterpretación en v4 | Aplicado; las misiones ya variaban por versión |
+| 2 | H-5 final de contención alcanzable (cinco controles reales) y epílogo con las decisiones del jugador en todos los finales | Aplicado |
 | 3 a 5 | Resto del plan | Pendiente |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).
