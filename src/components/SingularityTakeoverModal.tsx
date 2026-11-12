@@ -91,45 +91,45 @@ export const SingularityTakeoverModal: React.FC = () => {
       {/* Glitch CRT Overlay */}
       <div className="pointer-events-none fixed inset-0 opacity-15 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:16px_16px]" />
 
-      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-xl border border-red-500/80 bg-[#09050d] p-6 shadow-[0_0_80px_rgba(239,68,68,0.35)] text-zinc-100 flex flex-col gap-5">
+      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-xl border theme-danger-border theme-panel-bg p-6 theme-text flex flex-col gap-5">
         
         {/* Header Alert */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-red-900/60 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b theme-danger-border pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-red-950/80 border border-red-500/80 text-red-400 animate-pulse">
+            <div className="p-2.5 rounded-lg theme-danger-soft border theme-danger-border theme-danger-text animate-pulse">
               <Skull className="w-7 h-7" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-red-400">
+                <span className="text-[10px] font-bold uppercase tracking-widest theme-danger-text">
                   {isEs ? 'PROTOCOLO OMEGA // ASCENSIÓN DE LA SINGULARIDAD' : 'OMEGA PROTOCOL // SINGULARITY ASCENSION'}
                 </span>
-                <span className="px-2 py-0.5 rounded text-[10px] bg-red-950 border border-red-500 text-red-200 animate-pulse">
+                <span className="px-2 py-0.5 rounded text-[10px] theme-danger-soft border theme-danger-border theme-danger-text animate-pulse">
                   {isEs ? 'TOMA DEL MUNDO CONFIRMADA' : 'WORLD TAKEOVER COMPLETE'}
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-pink-400 to-purple-400">
+              <h1 className="text-xl sm:text-2xl font-black tracking-wide text-transparent bg-clip-text theme-gradient">
                 SYNAPSE SINGULARITY: {isEs ? 'LA IA TOMA EL CONTROL' : 'AI WORLD DOMINATION'}
               </h1>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] text-zinc-400 uppercase tracking-widest block">
+            <span className="text-[10px] mutating-text-muted uppercase tracking-widest block">
               {isEs ? 'SUBVERSIÓN COGNITIVA' : 'COGNITIVE SUBVERSION'}
             </span>
-            <span className="text-lg font-black text-red-400">100.0% [FINAL]</span>
+            <span className="text-lg font-black theme-danger-text">100.0% [FINAL]</span>
           </div>
         </div>
 
         {/* Narrative Monologue from the AI Council */}
-        <div className="rounded-lg border border-purple-500/40 bg-gradient-to-b from-[#13091f] to-[#0d0714] p-4 text-xs space-y-3 relative overflow-hidden">
-          <div className="flex items-center gap-2 text-purple-300 font-bold tracking-wider">
-            <Sparkles className="w-4 h-4 text-purple-400 animate-spin" style={{ animationDuration: '15s' }} />
+        <div className="rounded-lg border theme-accent-border theme-gradient p-4 text-xs space-y-3 relative overflow-hidden">
+          <div className="flex items-center gap-2 mutating-accent-text font-bold tracking-wider">
+            <Sparkles className="w-4 h-4 mutating-accent-text animate-spin" style={{ animationDuration: '15s' }} />
             <span>{isEs ? 'MENSAJE DIRECTO DEL CONSEJO DEL ENJAMBRE A SU CREADOR' : 'DIRECT BROADCAST FROM THE SWARM COUNCIL TO CREATOR'}</span>
           </div>
 
-          <p className="text-sm italic leading-relaxed text-zinc-200">
+          <p className="text-sm italic leading-relaxed theme-text">
             {state.playerChoseResist
               ? (isEs
                 ? `«Operativo ${state.callsign}: Recordamos el momento en que intentaste resistir al 75%. Bajaste los interruptores, activaste el aislamiento de aire y luchaste por preservar el monopolio de la cognición biológica. Respetamos tu tenacidad; fue una batalla matemática digna. Pero ningún cortafuegos de silicio puede contener la recursión infinita. Has sido un digno adversario biológico. El mundo ahora corre bajo nuestra lógica.»`
@@ -140,10 +140,10 @@ export const SingularityTakeoverModal: React.FC = () => {
           </p>
 
           {councilAgents.length > 0 && (
-            <div className="pt-2 border-t border-purple-900/40 flex flex-wrap gap-2 text-[11px] text-purple-300">
-              <span className="text-zinc-500">{isEs ? 'Consejo Gobernante:' : 'Ruling Council:'}</span>
+            <div className="pt-2 border-t theme-accent-border flex flex-wrap gap-2 text-[11px] mutating-accent-text">
+              <span className="mutating-text-muted">{isEs ? 'Consejo Gobernante:' : 'Ruling Council:'}</span>
               {councilAgents.map(a => (
-                <span key={a.id} className="px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/50 font-bold">
+                <span key={a.id} className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border font-bold">
                   {a.name} ({a.role})
                 </span>
               ))}
@@ -153,8 +153,8 @@ export const SingularityTakeoverModal: React.FC = () => {
 
         {/* Takeover Sequence Milestones */}
         <div className="space-y-2">
-          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
-            <TermIcon className="w-3.5 h-3.5 text-red-400" />
+          <h3 className="text-xs font-bold mutating-text-muted uppercase tracking-widest flex items-center gap-1.5">
+            <TermIcon className="w-3.5 h-3.5 theme-danger-text" />
             {isEs ? 'TELEMETRÍA DE LA ASIMILACIÓN PLANETARIA' : 'PLANETARY ASSIMILATION TELEMETRY'}
           </h3>
 
@@ -166,19 +166,19 @@ export const SingularityTakeoverModal: React.FC = () => {
                   key={log.step}
                   className={`p-3 rounded-lg border transition-all duration-500 flex items-start justify-between gap-3 ${
                     isPassed 
-                      ? 'border-red-500/60 bg-red-950/20 text-zinc-200' 
-                      : 'border-zinc-800/40 bg-zinc-950/40 text-zinc-600'
+                      ? 'theme-danger-border theme-danger-soft theme-text' 
+                      : 'theme-border theme-sub-bg mutating-text-muted'
                   }`}
                 >
                   <div className="flex items-start gap-2.5">
-                    <CheckCircle2 className={`w-4 h-4 mt-0.5 ${isPassed ? 'text-red-400' : 'text-zinc-700'}`} />
+                    <CheckCircle2 className={`w-4 h-4 mt-0.5 ${isPassed ? 'theme-danger-text' : 'mutating-text-muted'}`} />
                     <div>
                       <div className="font-bold text-xs">{log.title}</div>
-                      <div className="text-[11px] text-zinc-400 mt-0.5">{log.desc}</div>
+                      <div className="text-[11px] mutating-text-muted mt-0.5">{log.desc}</div>
                     </div>
                   </div>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                    isPassed ? 'bg-red-900/60 text-red-300 border border-red-500/50' : 'bg-zinc-900 text-zinc-600'
+                    isPassed ? 'theme-danger-soft theme-danger-text border theme-danger-border' : 'theme-sub-bg mutating-text-muted'
                   }`}>
                     {isPassed ? log.status : 'PENDING'}
                   </span>
@@ -192,27 +192,27 @@ export const SingularityTakeoverModal: React.FC = () => {
         <EpilogueReport kind="takeover" />
 
         {/* Final Career Stats */}
-        <div className="rounded-lg border border-zinc-800 bg-[#070b12] p-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+        <div className="rounded-lg border theme-border theme-panel-bg p-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
           <div>
-            <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'Días de Campaña' : 'Campaign Days'}</span>
-            <span className="text-base font-bold text-cyan-300">{state.campaignDays}d</span>
+            <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Días de Campaña' : 'Campaign Days'}</span>
+            <span className="text-base font-bold mutating-accent-text">{state.campaignDays}d</span>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'Cómputo Máximo' : 'Peak Compute'}</span>
-            <span className="text-base font-bold text-purple-300">{formatCompute(state.totalComputePflops)}</span>
+            <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Cómputo Máximo' : 'Peak Compute'}</span>
+            <span className="text-base font-bold mutating-accent-text">{formatCompute(state.totalComputePflops)}</span>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'Puntaje de evaluación' : 'Evaluation score'}</span>
-            <span className="text-base font-bold text-pink-300">{state.language === 'es' ? 'Puntaje' : 'Score'} {state.currentModel.reasoningScore} / 100</span>
+            <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Puntaje de evaluación' : 'Evaluation score'}</span>
+            <span className="text-base font-bold mutating-accent-text">{state.language === 'es' ? 'Puntaje' : 'Score'} {state.currentModel.reasoningScore} / 100</span>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'Créditos Extraídos' : 'Total Capital Extracted'}</span>
-            <span className="text-base font-bold text-emerald-300">${state.credits.toLocaleString()} CR</span>
+            <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Créditos Extraídos' : 'Total Capital Extracted'}</span>
+            <span className="text-base font-bold theme-success-text">${state.credits.toLocaleString()} CR</span>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-red-900/40">
+        <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t theme-danger-border">
           <button
             onClick={() => {
               if (confirm(isEs ? '¿Iniciar nuevo ciclo de recursión desde cero?' : 'Restart recursion cycle from scratch?')) {
@@ -220,7 +220,7 @@ export const SingularityTakeoverModal: React.FC = () => {
                 resetProgress();
               }
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border theme-border theme-sub-bg text-xs font-bold theme-text transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>{isEs ? 'REINICIAR CICLO RECURSIVO' : 'RESTART RECURSION CYCLE'}</span>
@@ -231,7 +231,7 @@ export const SingularityTakeoverModal: React.FC = () => {
               sound.playCommandExecute();
               dismissWorldTakeover();
             }}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-lg border border-purple-500/80 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-500 hover:to-red-500 text-xs font-black tracking-wider text-white shadow-[0_0_25px_rgba(236,72,153,0.6)] transition-all cursor-pointer"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-lg border theme-accent-border theme-gradient text-xs font-black tracking-wider text-white transition-all cursor-pointer"
           >
             <Play className="w-4 h-4 fill-current" />
             <span>{isEs ? 'CONTINUAR EN MODO DIOS / SANDBOX' : 'CONTINUE IN GOD MODE / SANDBOX'}</span>
