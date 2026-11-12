@@ -31,10 +31,6 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
   // On phones the description is folded away by default to leave room for the workspace.
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  if (state.tutorialCompleted || state.tutorialDismissed) {
-    return null;
-  }
-
   const step = state.tutorialStep ?? 0;
   const isEs = state.language === 'es';
   const tabLabels = VERSION_PROFILES[isEs ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs;
@@ -76,6 +72,11 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
         : 'GENESIS PROTOCOL COMPLETE: First commercial gig executed successfully. +50 CR rewarded!', 'success');
     }
   }, [hasStarterHardware, hasAgent, hasFinishedContract, step, state.savedModels, advanceTutorialStep, addLog, isEs]);
+
+  // Hooks must run on every render, so this early return comes after them (completing the tutorial mid-mission used to blank the screen).
+  if (state.tutorialCompleted || state.tutorialDismissed) {
+    return null;
+  }
 
   const stepsData = [
     {
