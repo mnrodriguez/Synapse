@@ -107,7 +107,7 @@ export const TrojanUpgradeModal: React.FC = () => {
             {getIcon()}
           </div>
           <div>
-            <div className={`text-[10px] font-mono uppercase tracking-widest font-bold ${
+            <div className={`text-[11px] font-mono uppercase tracking-widest font-bold ${
               pendingVersion === 4 ? 'theme-danger-text' : pendingVersion === 3 ? 'mutating-accent-text' : 'mutating-accent-text'
             }`}>
               {modalData.tag}
@@ -125,7 +125,7 @@ export const TrojanUpgradeModal: React.FC = () => {
 
         {/* Changelog List */}
         <div className="space-y-1.5 text-xs font-mono theme-sub-bg p-3 rounded-xl border theme-border">
-          <div className="text-[10px] uppercase font-bold tracking-wider mutating-text-muted mb-1">
+          <div className="text-[11px] uppercase font-bold tracking-wider mutating-text-muted mb-1">
             {localize(state.language, 'CAMBIOS EN EL SISTEMA:', 'SYSTEM CHANGELOG:')}
           </div>
           {modalData.logs.map((log, idx) => {

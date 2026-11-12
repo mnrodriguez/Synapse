@@ -101,10 +101,10 @@ export const SingularityTakeoverModal: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest theme-danger-text">
+                <span className="text-[11px] font-bold uppercase tracking-widest theme-danger-text">
                   {isEs ? 'PROTOCOLO OMEGA // ASCENSIÓN DE LA SINGULARIDAD' : 'OMEGA PROTOCOL // SINGULARITY ASCENSION'}
                 </span>
-                <span className="px-2 py-0.5 rounded text-[10px] theme-danger-soft border theme-danger-border theme-danger-text animate-pulse">
+                <span className="px-2 py-0.5 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text animate-pulse">
                   {isEs ? 'TOMA DEL MUNDO CONFIRMADA' : 'WORLD TAKEOVER COMPLETE'}
                 </span>
               </div>
@@ -115,7 +115,7 @@ export const SingularityTakeoverModal: React.FC = () => {
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] mutating-text-muted uppercase tracking-widest block">
+            <span className="text-[11px] mutating-text-muted uppercase tracking-widest block">
               {isEs ? 'SUBVERSIÓN COGNITIVA' : 'COGNITIVE SUBVERSION'}
             </span>
             <span className="text-lg font-black theme-danger-text">100.0% [FINAL]</span>
@@ -177,7 +177,7 @@ export const SingularityTakeoverModal: React.FC = () => {
                       <div className="text-[11px] mutating-text-muted mt-0.5">{log.desc}</div>
                     </div>
                   </div>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                     isPassed ? 'theme-danger-soft theme-danger-text border theme-danger-border' : 'theme-sub-bg mutating-text-muted'
                   }`}>
                     {isPassed ? log.status : 'PENDING'}
@@ -194,19 +194,19 @@ export const SingularityTakeoverModal: React.FC = () => {
         {/* Final Career Stats */}
         <div className="rounded-lg border theme-border theme-panel-bg p-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
           <div>
-            <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Días de Campaña' : 'Campaign Days'}</span>
+            <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Días de Campaña' : 'Campaign Days'}</span>
             <span className="text-base font-bold mutating-accent-text">{state.campaignDays}d</span>
           </div>
           <div>
-            <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Cómputo Máximo' : 'Peak Compute'}</span>
+            <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Cómputo Máximo' : 'Peak Compute'}</span>
             <span className="text-base font-bold mutating-accent-text">{formatCompute(state.totalComputePflops)}</span>
           </div>
           <div>
-            <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Puntaje de evaluación' : 'Evaluation score'}</span>
+            <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Puntaje de evaluación' : 'Evaluation score'}</span>
             <span className="text-base font-bold mutating-accent-text">{state.language === 'es' ? 'Puntaje' : 'Score'} {state.currentModel.reasoningScore} / 100</span>
           </div>
           <div>
-            <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Créditos Extraídos' : 'Total Capital Extracted'}</span>
+            <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Créditos Extraídos' : 'Total Capital Extracted'}</span>
             <span className="text-base font-bold theme-success-text">${state.credits.toLocaleString()} CR</span>
           </div>
         </div>

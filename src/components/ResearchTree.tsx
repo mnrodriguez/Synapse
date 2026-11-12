@@ -115,7 +115,7 @@ export const ResearchTree: React.FC = () => {
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded text-[10px] border font-bold uppercase ${getCategoryColor(node.category)}`}>
+                    <span className={`px-2 py-0.5 rounded text-[11px] border font-bold uppercase ${getCategoryColor(node.category)}`}>
                       {localize(state.language, ({
                         architecture: 'Arquitectura',
                         optimization: 'Optimización',
@@ -152,7 +152,7 @@ export const ResearchTree: React.FC = () => {
                   {content.effectDescription}
                 </p>
 
-                <div className="mt-2 flex flex-wrap gap-2 text-[10px]">
+                <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
                   {node.releaseYear && (
                     <span className={`rounded border px-1.5 py-0.5 ${
                       node.releaseYear > 2026
@@ -173,13 +173,13 @@ export const ResearchTree: React.FC = () => {
                   )}
                 </div>
 
-                <div className="mt-2 p-2 rounded bg-[#060a10] border border-cyan-950/80 text-[10px] text-zinc-500">
+                <div className="mt-2 p-2 rounded bg-[#060a10] border border-cyan-950/80 text-[11px] text-zinc-500">
                   <span className="text-cyan-400 font-semibold block">{localize(state.language, 'FUNDAMENTO TÉCNICO:', 'TECHNICAL BACKGROUND:')}</span>
                   {content.technicalLore}
                 </div>
 
                 {node.prerequisites.length > 0 && !node.unlocked && (
-                  <div className="mt-2 text-[10px] text-zinc-500 flex items-center gap-1">
+                  <div className="mt-2 text-[11px] text-zinc-500 flex items-center gap-1">
                     <GitBranch className="w-3 h-3 text-zinc-600" />
                     <span>{localize(state.language, 'Requisitos previos:', 'Prerequisites:')} </span>
                     <span className={preMet ? 'text-zinc-300' : 'text-red-400'}>

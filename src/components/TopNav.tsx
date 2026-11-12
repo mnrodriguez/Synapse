@@ -106,11 +106,11 @@ export const TopNav: React.FC<TopNavProps> = ({
               <h1 className="font-bold text-xs sm:text-sm tracking-tight font-mono">
                 {p.appTitle}
               </h1>
-              <span className="text-[10px] px-2 py-0.5 rounded mutating-sub mutating-text-muted font-mono font-semibold">
+              <span className="text-[11px] px-2 py-0.5 rounded mutating-sub mutating-text-muted font-mono font-semibold">
                 {p.badge}
               </span>
             </div>
-            <p className="text-[10px] mutating-text-muted font-mono">
+            <p className="text-[11px] mutating-text-muted font-mono">
               {p.story.operatorLabel} <strong className="mutating-accent-text">{state.callsign}</strong> • {p.facility}
             </p>
           </div>
@@ -124,7 +124,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           <Clock className="w-3.5 h-3.5 mutating-text-muted ml-1 mr-0.5" />
           <button
             onClick={() => setGameSpeed(state.gameSpeed === 0 ? 1 : 0)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer ${
+            className={`px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer ${
               state.gameSpeed === 0 ? 'bg-amber-500 text-slate-950 font-black' : 'mutating-text-muted hover:opacity-100'
             }`}
             title="Pause / Resume Simulation (Space)"
@@ -136,7 +136,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             <button
               key={speed}
               onClick={() => setGameSpeed(speed)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
                 state.gameSpeed === speed ? 'mutating-btn-primary shadow-sm font-bold' : 'mutating-text-muted hover:opacity-100'
               }`}
             >

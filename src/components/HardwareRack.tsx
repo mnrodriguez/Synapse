@@ -35,11 +35,19 @@ import { DocLinkBadge } from './DocLinkBadge';
 import { isProgressionUnlocked } from '../utils/progression';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { formatCompute, externalComputePflops, COVERT_NODE_PFLOPS, UNIVERSITY_LOAN_PFLOPS } from '../utils/training';
+import { PHASE_SCALES, toDisplayProgress, type UiVersion } from '../utils/singularityGoals';
 
 type HardwareMenuTab = 'compute' | 'thermal_power' | 'facility';
 
 export const HardwareRack: React.FC = () => {
   const { state, buyHardware, upgradeFacility, attemptShadowCompute, attemptSeverCovertNode } = useGame();
+  // Requirements are stored on the internal 0-100 scale; show them on the scale the HUD uses in this version.
+  const uiVer = (state.uiVersion || 1) as UiVersion;
+  const progressRequirement = (realRequired: number): string => {
+    if (realRequired >= PHASE_SCALES[uiVer].realEnd) return localize(state.language, 'próxima versión', 'next version');
+    const story = VERSION_PROFILES[state.language === 'es' ? 'es' : 'en'][uiVer].story;
+    return `${Math.ceil(toDisplayProgress(uiVer, realRequired))}% ${story.progressShort}`;
+  };
   const lang = state.language === 'es' ? 'es' : 'en';
   const ver = state.uiVersion || 1;
   const p = VERSION_PROFILES[lang][ver];
@@ -192,7 +200,7 @@ export const HardwareRack: React.FC = () => {
                 {t(state.language, 'interconnect')}
               </button>
             </div>
-            <span className="text-[10px] mutating-text-muted">
+            <span className="text-[11px] mutating-text-muted">
               {computeHardware.length} {localize(state.language, 'dispositivos listados', 'devices listed')}
             </span>
           </div>
@@ -214,7 +222,7 @@ export const HardwareRack: React.FC = () => {
                   <span className={`font-bold text-xs ${ver === 4 ? 'text-rose-400' : ver === 3 ? 'text-cyan-300' : ver === 2 ? 'text-purple-400' : 'mutating-accent-text'}`}>
                     {p.covertTitle}
                   </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold ${
+                  <span className={`text-[11px] px-2 py-0.5 rounded font-mono font-bold ${
                     ver === 4 
                       ? 'bg-rose-950/80 text-rose-300 border border-rose-500/60 animate-pulse'
                       : ver === 3 
@@ -299,14 +307,14 @@ export const HardwareRack: React.FC = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-cyan-400 font-mono">
+                          <span className="text-[11px] text-cyan-400 font-mono">
                             {t(state.language, 'installed')}: <strong className="text-zinc-100">{item.count} {t(state.language, 'units')}</strong>
                           </span>
                           {isLocked && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold flex items-center gap-1">
+                            <span className="text-[11px] px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold flex items-center gap-1">
                               <Lock className="w-2.5 h-2.5" />
                               {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
-                                ? `${item.minSingularityRequired}% ${t(state.language, 'singularity')}`
+                                ? `${progressRequirement(item.minSingularityRequired)}`
                                 : `${researchTitle ?? localize(state.language, 'Tecnología futura', 'Future technology')} · ${item.availableAfterDays ?? '—'} ${localize(state.language, 'días', 'days')}`}
                             </span>
                           )}
@@ -325,7 +333,7 @@ export const HardwareRack: React.FC = () => {
                     </p>
 
                     {/* Specs Badges */}
-                    <div className="flex flex-wrap gap-2 mt-2.5 text-[10px]">
+                    <div className="flex flex-wrap gap-2 mt-2.5 text-[11px]">
                       {item.computeTflops > 0 && (
                         <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300">
                           +{item.computeTflops} TFLOPS
@@ -356,7 +364,7 @@ export const HardwareRack: React.FC = () => {
                         <Lock className="w-3 h-3 text-purple-400" />
                         <span>
                           {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
-                            ? `${t(state.language, 'blocked')} (${item.minSingularityRequired}% ${t(state.language, 'singularity')})`
+                            ? `${t(state.language, 'blocked')} (${progressRequirement(item.minSingularityRequired)})`
                             : localize(state.language, `Investiga ${researchTitle ?? 'la tecnología'} o espera al día ${item.availableAfterDays ?? '—'}`, `Research ${researchTitle ?? 'the technology'} or wait until day ${item.availableAfterDays ?? '—'}`)}
                         </span>
                       </span>
@@ -445,7 +453,7 @@ export const HardwareRack: React.FC = () => {
                 {t(state.language, 'power_supply')}
               </button>
             </div>
-            <span className="text-[10px] text-zinc-400">
+            <span className="text-[11px] text-zinc-400">
               {thermalPowerHardware.length} {localize(state.language, 'sistemas de soporte', 'support systems')}
             </span>
           </div>
@@ -482,14 +490,14 @@ export const HardwareRack: React.FC = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-yellow-400 font-mono">
+                          <span className="text-[11px] text-yellow-400 font-mono">
                             {t(state.language, 'installed')}: <strong className="text-zinc-100">{item.count} {t(state.language, 'units')}</strong>
                           </span>
                           {isLocked && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold flex items-center gap-1">
+                            <span className="text-[11px] px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold flex items-center gap-1">
                               <Lock className="w-2.5 h-2.5" />
                               {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
-                                ? `${item.minSingularityRequired}% ${t(state.language, 'singularity')}`
+                                ? `${progressRequirement(item.minSingularityRequired)}`
                                 : `${researchTitle ?? localize(state.language, 'Tecnología futura', 'Future technology')} · ${item.availableAfterDays ?? '—'} ${localize(state.language, 'días', 'days')}`}
                             </span>
                           )}
@@ -508,7 +516,7 @@ export const HardwareRack: React.FC = () => {
                     </p>
 
                     {/* Specs Badges */}
-                    <div className="flex flex-wrap gap-2 mt-2.5 text-[10px]">
+                    <div className="flex flex-wrap gap-2 mt-2.5 text-[11px]">
                       {item.powerCapacityKw && (
                         <span className="px-2 py-0.5 rounded bg-yellow-950/80 border border-yellow-500/40 text-yellow-300">
                           +{item.powerCapacityKw} kW {t(state.language, 'power_capacity')}
@@ -529,7 +537,7 @@ export const HardwareRack: React.FC = () => {
                         <Lock className="w-3 h-3 text-purple-400" />
                         <span>
                           {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
-                            ? `${t(state.language, 'blocked')} (${item.minSingularityRequired}% ${t(state.language, 'singularity')})`
+                            ? `${t(state.language, 'blocked')} (${progressRequirement(item.minSingularityRequired)})`
                             : localize(state.language, `Investiga ${researchTitle ?? 'la tecnología'} o espera al día ${item.availableAfterDays ?? '—'}`, `Research ${researchTitle ?? 'the technology'} or wait until day ${item.availableAfterDays ?? '—'}`)}
                         </span>
                       </span>
@@ -593,7 +601,7 @@ export const HardwareRack: React.FC = () => {
                     className="rounded border border-purple-500 bg-purple-900/80 px-3 py-1.5 text-xs font-bold text-purple-100 hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-40 transition-colors shadow-[0_0_10px_rgba(168,85,247,0.2)]"
                   >
                     {t(state.language, 'upgrade')} · ${nextFacility.price.toLocaleString()} CR
-                    {nextFacility.requiredSingularity > 0 && ` · ${nextFacility.requiredSingularity}% SING.`}
+                    {nextFacility.requiredSingularity > 0 && ` · ${progressRequirement(nextFacility.requiredSingularity)}`}
                     {!nextFacilityUnlocked && ` · ${nextFacilityResearch ? localizedResearch(state.language, nextFacilityResearch).title : localize(state.language, 'Tecnología futura', 'Future technology')}`}
                   </button>
                 </div>
@@ -607,23 +615,23 @@ export const HardwareRack: React.FC = () => {
             {/* Billing and Electric Utility Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
               <div className="p-3 rounded bg-zinc-950/80 border border-purple-900/30">
-                <span className="text-zinc-500 text-[10px] block">{t(state.language, 'monthly_rent')}</span>
+                <span className="text-zinc-500 text-[11px] block">{t(state.language, 'monthly_rent')}</span>
                 <span className="text-zinc-100 font-bold font-mono text-sm">${facility.monthlyLeaseCost.toLocaleString()} CR</span>
-                <span className="text-[10px] text-zinc-500 block mt-0.5">{localize(state.language, 'Contrato de arrendamiento fijo', 'Fixed lease agreement')}</span>
+                <span className="text-[11px] text-zinc-500 block mt-0.5">{localize(state.language, 'Contrato de arrendamiento fijo', 'Fixed lease agreement')}</span>
               </div>
 
               <div className="p-3 rounded bg-zinc-950/80 border border-purple-900/30">
-                <span className="text-zinc-500 text-[10px] block">{t(state.language, 'monthly_estimate')}</span>
+                <span className="text-zinc-500 text-[11px] block">{t(state.language, 'monthly_estimate')}</span>
                 <span className="text-yellow-300 font-bold font-mono text-sm">${estimatedMonthlyCost.toFixed(2)} CR</span>
-                <span className="text-[10px] text-zinc-500 block mt-0.5">${ELECTRICITY_RATE_PER_KWH.toFixed(2)}/kWh · {state.activePowerKw} kW</span>
+                <span className="text-[11px] text-zinc-500 block mt-0.5">${ELECTRICITY_RATE_PER_KWH.toFixed(2)}/kWh · {state.activePowerKw} kW</span>
               </div>
 
               <div className="p-3 rounded bg-zinc-950/80 border border-purple-900/30">
-                <span className="text-zinc-500 text-[10px] block">{t(state.language, 'utility_debt')}</span>
+                <span className="text-zinc-500 text-[11px] block">{t(state.language, 'utility_debt')}</span>
                 <span className={`font-bold font-mono text-sm ${state.utilityDebt > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                   ${state.utilityDebt.toFixed(2)} CR
                 </span>
-                <span className="text-[10px] text-zinc-500 block mt-0.5">
+                <span className="text-[11px] text-zinc-500 block mt-0.5">
                   {state.utilityDebt > 0 
                     ? localize(state.language, '¡Paga deudas para evitar cortes!', 'Repay debt to prevent blackouts!')
                     : localize(state.language, 'Cuenta al corriente', 'Account in good standing')}

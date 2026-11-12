@@ -165,13 +165,13 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
 
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] uppercase tracking-widest font-black mutating-accent-text mutating-sub px-2 py-0.5 rounded border">
+              <span className="text-[11px] uppercase tracking-widest font-black mutating-accent-text mutating-sub px-2 py-0.5 rounded border">
                 {isEs ? 'MISIÓN INICIAL // PROTOCOLO GÉNESIS' : 'FIRST MISSION // GENESIS PROTOCOL'}
               </span>
               <span className="text-xs font-bold font-sans flex items-center gap-1">
                 {currentStepInfo.title}
               </span>
-              <span className="text-[10px] text-amber-500 font-bold mutating-sub px-1.5 py-0.2 rounded border border-amber-500/40">
+              <span className="text-[11px] text-amber-500 font-bold mutating-sub px-1.5 py-0.2 rounded border border-amber-500/40">
                 {isEs ? `Paso ${step + 1}/5` : `Step ${step + 1}/5`}
               </span>
             </div>
@@ -188,7 +188,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
             type="button"
             onClick={() => setDetailsOpen(open => !open)}
             aria-expanded={detailsOpen}
-            className="md:hidden px-2 py-1 text-[10px] font-bold rounded border mutating-sub cursor-pointer"
+            className="md:hidden px-2 py-1 text-[11px] font-bold rounded border mutating-sub cursor-pointer"
           >
             {detailsOpen ? (isEs ? 'Ocultar' : 'Hide') : (isEs ? 'Detalles' : 'Details')}
           </button>

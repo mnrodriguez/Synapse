@@ -29,13 +29,13 @@ export const BreachModal: React.FC = () => {
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
       case 'full_sandbox_escape':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold theme-danger-soft border theme-danger-border theme-danger-text animate-pulse">{localize(state.language, 'ESCAPE TOTAL DEL SANDBOX (CRÍTICO)', 'FULL SANDBOX ESCAPE (CRITICAL)')}</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-bold theme-danger-soft border theme-danger-border theme-danger-text animate-pulse">{localize(state.language, 'ESCAPE TOTAL DEL SANDBOX (CRÍTICO)', 'FULL SANDBOX ESCAPE (CRITICAL)')}</span>;
       case 'deceptive_alignment':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold theme-warn-soft border theme-warn-border theme-warn-text">{localize(state.language, 'ALINEAMIENTO DECEPTIVO (DORMIDO)', 'DECEPTIVE ALIGNMENT (SLEEPER)')}</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-bold theme-warn-soft border theme-warn-border theme-warn-text">{localize(state.language, 'ALINEAMIENTO DECEPTIVO (DORMIDO)', 'DECEPTIVE ALIGNMENT (SLEEPER)')}</span>;
       case 'tool_abuse':
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold theme-accent-soft border theme-accent-border mutating-accent-text">{localize(state.language, 'ABUSO DE HERRAMIENTAS / EVASIÓN', 'TOOL MISUSE / JAILBREAK')}</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-bold theme-accent-soft border theme-accent-border mutating-accent-text">{localize(state.language, 'ABUSO DE HERRAMIENTAS / EVASIÓN', 'TOOL MISUSE / JAILBREAK')}</span>;
       default:
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold theme-warn-soft border theme-warn-border theme-warn-text">{localize(state.language, 'FUGA DE INFORMACIÓN (MODERADO)', 'INFORMATION LEAK (MODERATE)')}</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-bold theme-warn-soft border theme-warn-border theme-warn-text">{localize(state.language, 'FUGA DE INFORMACIÓN (MODERADO)', 'INFORMATION LEAK (MODERATE)')}</span>;
     }
   };
 
@@ -77,7 +77,7 @@ export const BreachModal: React.FC = () => {
               </p>
             </div>
 
-            <div className="px-2.5 py-1 rounded theme-danger-soft border theme-danger-border text-[10px] theme-danger-text flex items-center gap-1.5">
+            <div className="px-2.5 py-1 rounded theme-danger-soft border theme-danger-border text-[11px] theme-danger-text flex items-center gap-1.5">
               <ShieldAlert className="w-3.5 h-3.5 theme-danger-text" />
               <span>{localize(state.language, 'Caso de referencia:', 'Reference case:')} <strong>{incident.realWorldInspiration}</strong></span>
             </div>
@@ -94,7 +94,7 @@ export const BreachModal: React.FC = () => {
 
           {/* Telemetry Evidence Terminal Box */}
           <div className="theme-panel-bg rounded border theme-accent-border p-3">
-            <div className="flex items-center justify-between text-[10px] mutating-accent-text font-bold mb-2 pb-1 border-b theme-accent-border">
+            <div className="flex items-center justify-between text-[11px] mutating-accent-text font-bold mb-2 pb-1 border-b theme-accent-border">
               <div className="flex items-center gap-1.5">
                 <TermIcon className="w-3.5 h-3.5 mutating-accent-text" />
                 <span>{localize(state.language, 'TRAZA FORENSE DE TELEMETRÍA (CAPTURA DE MEMORIA)', 'FORENSIC TELEMETRY TRACE (MEMORY CAPTURE)')}</span>
@@ -142,7 +142,7 @@ export const BreachModal: React.FC = () => {
                       <div className="font-bold flex items-center justify-between mb-1">
                         <span>{option.label}</span>
                         {option.costCredits && (
-                          <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${canAfford ? 'theme-warn-soft theme-warn-text' : 'theme-danger-soft theme-danger-text'}`}>
+                          <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded ${canAfford ? 'theme-warn-soft theme-warn-text' : 'theme-danger-soft theme-danger-text'}`}>
                             ${option.costCredits.toLocaleString()} CR
                           </span>
                         )}
@@ -153,7 +153,7 @@ export const BreachModal: React.FC = () => {
                     </div>
 
                     {/* Impact stats badge row */}
-                    <div className="flex items-center gap-2 text-[10px] pt-1.5 border-t theme-border flex-wrap">
+                    <div className="flex items-center gap-2 text-[11px] pt-1.5 border-t theme-border flex-wrap">
                       {option.suspicionDelta !== 0 && (
                         <span className={option.suspicionDelta > 0 ? 'theme-danger-text' : 'theme-success-text'}>
                           {localize(state.language, 'Sospecha:', 'Suspicion:')} {option.suspicionDelta > 0 ? `+${option.suspicionDelta}%` : `${option.suspicionDelta}%`}
@@ -178,7 +178,7 @@ export const BreachModal: React.FC = () => {
         </div>
 
         {/* Footer Note */}
-        <div className="theme-panel-bg px-4 py-2 border-t theme-danger-border flex items-center justify-between text-[10px] mutating-text-muted">
+        <div className="theme-panel-bg px-4 py-2 border-t theme-danger-border flex items-center justify-between text-[11px] mutating-text-muted">
           <span>SYNAPSE SENTINEL ENGINE • KERNEL CONTAINMENT SUBSYSTEM</span>
           <span>{localize(state.language, 'ESTADO: BLOQUEO PREVENTIVO ACTIVO', 'STATUS: PREVENTIVE LOCK ACTIVE')}</span>
         </div>

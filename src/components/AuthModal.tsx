@@ -131,15 +131,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 )}
                 <div className="flex-1 truncate">
-                  <span className="text-[10px] mutating-text-muted block font-mono">{localize(state.language, 'CALLSIGN DEL OPERATIVO', 'OPERATIVE CALLSIGN')}</span>
+                  <span className="text-[11px] mutating-text-muted block font-mono">{localize(state.language, 'CALLSIGN DEL OPERATIVO', 'OPERATIVE CALLSIGN')}</span>
                   <div className="font-bold mutating-accent-text text-sm truncate">{state.callsign}</div>
-                  <div className="text-[10px] mutating-text-muted truncate">{user.displayName || user.email}</div>
+                  <div className="text-[11px] mutating-text-muted truncate">{user.displayName || user.email}</div>
                 </div>
               </div>
 
               {/* Callsign Editor */}
               <form onSubmit={handleUpdateCallsign} className="pt-2 border-t theme-border space-y-1">
-                <label className="text-[10px] mutating-text-muted block">{localize(state.language, 'CALLSIGN DEL OPERATIVO (PÚBLICO EN RANKING):', 'OPERATIVE CALLSIGN (PUBLIC ON LEADERBOARD):')}</label>
+                <label className="text-[11px] mutating-text-muted block">{localize(state.language, 'CALLSIGN DEL OPERATIVO (PÚBLICO EN RANKING):', 'OPERATIVE CALLSIGN (PUBLIC ON LEADERBOARD):')}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -178,12 +178,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[10px] mutating-text-muted">
+                <span className="text-[11px] mutating-text-muted">
                   {localize(state.language, 'Estado:', 'Status:')} <strong className="theme-success-text">{localize(state.language, 'Enlace Criptográfico Activo', 'Secure connection active')}</strong>
                 </span>
                 <button
                   onClick={logoutUser}
-                  className="theme-danger-text text-[10px] flex items-center gap-1"
+                  className="theme-danger-text text-[11px] flex items-center gap-1"
                 >
                   <LogOut className="w-3 h-3" />
                   <span>{localize(state.language, 'CERRAR SESIÓN', 'SIGN OUT')}</span>
@@ -208,7 +208,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 <span>{localize(state.language, 'INICIAR SESIÓN CON GOOGLE', 'SIGN IN WITH GOOGLE')}</span>
               </button>
 
-              <span className="text-[10px] mutating-text-muted block">
+              <span className="text-[11px] mutating-text-muted block">
                 {localize(state.language, 'Tus datos locales están seguros y se transferirán automáticamente a la nube.', 'Your local data is safe and will be transferred to the cloud after sign-in.')}
               </span>
             </div>
@@ -227,7 +227,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <RotateCcw className="w-3.5 h-3.5" />
               <span>{localize(state.language, 'REINICIAR SIMULACIÓN A CERO', 'RESET SIMULATION')}</span>
             </div>
-            <p className="text-[10px] mutating-text-muted leading-snug">
+            <p className="text-[11px] mutating-text-muted leading-snug">
               {localize(state.language, '¿Quieres empezar de nuevo eligiendo otra configuración de hardware inicial y primer modelo? Puedes reiniciar toda la simulación desde cero. Se reiniciará el protocolo de Génesis.', 'Want to start over with different initial hardware and a new first model? This resets the simulation and restarts the Genesis protocol.')}
             </p>
             {confirmReset ? (

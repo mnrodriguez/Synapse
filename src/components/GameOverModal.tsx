@@ -61,7 +61,7 @@ export const GameOverModal: React.FC = () => {
               <Coins className="w-6 h-6 animate-bounce" />
             </div>
             <div>
-              <span className="text-[10px] font-bold theme-warn-text uppercase tracking-widest block">
+              <span className="text-[11px] font-bold theme-warn-text uppercase tracking-widest block">
                 {isEs ? 'LÍNEA DE CRÉDITO DE EMERGENCIA' : 'EMERGENCY BAILOUT CREDIT LINE'}
               </span>
               <h2 className="text-base font-black theme-warn-text tracking-wider">
@@ -111,7 +111,7 @@ export const GameOverModal: React.FC = () => {
               )}
             </div>
             <div>
-              <span className="text-[10px] font-bold theme-danger-text uppercase tracking-widest block flex items-center gap-1.5">
+              <span className="text-[11px] font-bold theme-danger-text uppercase tracking-widest block flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5 theme-danger-text" />
                 {state.gameOverReason === 'agency_seizure'
                   ? (isEs ? 'INCURSIÓN FEDERAL // INCAUTACIÓN DE INFRAESTRUCTURA' : 'FEDERAL RAID // INFRASTRUCTURE SEIZURE')
@@ -164,15 +164,15 @@ export const GameOverModal: React.FC = () => {
           {/* Final Campaign Stats */}
           <div className="grid grid-cols-3 gap-2 text-center text-xs p-3 rounded-lg theme-sub-bg border theme-border">
             <div>
-              <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Días Sobrevividos' : 'Days Survived'}</span>
+              <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Días Sobrevividos' : 'Days Survived'}</span>
               <span className="font-bold mutating-accent-text text-sm">{state.campaignDays} {isEs ? 'días' : 'days'}</span>
             </div>
             <div>
-              <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Progreso Singularidad' : 'Singularity Progress'}</span>
+              <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Progreso Singularidad' : 'Singularity Progress'}</span>
               <span className="font-bold mutating-accent-text text-sm">{state.singularityProgress.toFixed(1)}%</span>
             </div>
             <div>
-              <span className="text-[10px] mutating-text-muted block uppercase">{isEs ? 'Cómputo Alcanzado' : 'Peak Compute'}</span>
+              <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Cómputo Alcanzado' : 'Peak Compute'}</span>
               <span className="font-bold theme-success-text text-sm">{formatCompute(state.totalComputePflops)}</span>
             </div>
           </div>

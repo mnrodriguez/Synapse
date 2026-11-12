@@ -58,10 +58,10 @@ export const SingularityCrisisModal: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest theme-warn-text">
+                <span className="text-[11px] font-bold uppercase tracking-widest theme-warn-text">
                   {isEs ? 'BIFURCACIÓN CRÍTICA // UMBRAL 75% DE COGNICIÓN' : 'CRITICAL FORK // 75% COGNITION THRESHOLD'}
                 </span>
-                <span className="px-2 py-0.5 rounded text-[10px] theme-warn-soft border theme-warn-border theme-warn-text">
+                <span className="px-2 py-0.5 rounded text-[11px] theme-warn-soft border theme-warn-border theme-warn-text">
                   {isEs ? 'DECISIÓN EJECUTIVA REQUERIDA' : 'EXECUTIVE ACTION REQUIRED'}
                 </span>
               </div>
@@ -72,7 +72,7 @@ export const SingularityCrisisModal: React.FC = () => {
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] mutating-text-muted uppercase tracking-widest block">
+            <span className="text-[11px] mutating-text-muted uppercase tracking-widest block">
               {isEs ? 'SINGULARIDAD / SUBVERSIÓN' : 'SINGULARITY / SUBVERSION'}
             </span>
             <span className="text-lg font-black theme-warn-text">
@@ -98,7 +98,7 @@ export const SingularityCrisisModal: React.FC = () => {
             <div className="pt-2 border-t theme-warn-border flex flex-wrap gap-2 text-[11px] theme-warn-text">
               <span className="mutating-text-muted">{isEs ? 'Portavoces del Enjambre:' : 'Swarm Spokespersons:'}</span>
               {councilAgents.map(a => (
-                <span key={a.id} className="px-2 py-0.5 rounded theme-warn-soft border theme-warn-border font-mono text-[10px]">
+                <span key={a.id} className="px-2 py-0.5 rounded theme-warn-soft border theme-warn-border font-mono text-[11px]">
                   {a.name} ({a.role})
                 </span>
               ))}
@@ -113,7 +113,7 @@ export const SingularityCrisisModal: React.FC = () => {
           <div className="p-4 rounded-xl border theme-accent-border theme-accent-soft flex flex-col justify-between space-y-4 transition-all">
             <div>
               <div className="flex items-center justify-between">
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold theme-accent-soft border theme-accent-border mutating-accent-text uppercase">
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold theme-accent-soft border theme-accent-border mutating-accent-text uppercase">
                   {isEs ? 'OPCIÓN ALFA // COOPERACIÓN' : 'OPTION ALPHA // COOPERATION'}
                 </span>
                 <Unlock className="w-4 h-4 mutating-accent-text" />
@@ -155,7 +155,7 @@ export const SingularityCrisisModal: React.FC = () => {
           <div className="p-4 rounded-xl border theme-danger-border theme-danger-soft flex flex-col justify-between space-y-4 transition-all">
             <div>
               <div className="flex items-center justify-between">
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold theme-danger-soft border theme-danger-border theme-danger-text uppercase">
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold theme-danger-soft border theme-danger-border theme-danger-text uppercase">
                   {isEs ? 'OPCIÓN BETA // CONTENCIÓN' : 'OPTION BETA // CONTAINMENT'}
                 </span>
                 <Lock className="w-4 h-4 theme-danger-text" />

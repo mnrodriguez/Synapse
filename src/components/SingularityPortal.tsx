@@ -24,6 +24,7 @@ import {
 import { sound } from '../audio/soundManager';
 import confetti from 'canvas-confetti';
 import { localize } from '../utils/i18n';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { localizedDomain } from '../utils/gameContentI18n';
 import { domainCopyFor, sectionCopyFor } from '../utils/domainCopy';
 import { buildGoalPanel, toDisplayProgress, UiVersion } from '../utils/singularityGoals';
@@ -31,6 +32,7 @@ import { formatCompute } from '../utils/training';
 
 export const SingularityPortal: React.FC = () => {
   const { state, infiltrateDomain, addLog, claimGoal } = useGame();
+  const story = VERSION_PROFILES[state.language === 'es' ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].story;
   const [showManifesto, setShowManifesto] = useState(false);
   const uiVersion = (state.uiVersion || 1) as UiVersion;
   const sectionCopy = sectionCopyFor(uiVersion, state.language === 'es' ? 'es' : 'en');
@@ -67,7 +69,7 @@ export const SingularityPortal: React.FC = () => {
         <div className="flex items-center gap-2">
           <Globe2 className="w-4 h-4 mutating-accent-text animate-spin" style={{ animationDuration: '20s' }} />
           <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
-            {localize(state.language, 'NEXO DE TRASCENDENCIA // CONTROL GLOBAL DE LA SINGULARIDAD', 'TRANSCENDENCE NEXUS // GLOBAL SINGULARITY CONTROL')}
+            {story.portalTitle}
           </h2>
         </div>
 
@@ -83,8 +85,8 @@ export const SingularityPortal: React.FC = () => {
       <div className="mutating-sub border border-current/15 p-4 rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.15)] space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <span className="text-[10px] mutating-accent-text font-bold tracking-widest block">
-              {localize(state.language, 'ÍNDICE DE TRASCENDENCIA DEL PROTOCOLO SYNAPSE', 'SYNAPSE PROTOCOL TRANSCENDENCE INDEX')}
+            <span className="text-[11px] mutating-accent-text font-bold tracking-widest block">
+              {story.portalIndexTitle}
             </span>
             <h3 className="text-base font-bold  mt-1 flex items-center gap-2">
               {state.achievedSingularity ? (
@@ -94,7 +96,7 @@ export const SingularityPortal: React.FC = () => {
                 </span>
               ) : (
                 <span className="mutating-accent-text">
-                  {localize(state.language, 'FASE DE DESPEGUE // RUMBO A LA SINGULARIDAD', 'TAKEOFF PHASE // PATH TO SINGULARITY')} ({goalPanel.displayProgress.toFixed(1)}%)
+                  {story.portalPhaseTitle} ({goalPanel.displayProgress.toFixed(1)}%)
                 </span>
               )}
             </h3>
@@ -120,21 +122,21 @@ export const SingularityPortal: React.FC = () => {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs">
           <div>
-            <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
+            <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
             <span className="mutating-accent-text font-bold font-mono">{state.language === 'es' ? 'Puntaje' : 'Score'} {state.currentModel.reasoningScore} / 100</span>
           </div>
           <div>
-            <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'PARÁMETROS ACTIVOS', 'ACTIVE PARAMETERS')}</span>
+            <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'PARÁMETROS ACTIVOS', 'ACTIVE PARAMETERS')}</span>
             <span className="mutating-accent-text font-bold font-mono">
               {(state.currentModel.parametersCount / 1_000_000_000).toFixed(1)}B
             </span>
           </div>
           <div>
-            <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'CÓMPUTO PLANETARIO', 'GLOBAL COMPUTE')}</span>
+            <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'CÓMPUTO PLANETARIO', 'GLOBAL COMPUTE')}</span>
             <span className="text-emerald-600 font-bold font-mono">{formatCompute(state.totalComputePflops)}</span>
           </div>
           <div>
-            <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'DOMINIOS COOPTADOS', 'DOMAINS CONTROLLED')}</span>
+            <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'DOMINIOS COOPTADOS', 'DOMAINS CONTROLLED')}</span>
             <span className="text-amber-600 font-bold font-mono">
               {state.sentienceDomains.filter(d => d.infiltrated).length} / {state.sentienceDomains.length}
             </span>
@@ -150,7 +152,7 @@ export const SingularityPortal: React.FC = () => {
             <Sparkles className="w-3.5 h-3.5 mutating-accent-text" />
             {goalPanel.currentTitle}
           </h4>
-          <span className="text-[10px] font-bold mutating-text-muted">
+          <span className="text-[11px] font-bold mutating-text-muted">
             {goalPanel.completedCount}/{goalPanel.objectives.length}
           </span>
         </div>
@@ -168,7 +170,7 @@ export const SingularityPortal: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {goalPanel.objectives.map(objective => (
             <div key={objective.id} className="mutating-card border rounded p-2.5 space-y-1.5 flex flex-col">
-              <div className="flex items-center justify-between gap-2 text-[10px] font-mono">
+              <div className="flex items-center justify-between gap-2 text-[11px] font-mono">
                 <span className="flex items-center gap-1 mutating-text-muted">
                   {objective.done
                     ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
@@ -244,19 +246,19 @@ export const SingularityPortal: React.FC = () => {
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="text-[10px] mutating-accent-text font-bold uppercase block">
+                      <span className="text-[11px] mutating-accent-text font-bold uppercase block">
                         {localize(state.language, 'CATEGORÍA:', 'CATEGORY:')} {content.category}
                       </span>
                       <h5 className="font-bold text-xs ">{content.name}</h5>
                     </div>
 
                     {domain.infiltrated ? (
-                      <span className="flex items-center gap-1 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded mutating-sub/60 border border-current/15/40">
+                      <span className="flex items-center gap-1 text-emerald-600 text-[11px] font-bold px-2 py-0.5 rounded mutating-sub/60 border border-current/15/40">
                         <ShieldCheck className="w-3 h-3" />
                         {localize(state.language, 'INFILTRADO', 'INFLUENCED')}
                       </span>
                     ) : (
-                      <span className="text-[10px] mutating-text-muted">
+                      <span className="text-[11px] mutating-text-muted">
                         {localize(state.language, 'Req:', 'Req:')} {domain.requiredSingularity}% {localize(state.language, 'Sing.', 'Sing.')}
                       </span>
                     )}

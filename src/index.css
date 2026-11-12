@@ -592,3 +592,15 @@
 
 /* Text placed on accent-coloured buttons and gradients. */
 .theme-on-accent { color: var(--accent-primary-fg); }
+
+/* Accessibility: players who ask the OS for less motion get no looping or decorative animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

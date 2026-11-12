@@ -61,7 +61,7 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     objectives: [
       { id: 'v2-rag', kind: 'display', target: 25, es: 'Conecta una base vectorial RAG al modelo', en: 'Connect a vector RAG database to the model' },
       { id: 'v2-optimize', kind: 'display', target: 45, es: 'Optimiza el clúster con cuantización y refrigeración', en: 'Optimize the cluster with quantization and cooling' },
-      { id: 'v2-swarm', kind: 'display', target: 70, es: 'Despliega un enjambre de agentes', en: 'Deploy a swarm of agents' },
+      { id: 'v2-swarm', kind: 'display', target: 70, es: 'Despliega un equipo de agentes', en: 'Deploy a team of agents' },
       { id: 'v2-moe', kind: 'display', target: 90, es: 'Activa la topología MoE y migra a la versión 3', en: 'Enable MoE topology and migrate to version 3' }
     ]
   },

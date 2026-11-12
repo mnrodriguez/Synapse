@@ -37,7 +37,7 @@ export const ContainmentPanel: React.FC = () => {
           {localize(state.language, 'PROTOCOLO DE CONTENCIÓN', 'CONTAINMENT PROTOCOL')}
         </h4>
       </div>
-      <p className="text-[10px] mutating-text-muted leading-snug">
+      <p className="text-[11px] mutating-text-muted leading-snug">
         {localize(
           state.language,
           'Todavía puedes detener al enjambre, pero solo si los controles están en su lugar. Desconectarlo sin ellos no alcanza.',

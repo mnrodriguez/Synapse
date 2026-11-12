@@ -264,7 +264,7 @@ export const BentoHUD: React.FC = () => {
           type="button"
           onClick={() => setExpanded(false)}
           aria-expanded={true}
-          className="flex items-center gap-1 px-2 py-0.5 rounded-md mutating-sub border text-[10px] font-bold cursor-pointer"
+          className="flex items-center gap-1 px-2 py-0.5 rounded-md mutating-sub border text-[11px] font-bold cursor-pointer"
         >
           <ChevronUp className="w-3 h-3" />
           <span>{localize(state.language, 'Contraer HUD', 'Collapse HUD')}</span>
@@ -286,7 +286,7 @@ export const BentoHUD: React.FC = () => {
                   sound.playKeyClick();
                   setLanguage(state.language === 'es' ? 'en' : 'es');
                 }}
-                className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-black/10 border border-current/20 mutating-accent-text hover:opacity-80 transition cursor-pointer"
+                className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-black/10 border border-current/20 mutating-accent-text hover:opacity-80 transition cursor-pointer"
                 title="Toggle Language EN | ES"
               >
                 🌐 {state.language.toUpperCase()}
@@ -299,7 +299,7 @@ export const BentoHUD: React.FC = () => {
             <span className="text-xl font-bold tracking-tight text-emerald-500 font-mono">
               ${state.credits.toLocaleString()}
             </span>
-            <span className="text-[10px] mutating-text-muted font-mono flex items-center gap-1">
+            <span className="text-[11px] mutating-text-muted font-mono flex items-center gap-1">
               <Clock className="w-3 h-3 mutating-accent-text" />
               Day {state.gameDay}, Cycle {state.dayTicks + 1}/48
             </span>
@@ -332,7 +332,7 @@ export const BentoHUD: React.FC = () => {
 
           {/* The university loan is shown apart from the operative's own hardware, with the days it has left. */}
           {universityLoanPflops(state) > 0 && (
-            <div className="text-[10px] font-mono mutating-text-muted">
+            <div className="text-[11px] font-mono mutating-text-muted">
               {localize(state.language, 'Incluye nube universitaria', 'Includes university cloud')} +{formatCompute(universityLoanPflops(state))}
               {' · '}
               {localize(state.language, 'quedan', 'ends in')} {Math.max(0, LOAN_TRIAL_DAYS - (state.campaignDays || 0))} {localize(state.language, 'días', 'days')}
@@ -389,7 +389,7 @@ export const BentoHUD: React.FC = () => {
             }`}>
               {state.watchdogSuspicion.toFixed(1)}%
             </span>
-            <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
+            <span className={`text-[11px] px-2 py-0.5 rounded font-semibold ${
               state.watchdogSuspicion >= 80
                 ? 'bg-rose-950/80 text-rose-300 border border-rose-600/50'
                 : state.watchdogSuspicion >= 40
@@ -429,13 +429,13 @@ export const BentoHUD: React.FC = () => {
             <span className="text-xl font-bold tracking-tight text-purple-500">
               {state.language === 'es' ? 'Puntaje' : 'Score'} {reasoningIq} / 100
             </span>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300 font-semibold truncate max-w-[100px]" title={state.currentModel.name}>
+            <span className="text-[11px] px-2 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300 font-semibold truncate max-w-[100px]" title={state.currentModel.name}>
               {state.currentModel.name}
             </span>
           </div>
 
           <div className="space-y-1 pt-1.5 border-t border-current/10 font-mono text-[11px]">
-            <div className="flex justify-between items-center text-[10px]">
+            <div className="flex justify-between items-center text-[11px]">
               <span className="mutating-text-muted font-sans">{p.story.progressLabel} {displayedSingularity.toFixed(0)}%</span>
               {p.story.driftLabel && (
                 <span className="text-amber-500 font-bold font-sans">{p.story.driftLabel} {state.subversionProgress || 0}%</span>

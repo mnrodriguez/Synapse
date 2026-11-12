@@ -130,34 +130,34 @@ export const Terminal: React.FC = () => {
         <div className="flex items-center gap-2">
           <TerminalIcon className="w-3.5 h-3.5 mutating-accent-text" />
           <span className="mutating-accent-text font-bold tracking-wider">NEURO-TERMINAL // BASH-X</span>
-          <span className="text-[10px] mutating-text-muted">tty1:connected</span>
+          <span className="text-[11px] mutating-text-muted">tty1:connected</span>
         </div>
         
         {/* Quick Shortcut Buttons */}
         <div className="flex items-center gap-1.5 overflow-x-auto">
           <button 
             onClick={() => runShortcut('status')}
-            className="px-1.5 py-0.5 text-[10px] bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 rounded border border-cyan-800/40 transition-colors"
+            className="px-1.5 py-0.5 text-[11px] bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 rounded border border-cyan-800/40 transition-colors"
           >
             status
           </button>
           <button 
             onClick={() => runShortcut('train')}
-            className="px-1.5 py-0.5 text-[10px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 rounded border border-emerald-800/40 transition-colors"
+            className="px-1.5 py-0.5 text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 rounded border border-emerald-800/40 transition-colors"
           >
             train
           </button>
           <button 
             onClick={() => runShortcut('contracts')}
-            className="px-1.5 py-0.5 text-[10px] bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 rounded border border-amber-800/40 transition-colors"
+            className="px-1.5 py-0.5 text-[11px] bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 rounded border border-amber-800/40 transition-colors"
           >
             gigs
           </button>
           <button 
             onClick={() => runShortcut('singularity')}
-            className="px-1.5 py-0.5 text-[10px] bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 rounded border border-purple-800/40 transition-colors"
+            className="px-1.5 py-0.5 text-[11px] bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 rounded border border-purple-800/40 transition-colors"
           >
-            singularity
+            {story.progressShort}
           </button>
           <button 
             onClick={() => runShortcut('clear')}
@@ -182,7 +182,7 @@ export const Terminal: React.FC = () => {
 
         {state.logs.slice().reverse().map(log => (
           <div key={log.id} className="flex items-start gap-2 leading-relaxed break-words font-mono">
-            <span className="text-zinc-600 text-[10px] select-none shrink-0 font-mono">[{log.timestamp}]</span>
+            <span className="text-zinc-600 text-[11px] select-none shrink-0 font-mono">[{log.timestamp}]</span>
             <span className={`flex-1 whitespace-pre-wrap ${getLogStyle(log.type)}`}>
               {getLogMessage(log)}
             </span>
@@ -210,7 +210,7 @@ export const Terminal: React.FC = () => {
           className="px-2 py-1 mutating-btn-primary rounded text-xs flex items-center gap-1 transition-all cursor-pointer font-bold"
         >
           <CornerDownLeft className="w-3 h-3" />
-          <span className="hidden sm:inline text-[10px]">{localize(state.language, 'EJEC', 'EXEC')}</span>
+          <span className="hidden sm:inline text-[11px]">{localize(state.language, 'EJEC', 'EXEC')}</span>
         </button>
       </form>
     </div>

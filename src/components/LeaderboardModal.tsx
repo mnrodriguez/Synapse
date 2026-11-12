@@ -43,7 +43,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 theme-warn-text" />
             <h3 className="font-bold text-sm mutating-accent-text tracking-wider">
-              {localize(state.language, 'MATRIZ GLOBAL DE OPERATIVOS // RANKING DE SINGULARIDAD', 'GLOBAL OPERATIVE MATRIX // SINGULARITY LEADERBOARD')}
+              {localize(state.language, 'RANKING GLOBAL', 'GLOBAL LEADERBOARD')}
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -105,15 +105,15 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
                         <div className="font-bold theme-text flex items-center gap-1.5">
                           <span>{op.callsign}</span>
                           {op.achievedSingularity && (
-                            <span className="px-1.5 py-0.2 theme-accent-soft mutating-accent-text rounded text-[9px] font-bold">
+                            <span className="px-1.5 py-0.2 theme-accent-soft mutating-accent-text rounded text-[11px] font-bold">
                               ASI
                             </span>
                           )}
                           {isCurrent && (
-                            <span className="text-[10px] mutating-accent-text">({localize(state.language, 'TÚ', 'YOU')})</span>
+                            <span className="text-[11px] mutating-accent-text">({localize(state.language, 'TÚ', 'YOU')})</span>
                           )}
                         </div>
-                        <span className="text-[10px] mutating-text-muted block truncate max-w-[200px]">
+                        <span className="text-[11px] mutating-text-muted block truncate max-w-[200px]">
                           {op.activeArchitecture || 'Transformer'}
                         </span>
                       </div>
@@ -121,11 +121,11 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
 
                     <div className="flex items-center gap-4 text-right">
                       <div>
-                        <span className="text-[10px] mutating-text-muted block">{localize(state.language, 'CÓMPUTO', 'COMPUTE')}</span>
+                        <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'CÓMPUTO', 'COMPUTE')}</span>
                         <span className="mutating-accent-text font-bold">{op.computePFLOPS?.toFixed(4) || '0.0044'} PF</span>
                       </div>
                       <div className="w-20">
-                        <span className="text-[10px] mutating-text-muted block">{localize(state.language, 'SINGULARIDAD', 'SINGULARITY')}</span>
+                        <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'PROGRESO', 'PROGRESS')}</span>
                         <span className="mutating-accent-text font-bold">{op.singularityProgress?.toFixed(1) || '0.0'}%</span>
                       </div>
                     </div>
