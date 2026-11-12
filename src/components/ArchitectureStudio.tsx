@@ -44,6 +44,7 @@ import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSec
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
 import { DocLinkBadge } from './DocLinkBadge';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 
 const DEFAULT_TRAINING_TOKENS_ESTIMATE = 50_000_000; // general corpus, used for the architecture estimate
 
@@ -59,6 +60,8 @@ export const ArchitectureStudio: React.FC = () => {
     renameModel,
     mountHostModel
   } = useGame();
+  // Story texts of the active UI version (early versions must not name the end goal).
+  const story = VERSION_PROFILES[state.language === 'es' ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].story;
   const [newModelName, setNewModelName] = useState(`SYNAPSE-Model-${state.savedModels.length + 1}`);
   const [editingModelId, setEditingModelId] = useState<string | null>(null);
   const [editingModelName, setEditingModelName] = useState('');
@@ -212,7 +215,7 @@ export const ArchitectureStudio: React.FC = () => {
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 mutating-accent-text" />
           <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
-            {localize(state.language, 'ESTUDIO DE ARQUITECTURA NEURONAL // TOPOLOGÍA', 'NEURAL ARCHITECTURE STUDIO // TOPOLOGY')}
+            {story.architectureTitle}
           </h2>
         </div>
 
@@ -300,9 +303,9 @@ export const ArchitectureStudio: React.FC = () => {
                     disabled={!!state.activeTraining}
                     onClick={() => selectModel(model.id)}
                     className="max-w-48 truncate text-left disabled:cursor-not-allowed"
-                    title={`${model.name} · IQ ${model.reasoningScore}`}
+                    title={`${model.name} · score ${model.reasoningScore}`}
                   >
-                    {model.name} <span className="opacity-75">· IQ {model.reasoningScore}</span>
+                    {model.name} <span className="opacity-75">· {state.language === 'es' ? 'Puntaje' : 'Score'} {model.reasoningScore}</span>
                   </button>
                   <button
                     type="button"
@@ -349,8 +352,8 @@ export const ArchitectureStudio: React.FC = () => {
           <p className="text-[11px] leading-relaxed mutating-text-muted">
             {localize(
               state.language,
-              'Entrenar una IA consiste en procesar millones de palabras (tokens) de un dataset para ajustar sus conexiones neuronales (parámetros). Cuantos más parámetros tiene el modelo, mayor es su capacidad de razonamiento (IQ), pero exigirá más memoria VRAM en tus GPUs y más refrigeración.',
-              'Training an AI means processing millions of dataset tokens to refine its neural weights (parameters). Models with more parameters achieve higher reasoning IQ, but require more GPU VRAM and active cooling capacity.'
+              'Entrenar una IA consiste en procesar millones de palabras (tokens) de un dataset para ajustar sus conexiones neuronales (parámetros). Cuantos más parámetros tiene el modelo, mayor es su puntaje de evaluación, pero exigirá más memoria VRAM en tus GPUs y más refrigeración.',
+              'Training an AI means processing millions of dataset tokens to refine its neural weights (parameters). Models with more parameters achieve higher evaluation scores, but require more GPU VRAM and active cooling capacity.'
             )}
           </p>
           <div className="flex flex-wrap gap-2 text-[10px] pt-1 text-purple-400 font-bold">
@@ -386,7 +389,7 @@ export const ArchitectureStudio: React.FC = () => {
         </div>
         <div>
           <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
-          <span className="text-purple-500 font-bold">IQ {current.reasoningScore} pts</span>
+          <span className="text-purple-500 font-bold">{state.language === 'es' ? 'Puntaje' : 'Score'} {current.reasoningScore} / 100</span>
           {current.modelType === 'micro_model' && (
             <span className="text-[10px] text-purple-400 block font-bold">
               +{Math.round(((current.domainProficiency || 1.5) - 1) * 100)}% {current.specializedDomain?.toUpperCase()}
@@ -414,7 +417,7 @@ export const ArchitectureStudio: React.FC = () => {
         <div className="flex items-center justify-between col-span-2 sm:col-span-5 pt-2 border-t border-current/10">
           <div className="flex items-center gap-2">
             <span className="text-[11px] mutating-text-muted">
-              {localize(state.language, 'Agente Anfitrión Activo:', 'Active Host Agent:')} <strong className="mutating-accent-text">{current.name}</strong> (IQ {current.reasoningScore} / 100)
+              {localize(state.language, 'Agente Anfitrión Activo:', 'Active Host Agent:')} <strong className="mutating-accent-text">{current.name}</strong> ({state.language === 'es' ? 'Puntaje' : 'Score'} {current.reasoningScore} / 100)
             </span>
           </div>
           <button
@@ -423,7 +426,7 @@ export const ArchitectureStudio: React.FC = () => {
             className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:brightness-110 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(168,85,247,0.35)] transition cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{localize(state.language, 'MONTAR COMO AGENTE ANFITRIÓN GÉNESIS', 'MOUNT MODEL AS SYNAPSE HOST AGENT')}</span>
+            <span>{story.hostAgentButton}</span>
           </button>
         </div>
       </div>
@@ -573,8 +576,8 @@ export const ArchitectureStudio: React.FC = () => {
             <span className="text-[11px] text-amber-300">
               {localize(
                 state.language,
-                'Módulo de Scraping Bloqueado: Entrena tu modelo general a IQ ≥ 20 para desbloquear la generación de datasets especializados en la pestaña "Datos & Grafos".',
-                'Data Scraping Locked: Level your general model to Reasoning IQ ≥ 20 to unlock custom specialized datasets in the "Data & Graphs" tab.'
+                'Módulo de Scraping Bloqueado: Entrena tu modelo general a puntaje ≥ 20 para desbloquear la generación de datasets especializados en la pestaña "Datos & Grafos".',
+                'Data Scraping Locked: Level your general model to Evaluation score ≥ 20 to unlock custom specialized datasets in the "Data & Graphs" tab.'
               )}
             </span>
           </div>

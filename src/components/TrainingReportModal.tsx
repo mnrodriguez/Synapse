@@ -41,7 +41,7 @@ export const TrainingReportModal: React.FC = () => {
             <span className="font-bold">{report.isMicroModel ? 'Micro-Model' : 'General'}</span>
           </div>
           <div className="flex justify-between gap-3">
-            <span className="mutating-text-muted">{localize(state.language, 'IQ de razonamiento', 'Reasoning IQ')}</span>
+            <span className="mutating-text-muted">{localize(state.language, 'Puntaje de evaluación', 'Evaluation score')}</span>
             <span className="font-bold">
               {report.reasoningBefore} → {report.reasoningAfter}
               <span className={delta > 0 ? 'text-emerald-500 ml-2' : 'mutating-text-muted ml-2'}>

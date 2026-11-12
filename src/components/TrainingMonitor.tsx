@@ -136,7 +136,7 @@ export const TrainingMonitor: React.FC = () => {
                   <div className="pt-1 border-t border-current/10 flex items-center justify-between text-[11px]">
                     <span className="text-purple-400 font-bold flex items-center gap-1">
                       <Brain className="w-3 h-3 text-purple-400" />
-                      IQ {model.reasoningScore ?? 0}
+                      {state.language === 'es' ? 'Puntaje' : 'Score'} {model.reasoningScore ?? 0}
                     </span>
                     <span className={`text-[10px] ${hasVram ? 'mutating-text-muted' : 'text-rose-500 font-bold'}`}>
                       {model.vramRequiredGb} GB VRAM
@@ -159,8 +159,8 @@ export const TrainingMonitor: React.FC = () => {
               <p className="text-[10px] mutating-text-muted mt-0.5">
                 {localize(
                   state.language,
-                  'Los datos procesados reducirán la función de pérdida y aumentarán el coeficiente intelectual (IQ) de razonamiento del modelo seleccionado.',
-                  'Processed training data will decrease loss and elevate the reasoning IQ score of the selected model.'
+                  'Los datos procesados reducirán la función de pérdida y aumentarán el puntaje de evaluación del modelo seleccionado.',
+                  'Processed training data will decrease loss and elevate the evaluation score of the selected model.'
                 )}
               </p>
             </div>

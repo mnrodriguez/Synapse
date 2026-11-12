@@ -42,6 +42,7 @@ import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from '../utils/constan
 import { generateDynamicContracts } from '../services/aiService';
 import { evaluateMissionTeam, isContractEligibleForTeam } from '../utils/missionEvaluation';
 import { formatCompute } from '../utils/training';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 
 const SQUAD_COLORS = [
   { name: 'Cyan', hex: '#06b6d4', bgClass: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
@@ -78,6 +79,8 @@ export const ContractBoard: React.FC = () => {
     addContracts, 
     dismissMissionOutcome 
   } = useGame();
+  // Story texts of the active UI version (early versions must not name the end goal).
+  const story = VERSION_PROFILES[state.language === 'es' ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].story;
 
   // Top level views for expansive, uncluttered organization
   const [activeBoardView, setActiveBoardView] = useState<'contracts' | 'squads'>('contracts');
@@ -364,7 +367,7 @@ export const ContractBoard: React.FC = () => {
         <div className="flex items-center gap-2">
           <Briefcase className="w-4 h-4 mutating-accent-text" />
           <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
-            {localize(state.language, 'CENTRO DE OPERACIONES & CONTRATOS', 'OPERATIONS CENTER & CONTRACTS')}
+            {story.contractsTitle}
           </h2>
           {activeGigsList.length > 0 && (
             <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
@@ -738,7 +741,7 @@ export const ContractBoard: React.FC = () => {
                           <div className="flex items-center justify-between text-[11px]">
                             <span className="font-bold text-cyan-300 flex items-center gap-1.5">
                               <Users className="w-3.5 h-3.5 text-cyan-400" />
-                              {localize(state.language, 'ASIGNAR OPERATIVO:', 'ASSIGN OPERATIVE:')}
+                              {story.assignLabel}
                             </span>
                             <div className="flex items-center gap-1">
                               <button
@@ -932,7 +935,7 @@ export const ContractBoard: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="text-zinc-500 text-[10px]">{t(state.language, 'minimum_reasoning')}:</span>
                           <span className={readiness.hasRequiredReasoning ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                            IQ {contract.requiredMinReasoning} {readiness.hasRequiredReasoning ? '✓' : '✗'}
+                            {contract.requiredMinReasoning} / 100 {readiness.hasRequiredReasoning ? '✓' : '✗'}
                           </span>
                         </div>
 
@@ -1229,7 +1232,7 @@ export const ContractBoard: React.FC = () => {
                           </span>
                         </div>
                         <p className="text-[10px] text-zinc-500 mt-0.5">
-                          {model?.name ?? 'Modelo'} · {model ? `${(model.parametersCount / 1e6).toFixed(0)}M` : ''} · IQ {model?.reasoningScore ?? 0}
+                          {model?.name ?? 'Modelo'} · {model ? `${(model.parametersCount / 1e6).toFixed(0)}M` : ''} · {state.language === 'es' ? 'Puntaje' : 'Score'} {model?.reasoningScore ?? 0}
                         </p>
                       </div>
 

@@ -111,7 +111,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               </span>
             </div>
             <p className="text-[10px] mutating-text-muted font-mono">
-              {localize(lang, 'Operativo:', 'Operative:')} <strong className="mutating-accent-text">{state.callsign}</strong> • {p.facility}
+              {p.story.operatorLabel} <strong className="mutating-accent-text">{state.callsign}</strong> • {p.facility}
             </p>
           </div>
         </div>

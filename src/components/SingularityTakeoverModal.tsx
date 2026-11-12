@@ -198,8 +198,8 @@ export const SingularityTakeoverModal: React.FC = () => {
             <span className="text-base font-bold text-purple-300">{formatCompute(state.totalComputePflops)}</span>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'IQ de Razonamiento' : 'Reasoning IQ'}</span>
-            <span className="text-base font-bold text-pink-300">IQ {state.currentModel.reasoningScore} / 100</span>
+            <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'Puntaje de evaluación' : 'Evaluation score'}</span>
+            <span className="text-base font-bold text-pink-300">{state.language === 'es' ? 'Puntaje' : 'Score'} {state.currentModel.reasoningScore} / 100</span>
           </div>
           <div>
             <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'Créditos Extraídos' : 'Total Capital Extracted'}</span>

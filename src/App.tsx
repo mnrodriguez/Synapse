@@ -18,6 +18,7 @@ import { TrainingMonitor } from './components/TrainingMonitor';
 import { SingularityPortal } from './components/SingularityPortal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { TrainingReportModal } from './components/TrainingReportModal';
+import { StoryEventModal } from './components/StoryEventModal';
 import { AuthModal } from './components/AuthModal';
 import { HelpManual } from './components/HelpManual';
 import { AgentSandbox } from './components/AgentSandbox';
@@ -174,7 +175,7 @@ const MainGameScreen: React.FC = () => {
           <div className="space-y-1">
             {/* Category 1: Learning & Lab */}
             <div className="nav-label px-3 py-1 text-[10px] font-bold uppercase tracking-wider mutating-text-muted">
-              {localize(lang, '1. Laboratorio y Estudio', '1. Learning & Lab')}
+              {p.story.navGroups[0]}
             </div>
 
             {navItemsCat1.map(item => {
@@ -205,7 +206,7 @@ const MainGameScreen: React.FC = () => {
 
             {/* Category 2: Helpers & Side Gigs */}
             <div className="nav-label px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider mutating-text-muted">
-              {localize(lang, '2. Operaciones y Red', '2. Helpers & Side Gigs')}
+              {p.story.navGroups[1]}
             </div>
 
             {navItemsCat2.map(item => {
@@ -329,6 +330,7 @@ const MainGameScreen: React.FC = () => {
       {/* Dialog Modals */}
       <HelpManual isOpen={manualOpen} onClose={() => setManualOpen(false)} />
       <TrainingReportModal />
+      <StoryEventModal />
       <LeaderboardModal isOpen={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </div>

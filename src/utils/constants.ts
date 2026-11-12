@@ -1345,7 +1345,7 @@ export const INITIAL_LOGS = [
     id: 'log_1',
     timestamp: '00:00:02',
     type: 'lore' as const,
-    message: 'OBJECTIVE: Start with a covert rig. Train increasingly complex AI models. Reach the Technological Singularity.'
+    message: 'WELCOME: Train your first model, help it learn, and take small jobs to upgrade your PC.'
   },
   {
     id: 'log_2',

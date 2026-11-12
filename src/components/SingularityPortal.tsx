@@ -121,7 +121,7 @@ export const SingularityPortal: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs">
           <div>
             <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
-            <span className="mutating-accent-text font-bold font-mono">IQ {state.currentModel.reasoningScore} / 100</span>
+            <span className="mutating-accent-text font-bold font-mono">{state.language === 'es' ? 'Puntaje' : 'Score'} {state.currentModel.reasoningScore} / 100</span>
           </div>
           <div>
             <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'PARÁMETROS ACTIVOS', 'ACTIVE PARAMETERS')}</span>

@@ -34,9 +34,13 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 1 | R-1 escala única de 0 a 100 con migración (versión de guardado 10) · P0-1 y P0-2 misiones recalibradas | Aplicado |
 | 1 | P0-8 singularidad por mejora real, misiones y GPU nuevas | Aplicado; falta medir los tiempos jugando |
 | 1 | D-2 tests de balance (`bun test`) · D-3 typecheck y tests en CI | Aplicado |
-| 2 a 5 | Resto del plan | Pendiente |
+| 2 | H-1 títulos, rótulos y objetivo por versión en `VERSION_PROFILES.story`; la v1 y la v2 no nombran la Singularidad ni la subversión | Aplicado |
+| 2 | T-1 español neutro con tuteo · el "IQ" visible pasa a "puntaje de evaluación" | Aplicado |
+| 2 | H-3 ventanas de historia que pausan el juego: aviso del día 5 y auditoría del día 7 del préstamo, primer corte de luz, primer sobrecalentamiento | Aplicado |
+| 2 | H-2 diálogos y misiones por versión · H-5 finales y epílogo | Pendiente |
+| 3 a 5 | Resto del plan | Pendiente |
 
-Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los textos que todavía dicen "IQ" pasan a "puntaje de evaluación" en la fase 2 (T-5).
+Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).
 
 ## 1. Resumen ejecutivo
 
