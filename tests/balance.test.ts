@@ -13,6 +13,7 @@ import {
 } from '../src/utils/training';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, LOAN_WARNING_DAY } from '../src/utils/storyEvents';
 import type { GameState } from '../src/types/game';
+import { planTrainingRun, lossAt, vramForRun, sanitizeTrainingConfig, DEFAULT_TRAINING_CONFIG, MAX_EPOCHS } from '../src/utils/trainingRun';
 import { buildEpilogue, canAttemptContainment, endingTitle, CONTAINMENT_MAX_SUBVERSION } from '../src/utils/epilogue';
 import { agentChatter, AGENT_DIALOGUE_ROLES, STORY_LINES_FOR_TESTS, COVERT_LINES_FOR_TESTS } from '../src/utils/agentDialogues';
 
@@ -234,5 +235,65 @@ describe('endings and epilogue', () => {
       expect(endingTitle({ ...ready, language: 'es' }, kind).title).toMatch(/^Final/);
       expect(endingTitle({ ...ready, language: 'en' }, kind).title).toMatch(/^Ending/);
     }
+  });
+});
+
+describe('training runs (validation, overfitting, learning rate)', () => {
+  const starter = { currentScore: INITIAL_MODEL.reasoningScore, parametersCount: 14e6, datasetTokens: STARTER_TRAINING_DATASET.tokensCount * 1e6, datasetQuality: STARTER_TRAINING_DATASET.qualityScore, priorRunsOnDataset: 0 };
+  const run = (over: Partial<typeof starter> = {}, config: Partial<typeof DEFAULT_TRAINING_CONFIG> = {}) =>
+    planTrainingRun({ ...starter, ...over, config: { ...DEFAULT_TRAINING_CONFIG, ...config } });
+
+  test('with default settings the starter model still reaches the first mission within 4 runs', () => {
+    let score = starter.currentScore;
+    let runs = 0;
+    while (score < FIRST_MISSION_IQ && runs < 10) {
+      score += run({ currentScore: score, priorRunsOnDataset: runs }).scoreChange;
+      runs++;
+    }
+    expect(runs).toBeLessThanOrEqual(4);
+  });
+
+  test('early stopping never loses score; too many epochs without it does', () => {
+    for (let epochs = 1; epochs <= MAX_EPOCHS; epochs++) {
+      expect(run({}, { epochs, earlyStopping: true }).scoreChange).toBeGreaterThanOrEqual(0);
+    }
+    const long = run({}, { epochs: 6, earlyStopping: false });
+    expect(long.outcome).toBe('overfit');
+    expect(long.scoreChange).toBeLessThan(0);
+  });
+
+  test('a very high learning rate diverges and a low one learns less', () => {
+    const diverged = run({}, { learningRate: 'very_high' });
+    expect(diverged.outcome).toBe('diverged');
+    expect(diverged.scoreChange).toBe(0);
+    expect(diverged.stopEpoch).toBeLessThan(1);
+    expect(run({}, { learningRate: 'low' }).scoreChange).toBeLessThan(run().scoreChange);
+  });
+
+  test('repeating a dataset makes the model overfit sooner', () => {
+    expect(run({ priorRunsOnDataset: 3 }).overfitEpoch).toBeLessThan(run().overfitEpoch);
+  });
+
+  test('more data per parameter and better quality delay overfitting', () => {
+    expect(run({ datasetTokens: 500e6 }).overfitEpoch).toBeGreaterThan(run().overfitEpoch);
+    expect(run({ datasetQuality: 95 }).overfitEpoch).toBeGreaterThan(run({ datasetQuality: 40 }).overfitEpoch);
+  });
+
+  test('validation loss rises past the overfitting point', () => {
+    const plan = run({}, { epochs: 6, earlyStopping: false });
+    const atBest = lossAt(plan, plan.overfitEpoch).val;
+    expect(lossAt(plan, plan.overfitEpoch + 2).val).toBeGreaterThan(atBest);
+    expect(lossAt(plan, plan.overfitEpoch + 2).train).toBeLessThan(lossAt(plan, plan.overfitEpoch).train);
+  });
+
+  test('a bigger batch needs more VRAM; the medium batch is the model listing', () => {
+    expect(vramForRun(10, 'small')).toBeLessThan(vramForRun(10, 'medium'));
+    expect(vramForRun(10, 'medium')).toBe(10);
+    expect(vramForRun(10, 'large')).toBeGreaterThan(10);
+  });
+
+  test('saved settings are sanitized', () => {
+    expect(sanitizeTrainingConfig({ epochs: 99, learningRate: 'turbo', batchSize: 'large' })).toEqual({ ...DEFAULT_TRAINING_CONFIG, epochs: MAX_EPOCHS, batchSize: 'large' });
+    expect(sanitizeTrainingConfig(undefined)).toEqual(DEFAULT_TRAINING_CONFIG);
   });
 });

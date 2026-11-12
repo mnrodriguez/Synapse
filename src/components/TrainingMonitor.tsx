@@ -22,6 +22,8 @@ import { sound } from '../audio/soundManager';
 import { gpuComputePflops, formatTrainingTime, externalComputePflops, formatCompute } from '../utils/training';
 import { STARTER_TRAINING_DATASET } from '../utils/constants';
 import { localize } from '../utils/i18n';
+import { TrainingConfigPanel } from './TrainingConfigPanel';
+import { sanitizeTrainingConfig, vramForRun, BATCH_SIZES, learningRateLabel } from '../utils/trainingRun';
 
 // Selected dataset: an inline style so the accent border and tint win over the theme surface classes.
 const DATASET_SELECTED_STYLE: React.CSSProperties = {
@@ -42,7 +44,9 @@ export const TrainingMonitor: React.FC = () => {
   const totalClusterVram = state.hardware.reduce((sum, h) => 
     h.category === 'gpu' ? sum + (h.vramGb * h.count) : sum, 0
   );
-  const isVramSufficient = totalClusterVram >= current.vramRequiredGb;
+  // The batch changes the memory a run needs (see utils/trainingRun.ts).
+  const runVramGb = vramForRun(current.vramRequiredGb, sanitizeTrainingConfig(state.trainingConfig).batchSize);
+  const isVramSufficient = totalClusterVram >= runVramGb;
   const isBreakerTripped = state.powerTripSeconds > 0;
   const isDetained = state.detentionSeconds > 0;
 
@@ -54,7 +58,8 @@ export const TrainingMonitor: React.FC = () => {
       domain: 'general',
       tier: 1,
       // Show the tokens the run will actually use: the saved general corpus when present.
-      tokensCount: STARTER_TRAINING_DATASET.tokensCount
+      tokensCount: STARTER_TRAINING_DATASET.tokensCount,
+      qualityScore: STARTER_TRAINING_DATASET.qualityScore
     },
     // The general corpus is listed once above; a saved dataset with the same id would make two options look selected.
     ...state.customDatasets.map(ds => ({
@@ -62,7 +67,8 @@ export const TrainingMonitor: React.FC = () => {
       name: `${ds.name} (${ds.domainLabel})`,
       domain: ds.domain,
       tier: ds.tier,
-      tokensCount: ds.tokensCount
+      tokensCount: ds.tokensCount,
+      qualityScore: ds.qualityScore
     }))
   ];
 
@@ -198,6 +204,19 @@ export const TrainingMonitor: React.FC = () => {
             </div>
           </div>
 
+          {/* Run settings and their cost */}
+          {(() => {
+            const ds = unlockedDatasets.find(d => d.id === selectedDatasetId) ?? unlockedDatasets[0];
+            return (
+              <TrainingConfigPanel
+                datasetId={ds.id}
+                datasetTokensMillions={ds.tokensCount}
+                datasetQuality={ds.qualityScore ?? 70}
+                totalVramGb={totalClusterVram}
+              />
+            );
+          })()}
+
           {/* Hardware & VRAM Requirement Check */}
           <div className="p-3 rounded-lg border border-current/15 mutating-card flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="space-y-1">
@@ -207,7 +226,7 @@ export const TrainingMonitor: React.FC = () => {
                   {localize(state.language, 'Verificación de Memoria VRAM:', 'VRAM Memory Audit:')}
                 </span>
                 <span className={isVramSufficient ? 'theme-success-text font-bold' : 'theme-danger-text font-bold'}>
-                  {current.vramRequiredGb} GB {localize(state.language, 'requeridos', 'required')} / {totalClusterVram} GB {localize(state.language, 'disponibles', 'available')}
+                  {runVramGb} GB {localize(state.language, 'requeridos', 'required')} / {totalClusterVram} GB {localize(state.language, 'disponibles', 'available')}
                 </span>
               </div>
               <p className="text-[11px] mutating-text-muted">
@@ -248,12 +267,17 @@ export const TrainingMonitor: React.FC = () => {
   const width = 450;
   const height = 140;
 
-  const points = history.map((loss, idx) => {
-    const x = (idx / Math.max(1, history.length - 1)) * width;
+  const toPoints = (series: number[]) => series.map((loss, idx) => {
+    const x = (idx / Math.max(1, series.length - 1)) * width;
     const normalizedLoss = Math.min(1, Math.max(0, (loss - minLoss) / (maxLoss - minLoss)));
     const y = height - (normalizedLoss * height);
     return `${x},${y}`;
   }).join(' ');
+  const points = toPoints(history);
+  const valHistory = job.valLossHistory ?? [];
+  const valPoints = toPoints(valHistory);
+  // Validation going up while training goes down is the sign of overfitting.
+  const valRising = valHistory.length > 3 && valHistory[valHistory.length - 1] > Math.min(...valHistory) + 0.05;
 
   return (
     <div className="flex flex-col h-full mutating-panel border rounded-xl p-3 sm:p-4 overflow-y-auto space-y-4 font-mono">
@@ -335,10 +359,13 @@ export const TrainingMonitor: React.FC = () => {
         <div className="flex items-center justify-between text-xs">
           <span className="font-bold mutating-accent-text flex items-center gap-1.5">
             <TrendingDown className="w-3.5 h-3.5" />
-            {localize(state.language, 'CURVA DE PÉRDIDA EN TIEMPO REAL (CROSS-ENTROPY LOSS)', 'REAL-TIME LOSS CURVE (CROSS-ENTROPY)')}
+            {localize(state.language, 'CURVAS DE PÉRDIDA: ENTRENAMIENTO Y VALIDACIÓN', 'LOSS CURVES: TRAINING AND VALIDATION')}
           </span>
-          <span className="theme-success-text font-bold font-mono">
-            {localize(state.language, 'Pérdida actual:', 'Current loss:')} {job.currentLoss.toFixed(4)}
+          <span className="font-bold font-mono flex flex-wrap gap-3">
+            <span className="mutating-accent-text">{localize(state.language, 'Entrenamiento', 'Training')}: {job.currentLoss.toFixed(4)}</span>
+            {job.currentValLoss !== undefined && (
+              <span className="theme-warn-text">{localize(state.language, 'Validación', 'Validation')}: {job.currentValLoss.toFixed(4)}</span>
+            )}
           </span>
         </div>
 
@@ -350,7 +377,19 @@ export const TrainingMonitor: React.FC = () => {
             <line x1="0" y1="70" x2={width} y2="70" stroke="currentColor" strokeOpacity="0.1" strokeDasharray="4" />
             <line x1="0" y1="105" x2={width} y2="105" stroke="currentColor" strokeOpacity="0.1" strokeDasharray="4" />
 
-            {/* Loss Polyline */}
+            {/* Validation loss (dashed) */}
+            {valPoints && (
+              <polyline
+                fill="none"
+                stroke="var(--accent-warn)"
+                strokeWidth="2"
+                strokeDasharray="6 4"
+                points={valPoints}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+            {/* Training loss */}
             {points && (
               <polyline
                 fill="none"
@@ -365,8 +404,12 @@ export const TrainingMonitor: React.FC = () => {
         </div>
         <div className="flex items-center justify-between text-[11px] mutating-text-muted">
           <span>{localize(state.language, 'Paso Inicial:', 'Initial step:')} {job.initialLoss}</span>
-          <span className="mutating-accent-text">{localize(state.language, 'Tendencia: Convergencia Monótona', 'Trend: Monotonic convergence')}</span>
-          <span>{localize(state.language, 'Objetivo:', 'Target:')} &lt; 0.05</span>
+          <span className={valRising ? 'theme-danger-text font-bold' : 'mutating-accent-text'}>
+            {valRising
+              ? localize(state.language, 'La validación sube: el modelo empieza a memorizar (sobreajuste)', 'Validation is rising: the model is starting to memorise (overfitting)')
+              : localize(state.language, 'Línea llena: entrenamiento · punteada: validación', 'Solid: training · dashed: validation')}
+          </span>
+          <span>LR {learningRateLabel(state.language, job.plan ? job.plan.config.learningRate : 'balanced')} · batch {job.plan ? BATCH_SIZES[job.plan.config.batchSize].value : 64}</span>
         </div>
       </div>
 

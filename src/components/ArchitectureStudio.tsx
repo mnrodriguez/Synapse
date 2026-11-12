@@ -41,6 +41,7 @@ import {
 } from '../utils/aiDocumentation';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
 import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
+import { sanitizeTrainingConfig, BATCH_SIZES } from '../utils/trainingRun';
 import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime, externalComputePflops } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
@@ -76,9 +77,11 @@ export const ArchitectureStudio: React.FC = () => {
 
   const isVramSufficient = totalClusterVram >= current.vramRequiredGb;
   const agentComputeDemand = state.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
-  const trainingProgressPerTick = calculateTrainingProgressPerTick({
+  // Same estimate as the training panel: dataset tokens × epochs, sped up by the batch.
+  const runConfig = sanitizeTrainingConfig(state.trainingConfig);
+  const trainingProgressPerTick = BATCH_SIZES[runConfig.batchSize].speed * calculateTrainingProgressPerTick({
     parametersCount: current.parametersCount,
-    tokensCount: DEFAULT_TRAINING_TOKENS_ESTIMATE,
+    tokensCount: DEFAULT_TRAINING_TOKENS_ESTIMATE * runConfig.epochs,
     gpuPflops: gpuComputePflops(state.hardware),
     borrowedPflops: state.borrowedComputePflops + externalComputePflops(state),
     agentComputeDemand,
