@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { gpuComputePflops, formatTrainingTime } from '../utils/training';
+import { STARTER_TRAINING_DATASET } from '../utils/constants';
 import { localize } from '../utils/i18n';
 
 // Selected dataset: an inline style so the accent border and tint win over the theme surface classes.
@@ -34,7 +35,7 @@ export const TrainingMonitor: React.FC = () => {
   const job = state.activeTraining;
   const current = state.currentModel;
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>(
-    current.trainedOnDatasetId || 'dataset_general_corpus'
+    current.trainedOnDatasetId || STARTER_TRAINING_DATASET.id
   );
 
   // Total cluster VRAM calculation
@@ -48,15 +49,15 @@ export const TrainingMonitor: React.FC = () => {
   // Unlocked datasets for selection
   const unlockedDatasets = [
     {
-      id: 'dataset_general_corpus',
-      name: localize(state.language, 'Corpus General (Wikipedia / Libros / Noticias)', 'General Corpus (Web / Books / News)'),
+      id: STARTER_TRAINING_DATASET.id,
+      name: localize(state.language, 'Corpus de arranque (Wikipedia / Libros / Noticias)', 'Starter Corpus (Web / Books / News)'),
       domain: 'general',
       tier: 1,
       // Show the tokens the run will actually use: the saved general corpus when present.
-      tokensCount: state.customDatasets.find(d => d.id === 'dataset_general_corpus')?.tokensCount ?? 50
+      tokensCount: STARTER_TRAINING_DATASET.tokensCount
     },
     // The general corpus is listed once above; a saved dataset with the same id would make two options look selected.
-    ...state.customDatasets.filter(ds => ds.id !== 'dataset_general_corpus').map(ds => ({
+    ...state.customDatasets.map(ds => ({
       id: ds.id,
       name: `${ds.name} (${ds.domainLabel})`,
       domain: ds.domain,

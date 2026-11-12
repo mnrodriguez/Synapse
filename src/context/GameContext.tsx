@@ -51,6 +51,7 @@ import {
   AGENT_POWER_DRAW_KW,
   DAYS_PER_GAME_MONTH,
   DEFAULT_GENERAL_DATASET,
+  STARTER_TRAINING_DATASET,
   DATASET_TIER_CONFIGS,
   DOMAIN_PRESETS
 } from '../utils/constants';
@@ -2420,7 +2421,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Determine dataset & target model specialization
     const selectedDatasetId = datasetId || currentState.currentModel.trainedOnDatasetId || 'dataset_general_corpus';
-    const targetDataset = currentState.customDatasets.find(d => d.id === selectedDatasetId) || DEFAULT_GENERAL_DATASET;
+    const targetDataset = currentState.customDatasets.find(d => d.id === selectedDatasetId) || (selectedDatasetId === STARTER_TRAINING_DATASET.id ? STARTER_TRAINING_DATASET : DEFAULT_GENERAL_DATASET);
     const isMicro = asMicroModel !== undefined
       ? asMicroModel
       : (currentState.currentModel.modelType === 'micro_model' || (targetDataset.domain !== 'general' && targetDataset.id !== 'dataset_general_corpus'));
