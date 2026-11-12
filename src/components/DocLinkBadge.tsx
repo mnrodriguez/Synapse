@@ -45,7 +45,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
             }
           }}
           title={isEs ? `Ver documentación real: ${doc.title}` : `View official docs: ${doc.title}`}
-          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono tracking-wider transition-all cursor-pointer border select-none ${
+          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono tracking-wider transition-all cursor-pointer border select-none ${
             doc.type === 'official'
               ? 'bg-cyan-950/50 hover:bg-cyan-900/60 text-cyan-300 border-cyan-700/50 hover:border-cyan-400'
               : doc.type === 'research_paper'
@@ -63,7 +63,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
         <button
           type="button"
           onClick={handleClick}
-          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-mono font-bold transition-all border cursor-pointer ${
+          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-mono font-bold transition-all border cursor-pointer ${
             doc.type === 'official'
               ? 'bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 border-cyan-600/60 hover:shadow-[0_0_10px_rgba(0,255,200,0.2)]'
               : 'bg-purple-950/70 hover:bg-purple-900 text-purple-200 border-purple-600/60 hover:shadow-[0_0_10px_rgba(168,85,247,0.2)]'
@@ -103,7 +103,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-cyan-400 uppercase tracking-widest block font-bold">
+                  <span className="text-[11px] text-cyan-400 uppercase tracking-widest block font-bold">
                     {doc.category}
                   </span>
                   <h3 className="text-sm font-bold text-zinc-100 leading-snug">
@@ -125,7 +125,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
               <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700/60 text-zinc-300">
                 {isEs ? 'Fuente / Autor:' : 'Source / Author:'} <strong className="text-cyan-300">{doc.organization}</strong>
               </span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+              <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
                 doc.type === 'official'
                   ? 'bg-emerald-950/60 text-emerald-300 border-emerald-600/40'
                   : doc.type === 'research_paper'
@@ -149,7 +149,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
 
             {/* Real Link Action */}
             <div className="pt-2 flex items-center justify-between border-t border-cyan-900/40">
-              <span className="text-[10px] text-zinc-500">
+              <span className="text-[11px] text-zinc-500">
                 {isEs ? 'Abre en nueva pestaña para estudiar el concepto real.' : 'Opens in a new tab to inspect the real-world material.'}
               </span>
               <a

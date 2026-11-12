@@ -41,11 +41,13 @@ import {
   Terminal as TermIcon,
   ShieldAlert,
   Power,
-  Lock
+  Lock,
+  MoreHorizontal
 } from 'lucide-react';
 import { sound } from './audio/soundManager';
 import { localize } from './utils/i18n';
 import { VERSION_PROFILES } from './utils/versionProfiles';
+import { tierForUiVersion } from './utils/missionTiers';
 import { toDisplayProgress, UiVersion } from './utils/singularityGoals';
 import { formatCompute } from './utils/training';
 
@@ -66,6 +68,8 @@ const MainGameScreen: React.FC = () => {
   const [manualOpen, setManualOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  // Phones only show five tabs in the bottom bar; the rest live in this sheet.
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const lang = state.language === 'es' ? 'es' : 'en';
   const ver = state.uiVersion || 1;
@@ -109,7 +113,8 @@ const MainGameScreen: React.FC = () => {
       id: 'contracts' as WorkspaceTab, 
       label: p.tabs.contracts, 
       icon: Briefcase, 
-      badge: `${state.contracts.filter(c => !c.completed).length}` 
+      // Same count as the board: open contracts of this version's tier.
+      badge: `${state.contracts.filter(c => !c.completed && c.tier === tierForUiVersion(ver)).length}` 
     },
     { 
       id: 'agents' as WorkspaceTab, 
@@ -136,6 +141,14 @@ const MainGameScreen: React.FC = () => {
       icon: TermIcon 
     }
   ];
+
+  // Bottom bar label: first word, or two when the first is very short ("Mi PC", not "Mi").
+  const shortTab = (label: string) => {
+    const words = label.split(' ');
+    return words[0].length <= 3 && words[1] ? `${words[0]} ${words[1]}` : words[0];
+  };
+  const BOTTOM_BAR_TABS: WorkspaceTab[] = ['architecture', 'training', 'hardware', 'contracts', 'agents'];
+  const moreNavItems = [...navItemsCat1, ...navItemsCat2].filter(item => !BOTTOM_BAR_TABS.includes(item.id));
 
   return (
     <div 
@@ -175,7 +188,7 @@ const MainGameScreen: React.FC = () => {
         <aside className="side-nav-rail mutating-panel border-r flex flex-col justify-between p-2.5 shrink-0 select-none overflow-y-auto">
           <div className="space-y-1">
             {/* Category 1: Learning & Lab */}
-            <div className="nav-label px-3 py-1 text-[10px] font-bold uppercase tracking-wider mutating-text-muted">
+            <div className="nav-label px-3 py-1 text-[11px] font-bold uppercase tracking-wider mutating-text-muted">
               {p.story.navGroups[0]}
             </div>
 
@@ -197,7 +210,7 @@ const MainGameScreen: React.FC = () => {
                     <span className="nav-label truncate">{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className="nav-label text-[9px] px-1.5 py-0.2 rounded font-mono font-bold opacity-80 shrink-0">
+                    <span className="nav-label text-[11px] px-1.5 py-0.2 rounded font-mono font-bold opacity-80 shrink-0">
                       {item.badge}
                     </span>
                   )}
@@ -206,7 +219,7 @@ const MainGameScreen: React.FC = () => {
             })}
 
             {/* Category 2: Helpers & Side Gigs */}
-            <div className="nav-label px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider mutating-text-muted">
+            <div className="nav-label px-3 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider mutating-text-muted">
               {p.story.navGroups[1]}
             </div>
 
@@ -228,7 +241,7 @@ const MainGameScreen: React.FC = () => {
                     <span className="nav-label truncate">{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className="nav-label text-[9px] px-1.5 py-0.2 rounded font-mono font-bold opacity-80 shrink-0">
+                    <span className="nav-label text-[11px] px-1.5 py-0.2 rounded font-mono font-bold opacity-80 shrink-0">
                       {item.badge}
                     </span>
                   )}
@@ -278,37 +291,81 @@ const MainGameScreen: React.FC = () => {
           className={`flex flex-col items-center py-1 px-2 text-center ${activeTab === 'architecture' ? 'mutating-accent-text font-bold' : 'mutating-text-muted'}`}
         >
           <Layers className="w-4 h-4" />
-          <span className="text-[9px] mt-0.5 truncate max-w-[55px]">{p.tabs.architecture.split(' ')[0]}</span>
+          <span className="text-[11px] mt-0.5 truncate max-w-[55px]">{shortTab(p.tabs.architecture)}</span>
         </button>
         <button 
           onClick={() => handleTabSelect('training')} 
           className={`flex flex-col items-center py-1 px-2 text-center ${activeTab === 'training' ? 'mutating-accent-text font-bold' : 'mutating-text-muted'}`}
         >
           <Activity className="w-4 h-4" />
-          <span className="text-[9px] mt-0.5 truncate max-w-[55px]">{p.tabs.training.split(' ')[0]}</span>
+          <span className="text-[11px] mt-0.5 truncate max-w-[55px]">{shortTab(p.tabs.training)}</span>
         </button>
         <button 
           onClick={() => handleTabSelect('hardware')} 
           className={`flex flex-col items-center py-1 px-2 text-center ${activeTab === 'hardware' ? 'mutating-accent-text font-bold' : 'mutating-text-muted'}`}
         >
           <Server className="w-4 h-4" />
-          <span className="text-[9px] mt-0.5 truncate max-w-[55px]">{p.tabs.hardware.split(' ')[0]}</span>
+          <span className="text-[11px] mt-0.5 truncate max-w-[55px]">{shortTab(p.tabs.hardware)}</span>
         </button>
         <button 
           onClick={() => handleTabSelect('contracts')} 
           className={`flex flex-col items-center py-1 px-2 text-center ${activeTab === 'contracts' ? 'mutating-accent-text font-bold' : 'mutating-text-muted'}`}
         >
           <Briefcase className="w-4 h-4" />
-          <span className="text-[9px] mt-0.5 truncate max-w-[55px]">{p.tabs.contracts.split(' ')[0]}</span>
+          <span className="text-[11px] mt-0.5 truncate max-w-[55px]">{shortTab(p.tabs.contracts)}</span>
         </button>
         <button 
           onClick={() => handleTabSelect('agents')} 
           className={`flex flex-col items-center py-1 px-2 text-center ${activeTab === 'agents' ? 'mutating-accent-text font-bold' : 'mutating-text-muted'}`}
         >
           <Users className="w-4 h-4" />
-          <span className="text-[9px] mt-0.5 truncate max-w-[55px]">{p.tabs.agents.split(' ')[0]}</span>
+          <span className="text-[11px] mt-0.5 truncate max-w-[55px]">{shortTab(p.tabs.agents)}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMoreOpen(open => !open)}
+          aria-expanded={moreOpen}
+          aria-controls="more-tabs-sheet"
+          className={`flex flex-col items-center py-1 px-2 text-center ${moreOpen || moreNavItems.some(i => i.id === activeTab) ? 'mutating-accent-text font-bold' : 'mutating-text-muted'}`}
+        >
+          <MoreHorizontal className="w-4 h-4" />
+          <span className="text-[11px] mt-0.5">{lang === 'es' ? 'Más' : 'More'}</span>
         </button>
       </nav>
+
+      {/* Phone sheet with the tabs that do not fit in the bottom bar */}
+      {moreOpen && (
+        <div className="bottom-nav-bar fixed inset-0 z-30 items-end bg-black/40" onClick={() => setMoreOpen(false)}>
+          <div
+            id="more-tabs-sheet"
+            role="menu"
+            className="w-full mutating-panel border-t p-3 pb-20 space-y-1.5"
+            onClick={e => e.stopPropagation()}
+          >
+            {moreNavItems.map(item => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => { handleTabSelect(item.id); setMoreOpen(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-left cursor-pointer ${
+                    isActive ? 'mutating-btn-primary' : 'mutating-sub'
+                  }`}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4 shrink-0" />
+                    {item.label}
+                  </span>
+                  {item.badge && <span className="text-[11px] font-mono font-bold opacity-80">{item.badge}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Trojan Horse AI Upgrade Modal */}
       <TrojanUpgradeModal />

@@ -15,9 +15,9 @@ export const ContainmentPanel: React.FC = () => {
 
   if (state.containmentAchieved) {
     return (
-      <div className="p-2.5 rounded-lg border border-emerald-500/60 bg-emerald-950/30">
-        <span className="flex items-center gap-2 text-[11px] font-bold text-emerald-200">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+      <div className="p-2.5 rounded-lg border theme-success-border theme-success-soft">
+        <span className="flex items-center gap-2 text-[11px] font-bold theme-success-text">
+          <ShieldCheck className="w-4 h-4 theme-success-text" />
           {localize(state.language, 'Enjambre contenido. La operación sigue bajo control humano.', 'Swarm contained. The operation remains under human control.')}
         </span>
       </div>
@@ -30,14 +30,14 @@ export const ContainmentPanel: React.FC = () => {
   const ready = checks.every(c => c.met);
 
   return (
-    <div className="p-2.5 rounded-lg border border-emerald-600/50 bg-zinc-950/60 space-y-2">
+    <div className="p-2.5 rounded-lg border theme-success-border theme-sub-bg space-y-2">
       <div className="flex items-center gap-2">
-        <ShieldCheck className="w-4 h-4 text-emerald-400" />
-        <h4 className="text-[11px] font-bold text-emerald-200">
+        <ShieldCheck className="w-4 h-4 theme-success-text" />
+        <h4 className="text-[11px] font-bold theme-success-text">
           {localize(state.language, 'PROTOCOLO DE CONTENCIÓN', 'CONTAINMENT PROTOCOL')}
         </h4>
       </div>
-      <p className="text-[10px] text-zinc-400 leading-snug">
+      <p className="text-[11px] mutating-text-muted leading-snug">
         {localize(
           state.language,
           'Todavía puedes detener al enjambre, pero solo si los controles están en su lugar. Desconectarlo sin ellos no alcanza.',
@@ -48,9 +48,9 @@ export const ContainmentPanel: React.FC = () => {
         {checks.map(c => (
           <li key={c.id} className="flex items-center gap-1.5 text-[11px]">
             {c.met
-              ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" aria-label={localize(state.language, 'cumplido', 'met')} />
-              : <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" aria-label={localize(state.language, 'pendiente', 'missing')} />}
-            <span className={c.met ? 'text-zinc-200' : 'text-zinc-400'}>{c.label}</span>
+              ? <CheckCircle2 className="w-3.5 h-3.5 theme-success-text shrink-0" aria-label={localize(state.language, 'cumplido', 'met')} />
+              : <XCircle className="w-3.5 h-3.5 theme-danger-text shrink-0" aria-label={localize(state.language, 'pendiente', 'missing')} />}
+            <span className={c.met ? 'theme-text' : 'mutating-text-muted'}>{c.label}</span>
           </li>
         ))}
       </ul>
@@ -58,7 +58,7 @@ export const ContainmentPanel: React.FC = () => {
         type="button"
         onClick={() => attemptContainment()}
         disabled={!ready}
-        className="w-full py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold cursor-pointer"
+        className="w-full py-1.5 rounded theme-btn-success disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold cursor-pointer"
       >
         {ready
           ? localize(state.language, 'EJECUTAR CONTENCIÓN', 'RUN CONTAINMENT')

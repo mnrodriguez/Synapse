@@ -40,6 +40,7 @@ import {
   LOSS_DOCS 
 } from '../utils/aiDocumentation';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
+import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime, externalComputePflops } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
@@ -251,7 +252,7 @@ export const ArchitectureStudio: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-xs font-bold tracking-wider mutating-accent-text">{t(state.language, 'model_library')}</h3>
-            <p className="text-[10px] mutating-text-muted">{t(state.language, 'model_library_desc')}</p>
+            <p className="text-[11px] mutating-text-muted">{t(state.language, 'model_library_desc')}</p>
           </div>
           <form onSubmit={handleCreateModel} className="flex gap-1.5">
             <input
@@ -260,12 +261,12 @@ export const ArchitectureStudio: React.FC = () => {
               onChange={event => setNewModelName(event.target.value)}
               maxLength={40}
               disabled={!!state.activeTraining}
-              className="w-40 rounded border border-current/20 mutating-sub px-2 py-1 text-[10px] outline-none disabled:opacity-50"
+              className="w-40 rounded border border-current/20 mutating-sub px-2 py-1 text-[11px] outline-none disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={!!state.activeTraining || state.credits < 100}
-              className="rounded mutating-btn-primary px-2.5 py-1 text-[10px] font-bold disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+              className="rounded mutating-btn-primary px-2.5 py-1 text-[11px] font-bold disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               title={t(state.language, 'model_create_cost')}
             >
               + {t(state.language, 'create_model')} · 100 CR
@@ -277,7 +278,7 @@ export const ArchitectureStudio: React.FC = () => {
           {state.savedModels.map(model => (
             <div
               key={model.id}
-              className={`flex items-center gap-1 rounded border px-2 py-1 text-[10px] transition-all ${
+              className={`flex items-center gap-1 rounded border px-2 py-1 text-[11px] transition-all ${
                 current.id === model.id
                   ? 'mutating-btn-primary font-bold shadow-sm'
                   : 'mutating-sub mutating-text-muted hover:opacity-100'
@@ -291,7 +292,7 @@ export const ArchitectureStudio: React.FC = () => {
                     value={editingModelName}
                     onChange={event => setEditingModelName(event.target.value)}
                     maxLength={40}
-                    className="w-32 mutating-sub px-1 text-[10px] outline-none"
+                    className="w-32 mutating-sub px-1 text-[11px] outline-none"
                   />
                   <button type="submit" aria-label={t(state.language, 'save_name')} className="text-emerald-500"><Check className="h-3 w-3" /></button>
                   <button type="button" aria-label={t(state.language, 'cancel')} onClick={() => setEditingModelId(null)} className="mutating-text-muted"><X className="h-3 w-3" /></button>
@@ -320,14 +321,14 @@ export const ArchitectureStudio: React.FC = () => {
                   </button>
 
                   {current.id === model.id ? (
-                    <span className="ml-1 text-[9px] px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 font-bold border border-purple-500/40 shrink-0">
+                    <span className="ml-1 text-[11px] px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 font-bold border border-purple-500/40 shrink-0">
                       {localize(state.language, 'ANFITRIÓN ✓', 'HOST ✓')}
                     </span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => mountHostModel(model.id)}
-                      className="ml-1 text-[9px] px-1.5 py-0.2 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-200 font-bold border border-cyan-500/40 transition cursor-pointer shrink-0"
+                      className="ml-1 text-[11px] px-1.5 py-0.2 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-200 font-bold border border-cyan-500/40 transition cursor-pointer shrink-0"
                       title={localize(state.language, 'Montar como Agente Anfitrión de Synapse', 'Mount as Synapse Host Agent')}
                     >
                       🚀 {localize(state.language, 'Montar', 'Mount')}
@@ -356,7 +357,7 @@ export const ArchitectureStudio: React.FC = () => {
               'Training an AI means processing millions of dataset tokens to refine its neural weights (parameters). Models with more parameters achieve higher evaluation scores, but require more GPU VRAM and active cooling capacity.'
             )}
           </p>
-          <div className="flex flex-wrap gap-2 text-[10px] pt-1 text-purple-400 font-bold">
+          <div className="flex flex-wrap gap-2 text-[11px] pt-1 text-purple-400 font-bold">
             <span className="px-2 py-0.5 rounded bg-purple-500/15 border border-purple-500/30">
               💡 {localize(state.language, `Dificultad ${state.difficulty.toUpperCase()}: Micro-parámetros optimizados automáticamente`, `Difficulty ${state.difficulty.toUpperCase()}: Micro-parameters automatically optimized`)}
             </span>
@@ -370,11 +371,11 @@ export const ArchitectureStudio: React.FC = () => {
       {/* Model Spec Card */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mutating-sub p-2.5 rounded-lg text-xs">
         <div>
-          <span className="mutating-text-muted text-[10px] block">{t(state.language, 'base_model')}</span>
+          <span className="mutating-text-muted text-[11px] block">{t(state.language, 'base_model')}</span>
           <span className="mutating-accent-text font-bold">{current.name}</span>
         </div>
         <div>
-          <span className="mutating-text-muted text-[10px] block">{t(state.language, 'parameters')}</span>
+          <span className="mutating-text-muted text-[11px] block">{t(state.language, 'parameters')}</span>
           <span className="text-amber-500 font-bold">
             {current.parametersCount >= 1_000_000_000
               ? `${(current.parametersCount / 1_000_000_000).toFixed(1)}B`
@@ -382,34 +383,34 @@ export const ArchitectureStudio: React.FC = () => {
           </span>
         </div>
         <div>
-          <span className="mutating-text-muted text-[10px] block">{t(state.language, 'required_vram')}</span>
+          <span className="mutating-text-muted text-[11px] block">{t(state.language, 'required_vram')}</span>
           <span className={`font-bold ${isVramSufficient ? 'text-emerald-500' : 'text-rose-500'}`}>
             {current.vramRequiredGb} GB / {totalClusterVram} GB {isVramSufficient ? '✓' : '(OOM!)'}
           </span>
         </div>
         <div>
-          <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
+          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
           <span className="text-purple-500 font-bold">{state.language === 'es' ? 'Puntaje' : 'Score'} {current.reasoningScore} / 100</span>
           {current.modelType === 'micro_model' && (
-            <span className="text-[10px] text-purple-400 block font-bold">
+            <span className="text-[11px] text-purple-400 block font-bold">
               +{Math.round(((current.domainProficiency || 1.5) - 1) * 100)}% {current.specializedDomain?.toUpperCase()}
             </span>
           )}
         </div>
         <div>
-          <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'PREDICCIÓN CON HARDWARE ACTUAL', 'PREDICTION WITH CURRENT HW')}</span>
+          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'PREDICCIÓN CON HARDWARE ACTUAL', 'PREDICTION WITH CURRENT HW')}</span>
           <span className="text-emerald-500 font-bold block">
             {estimatedTrainingSeconds === null
               ? localize(state.language, 'Sin cómputo disponible', 'No compute available')
               : formatTrainingTime(estimatedTrainingSeconds, state.language)}
           </span>
-          <span className="text-[10px] mutating-text-muted font-mono block">
+          <span className="text-[11px] mutating-text-muted font-mono block">
             {estimatedTrainingSeconds === null
               ? ''
               : `(~${formatTrainingDuration(estimatedTrainingSeconds / estimateSpeed)} @ ${estimateSpeed}x)`}
           </span>
           {state.gameSpeed === 0 && (
-            <span className="text-[9px] text-amber-500 block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>
+            <span className="text-[11px] text-amber-500 block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>
           )}
         </div>
 
@@ -491,7 +492,7 @@ export const ArchitectureStudio: React.FC = () => {
               {localize(state.language, 'ESPECIALIZACIÓN Y CORPUS DE ENTRENAMIENTO // BASELINE GENERAL VS MICRO-MODELOS', 'TRAINING DATASET & SPECIALIZATION // GENERAL BASELINE VS MICRO-MODELS')}
             </h3>
           </div>
-          <span className="text-[10px] text-zinc-400">
+          <span className="text-[11px] text-zinc-400">
             {current.modelType === 'micro_model'
               ? localize(state.language, `MODO: MICRO-MODELO (${current.specializedDomain?.toUpperCase()})`, `MODE: MICRO-MODEL (${current.specializedDomain?.toUpperCase()})`)
               : localize(state.language, 'MODO: MODELO GENERAL (INFORMACIÓN AMPLIA)', 'MODE: GENERAL MODEL (BROAD SPECTRUM)')}
@@ -544,13 +545,13 @@ export const ArchitectureStudio: React.FC = () => {
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="truncate">{dataset.name}</span>
                   {isSelected && (
-                    <span className="text-[10px] text-cyan-400 font-mono">
+                    <span className="text-[11px] text-cyan-400 font-mono">
                       ✓ {localize(state.language, 'ACTIVO', 'ACTIVE')}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-[10px] mt-1 text-zinc-400">
-                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                <div className="flex items-center gap-2 text-[11px] mt-1 text-zinc-400">
+                  <span className={`px-1.5 py-0.2 rounded text-[11px] font-bold ${
                     isGeneral ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'bg-purple-950 text-purple-300 border border-purple-800'
                   }`}>
                     {isGeneral ? 'GENERAL T1' : `SPECIALIST T${dataset.tier}`}
@@ -558,11 +559,11 @@ export const ArchitectureStudio: React.FC = () => {
                   <span>{dataset.tokensCount}M tok</span>
                   <span>{dataset.qualityScore}% {localize(state.language, 'pureza', 'purity')}</span>
                 </div>
-                <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2 leading-tight">
+                <p className="text-[11px] text-zinc-500 mt-1 line-clamp-2 leading-tight">
                   {dataset.description}
                 </p>
                 {!isGeneral && (
-                  <div className="mt-1 text-[9px] text-emerald-400 font-bold">
+                  <div className="mt-1 text-[11px] text-emerald-400 font-bold">
                     +{Math.round(((1.4 + dataset.tier * 0.3) - 1) * 100)}% {localize(state.language, 'Pericia en contratos de', 'Proficiency in')} {dataset.domainLabel}
                   </div>
                 )}
@@ -576,8 +577,8 @@ export const ArchitectureStudio: React.FC = () => {
             <span className="text-[11px] text-amber-300">
               {localize(
                 state.language,
-                'Módulo de Scraping Bloqueado: Entrena tu modelo general a puntaje ≥ 20 para desbloquear la generación de datasets especializados en la pestaña "Datos & Grafos".',
-                'Data Scraping Locked: Level your general model to Evaluation score ≥ 20 to unlock custom specialized datasets in the "Data & Graphs" tab.'
+                `Módulo de Scraping Bloqueado: Entrena tu modelo general a puntaje ≥ ${DATA_SCRAPING_MIN_SCORE} para desbloquear la generación de datasets especializados en la pestaña "${VERSION_PROFILES.es[(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.data}".`,
+                `Data Scraping Locked: Level your general model to Evaluation score ≥ ${DATA_SCRAPING_MIN_SCORE} to unlock custom specialized datasets in the "${VERSION_PROFILES.en[(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.data}" tab.`
               )}
             </span>
           </div>
@@ -653,7 +654,7 @@ export const ArchitectureStudio: React.FC = () => {
                   {current.topology === top.id && <CheckCircle2 className="w-3 h-3 text-cyan-400" />}
                 </div>
               </div>
-              <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{top.desc}</p>
+              <p className="text-[11px] text-zinc-500 mt-1 leading-snug">{top.desc}</p>
             </div>
               );
             })()
@@ -699,7 +700,7 @@ export const ArchitectureStudio: React.FC = () => {
                 })()
               ))}
             </div>
-            <div className="mt-2 p-2 rounded bg-zinc-950/80 border border-zinc-800 text-[10px] text-zinc-400 flex flex-wrap items-center justify-between gap-2">
+            <div className="mt-2 p-2 rounded bg-zinc-950/80 border border-zinc-800 text-[11px] text-zinc-400 flex flex-wrap items-center justify-between gap-2">
               <span>{localize(state.language, 'Tokens Óptimos Chinchilla:', 'Chinchilla Optimal Tokens:')} <strong className="text-cyan-300 font-mono">{(current.parametersCount * 20 / 1_000_000).toFixed(0)}M tokens</strong></span>
               <span>{localize(state.language, 'Cómputo Teórico:', 'Theoretical Compute:')} <strong className="text-purple-300 font-mono">{(6 * current.parametersCount * (current.parametersCount * 20)).toExponential(2)} FLOPs</strong></span>
             </div>
@@ -746,7 +747,7 @@ export const ArchitectureStudio: React.FC = () => {
                 <div className="space-y-2 p-3.5 rounded-lg bg-zinc-900/50 border border-zinc-800">
                   <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
                     <span>{t(state.language, 'quantization')}</span>
-                    <span className="text-[10px] text-zinc-500 font-mono">WEIGHT MEMORY</span>
+                    <span className="text-[11px] text-zinc-500 font-mono">WEIGHT MEMORY</span>
                   </label>
                   <div className="space-y-2">
                     {[
@@ -800,7 +801,7 @@ export const ArchitectureStudio: React.FC = () => {
                 <div className="space-y-2 p-3.5 rounded-lg bg-zinc-900/50 border border-zinc-800">
                   <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
                     <span>{localize(state.language, 'Mecanismo de Atención', 'Attention Mechanism')}</span>
-                    <span className="text-[10px] text-zinc-500 font-mono">KV CACHE SPEED</span>
+                    <span className="text-[11px] text-zinc-500 font-mono">KV CACHE SPEED</span>
                   </label>
                   <div className="space-y-2">
                     {[
@@ -938,7 +939,7 @@ export const ArchitectureStudio: React.FC = () => {
                   <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                   {localize(state.language, 'Ventana de Contexto (Tokens)', 'Context Window (Tokens)')}
                 </span>
-                <span className="text-[10px] text-zinc-500 font-mono">TOKEN RETENTION</span>
+                <span className="text-[11px] text-zinc-500 font-mono">TOKEN RETENTION</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {contextPresets.map(ctx => {
@@ -973,7 +974,7 @@ export const ArchitectureStudio: React.FC = () => {
             <div className="space-y-2 p-3.5 rounded-lg bg-zinc-900/50 border border-zinc-800">
               <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
                 <span>{localize(state.language, 'Función de Pérdida & Alineación', 'Loss Function & Alignment Objective')}</span>
-                <span className="text-[10px] text-zinc-500 font-mono">OBJECTIVE GRADIENT</span>
+                <span className="text-[11px] text-zinc-500 font-mono">OBJECTIVE GRADIENT</span>
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {[
@@ -1030,7 +1031,7 @@ export const ArchitectureStudio: React.FC = () => {
                   <Database className="w-3.5 h-3.5 text-cyan-400" />
                   {localize(state.language, 'Pipelines de Datos Conectados al Modelo', 'Connected Cognitive Data Pipelines')}
                 </span>
-                <span className="text-[10px] text-zinc-500 font-mono">RETRIEVAL & SYNTHESIS</span>
+                <span className="text-[11px] text-zinc-500 font-mono">RETRIEVAL & SYNTHESIS</span>
               </label>
               <p className="text-xs text-zinc-400">
                 {localize(
@@ -1058,10 +1059,10 @@ export const ArchitectureStudio: React.FC = () => {
                     >
                       <div className="flex items-center justify-between text-xs font-semibold">
                         <span className="truncate">{displaySource.name.split(' (')[0]}</span>
-                        {isConnected && <span className="text-cyan-400 text-[10px] font-mono">LINKED</span>}
+                        {isConnected && <span className="text-cyan-400 text-[11px] font-mono">LINKED</span>}
                       </div>
                       <div className="text-[11px] text-zinc-300 mt-1">{displaySource.bonusAttribute}</div>
-                      <div className="text-[10px] text-zinc-500 mt-1.5 font-mono">
+                      <div className="text-[11px] text-zinc-500 mt-1.5 font-mono">
                         {ds.unlocked
                           ? `${ds.tokensIndexed}M tokens · Lv.${ds.level}`
                           : localize(state.language, 'BLOQUEADO', 'LOCKED')}
@@ -1100,32 +1101,32 @@ export const ArchitectureStudio: React.FC = () => {
                   <Sparkles className="w-4 h-4 text-yellow-400" />
                   {localize(state.language, 'Benchmarks Sintéticos del Modelo', 'Synthetic Model Benchmarks')}
                 </span>
-                <span className="text-[10px] text-zinc-500 font-mono">EVALUATION METRICS</span>
+                <span className="text-[11px] text-zinc-500 font-mono">EVALUATION METRICS</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-2.5 rounded bg-zinc-950/80 border border-zinc-800">
                   <div className="text-[11px] text-zinc-400">{localize(state.language, 'Capacidad de Razonamiento', 'Reasoning Score')}</div>
                   <div className="text-lg font-bold font-mono text-cyan-300 mt-1">{Math.round(modelEvaluation.reasoning)}</div>
-                  <div className="text-[10px] text-zinc-500 mt-0.5">MMLU / GSM8K</div>
+                  <div className="text-[11px] text-zinc-500 mt-0.5">MMLU / GSM8K</div>
                 </div>
 
                 <div className="p-2.5 rounded bg-zinc-950/80 border border-zinc-800">
                   <div className="text-[11px] text-zinc-400">{localize(state.language, 'Fiabilidad & Seguridad', 'Reliability & Safety')}</div>
                   <div className="text-lg font-bold font-mono text-emerald-300 mt-1">{Math.round(modelEvaluation.reliability)}%</div>
-                  <div className="text-[10px] text-zinc-500 mt-0.5">Hallucination Control</div>
+                  <div className="text-[11px] text-zinc-500 mt-0.5">Hallucination Control</div>
                 </div>
 
                 <div className="p-2.5 rounded bg-zinc-950/80 border border-zinc-800">
                   <div className="text-[11px] text-zinc-400">{localize(state.language, 'Especialización de Dominio', 'Specialization Index')}</div>
                   <div className="text-lg font-bold font-mono text-purple-300 mt-1">{Math.round(modelEvaluation.specialization)}</div>
-                  <div className="text-[10px] text-zinc-500 mt-0.5">Task Proficiency</div>
+                  <div className="text-[11px] text-zinc-500 mt-0.5">Task Proficiency</div>
                 </div>
 
                 <div className="p-2.5 rounded bg-zinc-950/80 border border-zinc-800">
                   <div className="text-[11px] text-zinc-400">{localize(state.language, 'Madurez de Datos', 'Data Readiness')}</div>
                   <div className="text-lg font-bold font-mono text-yellow-300 mt-1">{Math.round(modelEvaluation.dataReadiness)}%</div>
-                  <div className="text-[10px] text-zinc-500 mt-0.5">Pipeline Integration</div>
+                  <div className="text-[11px] text-zinc-500 mt-0.5">Pipeline Integration</div>
                 </div>
               </div>
             </div>
@@ -1136,7 +1137,7 @@ export const ArchitectureStudio: React.FC = () => {
                 <span className="text-xs font-semibold text-zinc-200">
                   {t(state.language, 'inference_hyperparams')}
                 </span>
-                <span className="text-[10px] text-zinc-500 font-mono">TEMPERATURE & TOP-P SAMPLING</span>
+                <span className="text-[11px] text-zinc-500 font-mono">TEMPERATURE & TOP-P SAMPLING</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1155,7 +1156,7 @@ export const ArchitectureStudio: React.FC = () => {
                     onChange={(e) => handleInferenceParamChange('temperature', parseFloat(e.target.value))}
                     className="w-full accent-cyan-400 cursor-pointer"
                   />
-                  <div className="text-[10px] text-zinc-400 mt-1.5">
+                  <div className="text-[11px] text-zinc-400 mt-1.5">
                     {currentParams.temperature < 0.3
                       ? localize(state.language, 'Determinista (Argmax / Greedy)', 'Deterministic (Greedy decoding)')
                       : currentParams.temperature > 1.1
@@ -1180,7 +1181,7 @@ export const ArchitectureStudio: React.FC = () => {
                     onChange={(e) => handleInferenceParamChange('topP', parseFloat(e.target.value))}
                     className="w-full accent-purple-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                   />
-                  <div className="text-[10px] text-zinc-400 mt-1.5">{localize(state.language, 'Filtro de masa probabilística acumulada', 'Cumulative probability mass nucleus')}</div>
+                  <div className="text-[11px] text-zinc-400 mt-1.5">{localize(state.language, 'Filtro de masa probabilística acumulada', 'Cumulative probability mass nucleus')}</div>
                 </div>
 
                 {/* Top-K */}
@@ -1199,7 +1200,7 @@ export const ArchitectureStudio: React.FC = () => {
                     onChange={(e) => handleInferenceParamChange('topK', parseInt(e.target.value))}
                     className="w-full accent-yellow-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                   />
-                  <div className="text-[10px] text-zinc-400 mt-1.5">{localize(state.language, 'Tamaño del vocabulario permitido', 'Permitted vocabulary token cutoff')}</div>
+                  <div className="text-[11px] text-zinc-400 mt-1.5">{localize(state.language, 'Tamaño del vocabulario permitido', 'Permitted vocabulary token cutoff')}</div>
                 </div>
 
                 {/* Repetition Penalty */}
@@ -1218,7 +1219,7 @@ export const ArchitectureStudio: React.FC = () => {
                     onChange={(e) => handleInferenceParamChange('repetitionPenalty', parseFloat(e.target.value))}
                     className="w-full accent-emerald-400 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                   />
-                  <div className="text-[10px] text-zinc-400 mt-1.5">{localize(state.language, 'Penalización por repetición de n-gramas', 'N-gram frequency penalty factor')}</div>
+                  <div className="text-[11px] text-zinc-400 mt-1.5">{localize(state.language, 'Penalización por repetición de n-gramas', 'N-gram frequency penalty factor')}</div>
                 </div>
               </div>
 

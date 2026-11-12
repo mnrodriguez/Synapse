@@ -1670,3 +1670,9 @@ export const getRoleSimpleName = (role: AgentRole | string, lang: 'en' | 'es' = 
 
 
 
+
+// Scaling a data source costs 1.5x its price per level. The free starter source uses a floor
+// price, otherwise scaling it would cost $0.
+export const DATA_SOURCE_MIN_UPGRADE_BASE = 200;
+export const dataSourceUpgradeCost = (ds: { cost: number; level?: number }): number =>
+  Math.round(Math.max(ds.cost, DATA_SOURCE_MIN_UPGRADE_BASE) * 1.5 * (ds.level || 1));

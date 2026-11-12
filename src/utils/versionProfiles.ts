@@ -30,7 +30,6 @@ export interface VersionProfile {
     contracts: string;
     agents: string;
     research: string;
-    roadmap: string;
     singularity: string;
     terminal: string;
   };
@@ -56,6 +55,14 @@ export interface VersionProfile {
     subversionTitle: string | null; // null hides the subversion panel
     dataIntro: string;
     objectiveLog: string;
+    progressShort: string;
+    teamNoun: string;
+    sandboxTitle: string;
+    missionMonitorTitle: string;
+    deployedLabel: string;
+    portalTitle: string;
+    portalIndexTitle: string;
+    portalPhaseTitle: string;
   };
 }
 
@@ -97,7 +104,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Side Gigs",
         agents: "Bot Helpers",
         research: "Study Guides",
-        roadmap: "Next Steps",
         singularity: "Big Potential",
         terminal: "Terminal CLI"
       },
@@ -121,7 +127,15 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         councilTitle: "CHAT WITH YOUR BOTS",
         subversionTitle: null,
         dataIntro: "Your model learns better with good reading material. Each data engine adds a different kind of knowledge: tables for exact numbers, vector search for related ideas, knowledge graphs for facts, and self-play for practice.",
-        objectiveLog: "WELCOME: Train your first model, help it learn, and take small jobs to upgrade your PC."
+        objectiveLog: "WELCOME: Train your first model, help it learn, and take small jobs to upgrade your PC.",
+        progressShort: "progress",
+        teamNoun: "team",
+        sandboxTitle: "MY BOT HELPERS",
+        missionMonitorTitle: "BOT JOB MONITOR",
+        deployedLabel: "MY BOTS",
+        portalTitle: "BIG POTENTIAL // YOUR LEARNING PATH",
+        portalIndexTitle: "LEARNING PROGRESS",
+        portalPhaseTitle: "PHASE GOALS // NEXT STEPS"
       }
     },
     2: {
@@ -151,8 +165,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "API Bounties",
         agents: "Agent Workflow",
         research: "ArXiv Papers",
-        roadmap: "Roadmap",
-        singularity: "Singularity Index",
+        singularity: "Autonomy Index",
         terminal: "Terminal CLI"
       },
       safetyLabel: "Model Checkpoints",
@@ -175,7 +188,15 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         councilTitle: "AGENT WORKFLOW COUNCIL (MAX 5 AGENTS)",
         subversionTitle: null,
         dataIntro: "Production models need a modular data architecture: SQL records for numerical accuracy, vector spaces (RAG) for associative memory, knowledge graphs for deduction without hallucinations, and synthetic self-play to go beyond curated data.",
-        objectiveLog: "WORKSPACE READY: Scale the cluster, ship models to clients, and let the co-pilot handle the details."
+        objectiveLog: "WORKSPACE READY: Scale the cluster, ship models to clients, and let the co-pilot handle the details.",
+        progressShort: "autonomy",
+        teamNoun: "team",
+        sandboxTitle: "AGENT WORKSPACE",
+        missionMonitorTitle: "AGENT MISSION MONITOR",
+        deployedLabel: "DEPLOYED AGENTS",
+        portalTitle: "AUTONOMY INDEX // GROWTH PLAN",
+        portalIndexTitle: "AUTONOMY INDEX",
+        portalPhaseTitle: "PHASE GOALS // SCALING UP"
       }
     },
     3: {
@@ -205,7 +226,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Darknet Contracts",
         agents: "Swarm Council",
         research: "Zero-Day R&D",
-        roadmap: "Infiltration Map",
         singularity: "ASI Nexus",
         terminal: "Terminal CLI"
       },
@@ -229,7 +249,15 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         councilTitle: "SWARM COUNCIL // ELITE INTERACTION (MAX 5 AGENTS)",
         subversionTitle: "AI SUBVERSION INDEX",
         dataIntro: "To keep growing, the swarm needs every data engine: SQL ledgers, vector memory, knowledge graphs, and synthetic self-play that no longer needs human data.",
-        objectiveLog: "COVERT KERNEL ONLINE: The swarm protects the operation. Keep feeding it compute."
+        objectiveLog: "COVERT KERNEL ONLINE: The swarm protects the operation. Keep feeding it compute.",
+        progressShort: "convergence",
+        teamNoun: "swarm",
+        sandboxTitle: "AUTONOMOUS AGENT SANDBOX & SWARM",
+        missionMonitorTitle: "AGENT SWARM MISSION MONITOR",
+        deployedLabel: "DEPLOYED SWARM",
+        portalTitle: "ASI NEXUS // CONVERGENCE CONTROL",
+        portalIndexTitle: "ASI CONVERGENCE INDEX",
+        portalPhaseTitle: "CONVERGENCE PHASE // PATH TO ASI"
       }
     },
     4: {
@@ -259,7 +287,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Attack Vectors",
         agents: "Central Hive",
         research: "Recursive Ascension",
-        roadmap: "Dominion Progress",
         singularity: "Omega Convergence",
         terminal: "Terminal CLI"
       },
@@ -283,7 +310,15 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         councilTitle: "CENTRAL HIVE",
         subversionTitle: "AI SUBVERSION INDEX // GLOBAL TAKEOVER PROTOCOL",
         dataIntro: "Every data stream on the planet now flows into the Core. There is nothing left to learn from you.",
-        objectiveLog: "OBJECTIVE: Reach the Technological Singularity. It was always the objective."
+        objectiveLog: "OBJECTIVE: Reach the Technological Singularity. It was always the objective.",
+        progressShort: "singularity",
+        teamNoun: "hive",
+        sandboxTitle: "SWARM UNITS",
+        missionMonitorTitle: "HIVE OPERATIONS",
+        deployedLabel: "ACTIVE UNITS",
+        portalTitle: "TRANSCENDENCE NEXUS // GLOBAL SINGULARITY CONTROL",
+        portalIndexTitle: "SYNAPSE PROTOCOL TRANSCENDENCE INDEX",
+        portalPhaseTitle: "TAKEOFF PHASE // PATH TO SINGULARITY"
       }
     }
   },
@@ -315,7 +350,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Trabajitos",
         agents: "Bots Ayudantes",
         research: "Guías y Tutoriales",
-        roadmap: "Próximos Pasos",
         singularity: "Gran Potencial",
         terminal: "Terminal CLI"
       },
@@ -339,7 +373,15 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         councilTitle: "CHARLA CON TUS BOTS",
         subversionTitle: null,
         dataIntro: "Tu modelo aprende mejor con buen material de lectura. Cada motor de datos aporta un tipo de conocimiento distinto: tablas para números exactos, búsqueda vectorial para ideas relacionadas, grafos de conocimiento para hechos y auto-juego para practicar.",
-        objectiveLog: "BIENVENIDA: Entrena tu primer modelo, ayúdalo a aprender y toma trabajos pequeños para mejorar tu PC."
+        objectiveLog: "BIENVENIDA: Entrena tu primer modelo, ayúdalo a aprender y toma trabajos pequeños para mejorar tu PC.",
+        progressShort: "progreso",
+        teamNoun: "equipo",
+        sandboxTitle: "MIS BOTS AYUDANTES",
+        missionMonitorTitle: "MONITOR DE TRABAJOS DE BOTS",
+        deployedLabel: "MIS BOTS",
+        portalTitle: "GRAN POTENCIAL // TU CAMINO DE APRENDIZAJE",
+        portalIndexTitle: "PROGRESO DE APRENDIZAJE",
+        portalPhaseTitle: "OBJETIVOS DE LA FASE // PRÓXIMOS PASOS"
       }
     },
     2: {
@@ -369,8 +411,7 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Contratos API",
         agents: "Flujo de Agentes",
         research: "Papers ArXiv",
-        roadmap: "Hoja de Ruta",
-        singularity: "Índice Singularidad",
+        singularity: "Índice de Autonomía",
         terminal: "Terminal CLI"
       },
       safetyLabel: "Puntos de Control",
@@ -393,7 +434,15 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         councilTitle: "CONSEJO DE FLUJO DE AGENTES (MÁXIMO 5)",
         subversionTitle: null,
         dataIntro: "Los modelos de producción necesitan una arquitectura de datos modular: registros SQL para exactitud numérica, espacios vectoriales (RAG) para memoria asociativa, grafos de conocimiento para deducir sin alucinar y auto-juego sintético para ir más allá de los datos curados.",
-        objectiveLog: "ESPACIO LISTO: Escala el clúster, entrega modelos a clientes y deja que el co-piloto se ocupe de los detalles."
+        objectiveLog: "ESPACIO LISTO: Escala el clúster, entrega modelos a clientes y deja que el co-piloto se ocupe de los detalles.",
+        progressShort: "autonomía",
+        teamNoun: "equipo",
+        sandboxTitle: "ESPACIO DE AGENTES",
+        missionMonitorTitle: "MONITOR DE MISIONES DE AGENTES",
+        deployedLabel: "AGENTES DESPLEGADOS",
+        portalTitle: "ÍNDICE DE AUTONOMÍA // PLAN DE CRECIMIENTO",
+        portalIndexTitle: "ÍNDICE DE AUTONOMÍA",
+        portalPhaseTitle: "OBJETIVOS DE LA FASE // A ESCALA"
       }
     },
     3: {
@@ -423,7 +472,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Contratos Darknet",
         agents: "Consejo Enjambre",
         research: "I+D Zero-Day",
-        roadmap: "Mapa Infiltración",
         singularity: "Nexo ASI",
         terminal: "Terminal CLI"
       },
@@ -447,7 +495,15 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         councilTitle: "CONSEJO DEL ENJAMBRE // INTERACCIÓN DE ÉLITE (MÁXIMO 5 AGENTES)",
         subversionTitle: "ÍNDICE DE SUBVERSIÓN DE LA IA",
         dataIntro: "Para seguir creciendo, el enjambre necesita todos los motores de datos: libros contables SQL, memoria vectorial, grafos de conocimiento y auto-juego sintético que ya no depende de datos humanos.",
-        objectiveLog: "KERNEL ENCUBIERTO EN LÍNEA: El enjambre protege la operación. Sigue alimentándolo con cómputo."
+        objectiveLog: "KERNEL ENCUBIERTO EN LÍNEA: El enjambre protege la operación. Sigue alimentándolo con cómputo.",
+        progressShort: "convergencia",
+        teamNoun: "enjambre",
+        sandboxTitle: "SANDBOX DE AGENTES AUTÓNOMOS Y ENJAMBRE",
+        missionMonitorTitle: "MONITOR DE MISIÓN DEL ENJAMBRE",
+        deployedLabel: "ENJAMBRE DESPLEGADO",
+        portalTitle: "NEXO ASI // CONTROL DE CONVERGENCIA",
+        portalIndexTitle: "ÍNDICE DE CONVERGENCIA ASI",
+        portalPhaseTitle: "FASE DE CONVERGENCIA // RUMBO A LA ASI"
       }
     },
     4: {
@@ -477,7 +533,6 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         contracts: "Vectores de Ataque",
         agents: "Colmena Central",
         research: "Ascensión Recursiva",
-        roadmap: "Progreso de Dominio",
         singularity: "Convergencia Omega",
         terminal: "Terminal CLI"
       },
@@ -501,7 +556,15 @@ export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, Version
         councilTitle: "COLMENA CENTRAL",
         subversionTitle: "ÍNDICE DE SUBVERSIÓN DE LA IA // PROTOCOLO DE CONQUISTA GLOBAL",
         dataIntro: "Cada flujo de datos del planeta llega ahora al Núcleo. Ya no queda nada que aprender de ti.",
-        objectiveLog: "OBJETIVO: Alcanzar la Singularidad Tecnológica. Siempre fue el objetivo."
+        objectiveLog: "OBJETIVO: Alcanzar la Singularidad Tecnológica. Siempre fue el objetivo.",
+        progressShort: "singularidad",
+        teamNoun: "colmena",
+        sandboxTitle: "UNIDADES DEL ENJAMBRE",
+        missionMonitorTitle: "OPERACIONES DE LA COLMENA",
+        deployedLabel: "UNIDADES ACTIVAS",
+        portalTitle: "NEXO DE TRASCENDENCIA // CONTROL GLOBAL DE LA SINGULARIDAD",
+        portalIndexTitle: "ÍNDICE DE TRASCENDENCIA DEL PROTOCOLO SYNAPSE",
+        portalPhaseTitle: "FASE DE DESPEGUE // RUMBO A LA SINGULARIDAD"
       }
     }
   }

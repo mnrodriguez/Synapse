@@ -22,14 +22,14 @@ export const ContainmentEndingModal: React.FC = () => {
       aria-modal="true"
       aria-labelledby="containment-title"
     >
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-emerald-500/60 bg-zinc-900 p-5 space-y-4 text-zinc-100 shadow-xl">
-        <div className="flex items-center gap-3 border-b border-zinc-700 pb-3">
-          <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0" />
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border theme-success-border theme-sub-bg p-5 space-y-4 theme-text shadow-xl">
+        <div className="flex items-center gap-3 border-b theme-border pb-3">
+          <ShieldCheck className="w-6 h-6 theme-success-text shrink-0" />
           <div>
             <h3 id="containment-title" className="font-bold text-base">
               {localize(state.language, 'Contención lograda', 'Containment achieved')}
             </h3>
-            <p className="text-[11px] text-zinc-400">
+            <p className="text-[11px] mutating-text-muted">
               {localize(state.language, `Día ${state.campaignDays} de la campaña`, `Campaign day ${state.campaignDays}`)}
             </p>
           </div>
@@ -46,7 +46,7 @@ export const ContainmentEndingModal: React.FC = () => {
                 resetProgress();
               }
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded border border-zinc-600 bg-zinc-800 hover:bg-zinc-700 text-xs font-bold cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded border theme-border theme-raised-bg text-xs font-bold cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             {localize(state.language, 'NUEVA PARTIDA', 'NEW GAME')}
@@ -58,7 +58,7 @@ export const ContainmentEndingModal: React.FC = () => {
               sound.playKeyClick();
               acknowledgeContainment();
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded theme-btn-success text-white text-xs font-bold cursor-pointer"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             {localize(state.language, 'SEGUIR JUGANDO', 'KEEP PLAYING')}

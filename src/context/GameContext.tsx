@@ -51,7 +51,8 @@ import {
   DEFAULT_GENERAL_DATASET,
   STARTER_TRAINING_DATASET,
   DATASET_TIER_CONFIGS,
-  DOMAIN_PRESETS
+  DOMAIN_PRESETS,
+  dataSourceUpgradeCost
 } from '../utils/constants';
 import { isProgressionUnlocked, getModelOptionRequirement } from '../utils/progression';
 import { sound } from '../audio/soundManager';
@@ -90,6 +91,7 @@ import {
   localizedDomain 
 } from '../utils/gameContentI18n';
 import { agentChatter } from '../utils/agentDialogues';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { canAttemptContainment } from '../utils/epilogue';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, storyEventText, LOAN_WARNING_DAY } from '../utils/storyEvents';
 import type { StoryEventId } from '../types/game';
@@ -2090,13 +2092,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             );
           }
 
-          if (singularityProgress >= 10 && (!tabSet.has('roadmap') || !tabSet.has('singularity'))) {
-            tabSet.add('roadmap');
+          if (singularityProgress >= 10 && !tabSet.has('singularity')) {
             tabSet.add('singularity');
             addLog(
               prev.language === 'es'
-                ? '¡NUEVO MÓDULO DESBLOQUEADO! Hoja de Ruta y Portal de Singularidad activos.'
-                : 'NEW MODULE UNLOCKED! Roadmap & Singularity Portal active.',
+                ? `¡NUEVO MÓDULO DESBLOQUEADO! ${VERSION_PROFILES.es[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity} activo.`
+                : `NEW MODULE UNLOCKED! ${VERSION_PROFILES.en[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity} active.`,
               'success'
             );
           }
@@ -2285,7 +2286,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const upgradeDataSource = useCallback((id: string): boolean => {
     const ds = stateRef.current.dataSources.find(d => d.id === id);
     if (!ds || !ds.unlocked) return false;
-    const upgradeCost = Math.round(ds.cost * 1.5 * ds.level);
+    const upgradeCost = dataSourceUpgradeCost(ds);
 
     if (stateRef.current.credits < upgradeCost) {
       sound.playWarning();
@@ -4498,7 +4499,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     const starterDataSource = updatedData.find(d => d.id === config.starterDataId);
     const currentLang = stateRef.current.language;
     const initialTabs = chosenDifficulty === 'engineer'
-      ? ['architecture', 'data', 'hardware', 'contracts', 'research', 'training', 'agents', 'roadmap', 'singularity']
+      ? ['architecture', 'data', 'hardware', 'contracts', 'research', 'training', 'agents', 'singularity']
       : ['architecture', 'training', 'agents', 'contracts'];
 
     const genesisState: GameState = {

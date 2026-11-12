@@ -319,7 +319,7 @@ export const GenesisOnboarding: React.FC = () => {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
             </div>
             <div>
-              <span className="text-[10px] text-zinc-500 uppercase tracking-widest block font-bold">
+              <span className="text-[11px] text-zinc-500 uppercase tracking-widest block font-bold">
                 {localize(state.language, 'PROTOCOLO GÉNESIS // INICIALIZACIÓN DE NODO', 'GENESIS PROTOCOL // NODE INITIALIZATION')}
               </span>
               <h2 className="text-sm font-bold text-cyan-300 tracking-wider">
@@ -338,7 +338,7 @@ export const GenesisOnboarding: React.FC = () => {
             <button
               type="button"
               onClick={() => setLanguage(en ? 'es' : 'en')}
-              className="flex items-center gap-1 rounded border border-cyan-800/60 bg-zinc-900 px-2 py-1 text-[10px] font-bold text-cyan-200 hover:border-cyan-500"
+              className="flex items-center gap-1 rounded border border-cyan-800/60 bg-zinc-900 px-2 py-1 text-[11px] font-bold text-cyan-200 hover:border-cyan-500"
               aria-label={localize(state.language, 'Cambiar idioma a inglés', 'Change language to Spanish')}
             >
               <Languages className="h-3.5 w-3.5" />
@@ -347,7 +347,7 @@ export const GenesisOnboarding: React.FC = () => {
             <button
               type="button"
               onClick={() => setAuthOpen(true)}
-              className="flex items-center gap-1 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-[10px] font-bold text-zinc-200 hover:border-cyan-500"
+              className="flex items-center gap-1 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-[11px] font-bold text-zinc-200 hover:border-cyan-500"
             >
               <Cloud className="h-3.5 w-3.5 text-cyan-400" />
               {localize(state.language, 'INICIAR SESIÓN', 'SIGN IN')}
@@ -363,7 +363,7 @@ export const GenesisOnboarding: React.FC = () => {
         </div>
 
         {/* Visual Progress Steps Indicators */}
-        <div className="grid grid-cols-5 bg-[#05080e] border-b border-cyan-950 text-[10px] text-center font-bold">
+        <div className="grid grid-cols-5 bg-[#05080e] border-b border-cyan-950 text-[11px] text-center font-bold">
           {[
             { num: 1, label: localize(state.language, 'Identidad', 'Identity') },
             { num: 2, label: 'Hardware' },
@@ -427,7 +427,7 @@ export const GenesisOnboarding: React.FC = () => {
                     <span>{localize(state.language, 'ALEATORIO', 'RANDOM')}</span>
                   </button>
                 </div>
-                <span className="text-[10px] text-zinc-500 block">
+                <span className="text-[11px] text-zinc-500 block">
                   {localize(state.language, 'Este identificador será transmitido a los libros de órdenes de contratos y al ranking de la Singularidad en la nube.', 'This identifier appears on contract orders and the cloud singularity leaderboard.')}
                 </span>
               </div>
@@ -474,11 +474,11 @@ export const GenesisOnboarding: React.FC = () => {
                         <div>
                           <div className="flex items-center justify-between gap-1 mb-1">
                             <span className="font-bold text-xs">{diffOption.title}</span>
-                            <span className={`text-[9px] px-1 py-0.2 rounded font-bold ${isSelected ? 'bg-purple-900 text-purple-200 border border-purple-500' : 'bg-zinc-900 text-zinc-500'}`}>
+                            <span className={`text-[11px] px-1 py-0.2 rounded font-bold ${isSelected ? 'bg-purple-900 text-purple-200 border border-purple-500' : 'bg-zinc-900 text-zinc-500'}`}>
                               {diffOption.badge}
                             </span>
                           </div>
-                          <p className="text-[10px] leading-relaxed text-zinc-400">{diffOption.desc}</p>
+                          <p className="text-[11px] leading-relaxed text-zinc-400">{diffOption.desc}</p>
                         </div>
                       </div>
                     );
@@ -517,7 +517,7 @@ export const GenesisOnboarding: React.FC = () => {
                     >
                       <div className="flex items-start justify-between gap-1">
                         <div>
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-zinc-800 text-cyan-300 font-bold block w-fit mb-1">
+                          <span className="text-[11px] px-1.5 py-0.2 rounded bg-zinc-800 text-cyan-300 font-bold block w-fit mb-1">
                             {en ? gpuEnglishCopy[gpu.id]?.badge ?? gpu.badge : gpu.badge}
                           </span>
                           <h4 className="font-bold text-xs text-zinc-200">{gpu.name}</h4>
@@ -525,7 +525,7 @@ export const GenesisOnboarding: React.FC = () => {
                         <span className="text-amber-300 font-bold text-xs">${gpu.price} CR</span>
                       </div>
                       <p className="text-[11px] text-zinc-400 mt-2 leading-snug">{en ? gpuEnglishCopy[gpu.id]?.desc ?? gpu.desc : gpu.desc}</p>
-                      <div className="flex items-center gap-2 mt-2.5 text-[10px] text-zinc-500 pt-1.5 border-t border-zinc-800">
+                      <div className="flex items-center gap-2 mt-2.5 text-[11px] text-zinc-500 pt-1.5 border-t border-zinc-800">
                         <span className="text-cyan-400 font-semibold">{gpu.compute}</span>
                         <span>•</span>
                         <span className="text-purple-400 font-semibold">{gpu.vram} GB VRAM</span>
@@ -560,8 +560,8 @@ export const GenesisOnboarding: React.FC = () => {
                           <h4 className="font-bold text-xs text-zinc-200">{en ? coolingEnglishCopy[cool.id]?.name ?? cool.name : cool.name}</h4>
                           <span className="text-amber-300 font-bold text-xs">${cool.price} CR</span>
                         </div>
-                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{en ? coolingEnglishCopy[cool.id]?.desc ?? cool.desc : cool.desc}</p>
-                        <span className="text-[10px] text-emerald-400 block mt-1.5 font-bold">
+                        <p className="text-[11px] text-zinc-400 mt-1 leading-snug">{en ? coolingEnglishCopy[cool.id]?.desc ?? cool.desc : cool.desc}</p>
+                        <span className="text-[11px] text-emerald-400 block mt-1.5 font-bold">
                           {localize(state.language, 'Disipación:', 'Cooling capacity:')} {cool.capacity}
                         </span>
                       </button>
@@ -594,8 +594,8 @@ export const GenesisOnboarding: React.FC = () => {
                           <h4 className="font-bold text-xs text-zinc-200">{en ? powerEnglishCopy[pow.id]?.name ?? pow.name : pow.name}</h4>
                           <span className="text-amber-300 font-bold text-xs">${pow.price} CR</span>
                         </div>
-                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{en ? powerEnglishCopy[pow.id]?.desc ?? pow.desc : pow.desc}</p>
-                        <span className="text-[10px] text-yellow-400 block mt-1.5 font-bold">
+                        <p className="text-[11px] text-zinc-400 mt-1 leading-snug">{en ? powerEnglishCopy[pow.id]?.desc ?? pow.desc : pow.desc}</p>
+                        <span className="text-[11px] text-yellow-400 block mt-1.5 font-bold">
                           {localize(state.language, 'Capacidad:', 'Power capacity:')} {pow.capacity}
                         </span>
                       </button>
@@ -628,8 +628,8 @@ export const GenesisOnboarding: React.FC = () => {
                           <h4 className="font-bold text-xs text-zinc-200">{en ? networkEnglishCopy[net.id]?.name ?? net.name : net.name}</h4>
                           <span className="text-amber-300 font-bold text-xs">${net.price} CR</span>
                         </div>
-                        <p className="text-[10px] text-zinc-400 mt-1 leading-snug">{en ? networkEnglishCopy[net.id]?.desc ?? net.desc : net.desc}</p>
-                        <span className="text-[10px] text-blue-400 block mt-1.5 font-bold">
+                        <p className="text-[11px] text-zinc-400 mt-1 leading-snug">{en ? networkEnglishCopy[net.id]?.desc ?? net.desc : net.desc}</p>
+                        <span className="text-[11px] text-blue-400 block mt-1.5 font-bold">
                           {localize(state.language, 'Ancho de banda:', 'Bandwidth:')} {net.bandwidth}
                         </span>
                       </button>
@@ -644,22 +644,22 @@ export const GenesisOnboarding: React.FC = () => {
                   <span className="font-bold text-cyan-300 text-[11px]">
                     {localize(state.language, 'ESTADO DEL RIG (4/4 COMPONENTES):', 'RIG STATUS (4/4 COMPONENTS):')}
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedGpu ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${selectedGpu ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
                     1. GPU {selectedGpu ? '✓' : '✗'}
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedCooling ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${selectedCooling ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
                     2. REFRIGERACIÓN {selectedCooling ? '✓' : '✗'}
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedPower ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${selectedPower ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
                     3. ENERGÍA {selectedPower ? '✓' : '✗'}
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedNetwork ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${selectedNetwork ? 'text-emerald-300 bg-emerald-950 border border-emerald-500/50' : 'text-red-400 bg-red-950 border border-red-500/50'}`}>
                     4. RED {selectedNetwork ? '✓' : '✗'}
                   </span>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[10px] text-zinc-400 block">{localize(state.language, 'PRESUPUESTO:', 'BUDGET:')}</span>
+                  <span className="text-[11px] text-zinc-400 block">{localize(state.language, 'PRESUPUESTO:', 'BUDGET:')}</span>
                   <span className={`font-bold text-xs ${remainingBudget >= 0 ? 'text-amber-300' : 'text-red-400'}`}>
                     ${remainingBudget} CR / ${INITIAL_GRANT} CR
                   </span>
@@ -695,13 +695,13 @@ export const GenesisOnboarding: React.FC = () => {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h4 className="font-bold text-xs text-zinc-100">{en ? dataEnglishCopy[ds.id]?.name ?? ds.name : ds.name}</h4>
-                          <span className="text-[10px] px-2 py-0.5 bg-emerald-950 border border-emerald-500/60 text-emerald-300 font-bold rounded flex items-center gap-1">
+                          <span className="text-[11px] px-2 py-0.5 bg-emerald-950 border border-emerald-500/60 text-emerald-300 font-bold rounded flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                             {isEs ? 'INCLUIDO DE SERIE' : 'STARTER PIPELINE'}
                           </span>
                         </div>
                         <p className="text-xs text-zinc-300 mt-1">{en ? dataEnglishCopy[ds.id]?.desc ?? ds.desc : ds.desc}</p>
-                        <div className="p-1.5 mt-2 bg-[#05080e] border border-cyan-950 rounded text-[10px] space-y-0.5">
+                        <div className="p-1.5 mt-2 bg-[#05080e] border border-cyan-950 rounded text-[11px] space-y-0.5">
                           <span className="text-cyan-300 font-bold block">{en ? dataEnglishCopy[ds.id]?.bonus ?? ds.bonus : ds.bonus}</span>
                           <span className="text-zinc-400 block">{en ? dataEnglishCopy[ds.id]?.lore ?? ds.lore : ds.lore}</span>
                         </div>
@@ -711,7 +711,7 @@ export const GenesisOnboarding: React.FC = () => {
                 })}
               </div>
 
-              <div className="p-2.5 rounded bg-zinc-900/60 border border-zinc-800 text-[10px] text-zinc-400 flex items-center gap-2">
+              <div className="p-2.5 rounded bg-zinc-900/60 border border-zinc-800 text-[11px] text-zinc-400 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
                 <span>
                   {isEs 
@@ -732,7 +732,7 @@ export const GenesisOnboarding: React.FC = () => {
                       <Layers className="w-4 h-4 text-cyan-400" />
                       {localize(state.language, 'ARQUITECTURA DEL MODELO (CALIBRACIÓN AUTOMATIZADA):', 'FIRST MODEL ARCHITECTURE (AUTOMATED CALIBRATION):')}
                     </h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/60 text-emerald-300 font-bold flex items-center gap-1">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/60 text-emerald-300 font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       {localize(state.language, 'AUTOMATIZADO PARA PRINCIPIANTES', 'AUTOMATED FOR BEGINNERS')}
                     </span>
@@ -785,7 +785,7 @@ export const GenesisOnboarding: React.FC = () => {
                         <span className="font-bold text-xs text-cyan-200">
                           {localize(state.language, 'Topología: Transformer Autoregresivo (Decoder-Only)', 'Topology: Autoregressive Transformer (Decoder-Only)')}
                         </span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-700 font-bold">
+                        <span className="text-[11px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-700 font-bold">
                           {localize(state.language, 'INICIAL ESTÁNDAR ✓', 'STARTER STANDARD ✓')}
                         </span>
                       </div>
@@ -809,7 +809,7 @@ export const GenesisOnboarding: React.FC = () => {
                         <span className="font-bold text-xs text-yellow-200">
                           {localize(state.language, 'Escala de Parámetros: 14 Millones (14M / 0.014B)', 'Parameter Scale: 14 Million (14M / 0.014B)')}
                         </span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-yellow-950 text-yellow-300 border border-yellow-700 font-bold">
+                        <span className="text-[11px] px-1.5 py-0.2 rounded bg-yellow-950 text-yellow-300 border border-yellow-700 font-bold">
                           {localize(state.language, 'CALIBRADO AUTOMÁTICO ✓', 'AUTO-CALIBRATED ✓')}
                         </span>
                       </div>
@@ -833,7 +833,7 @@ export const GenesisOnboarding: React.FC = () => {
                         <span className="font-bold text-xs text-purple-200">
                           {localize(state.language, 'Precisión de Pesos: INT8 Cuantizado (1 Byte / Peso)', 'Weight Precision: INT8 Quantized (1 Byte / Weight)')}
                         </span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-700 font-bold">
+                        <span className="text-[11px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-700 font-bold">
                           {localize(state.language, 'OPTIMIZADO AUTOMÁTICO ✓', 'AUTO-OPTIMIZED ✓')}
                         </span>
                       </div>
@@ -870,7 +870,7 @@ export const GenesisOnboarding: React.FC = () => {
                           }`}
                         >
                           <div className="font-bold text-xs">{p.label}</div>
-                          <div className="text-[10px] text-zinc-500 mt-1">{p.note}</div>
+                          <div className="text-[11px] text-zinc-500 mt-1">{p.note}</div>
                         </button>
                       ))}
                     </div>
@@ -888,7 +888,7 @@ export const GenesisOnboarding: React.FC = () => {
                         }`}
                       >
                         <div className="font-bold text-xs">{localize(state.language, 'INT8 Cuantizado (Recomendado)', 'INT8 Quantized (Recommended)')}</div>
-                        <div className="text-[10px] text-zinc-500">{localize(state.language, '1 byte por peso. Cabe holgadamente en tu GPU.', '1 byte per weight. Fits easily in your GPU memory.')}</div>
+                        <div className="text-[11px] text-zinc-500">{localize(state.language, '1 byte por peso. Cabe holgadamente en tu GPU.', '1 byte per weight. Fits easily in your GPU memory.')}</div>
                       </button>
                       <button
                         type="button"
@@ -898,7 +898,7 @@ export const GenesisOnboarding: React.FC = () => {
                         }`}
                       >
                         <div className="font-bold text-xs">{localize(state.language, 'BF16 Precisión Media', 'BF16 Half Precision')}</div>
-                        <div className="text-[10px] text-zinc-500">{localize(state.language, '2 bytes por peso. Mayor fidelidad de gradiente.', '2 bytes per weight. Greater gradient fidelity.')}</div>
+                        <div className="text-[11px] text-zinc-500">{localize(state.language, '2 bytes por peso. Mayor fidelidad de gradiente.', '2 bytes per weight. Greater gradient fidelity.')}</div>
                       </button>
                     </div>
                   </div>
@@ -906,7 +906,7 @@ export const GenesisOnboarding: React.FC = () => {
               )}
 
               {/* Ready summary banner */}
-              <div className="p-2.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-[10px] text-emerald-300 flex items-center gap-2">
+              <div className="p-2.5 rounded bg-emerald-950/40 border border-emerald-500/40 text-[11px] text-emerald-300 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>
                   {localize(
@@ -1013,7 +1013,7 @@ export const GenesisOnboarding: React.FC = () => {
               <span>{localize(state.language, 'ANTERIOR', 'BACK')}</span>
             </button>
           ) : (
-            <span className="text-[10px] text-zinc-600">{localize(state.language, 'FASE 1 // PROTOCOLO DE IDENTIDAD', 'PHASE 1 // IDENTITY PROTOCOL')}</span>
+            <span className="text-[11px] text-zinc-600">{localize(state.language, 'FASE 1 // PROTOCOLO DE IDENTIDAD', 'PHASE 1 // IDENTITY PROTOCOL')}</span>
           )}
 
           {step < 5 ? (
@@ -1028,7 +1028,7 @@ export const GenesisOnboarding: React.FC = () => {
           ) : (
             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto justify-end">
               {!simComplete && (
-                <span className="text-[10px] text-amber-400 font-mono animate-pulse">
+                <span className="text-[11px] text-amber-400 font-mono animate-pulse">
                   {isEs ? '👈 Primero ejecuta "INICIAR ENTRENAMIENTO GÉNESIS" arriba' : '👈 Click "START GENESIS TRAINING" above first'}
                 </span>
               )}

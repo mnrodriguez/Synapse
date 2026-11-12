@@ -35,7 +35,7 @@ import { localizedDataSource } from '../utils/gameContentI18n';
 import { DATA_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { isDataSourceProgressionUnlocked } from '../utils/progression';
-import { DATASET_TIER_CONFIGS, DOMAIN_PRESETS } from '../utils/constants';
+import { DATASET_TIER_CONFIGS, DOMAIN_PRESETS, dataSourceUpgradeCost } from '../utils/constants';
 import { formatTrainingDuration } from '../utils/training';
 import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
@@ -155,16 +155,16 @@ export const DataPipelineManager: React.FC = () => {
           <Search className="w-3.5 h-3.5" />
           <span>{localize(state.language, 'MÓDULO DE SCRAPING & MICRO-MODELOS', 'DATA SCRAPING & MICRO-MODELS')}</span>
           {!state.isDataScrapingUnlocked ? (
-            <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/40 text-[9px] flex items-center gap-1">
+            <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/40 text-[11px] flex items-center gap-1">
               <Lock className="w-2.5 h-2.5" />
               {localize(state.language, 'BLOQUEADO', 'LOCKED')}
             </span>
           ) : state.activeScrapeJob ? (
-            <span className="px-1.5 py-0.2 rounded bg-cyan-400 text-slate-950 font-black text-[9px] animate-pulse">
+            <span className="px-1.5 py-0.2 rounded bg-cyan-400 text-slate-950 font-black text-[11px] animate-pulse">
               SCRAPING {state.activeScrapeJob.progressPercent}%
             </span>
           ) : (
-            <span className="px-1.5 py-0.2 rounded mutating-sub text-[9px] font-bold">
+            <span className="px-1.5 py-0.2 rounded mutating-sub text-[11px] font-bold">
               {state.customDatasets.length} DATASETS
             </span>
           )}
@@ -183,7 +183,7 @@ export const DataPipelineManager: React.FC = () => {
             {state.dataSources.map(ds => {
               const content = localizedDataSource(state.language, ds);
               const isConnected = state.currentModel.activeDataSources.includes(ds.id);
-              const upgradeCost = Math.round(ds.cost * 1.5 * (ds.level || 1));
+              const upgradeCost = dataSourceUpgradeCost(ds);
               const technologyAvailable = isDataSourceProgressionUnlocked(ds, state);
               const requiredResearch = state.researchTree.find(node => node.id === ds.requiredResearchId);
 
@@ -210,7 +210,7 @@ export const DataPipelineManager: React.FC = () => {
                               <DocLinkBadge doc={DATA_DOCS[ds.id]} language={state.language} />
                             )}
                           </div>
-                          <span className="text-[10px] text-cyan-400 font-mono">
+                          <span className="text-[11px] text-cyan-400 font-mono">
                             {ds.unlocked
                               ? localize(state.language, `ESTADO: ONLINE (NIVEL ${ds.level})`, `STATUS: ONLINE (LEVEL ${ds.level})`)
                               : technologyAvailable
@@ -221,7 +221,7 @@ export const DataPipelineManager: React.FC = () => {
                       </div>
 
                       {ds.unlocked && (
-                        <span className={`px-2 py-0.5 rounded text-[10px] border font-bold ${
+                        <span className={`px-2 py-0.5 rounded text-[11px] border font-bold ${
                           isConnected 
                             ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300' 
                             : 'bg-zinc-900 border-zinc-700 text-zinc-500'
@@ -240,22 +240,22 @@ export const DataPipelineManager: React.FC = () => {
 
                     <div className="mt-2 p-2 rounded mutating-sub border text-[11px] space-y-1">
                       <div className="text-purple-300 font-semibold">{content.bonusAttribute}</div>
-                      <div className="text-zinc-500 text-[10px]">{content.technicalDetails}</div>
+                      <div className="text-zinc-500 text-[11px]">{content.technicalDetails}</div>
                     </div>
 
                     {/* Metric Bars if unlocked */}
                     {ds.unlocked && (
                       <div className="grid grid-cols-3 gap-2 mt-3 pt-2 border-t border-zinc-800 text-[11px]">
                         <div>
-                          <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'TOKENS INDEXADOS', 'INDEXED TOKENS')}</span>
+                          <span className="text-zinc-500 text-[11px] block">{localize(state.language, 'TOKENS INDEXADOS', 'INDEXED TOKENS')}</span>
                           <span className="text-cyan-300 font-bold">{ds.tokensIndexed}M</span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'CALIDAD Y PUREZA', 'QUALITY & PURITY')}</span>
+                          <span className="text-zinc-500 text-[11px] block">{localize(state.language, 'CALIDAD Y PUREZA', 'QUALITY & PURITY')}</span>
                           <span className="text-emerald-400 font-bold">{ds.qualityScore}%</span>
                         </div>
                         <div>
-                          <span className="text-zinc-500 text-[10px] block">{localize(state.language, 'ALMACENAMIENTO', 'STORAGE')}</span>
+                          <span className="text-zinc-500 text-[11px] block">{localize(state.language, 'ALMACENAMIENTO', 'STORAGE')}</span>
                           <span className="text-yellow-300 font-bold">{ds.storageGb} GB</span>
                         </div>
                       </div>
@@ -279,7 +279,7 @@ export const DataPipelineManager: React.FC = () => {
                       </button>
                     ) : (
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-[10px] text-zinc-500">
+                        <span className="text-[11px] text-zinc-500">
                           {localize(state.language, 'Capacidad Nivel', 'Capacity level')} {ds.level}
                         </span>
                         <button
@@ -309,23 +309,23 @@ export const DataPipelineManager: React.FC = () => {
               {localize(state.language, 'FLUJO ARQUITECTÓNICO DE ALIMENTACIÓN NEURONAL (DAG)', 'NEURAL DATA FLOW ARCHITECTURE (DAG)')}
             </h4>
             <div className="flex flex-wrap items-center justify-center gap-2 py-2 text-center">
-              <div className="px-2 py-1 rounded bg-blue-950/60 border border-blue-500/50 text-blue-300 text-[10px]">
+              <div className="px-2 py-1 rounded bg-blue-950/60 border border-blue-500/50 text-blue-300 text-[11px]">
                 SQL Relacional (Tablas ACID)
               </div>
               <ArrowRight className="w-3 h-3 text-zinc-600" />
-              <div className="px-2 py-1 rounded bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 text-[10px]">
+              <div className="px-2 py-1 rounded bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 text-[11px]">
                 {localize(state.language, 'Vectores Semánticos (HNSW RAG)', 'Semantic Vectors (HNSW RAG)')}
               </div>
               <ArrowRight className="w-3 h-3 text-zinc-600" />
-              <div className="px-2 py-1 rounded bg-purple-950/60 border border-purple-500/50 text-purple-300 text-[10px]">
+              <div className="px-2 py-1 rounded bg-purple-950/60 border border-purple-500/50 text-purple-300 text-[11px]">
                 {localize(state.language, 'Grafo Ontológico (RDF Tripletas)', 'Ontological Graph (RDF Triples)')}
               </div>
               <ArrowRight className="w-3 h-3 text-zinc-600" />
-              <div className="px-2 py-1 rounded bg-amber-950/60 border border-amber-500/50 text-amber-300 text-[10px]">
+              <div className="px-2 py-1 rounded bg-amber-950/60 border border-amber-500/50 text-amber-300 text-[11px]">
                 {localize(state.language, 'Auto-Juego Sintético (Flywheel)', 'Synthetic Self-Play (Flywheel)')}
               </div>
               <ArrowRight className="w-3 h-3 text-zinc-600" />
-              <div className="px-2 py-1 rounded bg-cyan-500 text-zinc-950 font-bold text-[10px] shadow-[0_0_10px_rgba(0,255,200,0.5)]">
+              <div className="px-2 py-1 rounded bg-cyan-500 text-zinc-950 font-bold text-[11px] shadow-[0_0_10px_rgba(0,255,200,0.5)]">
                 SYNAPSE NEURAL CORE
               </div>
             </div>
@@ -353,7 +353,7 @@ export const DataPipelineManager: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded text-[10px] bg-amber-950 text-amber-300 border border-amber-700 font-bold">
+                <span className="px-2 py-0.5 rounded text-[11px] bg-amber-950 text-amber-300 border border-amber-700 font-bold">
                   {localize(state.language, 'PRERREQUISITO COGNITIVO', 'COGNITIVE PREREQUISITE')}
                 </span>
               </div>
@@ -401,7 +401,7 @@ export const DataPipelineManager: React.FC = () => {
                             <span>{m.name}</span>
                             {isQualified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                           </div>
-                          <span className="text-[10px] text-zinc-500">
+                          <span className="text-[11px] text-zinc-500">
                             {state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} / {DATA_SCRAPING_MIN_SCORE} {localize(state.language, 'requerido', 'required')}
                           </span>
                         </div>
@@ -414,7 +414,7 @@ export const DataPipelineManager: React.FC = () => {
                             {localize(state.language, 'DESPLEGAR Y DESBLOQUEAR', 'DEPLOY & UNLOCK')}
                           </button>
                         ) : (
-                          <span className="text-[10px] text-amber-400 font-bold">
+                          <span className="text-[11px] text-amber-400 font-bold">
                             {localize(state.language, 'Falta entrenamiento', 'Needs more training')}
                           </span>
                         )}
@@ -430,7 +430,7 @@ export const DataPipelineManager: React.FC = () => {
                   <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                   {localize(state.language, 'ÁRBOL DE COMPLEJIDAD PROGRESIVA DE DATASETS (VISTA PREVIA)', 'PROGRESSIVE DATASET COMPLEXITY TREE (PREVIEW)')}
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[10px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
                   {Object.values(DATASET_TIER_CONFIGS).map(tc => (
                     <div key={tc.tier} className="p-2 rounded bg-zinc-950/80 border border-zinc-800">
                       <div className="font-bold text-zinc-200">{state.language === 'en' ? tc.name : tc.nameEs}</div>
@@ -456,7 +456,7 @@ export const DataPipelineManager: React.FC = () => {
                     </div>
                     <button
                       onClick={cancelDatasetScraping}
-                      className="px-2 py-0.5 rounded bg-red-950 border border-red-700 text-red-300 text-[10px] hover:bg-red-900 transition-colors"
+                      className="px-2 py-0.5 rounded bg-red-950 border border-red-700 text-red-300 text-[11px] hover:bg-red-900 transition-colors"
                     >
                       {localize(state.language, 'CANCELAR SCRAPING', 'CANCEL SCRAPING')}
                     </button>
@@ -492,7 +492,7 @@ export const DataPipelineManager: React.FC = () => {
                       {localize(state.language, 'CONSOLA DE GENERACIÓN Y SCRAPING DE DATASETS ESPECIALIZADOS', 'SPECIALIZED DATASET SCRAPING & GENERATION CONSOLE')}
                     </h3>
                   </div>
-                  <span className="text-[10px] text-zinc-500">
+                  <span className="text-[11px] text-zinc-500">
                     {localize(state.language, 'ÁRBOL DE COMPLEJIDAD TIERS 1 A 4', 'COMPLEXITY TREE TIERS 1 TO 4')}
                   </span>
                 </div>
@@ -527,7 +527,7 @@ export const DataPipelineManager: React.FC = () => {
                             </span>
                             {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />}
                           </div>
-                          <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2">
+                          <p className="text-[11px] text-zinc-500 mt-1 line-clamp-2">
                             {state.language === 'en' ? preset.description : preset.descriptionEs}
                           </p>
                         </button>
@@ -586,17 +586,17 @@ export const DataPipelineManager: React.FC = () => {
                           <div className="flex items-center justify-between text-xs font-bold">
                             <span>{state.language === 'en' ? tc.name.split(':')[0] : tc.nameEs.split(':')[0]}</span>
                             {!modelMeetsIQ ? (
-                              <span className="text-[9px] text-amber-400 flex items-center gap-0.5">
+                              <span className="text-[11px] text-amber-400 flex items-center gap-0.5">
                                 <Lock className="w-2.5 h-2.5" /> {state.language === 'es' ? 'Puntaje' : 'Score'} ≥ {tc.minModelIQ}
                               </span>
                             ) : (
-                              <span className="text-[9px] text-emerald-400 font-bold">✓ APTO</span>
+                              <span className="text-[11px] text-emerald-400 font-bold">✓ APTO</span>
                             )}
                           </div>
-                          <div className="text-[10px] text-cyan-300 font-bold mt-1">
+                          <div className="text-[11px] text-cyan-300 font-bold mt-1">
                             {tc.targetTokensMillions}M tok · {tc.computePflopsRequired} PF
                           </div>
-                          <p className="text-[9px] text-zinc-500 mt-1 line-clamp-2">
+                          <p className="text-[11px] text-zinc-500 mt-1 line-clamp-2">
                             {state.language === 'en' ? tc.description : tc.descriptionEs}
                           </p>
                         </button>
@@ -622,7 +622,7 @@ export const DataPipelineManager: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    <span className="text-[10px] text-zinc-500 mt-1 block">
+                    <span className="text-[11px] text-zinc-500 mt-1 block">
                       {localize(state.language, 'Modelos con mayor puntaje pueden generar tiers superiores de datos con mayor pureza.', 'Higher-scoring models can scrape higher tiers with greater dataset purity.')}
                     </span>
                   </div>
@@ -643,7 +643,7 @@ export const DataPipelineManager: React.FC = () => {
                       </span>
                     </button>
                     {!isModelQualifiedForTier && (
-                      <span className="text-[10px] text-amber-400 mt-1 text-center font-bold">
+                      <span className="text-[11px] text-amber-400 mt-1 text-center font-bold">
                         {localize(state.language, `El modelo asignado necesita puntaje ≥ ${tierConfig.minModelIQ} para este nivel.`, `Assigned model needs score ≥ ${tierConfig.minModelIQ} for this tier.`)}
                       </span>
                     )}
@@ -658,7 +658,7 @@ export const DataPipelineManager: React.FC = () => {
                     <Database className="w-3.5 h-3.5 text-cyan-400" />
                     <span>{localize(state.language, 'REPOSITORIO DE DATASETS ESPECIALIZADOS Y BASELINE GENERAL:', 'SPECIALIZED DATASETS & GENERAL BASELINE REPOSITORY:')}</span>
                   </h4>
-                  <span className="text-[10px] text-zinc-500">
+                  <span className="text-[11px] text-zinc-500">
                     {state.customDatasets.length} {localize(state.language, 'disponibles', 'available')}
                   </span>
                 </div>
@@ -679,45 +679,45 @@ export const DataPipelineManager: React.FC = () => {
                           <div className="flex items-start justify-between gap-1.5">
                             <div>
                               <h5 className="font-bold text-xs text-zinc-200">{ds.name}</h5>
-                              <span className="text-[10px] text-cyan-400 font-mono block">
+                              <span className="text-[11px] text-cyan-400 font-mono block">
                                 {ds.domainLabel} · Tier {ds.tier}
                               </span>
                             </div>
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                            <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                               isGeneral ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'bg-purple-950 text-purple-300 border border-purple-800'
                             }`}>
                               {isGeneral ? 'BASELINE' : `TIER ${ds.tier}`}
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-1 my-2 text-[10px] text-zinc-400 border-y border-zinc-800/80 py-1.5">
+                          <div className="grid grid-cols-3 gap-1 my-2 text-[11px] text-zinc-400 border-y border-zinc-800/80 py-1.5">
                             <div>
-                              <span className="text-zinc-500 block text-[9px]">VOLUMEN</span>
+                              <span className="text-zinc-500 block text-[11px]">VOLUMEN</span>
                               <span className="text-zinc-200 font-bold">{ds.tokensCount}M tok</span>
                             </div>
                             <div>
-                              <span className="text-zinc-500 block text-[9px]">{localize(state.language, 'PUREZA', 'PURITY')}</span>
+                              <span className="text-zinc-500 block text-[11px]">{localize(state.language, 'PUREZA', 'PURITY')}</span>
                               <span className="text-emerald-400 font-bold">{ds.qualityScore}%</span>
                             </div>
                             <div>
-                              <span className="text-zinc-500 block text-[9px]">CÓMPUTO</span>
+                              <span className="text-zinc-500 block text-[11px]">CÓMPUTO</span>
                               <span className="text-yellow-300 font-bold">{ds.computeSpentPflops} PF</span>
                             </div>
                           </div>
 
-                          <p className="text-[10px] text-zinc-400 leading-snug line-clamp-2">
+                          <p className="text-[11px] text-zinc-400 leading-snug line-clamp-2">
                             {ds.description}
                           </p>
                         </div>
 
                         <div className="mt-3 pt-2 border-t border-zinc-800/80 flex items-center justify-between">
-                          <span className="text-[9px] text-zinc-500 truncate max-w-36">
+                          <span className="text-[11px] text-zinc-500 truncate max-w-36">
                             {ds.generatedByModelName ? `Por ${ds.generatedByModelName}` : 'Baseline Abierto'}
                           </span>
                           <button
                             onClick={() => trainModelOnDataset(ds.id, !isGeneral)}
                             disabled={!!state.activeTraining}
-                            className={`px-2.5 py-1 rounded text-[10px] font-bold transition-all ${
+                            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all ${
                               !isGeneral
                                 ? 'bg-purple-950 hover:bg-purple-900 border border-purple-500 text-purple-200'
                                 : 'bg-cyan-950 hover:bg-cyan-900 border border-cyan-500 text-cyan-200'

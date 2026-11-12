@@ -45,7 +45,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-cyan-400" />
             <h3 className="font-bold text-sm text-cyan-300 tracking-wider">
-              {localize(state.language, 'MANUAL TÉCNICO OFICIAL // ARQUITECTURA DE IA & SINGULARIDAD', 'OFFICIAL TECHNICAL MANUAL // AI ARCHITECTURE & SINGULARITY')}
+              {localize(state.language, 'MANUAL TÉCNICO OFICIAL // ARQUITECTURA DE IA', 'OFFICIAL TECHNICAL MANUAL // AI ARCHITECTURE')}
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -86,7 +86,8 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
             { id: 'arch', label: localize(state.language, '3. TOPOLOGÍA & CUANTIZACIÓN', '3. TOPOLOGY & QUANTIZATION') },
             { id: 'infra', label: localize(state.language, '4. CLÚSTER & FÍSICA', '4. CLUSTER & PHYSICS') },
             { id: 'singularity', label: localize(state.language, '5. LA SINGULARIDAD', '5. THE SINGULARITY') }
-          ].map(tab => (
+          // The Singularity chapter would spoil the story before v3.
+          ].filter(tab => tab.id !== 'singularity' || (state.uiVersion || 1) >= 3).map(tab => (
             <button
               key={tab.id}
               onClick={() => { sound.playKeyClick(); setActiveSection(tab.id as any); }}
@@ -212,14 +213,14 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                     <li><strong>Scale your hardware</strong> and improve cooling and power before expanding the cluster.</li>
                     <li><strong>Deploy data engines</strong>: relational SQL, semantic vectors (RAG), and knowledge graphs.</li>
                     <li><strong>Fund research</strong> to unlock LoRA, FlashAttention, MoE, and recursive optimization.</li>
-                    <li><strong>Advance the campaign</strong> through fictional global domains toward the Singularity.</li>
+                    <li><strong>Advance the campaign</strong> by completing the goals of each phase.</li>
                   </> : <>
                     <li><strong>Entrena tu modelo inicial</strong> (Proto-14M) en el panel de Arquitectura o mediante el comando <code className="text-cyan-300">train</code>.</li>
                     <li><strong>Monetiza en el Tablero de Contratos</strong>: Completa trabajos para acumular créditos ($).</li>
                     <li><strong>Escala tu Hardware</strong>: Adquiere GPUs y amplía la refrigeración y potencia para evitar sobrecalentamiento.</li>
                     <li><strong>Despliega Motores de Datos</strong>: Desbloquea SQL, vectores semánticos (RAG) y grafos de conocimiento.</li>
                     <li><strong>Financia Papers de Investigación</strong>: Desbloquea LoRA, FlashAttention, MoE y optimización recursiva.</li>
-                    <li><strong>Avanza en la campaña</strong> a través de dominios ficticios hasta alcanzar la Singularidad.</li>
+                    <li><strong>Avanza en la campaña</strong> cumpliendo los objetivos de cada fase.</li>
                   </>}
                 </ol>
               </div>

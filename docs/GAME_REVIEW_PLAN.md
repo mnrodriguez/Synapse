@@ -40,7 +40,13 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 2 | T-5 y T-3 glosario: "pérdida", "época", "micro-modelo" y tipos de objetivo traducidos en la interfaz en español | Aplicado |
 | 2 | H-2 charla de agentes por versión (`agentDialogues.ts`): pistas sutiles en v1 y v2, canal privado desde v3, reinterpretación en v4 | Aplicado; las misiones ya variaban por versión |
 | 2 | H-5 final de contención alcanzable (cinco controles reales) y epílogo con las decisiones del jugador en todos los finales | Aplicado |
-| 3 a 5 | Resto del plan | Pendiente |
+| 3 | UI-4 borrados `ProgressionRoadmap`, `AiSuggestionBanner`, la pestaña `roadmap` y `generateStrategicAdvice` | Aplicado |
+| 3 | UI-3 contadores: insignia de contratos, costo de escalar la fuente inicial, día de campaña en Papers, nombre de la pestaña de datos | Aplicado |
+| 3 | UI-1 tokens nuevos por versión (éxito, info, chips, degradado) y clases semánticas `theme-*`; los diez modales y paneles de final migrados | Aplicado |
+| 3 | UI-6 tamaño mínimo de 11 px y respeto de `prefers-reduced-motion` · móvil: hoja "Más" con las pestañas que no entran en la barra inferior, sin desborde horizontal a 390 px | Aplicado |
+| 3 | H-1 (repaso) títulos de Agentes, Portal, Hardware, ranking y manual por versión; la v1 y la v2 ya no nombran la Singularidad, el enjambre ni el control global | Aplicado |
+| 3 | UI-1 migración de Arquitectura, Contratos, Datos, Hardware, Papers, Onboarding y Agentes · borrar remapeos de v1 · chequeo en CI | Pendiente (próximo PR) |
+| 4 y 5 | Resto del plan | Pendiente |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).
 
