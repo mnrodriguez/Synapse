@@ -40,7 +40,7 @@ import {
   LOSS_DOCS 
 } from '../utils/aiDocumentation';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
-import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime, covertLoanPflops } from '../utils/training';
+import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime, externalComputePflops } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
 import { DocLinkBadge } from './DocLinkBadge';
@@ -76,7 +76,7 @@ export const ArchitectureStudio: React.FC = () => {
     parametersCount: current.parametersCount,
     tokensCount: DEFAULT_TRAINING_TOKENS_ESTIMATE,
     gpuPflops: gpuComputePflops(state.hardware),
-    borrowedPflops: state.borrowedComputePflops + covertLoanPflops(state),
+    borrowedPflops: state.borrowedComputePflops + externalComputePflops(state),
     agentComputeDemand,
     reservedComputePflops: (state.activeGigs || (state.activeGig ? [state.activeGig] : [])).reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0),
     systemHeatCelsius: state.systemHeatCelsius
@@ -414,7 +414,7 @@ export const ArchitectureStudio: React.FC = () => {
         <div className="flex items-center justify-between col-span-2 sm:col-span-5 pt-2 border-t border-current/10">
           <div className="flex items-center gap-2">
             <span className="text-[11px] mutating-text-muted">
-              {localize(state.language, 'Agente Anfitrión Activo:', 'Active Host Agent:')} <strong className="mutating-accent-text">{current.name}</strong> (IQ {Math.round(current.reasoningScore * 4)} / 400)
+              {localize(state.language, 'Agente Anfitrión Activo:', 'Active Host Agent:')} <strong className="mutating-accent-text">{current.name}</strong> (IQ {current.reasoningScore} / 100)
             </span>
           </div>
           <button
@@ -573,8 +573,8 @@ export const ArchitectureStudio: React.FC = () => {
             <span className="text-[11px] text-amber-300">
               {localize(
                 state.language,
-                'Módulo de Scraping Bloqueado: Entrena tu modelo general a IQ ≥ 80 para desbloquear la generación de datasets especializados en la pestaña "Datos & Grafos".',
-                'Data Scraping Locked: Level your general model to Reasoning IQ ≥ 80 to unlock custom specialized datasets in the "Data & Graphs" tab.'
+                'Módulo de Scraping Bloqueado: Entrena tu modelo general a IQ ≥ 20 para desbloquear la generación de datasets especializados en la pestaña "Datos & Grafos".',
+                'Data Scraping Locked: Level your general model to Reasoning IQ ≥ 20 to unlock custom specialized datasets in the "Data & Graphs" tab.'
               )}
             </span>
           </div>

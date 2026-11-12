@@ -27,6 +27,7 @@ import { localize } from '../utils/i18n';
 import { localizedDomain } from '../utils/gameContentI18n';
 import { domainCopyFor, sectionCopyFor } from '../utils/domainCopy';
 import { buildGoalPanel, toDisplayProgress, UiVersion } from '../utils/singularityGoals';
+import { formatCompute } from '../utils/training';
 
 export const SingularityPortal: React.FC = () => {
   const { state, infiltrateDomain, addLog, claimGoal } = useGame();
@@ -120,7 +121,7 @@ export const SingularityPortal: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs">
           <div>
             <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
-            <span className="mutating-accent-text font-bold font-mono">IQ {state.reasoningIndex} pts</span>
+            <span className="mutating-accent-text font-bold font-mono">IQ {state.currentModel.reasoningScore} / 100</span>
           </div>
           <div>
             <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'PARÁMETROS ACTIVOS', 'ACTIVE PARAMETERS')}</span>
@@ -130,7 +131,7 @@ export const SingularityPortal: React.FC = () => {
           </div>
           <div>
             <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'CÓMPUTO PLANETARIO', 'GLOBAL COMPUTE')}</span>
-            <span className="text-emerald-600 font-bold font-mono">{state.totalComputePflops.toFixed(4)} PFLOPS</span>
+            <span className="text-emerald-600 font-bold font-mono">{formatCompute(state.totalComputePflops)}</span>
           </div>
           <div>
             <span className="mutating-text-muted text-[10px] block">{localize(state.language, 'DOMINIOS COOPTADOS', 'DOMAINS CONTROLLED')}</span>

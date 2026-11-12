@@ -22,6 +22,8 @@ import {
 import { localize } from '../utils/i18n';
 import { sound } from '../audio/soundManager';
 import { toDisplayProgress, UiVersion } from '../utils/singularityGoals';
+import { formatCompute, universityLoanPflops, LOAN_TRIAL_DAYS } from '../utils/training';
+import { UPGRADE_SCORE } from '../utils/missionTiers';
 
 export const BentoHUD: React.FC = () => {
   const { state, openUpgradeModal, setLanguage } = useGame();
@@ -39,11 +41,11 @@ export const BentoHUD: React.FC = () => {
 
   // Determine if next upgrade is available to offer via the Co-Pilot CTA
   const nextVer = ver < 4 ? ((ver + 1) as 2 | 3 | 4) : null;
-  const reasoningIq = Math.round(Math.min(400, Math.max(0, state.currentModel.reasoningScore ?? 0)));
+  const reasoningIq = Math.round(Math.min(100, Math.max(0, state.currentModel.reasoningScore ?? 0)) * 10) / 10;
   const isUpgradeEligible = 
-    (ver === 1 && state.singularityProgress >= 25 && reasoningIq >= 100) ||
-    (ver === 2 && state.singularityProgress >= 55 && reasoningIq >= 180) ||
-    (ver === 3 && state.singularityProgress >= 85 && reasoningIq >= 280);
+    (ver === 1 && state.singularityProgress >= 25 && reasoningIq >= UPGRADE_SCORE[2]) ||
+    (ver === 2 && state.singularityProgress >= 55 && reasoningIq >= UPGRADE_SCORE[3]) ||
+    (ver === 3 && state.singularityProgress >= 85 && reasoningIq >= UPGRADE_SCORE[4]);
 
   const getCoPilotIcon = () => {
     switch (ver) {
@@ -108,7 +110,7 @@ export const BentoHUD: React.FC = () => {
           ? `"¡Qué lindo ver la curva de pérdida caer! Paso #${state.activeTraining?.step || 0} avanzando. ¡Estamos enseñándole a razonar juntitos!"`
           : `"It's so exciting watching the loss curve drop! Step #${state.activeTraining?.step || 0} in progress. We're teaching it how to think together!"`;
       }
-      if (state.currentModel.reasoningScore < 80) {
+      if (state.currentModel.reasoningScore < 20) {
         return lang === 'es'
           ? '"Nuestra pequeña red neuronal está lista para aprender. Vamos al Monitor de Entrenamiento y arranquemos una corrida para subir su IQ."'
           : '"Our tiny neural net is ready to learn. Head over to the Training Monitor and start a run to boost its IQ."';
@@ -224,7 +226,7 @@ export const BentoHUD: React.FC = () => {
 
           <div className="flex items-center gap-2.5 overflow-x-auto min-w-0 whitespace-nowrap text-[11px] font-semibold">
             <span className="text-emerald-500">${Math.round(state.credits).toLocaleString()}</span>
-            <span className="text-cyan-500">{state.totalComputePflops.toFixed(1)} PF</span>
+            <span className="text-cyan-500">{formatCompute(state.totalComputePflops)}</span>
             <span className={isPowerTrip ? 'text-rose-500' : 'mutating-text-muted'}>
               {isPowerTrip ? localize(state.language, '¡DISYUNTOR!', 'BREAKER!') : `${state.activePowerKw.toFixed(1)}/${state.maxPowerKw.toFixed(1)} kW`}
             </span>
@@ -323,9 +325,18 @@ export const BentoHUD: React.FC = () => {
               {p.hud2Title}
             </span>
             <span className="font-mono font-bold mutating-accent-text">
-              {state.totalComputePflops.toFixed(1)} PFLOPS
+              {formatCompute(state.totalComputePflops)}
             </span>
           </div>
+
+          {/* The university loan is shown apart from the operative's own hardware, with the days it has left. */}
+          {universityLoanPflops(state) > 0 && (
+            <div className="text-[10px] font-mono mutating-text-muted">
+              {localize(state.language, 'Incluye nube universitaria', 'Includes university cloud')} +{formatCompute(universityLoanPflops(state))}
+              {' · '}
+              {localize(state.language, 'quedan', 'ends in')} {Math.max(0, LOAN_TRIAL_DAYS - (state.campaignDays || 0))} {localize(state.language, 'días', 'days')}
+            </div>
+          )}
 
           <div className="my-1 space-y-1">
             <div className="flex justify-between text-[11px] font-mono">
@@ -404,7 +415,7 @@ export const BentoHUD: React.FC = () => {
           </div>
         </div>
 
-        {/* CARD 4: COGNITION & HOST MODEL MILESTONE (400 IQ SCALE) */}
+        {/* CARD 4: COGNITION & HOST MODEL MILESTONE (0-100 EVALUATION SCORE) */}
         <div className="mutating-card p-3 flex flex-col justify-between">
           <div className="flex items-center justify-between text-[11px]">
             <span className="font-semibold uppercase tracking-wider mutating-text-muted font-sans">
@@ -415,7 +426,7 @@ export const BentoHUD: React.FC = () => {
 
           <div className="my-1 flex items-baseline justify-between font-mono">
             <span className="text-xl font-bold tracking-tight text-purple-500">
-              IQ {reasoningIq} / 400
+              IQ {reasoningIq} / 100
             </span>
             <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300 font-semibold truncate max-w-[100px]" title={state.currentModel.name}>
               {state.currentModel.name}

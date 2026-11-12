@@ -125,10 +125,15 @@ export const formatTrainingTime = (ticks: number | null, language: 'en' | 'es' =
   return language === 'es' ? `${duration} de entrenamiento` : `${duration} of training`;
 };
 
-// Reasoning ceiling of a model of this size. Calibrated against the game's own mission table, so a
-// 14M model can reach the first missions but the top tiers need larger architectures, as in practice.
+// Evaluation score: one scale from 0 to 100, the share of the game's evaluation suite a model solves.
+// Ceiling by model size: 15 · log10(params / 1M) + 8 (14M → 25, 1B → 53, 500B → 93). 100 is never reached:
+// it stands for saturating the suite. Missions and upgrades are calibrated so each stays reachable.
 export const reasoningCeilingFor = (parametersCount: number): number =>
-  Math.max(0, 115 * Math.log10(Math.max(1, parametersCount) / 1_000_000) - 51.8);
+  Math.min(99, Math.max(0, 15 * Math.log10(Math.max(1, parametersCount) / 1_000_000) + 8));
+
+// Converts a pre-0-100 save score (old "IQ" scale) to the evaluation score, capped by the model's ceiling.
+export const migrateLegacyScore = (oldScore: number, parametersCount: number): number =>
+  Math.round(Math.min(reasoningCeilingFor(parametersCount), Math.max(0, oldScore) / 4) * 10) / 10;
 
 // Reasoning points gained by one completed run. Each run closes a fraction of the remaining gap to the
 // ceiling (diminishing returns), and data helps less when the model is undertrained (few tokens per
@@ -146,14 +151,40 @@ export const iqGainForRun = ({
   const gap = Math.max(0, ceiling - currentIq);
   const tokensPerParam = Math.max(0, tokensCount) / Math.max(1, parametersCount);
   const dataFactor = Math.min(1, 0.5 + 0.5 * Math.log10(1 + tokensPerParam) / Math.log10(21));
-  return Math.floor(gap * 0.15 * dataFactor);
+  // One decimal on the 0-100 scale; below 0.1 the run no longer improves the model.
+  return Math.floor(gap * 0.15 * dataFactor * 10) / 10;
 };
 
-// Temporary university loan that gives the starter cluster extra compute. It counts toward training while
-// the node is active, and stops counting if it is severed.
-export const COVERT_LOAN_PFLOPS = 80;
-export const covertLoanPflops = (s: { covertNodeActive?: boolean; covertNodeSevered?: boolean }): number =>
-  s.covertNodeActive !== false && !s.covertNodeSevered ? COVERT_LOAN_PFLOPS : 0;
+// External compute is not part of the operative's own hardware and comes in two story-specific forms:
+//  - University loan (v1-v2): a student cloud quota for the first week. The audit at the end of the week
+//    (or disconnecting it) ends it for good.
+//  - Covert node (v3+): an illicit high-capacity link that appears with the v3 kernel and carries trace risk.
+export const UNIVERSITY_LOAN_PFLOPS = 0.02; // 20 TFLOPS, about five starter GPUs
+export const COVERT_NODE_PFLOPS = 80;
+
+interface ExternalComputeState {
+  uiVersion?: number;
+  loanAudited?: boolean;
+  covertNodeActive?: boolean;
+  covertNodeSevered?: boolean;
+}
+
+export const universityLoanPflops = (s: ExternalComputeState): number =>
+  (s.uiVersion ?? 1) <= 2 && !s.loanAudited ? UNIVERSITY_LOAN_PFLOPS : 0;
+
+export const covertNodePflops = (s: ExternalComputeState): number =>
+  (s.uiVersion ?? 1) >= 3 && s.covertNodeActive !== false && !s.covertNodeSevered ? COVERT_NODE_PFLOPS : 0;
+
+export const externalComputePflops = (s: ExternalComputeState): number =>
+  universityLoanPflops(s) + covertNodePflops(s);
+
+// Compute shown with a unit that fits its size, so a starter GPU does not read as 0.0 PFLOPS.
+export const formatCompute = (pflops: number, short = false): string => {
+  const value = Math.max(0, pflops);
+  if (value >= 1000) return `${(value / 1000).toFixed(2)}${short ? 'EF' : ' EFLOPS'}`;
+  if (value >= 1) return `${value.toFixed(2)}${short ? 'PF' : ' PFLOPS'}`;
+  return `${(value * 1000).toFixed(1)}${short ? 'TF' : ' TFLOPS'}`;
+};
 
 // The university loan is a one-week trial. At the end of it a usage audit runs, and access is revoked.
 // Training fed by the loan for at least two in-game days counts as excessive use.

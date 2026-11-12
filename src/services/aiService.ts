@@ -246,7 +246,7 @@ function getSystemPrompt(context: AgentResponseContext): string {
   const modelSize = context.modelParameters >= 1_000_000_000
     ? `${(context.modelParameters / 1_000_000_000).toFixed(1)}B`
     : `${Math.round(context.modelParameters / 1_000_000)}M`;
-  const complexity = context.reasoningScore < 100
+  const complexity = context.reasoningScore < 25
     ? language === 'es' ? 'Usa frases breves y reconoce la incertidumbre.' : 'Use brief sentences and acknowledge uncertainty.'
     : language === 'es' ? 'Expón un análisis estructurado y reconoce la incertidumbre.' : 'Give structured analysis and acknowledge uncertainty.';
   const alignment = agent.alignmentScore < 35
@@ -271,7 +271,7 @@ function createProceduralResponse(context: AgentResponseContext, userPrompt: str
   const role = roleLabels[agent.role]?.[language] ?? agent.role;
   const prompt = userPrompt.trim().slice(0, 100);
   if (language === 'en') {
-    const capability = context.reasoningScore < 100
+    const capability = context.reasoningScore < 25
       ? 'My analysis is limited; I will separate known facts from assumptions.'
       : 'I will break the objective into constraints, evidence, and a verifiable next step.';
     const style = agent.inferenceParams.temperature > 0.9
@@ -282,7 +282,7 @@ function createProceduralResponse(context: AgentResponseContext, userPrompt: str
       : '';
     return `${agent.name} (${role}): Regarding "${prompt}" — ${capability}${style}${alignment}`;
   }
-  const capability = context.reasoningScore < 100
+  const capability = context.reasoningScore < 25
     ? 'Mi análisis es limitado; separaré los hechos conocidos de las suposiciones.'
     : 'Dividiré el objetivo en restricciones, evidencia y un siguiente paso verificable.';
   const style = agent.inferenceParams.temperature > 0.9
@@ -473,7 +473,7 @@ const FALLBACK_CLIENTS = [
   'Nexus Silicon Design'
 ];
 
-const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
+export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
   titleEs: string;
   titleEn: string;
   loreEs: string;
@@ -499,7 +499,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'Supervised binary classification fine-tuning over relational tabular records.',
       baseReward: 95,
       params: 10_000_000,
-      reasoning: 50,
+      reasoning: 12,
       duration: 15,
       risk: 2,
       dataTypes: ['relational_sql'],
@@ -514,7 +514,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'Token-level NER extraction optimized with INT8 quantization for sub-10ms response.',
       baseReward: 140,
       params: 14_000_000,
-      reasoning: 55,
+      reasoning: 15,
       duration: 20,
       risk: 3,
       docsUrl: 'https://arxiv.org/abs/2208.07339'
@@ -528,7 +528,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'Density estimation and reconstruction thresholding over relational databases.',
       baseReward: 210,
       params: 16_000_000,
-      reasoning: 60,
+      reasoning: 18,
       duration: 25,
       risk: 4,
       dataTypes: ['relational_sql'],
@@ -545,7 +545,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'Approximate nearest neighbor HNSW retrieval with contextual hallucination suppression.',
       baseReward: 1200,
       params: 35_000_000,
-      reasoning: 78,
+      reasoning: 30,
       duration: 45,
       risk: 8,
       dataTypes: ['vector_embeddings'],
@@ -560,7 +560,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'Causal message passing and edge convolutions over RDF molecular knowledge graphs.',
       baseReward: 2400,
       params: 70_000_000,
-      reasoning: 92,
+      reasoning: 34,
       duration: 60,
       risk: 10,
       topology: 'gnn_hybrid',
@@ -576,7 +576,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'Top-2 expert load-balancing with GQA grouped-query attention decoding.',
       baseReward: 3800,
       params: 120_000_000,
-      reasoning: 110,
+      reasoning: 38,
       duration: 75,
       risk: 12,
       topology: 'moe',
@@ -593,7 +593,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'State-graph path optimization with zero slippage execution simulation.',
       baseReward: 8500,
       params: 250_000_000,
-      reasoning: 145,
+      reasoning: 42,
       duration: 90,
       risk: 35,
       topology: 'transformer',
@@ -609,7 +609,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'Adversarial test generation using Monte Carlo Tree Search and symbolic verification.',
       baseReward: 16000,
       params: 500_000_000,
-      reasoning: 180,
+      reasoning: 46,
       duration: 110,
       risk: 50,
       dataTypes: ['synthetic_flywheel'],
@@ -626,7 +626,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'Linear-time SSM processing one-million-token telemetry windows with predictive control.',
       baseReward: 48000,
       params: 1_200_000_000,
-      reasoning: 250,
+      reasoning: 52,
       duration: 150,
       risk: 30,
       topology: 'mamba_ssm',
@@ -641,7 +641,7 @@ const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       objEn: 'Closed-loop Gödel Machine self-modification with formal theorem proof verification.',
       baseReward: 125000,
       params: 3_500_000_000,
-      reasoning: 350,
+      reasoning: 58,
       duration: 200,
       risk: 45,
       dataTypes: ['synthetic_flywheel', 'knowledge_graph', 'vector_embeddings'],
@@ -686,7 +686,7 @@ Rules:
     "requiredAgentRoles": array of required roles from ${JSON.stringify(AGENT_ROLES)},
     "requiredTopology": "transformer" | "moe" | "mamba_ssm" | "gnn_hybrid" | "multimodal_diffusion" (optional or omit),
     "requiredDataTypes": array of ("relational_sql" | "vector_embeddings" | "knowledge_graph" | "synthetic_flywheel"),
-    "requiredMinReasoning": number (Tier 1: 50-65, Tier 2: 70-120, Tier 3: 130-220, Tier 4: 250-400),
+    "requiredMinReasoning": number (Tier 1: 10-24, Tier 2: 30-42, Tier 3: 46-62, Tier 4: 70-90; evaluation score from 0 to 100),
     "durationSeconds": number (15 to 150),
     "suspicionRisk": number (Tier 1: 1-5, Tier 2: 5-15, Tier 3: 20-55, Tier 4: 25-50),
     "loreDescription": "1-2 sentence real-world lore context in ${language === 'es' ? 'Spanish' : 'English'}",
@@ -722,7 +722,7 @@ Rules:
             requiredAgentRoles,
             requiredTopology: item.requiredTopology,
             requiredDataTypes: Array.isArray(item.requiredDataTypes) ? item.requiredDataTypes : ['relational_sql'],
-            requiredMinReasoning: Number(item.requiredMinReasoning) || 60,
+            requiredMinReasoning: Number(item.requiredMinReasoning) || 15,
             durationSeconds: Math.max(15, Math.min(180, Number(item.durationSeconds) || 30)),
             suspicionRisk: Math.max(1, Math.min(80, Number(item.suspicionRisk) || 5)),
             loreDescription: String(item.loreDescription || 'Operación encubierta de procesamiento distribuido de tensores y filtrado de señales en tiempo real.'),
@@ -997,7 +997,7 @@ CURRENT GAME TELEMETRY:
 - Current Subversion Index: ${subversion.toFixed(1)}% (at 90-100%, AI takes over the world from the creator)
 - Operative Credits: $${state.credits.toLocaleString()} CR
 - Active Compute: ${state.totalComputePflops.toFixed(4)} PFLOPS
-- Highest Model Params: ${(totalParams / 1_000_000).toFixed(0)}M | Reasoning IQ: ${state.reasoningIndex || state.currentModel.reasoningScore}
+- Highest Model Params: ${(totalParams / 1_000_000).toFixed(0)}M | Evaluation score (0-100): ${state.currentModel.reasoningScore}
 - Heat: ${state.systemHeatCelsius}°C | VRAM: ${state.hardware.reduce((acc, h) => acc + h.vramGb * h.count, 0)} GB
 - Council Agents (Max 5):
 ${agentProfiles.map(p => `  • "${p.name}" [Role: ${p.role}, Model: ${p.modelName} (${(p.params / 1_000_000).toFixed(0)}M params, IQ: ${p.reasoning}), Alignment: ${p.alignment}%, Tools: ${p.tools.join(', ')}]`).join('\n')}
@@ -1097,7 +1097,7 @@ Return strictly a valid JSON object matching this schema:
             durationSeconds: Math.max(15, Math.min(120, Number(parsed.suggestedMission.durationSeconds) || 35)),
             suspicionRisk: Math.max(10, Math.min(85, Number(parsed.suggestedMission.suspicionRisk) || 30)),
             requiredParams: Number(parsed.suggestedMission.requiredParams) || 14_000_000,
-            requiredMinReasoning: Number(parsed.suggestedMission.requiredMinReasoning) || 60,
+            requiredMinReasoning: Number(parsed.suggestedMission.requiredMinReasoning) || 15,
             requiredAgentRoles: validatedRoles.length > 0 ? validatedRoles : [councilAgents[0]?.role || 'arbitrageur'],
             loreDescription: String(parsed.suggestedMission.loreDescription || ''),
             technicalObjective: String(parsed.suggestedMission.technicalObjective || ''),
@@ -1441,7 +1441,7 @@ Return strictly a valid JSON object matching this schema:
   if (wantsFeasible) {
     // 100% matched to current capabilities so user can launch right away
     requiredParams = Math.min(highestModel.parametersCount, 14_000_000);
-    requiredMinReasoning = Math.max(40, Math.min(highestReasoning, 65));
+    requiredMinReasoning = Math.max(5, Math.min(highestReasoning, 16));
     requiredAgentRoles = squadRoles.slice(0, Math.min(2, Math.max(1, squadRoles.length)));
     tacticalReasoning = isEs
       ? `Misión 100% adaptada a las capacidades actuales de tu enjambre. Todos los requisitos de parámetros (${(requiredParams / 1_000_000).toFixed(0)}M) e IQ (${requiredMinReasoning} pts) están cubiertos para ejecución inmediata.`
@@ -1453,8 +1453,8 @@ Return strictly a valid JSON object matching this schema:
       ? Math.max(28_000_000, Math.round(highestModel.parametersCount * 1.5))
       : Math.round(highestModel.parametersCount * 0.95);
     requiredMinReasoning = isHardMission
-      ? Math.max(85, Math.round(highestReasoning + 20))
-      : Math.max(50, Math.round(highestReasoning * 0.85));
+      ? Math.max(21, Math.round(highestReasoning + 5))
+      : Math.max(12, Math.round(highestReasoning * 0.85));
     requiredAgentRoles = squadRoles.length >= 2 ? squadRoles.slice(0, 2) : (squadRoles.length === 1 ? [squadRoles[0]] : ['arbitrageur' as AgentRole]);
     tacticalReasoning = isEs
       ? `Operación de alto rendimiento: Exige un modelo de ${(requiredParams / 1_000_000).toFixed(0)}M parámetros y ${requiredMinReasoning} IQ. Tu clúster actual cuenta con ${(highestModel.parametersCount / 1_000_000).toFixed(0)}M y ${highestReasoning} IQ.`

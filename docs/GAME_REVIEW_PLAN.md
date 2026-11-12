@@ -25,6 +25,19 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 
 ---
 
+## Estado de avance
+
+| Fase | Punto | Estado |
+|---|---|---|
+| 1 | P0-3 tutorial con compuerta de puntaje · P0-4 reasignar modelo del agente · L-1 primer agente gratis · L-2 50 CR por etapa | Aplicado |
+| 1 | P0-5 préstamo de 0,02 PFLOPS · P0-6 préstamo y nodo encubierto separados · P0-7 sin redondeo · R-3 unidades adaptativas | Aplicado |
+| 1 | R-1 escala única de 0 a 100 con migración (versión de guardado 10) · P0-1 y P0-2 misiones recalibradas | Aplicado |
+| 1 | P0-8 singularidad por mejora real, misiones y GPU nuevas | Aplicado; falta medir los tiempos jugando |
+| 1 | D-2 tests de balance (`bun test`) · D-3 typecheck y tests en CI | Aplicado |
+| 2 a 5 | Resto del plan | Pendiente |
+
+Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los textos que todavía dicen "IQ" pasan a "puntaje de evaluación" en la fase 2 (T-5).
+
 ## 1. Resumen ejecutivo
 
 El juego tiene una base fuerte: la idea de la UI que muta en cuatro versiones es buena, el catálogo técnico (hardware, papers, topologías, cuantización) es amplio y los cálculos de entrenamiento ya siguen reglas reales. Hoy lo frenan cuatro cosas:

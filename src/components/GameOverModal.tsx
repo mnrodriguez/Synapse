@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { EMERGENCY_LOAN_AMOUNT, EMERGENCY_LOAN_REPAYMENT } from '../utils/constants';
+import { formatCompute } from '../utils/training';
 
 export const GameOverModal: React.FC = () => {
   const { state, takeEmergencyLoan, clearGameOver, resetProgress } = useGame();
@@ -171,7 +172,7 @@ export const GameOverModal: React.FC = () => {
             </div>
             <div>
               <span className="text-[10px] text-zinc-500 block uppercase">{isEs ? 'Cómputo Alcanzado' : 'Peak Compute'}</span>
-              <span className="font-bold text-emerald-300 text-sm">{state.totalComputePflops.toFixed(3)} PFLOPS</span>
+              <span className="font-bold text-emerald-300 text-sm">{formatCompute(state.totalComputePflops)}</span>
             </div>
           </div>
 

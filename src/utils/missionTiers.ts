@@ -26,4 +26,22 @@ export function lowestOpenIqForVersion(contracts: ContractGig[], uiVersion: numb
 }
 
 // Reasoning IQ the first model needs before the first mission can be run with a deployed agent.
-export const FIRST_MISSION_IQ = 50;
+export const FIRST_MISSION_IQ = 10;
+
+// Evaluation score the active model needs to unlock each UI version upgrade (with the singularity progress).
+export const UPGRADE_SCORE: Record<2 | 3 | 4, number> = { 2: 28, 3: 42, 4: 50 };
+
+// Evaluation score a general model needs to unlock the data scraping module.
+export const DATA_SCRAPING_MIN_SCORE = 20;
+
+// Singularity progress budget (docs/GAME_REVIEW_PLAN.md, P0-8). The v1 stage needs 25 points: about 9 from
+// training gains, 10 from missions, and the rest from papers, data engines and new hardware. Later tiers
+// pay more per mission, so each stage keeps a similar mix.
+export const SINGULARITY_PER_SCORE_POINT = 0.4; // per evaluation point a training run actually gained
+export const MISSION_SINGULARITY: Record<ContractGig['tier'], number> = {
+  tier1_micro: 1.25,
+  tier2_corporate: 2,
+  tier3_blackops: 2.5,
+  tier4_singularity: 3
+};
+export const NEW_GPU_SINGULARITY = 0.5; // first unit of each GPU model

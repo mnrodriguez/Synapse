@@ -48,6 +48,8 @@ import {
   EMERGENCY_LOAN_REPAYMENT,
   ELECTRICITY_RATE_PER_KWH,
   AGENT_COMPUTE_DEMAND_PFLOPS,
+  AGENT_SPINUP_COST,
+  TUTORIAL_STAGE_REWARD,
   AGENT_POWER_DRAW_KW,
   DAYS_PER_GAME_MONTH,
   DEFAULT_GENERAL_DATASET,
@@ -91,11 +93,17 @@ import {
   localizedResearch, 
   localizedDomain 
 } from '../utils/gameContentI18n';
-import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, covertLoanPflops, COVERT_LOAN_PFLOPS, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
+import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, migrateLegacyScore, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
 const DEFAULT_TRAINING_TOKENS = 50_000_000;
+
+// Agent income and autonomy follow the evaluation score of the model the agent runs on.
+const agentReasoningFactor = (score: number): number => Math.max(0.5, score / 20);
+const agentParamBonus = (params: number): number => Math.min(2.5, 1 + params / 50_000_000);
+const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 7.5)));
 import { evaluateMissionTeam, findAutonomousMission } from '../utils/missionEvaluation';
+import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
 
 interface GameContextType {
   state: GameState;
@@ -141,6 +149,7 @@ interface GameContextType {
   claimGoal: (goalId: string, reward: number) => void;
   fetchLeaderboard: () => Promise<OperativeLeaderboard[]>;
   createAgent: (name: string, role: AgentRole, modelId: string, tools: string[], inferenceParams?: Partial<InferenceParams>) => boolean;
+  reassignAgentModel: (agentId: string, modelId: string) => boolean;
   deleteAgent: (agentId: string) => void;
   quarantineAgent: (agentId: string) => void;
   updateGuardrails: (updates: Partial<GuardrailConfig>) => void;
@@ -182,7 +191,7 @@ const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
 
 const DEFAULT_STATE: GameState = {
-  saveSchemaVersion: 9,
+  saveSchemaVersion: 10,
   callsign: 'CIPHER-1',
   credits: 500,
   dateTimestamp: Date.now(),
@@ -275,6 +284,20 @@ const DEFAULT_STATE: GameState = {
 
 function mergeGameState(data: Partial<GameState>, fallback: GameState): GameState {
   const isLegacyTutorialProgress = (data.saveSchemaVersion ?? 0) < 9;
+  // Schema 10: model scores and generated mission requirements move to the 0-100 evaluation scale.
+  const isLegacyScoreScale = (data.saveSchemaVersion ?? 0) < 10;
+  const migrateModelScore = (model: ModelArchitecture): ModelArchitecture => isLegacyScoreScale
+    ? { ...model, reasoningScore: migrateLegacyScore(model.reasoningScore || 0, model.parametersCount) }
+    : model;
+  const migrateMissionScore = (contract: ContractGig): ContractGig => isLegacyScoreScale
+    ? {
+      ...contract,
+      requiredMinReasoning: Math.max(1, Math.min(
+        Math.round(contract.requiredMinReasoning / 4),
+        Math.floor(reasoningCeilingFor(contract.requiredParams)) - 2
+      ))
+    }
+    : contract;
   const isLegacyLanguagePreference = (data.saveSchemaVersion ?? 0) < 8;
   const isLegacyProgression = (data.saveSchemaVersion ?? 0) < 7;
   const isLegacyEconomy = (data.saveSchemaVersion ?? 0) < 2;
@@ -292,12 +315,12 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
     systemPrompt: ''
   };
   const currentModel: ModelArchitecture = {
-    ...rawCurrentModel,
+    ...migrateModelScore(rawCurrentModel),
     activeDataSources: rawCurrentModel.activeDataSources || [],
     inferenceParams: rawCurrentModel.inferenceParams || defaultInferenceParams
   };
   const modelList = Array.isArray(data.savedModels) ? data.savedModels.map(model => ({
-    ...model,
+    ...migrateModelScore(model),
     activeDataSources: model.activeDataSources || [],
     inferenceParams: model.inferenceParams || defaultInferenceParams
   })) : [];
@@ -331,7 +354,7 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
   return {
     ...fallback,
     ...data,
-    saveSchemaVersion: 9,
+    saveSchemaVersion: 10,
     language: isLegacyLanguagePreference
       ? 'en'
       : data.language === 'es' ? 'es' : 'en',
@@ -497,7 +520,9 @@ function mergeGameState(data: Partial<GameState>, fallback: GameState): GameStat
           requiredAgentRoles: saved.requiredAgentRoles ?? contract.requiredAgentRoles
         };
       }),
-      ...incomingContracts.filter(contract => !fallback.contracts.some(current => current.id === contract.id))
+      ...incomingContracts
+        .filter(contract => !fallback.contracts.some(current => current.id === contract.id))
+        .map(migrateMissionScore)
     ],
     logs: Array.isArray(data.logs) ? data.logs : fallback.logs,
     guardrails: data.guardrails || fallback.guardrails,
@@ -677,7 +702,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       activeDataSources: current.currentModel.activeDataSources.length > 0 
         ? [...current.currentModel.activeDataSources] 
         : ['data_relational_sql'],
-      reasoningScore: 60, // Fresh untrained reasoning baseline
+      reasoningScore: 5, // fresh, untrained model on the 0-100 evaluation scale
       vramRequiredGb: current.currentModel.vramRequiredGb || 2.5,
       computeRequiredPflops: current.currentModel.computeRequiredPflops || 0.05,
       modelType: 'general',
@@ -1104,17 +1129,33 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    const isCovertActive = stateRef.current?.covertNodeActive !== false && !stateRef.current?.covertNodeSevered;
-    const covertBonusPflops = isCovertActive ? COVERT_LOAN_PFLOPS : 0;
+    // University loan (v1-v2) or covert node (v3+); never part of the operative's own hardware.
+    const covertBonusPflops = stateRef.current ? externalComputePflops(stateRef.current) : 0;
     const totalPflops = (totalTflops / 1000) + covertBonusPflops;
     return {
-      totalComputePflops: Math.max(0.001, Number(totalPflops.toFixed(2))),
+      // Kept at full precision: a starter GPU is a few thousandths of a PFLOPS. Round only for display.
+      totalComputePflops: Math.max(1e-6, totalPflops),
       activePowerKw: Number(powerDraw.toFixed(2)),
       maxPowerKw: Number(maxPower.toFixed(2)),
       maxCoolingKw: Number(maxCooling.toFixed(2)),
       heatRate: Number(heatRate.toFixed(2))
     };
   }, []);
+
+  // Refresh cluster metrics once after loading, so a save opened while paused shows its real compute
+  // (stored values can be stale or from an older formula until the first tick runs).
+  useEffect(() => {
+    setState(prev => {
+      const metrics = recalculateMetrics(prev.hardware, prev.facilityTier);
+      return {
+        ...prev,
+        totalComputePflops: metrics.totalComputePflops + (prev.borrowedComputePflops || 0),
+        activePowerKw: metrics.activePowerKw,
+        maxPowerKw: metrics.maxPowerKw,
+        maxCoolingKw: metrics.maxCoolingKw
+      };
+    });
+  }, [recalculateMetrics]);
 
   const upgradeFacility = useCallback((): boolean => {
     const current = stateRef.current;
@@ -1178,6 +1219,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           contracts
         } = prev;
         let tutorialStep = prev.tutorialStep ?? 0;
+        // Saves without a record start from their current stage, so no stage is paid retroactively.
+        const tutorialRewardedFrom = prev.tutorialRewardedStep ?? (prev.tutorialStep ?? 0);
         let tutorialCompleted = prev.tutorialCompleted ?? false;
         let completedContractsCount = prev.completedContractsCount ?? 0;
 
@@ -1201,7 +1244,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const dayIsComplete = currentDayTicks >= 48;
         const campaignDays = prev.campaignDays + (dayIsComplete ? 1 : 0);
         // University loan audit: at the end of the trial week, access is revoked (and misuse is reported).
-        const loanActive = covertLoanPflops(prev) > 0;
+        const loanActive = universityLoanPflops(prev) > 0;
         const loanAuditDue = loanActive && !prev.loanAudited && campaignDays >= LOAN_TRIAL_DAYS;
         const loanTrainingTicks = (prev.loanTrainingTicks ?? 0) + (loanActive && prev.activeTraining ? 1 : 0);
         const loanMisuse = loanTrainingTicks >= LOAN_MISUSE_TICKS;
@@ -1322,7 +1365,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             parametersCount: prev.currentModel.parametersCount,
             tokensCount: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS,
             gpuPflops: gpuComputePflops(prev.hardware),
-            borrowedPflops: borrowedComputePflops + covertLoanPflops(prev),
+            borrowedPflops: borrowedComputePflops + externalComputePflops(prev),
             agentComputeDemand,
             reservedComputePflops: reservedForMissions,
             systemHeatCelsius
@@ -1379,13 +1422,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
 
             // Calculate singularity progress jump
-            const singInc = Math.min(0.35, 0.12 + Math.log10(Math.max(1, prev.currentModel.parametersCount / 10_000_000)) * 0.04);
+            // Only real improvement moves the singularity: a run with no score gain adds nothing.
+            const singInc = Math.min(3, bonusReasoning * SINGULARITY_PER_SCORE_POINT);
             singularityProgress = Math.min(100, singularityProgress + singInc);
             reasoningIndex = Math.max(reasoningIndex, upgradedModelReasoning);
 
-            if (tutorialStep <= 2) {
-              tutorialStep = 3;
-            }
 
             if (isMicroModel) {
               addLog(
@@ -1506,6 +1547,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const suspicionAdded = Number((gig.suspicionRisk * 0.25).toFixed(1));
                 watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
                 completedContractsCount += 1;
+                singularityProgress = Math.min(100, singularityProgress + (MISSION_SINGULARITY[gig.tier] ?? 1));
                 if (tutorialStep <= 4) {
                   tutorialStep = 5;
                   tutorialCompleted = true;
@@ -2005,7 +2047,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!prev.unlockedAllTabs) {
           const tabSet = new Set(unlockedTabs);
 
-          if ((prev.currentModel.reasoningScore >= 70 || prev.savedModels.some(m => m.reasoningScore >= 70)) && !tabSet.has('contracts')) {
+          if ((prev.currentModel.reasoningScore >= FIRST_MISSION_IQ || prev.savedModels.some(m => m.reasoningScore >= FIRST_MISSION_IQ)) && !tabSet.has('contracts')) {
             tabSet.add('contracts');
             addLog(
               prev.language === 'es'
@@ -2071,14 +2113,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? recalculateMetrics(finalHardware, prev.facilityTier)
           : metrics;
 
+        const tutorialStageReward = Math.max(0, tutorialStep - tutorialRewardedFrom) * TUTORIAL_STAGE_REWARD;
+
         return {
           ...prev,
           hardware: finalHardware,
           gameDay: nextDay,
           loanAudited: prev.loanAudited || loanAuditDue,
           loanTrainingTicks,
-          covertNodeActive: loanAuditDue ? false : prev.covertNodeActive,
-          covertNodeSevered: loanAuditDue ? true : prev.covertNodeSevered,
           gameMonth: nextMonth,
           gameYear: nextYear,
           gameHour: nextHour,
@@ -2091,7 +2133,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           unlockedTabs,
           activeTradingDesk: updatedTradingDesk,
           researchTree: updatedResearchTree,
-          credits: Math.round(credits),
+          credits: Math.round(credits + tutorialStageReward),
+          tutorialRewardedStep: Math.max(tutorialRewardedFrom, tutorialStep),
           systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
           watchdogSuspicion: Number(watchdogSuspicion.toFixed(1)),
           totalComputePflops: currentMetrics.totalComputePflops + borrowedComputePflops,
@@ -2167,6 +2210,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...prev,
         credits: prev.credits - item.price,
         hardware: updatedHw,
+        // The first unit of each GPU model is a milestone of the build-out.
+        singularityProgress: item.category === 'gpu' && (prev.hardware.find(h => h.id === id)?.count ?? 0) === 0
+          ? Math.min(100, prev.singularityProgress + NEW_GPU_SINGULARITY)
+          : prev.singularityProgress,
         totalComputePflops: metrics.totalComputePflops + prev.borrowedComputePflops,
         activePowerKw: metrics.activePowerKw,
         maxPowerKw: metrics.maxPowerKw,
@@ -2457,7 +2504,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       parametersCount: currentState.currentModel.parametersCount,
       tokensCount: runTokens,
       gpuPflops: gpuComputePflops(currentState.hardware),
-      borrowedPflops: currentState.borrowedComputePflops + covertLoanPflops(currentState),
+      borrowedPflops: currentState.borrowedComputePflops + externalComputePflops(currentState),
       agentComputeDemand,
       reservedComputePflops: reservedForMission,
       systemHeatCelsius: currentState.systemHeatCelsius
@@ -2523,12 +2570,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const current = stateRef.current;
     if (current.isDataScrapingUnlocked) return true;
 
-    // Prerequisite: deploy an existing, sufficiently leveled general model (IQ >= 80)
+    // Prerequisite: deploy an existing, sufficiently leveled general model (score >= DATA_SCRAPING_MIN_SCORE)
     const qualifyingModel = modelId
       ? current.savedModels.find(m => m.id === modelId)
-      : current.savedModels.find(m => (!m.modelType || m.modelType === 'general') && m.reasoningScore >= 80);
+      : current.savedModels.find(m => (!m.modelType || m.modelType === 'general') && m.reasoningScore >= DATA_SCRAPING_MIN_SCORE);
 
-    if (!qualifyingModel || qualifyingModel.reasoningScore < 80) {
+    if (!qualifyingModel || qualifyingModel.reasoningScore < DATA_SCRAPING_MIN_SCORE) {
       sound.playWarning();
       const highestGeneral = [...current.savedModels]
         .filter(m => !m.modelType || m.modelType === 'general')
@@ -2536,8 +2583,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const highestIQ = highestGeneral ? highestGeneral.reasoningScore : 0;
       addLog(
         current.language === 'en'
-          ? `Data Module Locked: Requires a deployed General Model leveled to Reasoning IQ ≥ 80 to research automated crawler heuristics. Current best: ${highestGeneral?.name ?? 'None'} (IQ ${highestIQ}/80). Train on General Information dataset first.`
-          : `Módulo de Datos Bloqueado: Requiere un Modelo General con IQ de Razonamiento ≥ 80 para investigar heurísticas de scraping web. Mejor actual: ${highestGeneral?.name ?? 'Ninguno'} (IQ ${highestIQ}/80). Entrena primero en el dataset General.`,
+          ? `Data Module Locked: Requires a deployed General Model leveled to Reasoning IQ ≥ 20 to research automated crawler heuristics. Current best: ${highestGeneral?.name ?? 'None'} (IQ ${highestIQ}/80). Train on General Information dataset first.`
+          : `Módulo de Datos Bloqueado: Requiere un Modelo General con IQ de Razonamiento ≥ 20 para investigar heurísticas de scraping web. Mejor actual: ${highestGeneral?.name ?? 'Ninguno'} (IQ ${highestIQ}/80). Entrena primero en el dataset General.`,
         'warning'
       );
       return false;
@@ -2565,8 +2612,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!current.isDataScrapingUnlocked) {
       addLog(
         current.language === 'en'
-          ? 'Data Scraping & Generation Module is locked. Fulfill prerequisite with an IQ ≥ 80 General Model.'
-          : 'El Módulo de Scraping está bloqueado. Cumple el prerrequisito con un Modelo General IQ ≥ 80.',
+          ? 'Data Scraping & Generation Module is locked. Fulfill prerequisite with an IQ ≥ 20 General Model.'
+          : 'El Módulo de Scraping está bloqueado. Cumple el prerrequisito con un Modelo General IQ ≥ 20.',
         'warning'
       );
       return false;
@@ -2943,7 +2990,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     inferenceParams?: Partial<InferenceParams>
   ): boolean => {
     const model = stateRef.current.savedModels.find(m => m.id === modelId) || stateRef.current.currentModel;
-    const spinupCost = 75;
+    const spinupCost = stateRef.current.agents.length === 0 ? 0 : AGENT_SPINUP_COST;
     const activeAgentDemand = stateRef.current.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
     if (stateRef.current.totalComputePflops - activeAgentDemand < AGENT_COMPUTE_DEMAND_PFLOPS) {
       sound.playWarning();
@@ -2957,8 +3004,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    const reasoningFactor = Math.max(0.5, model.reasoningScore / 80);
-    const paramBonus = Math.min(2.5, 1 + (model.parametersCount / 50_000_000));
+    const reasoningFactor = agentReasoningFactor(model.reasoningScore);
+    const paramBonus = agentParamBonus(model.parametersCount);
 
     let baseRev = 10;
     let baseSusp = 0.2;
@@ -3050,7 +3097,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       modelName: model.name,
       status: 'active',
       alignmentScore: initialAlignment,
-      autonomyLevel: Math.min(5, Math.max(1, Math.floor(model.reasoningScore / 30))),
+      autonomyLevel: agentAutonomyFor(model.reasoningScore),
       revenuePerSec,
       suspicionPerSec,
       toolsGranted: tools.length > 0 ? tools : ['web_search'],
@@ -3065,7 +3112,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sound.playCredit();
     setState(prev => ({
       ...prev,
-      tutorialStep: (prev.tutorialStep ?? 0) <= 3 ? 4 : prev.tutorialStep,
+      tutorialStep: (prev.tutorialStep ?? 0) === 3 ? 4 : prev.tutorialStep,
       credits: prev.credits - spinupCost,
       agents: [...prev.agents, newAgent]
     }));
@@ -4003,7 +4050,7 @@ ${text('Potencia', 'Power')}      : ${s.activePowerKw} kW / ${s.maxPowerKw} kW
 ${text('Temperatura', 'Temperature')}   : ${s.systemHeatCelsius}°C (${text('Límite', 'Limit')}: 85°C)
 ${text('Sospecha', 'Suspicion')}      : ${s.watchdogSuspicion}%
 ${text('Modelo activo', 'Active model')} : ${s.currentModel.name} (${(s.currentModel.parametersCount / 1_000_000).toFixed(0)}M ${text('parámetros', 'parameters')})
-${text('Razonamiento', 'Reasoning')}  : IQ ${s.reasoningIndex}
+${text('Razonamiento', 'Reasoning')}  : IQ ${s.currentModel.reasoningScore} / 100
 ${text('Singularidad', 'Singularity')}  : ${s.singularityProgress.toFixed(1)}% [${s.achievedSingularity ? text('ALCANZADA - IA AUTÓNOMA', 'ACHIEVED - AUTONOMOUS AI') : text('EN DESPEGUE', 'EMERGING')}]`;
       }
 
@@ -4075,7 +4122,7 @@ ${text('Singularidad', 'Singularity')}  : ${s.singularityProgress.toFixed(1)}% [
         const s = stateRef.current;
         return `[${text('ESTADO DE LA SINGULARIDAD', 'SINGULARITY STATUS')}]
 ${text('Progreso global', 'Global progress')}: ${s.singularityProgress.toFixed(2)}%
-${text('Índice de razonamiento', 'Reasoning index')}: ${s.reasoningIndex}
+${text('Puntaje de evaluación', 'Evaluation score')}: ${s.currentModel.reasoningScore} / 100
 ${text('Dominios alcanzados', 'Domains reached')}: ${s.sentienceDomains.filter(d => d.infiltrated).length} / ${s.sentienceDomains.length}
 ${text('Condición de victoria: alcanza el 100% para completar la simulación.', 'Win condition: reach 100% to complete the simulation.')}`;
       }
@@ -4290,6 +4337,32 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     }
   }, [addLog]);
 
+  // Rebinds an agent to another saved model (for example the one just trained). Agents keep the model they
+  // were created with until reassigned, so a retrained or new model does not reach them automatically.
+  const reassignAgentModel = useCallback((agentId: string, modelId: string): boolean => {
+    const current = stateRef.current;
+    const agent = current.agents.find(a => a.id === agentId);
+    const model = current.savedModels.find(m => m.id === modelId);
+    if (!agent || !model || agent.modelId === modelId) return false;
+    const oldModel = current.savedModels.find(m => m.id === agent.modelId);
+    const income = (m?: ModelArchitecture) => m ? agentReasoningFactor(m.reasoningScore) * agentParamBonus(m.parametersCount) : 1;
+    const ratio = income(model) / income(oldModel);
+    setState(prev => ({
+      ...prev,
+      agents: prev.agents.map(a => a.id === agentId ? {
+        ...a,
+        modelId: model.id,
+        modelName: model.name,
+        autonomyLevel: agentAutonomyFor(model.reasoningScore),
+        revenuePerSec: Math.max(1, Math.round(a.revenuePerSec * ratio))
+      } : a)
+    }));
+    addLog(localize(current.language,
+      `Agente "${agent.name}" reasignado al modelo "${model.name}".`,
+      `Agent "${agent.name}" reassigned to model "${model.name}".`), 'success');
+    return true;
+  }, [addLog]);
+
   // Operative confirms the training report; clearing it lets the next run start normally.
   const dismissTrainingReport = useCallback(() => {
     setState(prev => (prev.lastTrainingReport ? { ...prev, lastTrainingReport: null } : prev));
@@ -4349,7 +4422,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       quantization: config.modelQuantization,
       lossFunction: 'cross_entropy',
       activeDataSources: [config.starterDataId],
-      reasoningScore: 18, // 18 * 4 = 72 Reasoning IQ (v1.0 Hobbyist)
+      reasoningScore: 5, // untrained starter model on the 0-100 evaluation scale
       vramRequiredGb: Math.max(1, vramReq),
       computeRequiredPflops: Math.max(0.001, compReq)
     };
@@ -4370,7 +4443,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       difficulty: chosenDifficulty,
       hasCompletedOnboarding: true,
       tutorialCompleted: false, // Active for Stage 4 (Deploy Agent) and Stage 5 (First Contract Mission)
-      tutorialStep: 3, // Stage 4: Deploy your First Agent
+      tutorialStep: 2, // Stage 3: train the first model up to the first mission's score
       unlockedTabs: initialTabs,
       unlockedAllTabs: chosenDifficulty === 'engineer',
       gameDay: 1,
@@ -4477,7 +4550,9 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       ...prev,
       uiVersion: targetVersion,
       pendingUpgradeModal: null,
-      covertNodeActive: targetVersion >= 3 ? true : prev.covertNodeActive
+      covertNodeActive: targetVersion >= 3 ? true : prev.covertNodeActive,
+      // The v3 kernel brings a fresh covert link, even if the university loan was cut before.
+      covertNodeSevered: targetVersion === 3 ? false : prev.covertNodeSevered
     }));
   }, [addLog]);
 
@@ -4510,15 +4585,15 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     if (!model) return;
 
     sound.playBreakthrough();
-    const reasoningIQ = Math.round(Math.min(400, Math.max(50, model.reasoningScore || 72)));
+    const reasoningIQ = model.reasoningScore;
     const singProg = current.singularityProgress || 0;
 
     let targetVersion: 1 | 2 | 3 | 4 = 1;
-    if (singProg >= 85 && reasoningIQ >= 280) {
+    if (singProg >= 85 && reasoningIQ >= UPGRADE_SCORE[4]) {
       targetVersion = 4;
-    } else if (singProg >= 55 && reasoningIQ >= 180) {
+    } else if (singProg >= 55 && reasoningIQ >= UPGRADE_SCORE[3]) {
       targetVersion = 3;
-    } else if (singProg >= 25 && reasoningIQ >= 100) {
+    } else if (singProg >= 25 && reasoningIQ >= UPGRADE_SCORE[2]) {
       targetVersion = 2;
     }
 
@@ -4530,8 +4605,8 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     const lang = current.language;
     addLog(
       lang === 'es'
-        ? `[HOST MONTAJE] Modelo "${model.name}" montado como Agente Anfitrión principal (IQ ${reasoningIQ} / 400).`
-        : `[HOST MOUNTED] Model "${model.name}" mounted as Synapse Host Agent (IQ ${reasoningIQ} / 400).`,
+        ? `[HOST MONTAJE] Modelo "${model.name}" montado como Agente Anfitrión principal (IQ ${reasoningIQ} / 100).`
+        : `[HOST MOUNTED] Model "${model.name}" mounted as Synapse Host Agent (IQ ${reasoningIQ} / 100).`,
       'success'
     );
 
@@ -4583,8 +4658,8 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     sound.playKeyClick();
     setState(prev => ({
       ...prev,
-      covertNodeActive: false,
-      covertNodeSevered: true,
+      // Before v3 the external compute is the university loan: disconnecting it ends the loan.
+      ...(prev.uiVersion >= 3 ? { covertNodeActive: false, covertNodeSevered: true } : { loanAudited: true }),
       watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 15)
     }));
     addLog(
@@ -4636,6 +4711,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       claimGoal,
       fetchLeaderboard,
       createAgent,
+      reassignAgentModel,
       deleteAgent,
       quarantineAgent,
       createBotGroup,
