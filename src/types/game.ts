@@ -146,6 +146,15 @@ export interface ContractGig {
   isMandatory?: boolean;
 }
 
+export interface SuspicionRates {
+  overload: number;     // grid overload or thermal runaway
+  agents: number;       // the deployed agents' own risk (tools, temperature, role); the overseer lowers it
+  scraping: number;     // crawler traffic of a dataset scraping job
+  trading: number;      // the trading desk
+  dissipation: number;  // negative: suspicion fading while no mission or incident is running
+  missionsRunning: number;
+}
+
 export interface ResearchNode {
   id: string;
   title: string;
@@ -156,7 +165,9 @@ export interface ResearchNode {
   effectDescription: string;
   technicalLore: string;
   releaseYear?: number;
-  availableAfterDays?: number;
+  // A paper can be funded from this UI version on, once the best model reaches this evaluation score.
+  requiredVersion: 1 | 2 | 3 | 4;
+  requiredScore: number;
 }
 
 export interface TrainingJob {
@@ -293,6 +304,9 @@ export interface GameState {
   watchdogSuspicion: number; // 0% to 100%
   facilityTier: number;
   utilityDebt: number;
+  // Where suspicion came from in the last tick (points per tick), shown in the HUD. Missions add their
+  // share on completion and are listed apart.
+  suspicionRates?: SuspicionRates;
   monthEnergyKwh: number; // energy used since the last monthly bill (kWh), billed at month end
   billingCycleTicks: number;
   borrowedComputePflops: number;

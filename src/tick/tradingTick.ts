@@ -26,6 +26,7 @@ export function tradingTick(input: TradingTickInput) {
   const { effects, log: addLog, play } = effectCollector();
   // 7.5 Continuous Market Trading Desk Execution
   let updatedTradingDesk = prev.activeTradingDesk;
+  let tradingSuspicion = 0;
   if (updatedTradingDesk && detentionSeconds === 0 && powerTripSeconds === 0) {
     const assignedAgent = updatedAgents.find(a => a.id === updatedTradingDesk?.agentId);
     if (assignedAgent && (assignedAgent.status === 'active' || assignedAgent.status === 'collaborating')) {
@@ -64,6 +65,7 @@ export function tradingTick(input: TradingTickInput) {
       };
 
       watchdogSuspicion = Math.min(100, watchdogSuspicion + tickSuspicion);
+      tradingSuspicion = tickSuspicion;
 
       if (newCapital <= 0) {
         updatedTradingDesk = null;
@@ -76,5 +78,5 @@ export function tradingTick(input: TradingTickInput) {
   }
 
 
-  return { updatedTradingDesk, watchdogSuspicion, effects };
+  return { updatedTradingDesk, watchdogSuspicion, tradingSuspicion, effects };
 }

@@ -54,7 +54,7 @@ import {
   DOMAIN_PRESETS,
   dataSourceUpgradeCost
 } from '../utils/constants';
-import { isProgressionUnlocked, getModelOptionRequirement } from '../utils/progression';
+import { isProgressionUnlocked, getModelOptionRequirement, researchStatus } from '../utils/progression';
 import { sound } from '../audio/soundManager';
 import { 
   auth, 
@@ -1042,6 +1042,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const trading = tradingTick({ detentionSeconds, powerTripSeconds, prev, updatedAgents, watchdogSuspicion, rand: Math.random });
       applyTickEffects(trading.effects);
       watchdogSuspicion = trading.watchdogSuspicion;
+      const suspicionRates = { ...thermal.suspicionRates, trading: trading.tradingSuspicion };
       let updatedTradingDesk = trading.updatedTradingDesk;
 
       // 7. Check for 75% Singularity / Subversion Crisis Dilemma
@@ -1079,33 +1080,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         utilityDebt = Number((utilityDebt - debtPayment).toFixed(2));
       }
 
-      let updatedResearchTree = prev.researchTree;
-      if (dayIsComplete) {
-        let foundTimelineResearch = true;
-        while (foundTimelineResearch) {
-          foundTimelineResearch = false;
-          updatedResearchTree = updatedResearchTree.map(node => {
-            const prerequisitesMet = node.prerequisites.every(prerequisiteId =>
-              updatedResearchTree.some(candidate =>
-                candidate.id === prerequisiteId && candidate.unlocked
-              )
-            );
-            if (
-              node.unlocked ||
-              node.availableAfterDays === undefined ||
-              campaignDays < node.availableAfterDays ||
-              !prerequisitesMet
-            ) return node;
-            foundTimelineResearch = true;
-            const locNode = localizedResearch(prev.language, node);
-            addLog(
-              tr(prev.language, 'gameContext.technologyReachedItsHistoricalAvailability', { title: locNode.title }),
-              'success'
-            );
-            return { ...node, unlocked: true };
-          });
-        }
-      }
+      // Papers are never unlocked by the calendar: they are funded once their stage is reached.
+      const updatedResearchTree = prev.researchTree;
 
       // 9. Agency Tracking & Defeat Conditions
       let trackingAgency = prev.trackingAgency || 'Local Cyber-Crime Task Force';
@@ -1243,6 +1219,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         gameMonth: nextMonth,
         gameYear: nextYear,
         monthEnergyKwh,
+        suspicionRates,
         gameHour: nextHour,
         gameMinute: nextMinute,
         dayTicks: nextDayTicks,
@@ -1471,6 +1448,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (missingPre.length > 0) {
       sound.playWarning();
       addLog(tr(lang, 'gameContext.prerequisitesNotMetResearch', { title: locNode.title }), 'warning');
+      return false;
+    }
+
+    const status = researchStatus(node, stateRef.current);
+    if (!status.versionMet) {
+      sound.playWarning();
+      addLog(tr(lang, 'gameContext.researchLaterVersion', { title: locNode.title }), 'warning');
+      return false;
+    }
+    if (!status.scoreMet) {
+      sound.playWarning();
+      addLog(tr(lang, 'gameContext.researchNeedsScore', { title: locNode.title, score: node.requiredScore, best: status.bestScore.toFixed(1) }), 'warning');
       return false;
     }
 
