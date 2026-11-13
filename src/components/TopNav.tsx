@@ -16,7 +16,8 @@ import {
   Languages,
   Volume2,
   VolumeX,
-  FileText,
+  BookOpen,
+  Trophy,
   RefreshCw,
   User,
   CloudOff
@@ -117,7 +118,7 @@ export const TopNav: React.FC<TopNavProps> = ({
         </div>
 
         {/* Controls row: one line that scrolls sideways on phones instead of stacking into three rows */}
-        <div className="flex items-center gap-2 w-full sm:w-auto min-w-0 overflow-x-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto min-w-0">
 
         {/* Center: Simulation Speed Controls */}
         <div className="flex items-center gap-1 mutating-sub p-1 rounded-xl border font-mono text-xs">
@@ -127,7 +128,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             className={`px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer ${
               state.gameSpeed === 0 ? 'theme-btn-warn theme-on-accent font-black' : 'mutating-text-muted hover:opacity-100'
             }`}
-            title="Pause / Resume Simulation (Space)"
+            title={tr(lang, 'topNav.pauseResumeTitle')}
           >
             {state.gameSpeed === 0 ? <Play className="w-3 h-3 fill-current" /> : <Pause className="w-3 h-3 fill-current" />}
             <span>{state.gameSpeed === 0 ? (tr(lang, 'topNav.paused')) : '1x'}</span>
@@ -157,29 +158,37 @@ export const TopNav: React.FC<TopNavProps> = ({
             title="Language Switcher / Selector de Idioma"
           >
             <Languages className="w-3.5 h-3.5 mutating-accent-text" />
-            <span className={`px-1.5 py-0.2 rounded font-bold ${tr(state.language, 'topNav.mutatingBtnPrimary')}`}>EN</span>
+            <span className={`px-1.5 py-0.2 rounded font-bold ${state.language === 'en' ? 'mutating-btn-primary' : 'mutating-text-muted'}`}>EN</span>
             <span className="opacity-40">|</span>
-            <span className={`px-1.5 py-0.2 rounded font-bold ${tr(state.language, 'topNav.mutatingTextMuted')}`}>ES</span>
+            <span className={`px-1.5 py-0.2 rounded font-bold ${state.language === 'es' ? 'mutating-btn-primary' : 'mutating-text-muted'}`}>ES</span>
           </button>
 
-          {/* Official PDF Manual Link */}
-          <a
-            href="/assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => sound.playKeyClick()}
-            className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-xl mutating-sub hover:opacity-90 border text-xs font-medium transition cursor-pointer"
-            title="Download PDF Systems Manual"
+          {/* Manual (in-game viewer and PDF) */}
+          <button
+            onClick={() => { sound.playKeyClick(); onOpenManual(); }}
+            className="px-2.5 py-1 rounded-xl mutating-sub hover:opacity-90 border text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+            title={tr(lang, 'topNav.manualTitle')}
+            aria-label={tr(lang, 'topNav.manual')}
           >
-            <FileText className="w-3.5 h-3.5 theme-warn-text" />
-            <span>PDF</span>
-          </a>
+            <BookOpen className="w-3.5 h-3.5 theme-warn-text" />
+            <span className="hidden lg:inline">{tr(lang, 'topNav.manual')}</span>
+          </button>
+
+          {/* Leaderboard */}
+          <button
+            onClick={() => { sound.playKeyClick(); onOpenLeaderboard(); }}
+            className="p-1.5 rounded-xl mutating-sub hover:opacity-90 border transition cursor-pointer"
+            title={tr(lang, 'topNav.leaderboard')}
+            aria-label={tr(lang, 'topNav.leaderboard')}
+          >
+            <Trophy className="w-3.5 h-3.5 mutating-accent-text" />
+          </button>
 
           {/* Audio Sound FX Toggle */}
           <button
             onClick={() => toggleSound()}
             className="p-1.5 rounded-xl mutating-sub hover:opacity-90 border transition cursor-pointer"
-            title={soundMuted ? 'Unmute Sound FX' : 'Mute Sound FX'}
+            title={tr(lang, soundMuted ? 'topNav.unmuteTitle' : 'topNav.muteTitle')}
           >
             {soundMuted ? <VolumeX className="w-3.5 h-3.5 theme-danger-text" /> : <Volume2 className="w-3.5 h-3.5 theme-success-text" />}
           </button>
@@ -193,7 +202,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 ? 'theme-success-soft theme-success-border theme-success-text'
                 : 'mutating-sub hover:opacity-90'
             }`}
-            title="Sync & Save Progress"
+            title={tr(lang, 'topNav.saveTitle')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSaving || savingAnim ? 'animate-spin theme-success-text' : 'mutating-text-muted'}`} />
             <span className="hidden sm:inline">{isSaving ? (tr(lang, 'topNav.saving')) : (tr(lang, 'topNav.save'))}</span>

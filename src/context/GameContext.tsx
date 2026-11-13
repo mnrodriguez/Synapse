@@ -117,6 +117,7 @@ const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math
 import { evaluateMissionTeam, findAutonomousMission, weakestTeamFactors } from '../utils/missionEvaluation';
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
 import { tr } from '../i18n';
+import { MANUAL_PDF_URL } from '../utils/assets';
 
 interface GameContextType {
   state: GameState;
@@ -3108,7 +3109,7 @@ ${tr(stateRef.current.language, 'terminal.winConditionReach100Complete')}`;
 
       case 'manual':
       case 'guide':
-        return tr(stateRef.current.language, 'terminal.synapseOfficialAiArchitectureSystems');
+        return tr(stateRef.current.language, 'terminal.synapseOfficialAiArchitectureSystems', { url: MANUAL_PDF_URL });
 
       case 'speed': {
         const val = args[0]?.toLowerCase();
