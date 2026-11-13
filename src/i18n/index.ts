@@ -37,3 +37,23 @@ export function trv(language: Language, key: CatalogKey, version: number, params
   const variant = catalog[`${key}@v${version}`];
   return interpolate(variant ?? catalog[key] ?? en[key] ?? key, params);
 }
+
+// A tree with the same shape as T whose texts are catalog keys (used for tables of texts by version,
+// role, etc.). localizeTree() turns it into T for one language.
+export type KeyTree<T> = T extends string
+  ? CatalogKey
+  : T extends readonly (infer U)[]
+    ? KeyTree<U>[]
+    : T extends object
+      ? { [P in keyof T]: KeyTree<T[P]> }
+      : T;
+
+export function localizeTree<T>(language: Language, tree: KeyTree<NoInfer<T>>): T {
+  const walk = (node: unknown): unknown => {
+    if (typeof node === 'string') return tr(language, node as CatalogKey);
+    if (Array.isArray(node)) return node.map(walk);
+    if (node && typeof node === 'object') return Object.fromEntries(Object.entries(node).map(([k, v]) => [k, walk(v)]));
+    return node;
+  };
+  return walk(tree) as T;
+}

@@ -64,10 +64,10 @@ const isContractTierUnlocked = (tier: string, uiVersion: number = 1): boolean =>
 };
 
 const getRequiredUiVersionForTier = (tier: string) => {
-  if (tier === 'tier2_corporate') return { nameEn: 'Synapse Studio Pro (v2.0)', nameEs: 'Synapse Studio Pro (v2.0)', ver: 2 };
-  if (tier === 'tier3_blackops') return { nameEn: 'Blackbox OS (v3.0)', nameEs: 'Blackbox OS (v3.0)', ver: 3 };
-  if (tier === 'tier4_singularity') return { nameEn: 'Sovereign Core (v4.0)', nameEs: 'Sovereign Core (v4.0)', ver: 4 };
-  return { nameEn: 'Synapse Home Lab (v1.0)', nameEs: 'Synapse Home Lab (v1.0)', ver: 1 };
+  if (tier === 'tier2_corporate') return { name: 'Synapse Studio Pro (v2.0)', ver: 2 };
+  if (tier === 'tier3_blackops') return { name: 'Blackbox OS (v3.0)', ver: 3 };
+  if (tier === 'tier4_singularity') return { name: 'Sovereign Core (v4.0)', ver: 4 };
+  return { name: 'Synapse Home Lab (v1.0)', ver: 1 };
 };
 
 // Names and advice for each capability factor, shown when a mission fails.
@@ -164,7 +164,7 @@ export const ContractBoard: React.FC = () => {
 
   const openCreateSquadModal = () => {
     setEditingSquadId(null);
-    setSquadName(`Escuadrón ${botGroups.length + 1}`);
+    setSquadName(tr(state.language, 'contractBoard.defaultSquadName', { n: botGroups.length + 1 }));
     setSquadColor(SQUAD_COLORS[botGroups.length % SQUAD_COLORS.length].hex);
     setSquadMemberIds([]);
     setIsSquadModalOpen(true);
@@ -638,7 +638,7 @@ export const ContractBoard: React.FC = () => {
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
-                T3: BLACK-OPS ({state.contracts.filter(c => !c.completed && c.tier === 'tier3_blackops').length})
+                T3: {tr(state.language, 'contractBoard.blackOps')} ({state.contracts.filter(c => !c.completed && c.tier === 'tier3_blackops').length})
               </button>
               <button
                 onClick={() => setActiveTierFilter('tier4_singularity')}
@@ -898,7 +898,7 @@ export const ContractBoard: React.FC = () => {
                                           />
                                           <span>{agent.name}</span>
                                           <span className="mutating-text-muted text-[11px]">({getRoleSimpleName(agent.role, state.language)})</span>
-                                          {isBusy && <span className="theme-warn-text text-[11px]">[Ocupado]</span>}
+                                          {isBusy && <span className="theme-warn-text text-[11px]">[{tr(state.language, 'contractBoard.busy')}]</span>}
                                         </label>
                                       );
                                     })}
@@ -1028,7 +1028,7 @@ export const ContractBoard: React.FC = () => {
                         <div className="mt-2 p-2 rounded mutating-sub border text-[11px] theme-warn-text font-bold flex items-center gap-1.5 font-mono">
                           <Lock className="w-3.5 h-3.5 shrink-0" />
                           <span>
-                            {tr(state.language, 'contractBoard.storyMilestoneLocked', { name: (state.language === 'es' ? readiness.requiredUiVer.nameEs : readiness.requiredUiVer.nameEn) })}
+                            {tr(state.language, 'contractBoard.storyMilestoneLocked', { name: readiness.requiredUiVer.name })}
                           </span>
                         </div>
                       )}
@@ -1047,7 +1047,7 @@ export const ContractBoard: React.FC = () => {
                         <button
                           onClick={() => handleLaunchContract(contract.id)}
                           disabled={!readiness.isEligible}
-                          title={!readiness.isTierUnlocked ? (tr(state.language, 'contractBoard.mountHostModelReachesUnlock', { name: (state.language === 'es' ? readiness.requiredUiVer.nameEs : readiness.requiredUiVer.nameEn) })) : undefined}
+                          title={!readiness.isTierUnlocked ? (tr(state.language, 'contractBoard.mountHostModelReachesUnlock', { name: readiness.requiredUiVer.name })) : undefined}
                           className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
                             readiness.isEligible
                               ? (contract.isMandatory || state.uiVersion === 4)
@@ -1243,7 +1243,7 @@ export const ContractBoard: React.FC = () => {
                           </span>
                         </div>
                         <p className="text-[11px] mutating-text-muted mt-0.5">
-                          {model?.name ?? 'Modelo'} · {model ? `${(model.parametersCount / 1e6).toFixed(0)}M` : ''} · {tr(state.language, 'contractBoard.score')} {model?.reasoningScore ?? 0}
+                          {model?.name ?? tr(state.language, 'contractBoard.modelFallback')} · {model ? `${(model.parametersCount / 1e6).toFixed(0)}M` : ''} · {tr(state.language, 'contractBoard.score')} {model?.reasoningScore ?? 0}
                         </p>
                       </div>
 
@@ -1299,7 +1299,7 @@ export const ContractBoard: React.FC = () => {
                   type="text"
                   value={squadName}
                   onChange={e => setSquadName(e.target.value)}
-                  placeholder="e.g. Escuadrón Alfa, Trading Task Force..."
+                  placeholder={tr(state.language, 'contractBoard.squadNamePlaceholder')}
                   className="w-full theme-sub-bg border theme-border rounded px-2.5 py-1.5 text-xs theme-text focus:outline-none"
                   required
                 />
@@ -1376,7 +1376,7 @@ export const ContractBoard: React.FC = () => {
                               </span>
                             ) : (
                               <span className="mutating-text-muted">
-                                {model?.name ?? 'Modelo'} ({(model?.parametersCount ?? 0) / 1e6}M)
+                                {model?.name ?? tr(state.language, 'contractBoard.modelFallback')} ({(model?.parametersCount ?? 0) / 1e6}M)
                               </span>
                             )}
                           </div>

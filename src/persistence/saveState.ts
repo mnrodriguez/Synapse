@@ -20,6 +20,7 @@ import { INITIAL_HARDWARE, INITIAL_DATA_SOURCES, INITIAL_MODEL, INITIAL_RESEARCH
 import { sanitizeTrainingConfig } from '../utils/trainingRun';
 import { sanitizeStoryEvents } from '../utils/storyEvents';
 import { reasoningCeilingFor, migrateLegacyScore } from '../utils/training';
+import { tr } from '../i18n';
 
 export const SAVE_SCHEMA_VERSION = 10;
 
@@ -227,9 +228,9 @@ export function mergeGameState(data: Partial<GameState>, fallback: GameState): G
     emergencyLoanAmount: typeof data.emergencyLoanAmount === 'number' ? data.emergencyLoanAmount : 0,
     trackingAgency: (() => {
       if (typeof data.trackingAgency !== 'string' || !data.trackingAgency) return fallback.trackingAgency;
-      const agencyMatch = TRACKING_AGENCIES_BY_SINGULARITY.find(a => a.agencyEs === data.trackingAgency || a.agencyEn === data.trackingAgency);
+      const agencyMatch = TRACKING_AGENCIES_BY_SINGULARITY.find(a => tr('es', a.agencyKey) === data.trackingAgency || tr('en', a.agencyKey) === data.trackingAgency);
       if (agencyMatch) {
-        return (data.language === 'es' ? agencyMatch.agencyEs : agencyMatch.agencyEn);
+        return tr(data.language === 'es' ? 'es' : 'en', agencyMatch.agencyKey);
       }
       return data.trackingAgency;
     })(),

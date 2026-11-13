@@ -81,8 +81,8 @@ export const GenesisOnboarding: React.FC = () => {
       compute: '4.4 TFLOPS',
       vram: 6,
       heat: '0.8°C/min',
-      desc: 'Pascal de segunda mano. Balanceada, fría y altamente compatible con cuantización INT8.',
-      badge: 'EQUILIBRADA'
+      desc: tr(state.language, 'genesisOnboarding.gpu.gpuGtx1060.desc'),
+      badge: tr(state.language, 'genesisOnboarding.gpu.gpuGtx1060.badge')
     },
     {
       id: 'gpu_rx580_dual',
@@ -91,8 +91,8 @@ export const GenesisOnboarding: React.FC = () => {
       compute: '11.0 TFLOPS',
       vram: 16,
       heat: '1.6°C/min',
-      desc: 'CrossFire Polaris. Ofrece 16GB de VRAM para entrenar ventanas de contexto amplias sin OOM.',
-      badge: 'ALTA VRAM'
+      desc: tr(state.language, 'genesisOnboarding.gpu.gpuRx580Dual.desc'),
+      badge: tr(state.language, 'genesisOnboarding.gpu.gpuRx580Dual.badge')
     },
     {
       id: 'gpu_tesla_k80',
@@ -101,8 +101,8 @@ export const GenesisOnboarding: React.FC = () => {
       compute: '8.7 TFLOPS',
       vram: 24,
       heat: '1.9°C/min',
-      desc: 'Acelerador de datacenter. 24GB de memoria masiva para modelos más densos, pero mayor calor.',
-      badge: 'MÁXIMA MEMORIA'
+      desc: tr(state.language, 'genesisOnboarding.gpu.gpuTeslaK80.desc'),
+      badge: tr(state.language, 'genesisOnboarding.gpu.gpuTeslaK80.badge')
     },
     {
       id: 'gpu_coral_edge',
@@ -111,130 +111,74 @@ export const GenesisOnboarding: React.FC = () => {
       compute: '6.2 TFLOPS',
       vram: 4,
       heat: '0.6°C/min',
-      desc: 'Híbrido con ASIC de bajo consumo. Máximo ahorro de presupuesto inicial y muy baja temperatura.',
-      badge: 'BAJO CONSUMO'
+      desc: tr(state.language, 'genesisOnboarding.gpu.gpuCoralEdge.desc'),
+      badge: tr(state.language, 'genesisOnboarding.gpu.gpuCoralEdge.badge')
     }
   ];
 
   const starterCoolingOptions = [
     {
       id: 'cool_air_basic',
-      name: 'Ventiladores Industriales de 120mm',
+      name: tr(state.language, 'genesisOnboarding.cooling.coolAirBasic.name'),
       price: 40,
       capacity: '0.9 kW',
-      desc: 'Flujo de aire forzado ruidoso pero suficiente para una tarjeta de bajo consumo.'
+      desc: tr(state.language, 'genesisOnboarding.cooling.coolAirBasic.desc')
     },
     {
       id: 'cool_copper_pipes',
-      name: 'Heatpipes de Cobre & Disipador Doble Torre',
+      name: tr(state.language, 'genesisOnboarding.cooling.coolCopperPipes.name'),
       price: 85,
       capacity: '1.8 kW',
-      desc: 'Disipación de alto flujo por contacto directo de cobre puro para configuraciones más potentes.'
+      desc: tr(state.language, 'genesisOnboarding.cooling.coolCopperPipes.desc')
     }
   ];
 
   const starterPowerOptions = [
     {
       id: 'power_wall_socket',
-      name: 'Toma Eléctrica Domiciliaria (1.5 kW)',
+      name: tr(state.language, 'genesisOnboarding.power.powerWallSocket.name'),
       price: 20,
       capacity: '1.5 kW',
-      desc: 'Suministro eléctrico domiciliario. Imprescindible para alimentar GPU y ventiladores.'
+      desc: tr(state.language, 'genesisOnboarding.power.powerWallSocket.desc')
     },
     {
       id: 'power_solar_array',
-      name: 'Segundo circuito de la casa (3.0 kW en total)',
+      name: tr(state.language, 'genesisOnboarding.power.powerSolarArray.name'),
       price: 55,
       capacity: '3.0 kW',
-      desc: 'Un alargue grueso hasta otro circuito de la casa. Duplica la potencia sin hacer saltar el disyuntor.'
+      desc: tr(state.language, 'genesisOnboarding.power.powerSolarArray.desc')
     }
   ];
 
   const starterNetworkOptions = [
     {
       id: 'net_gigabit',
-      name: 'Red Ethernet Gigabit Cat 6 (1 Gbps)',
+      name: tr(state.language, 'genesisOnboarding.network.netGigabit.name'),
       price: 30,
       bandwidth: '1 Gbps',
-      desc: 'Conexión a internet estándar de alta velocidad. Imprescindible para descargar datasets y comunicar agentes.'
+      desc: tr(state.language, 'genesisOnboarding.network.netGigabit.desc')
     },
     {
       id: 'net_fiber_10g',
-      name: 'Fibra Óptica Dedicada Punto a Punto (10 Gbps)',
+      name: tr(state.language, 'genesisOnboarding.network.netFiber10g.name'),
       price: 75,
       bandwidth: '10 Gbps',
-      desc: 'Enlace simétrico de fibra óptica empresarial. Acelera la descarga masiva de datos y reduce latencia.'
+      desc: tr(state.language, 'genesisOnboarding.network.netFiber10g.desc')
     }
   ];
 
   const starterDataOptions = [
     {
       id: 'data_relational_sql',
-      name: 'Base de Datos Relacional SQL & Registros Tabulares',
+      name: tr(state.language, 'genesisOnboarding.data.dataRelationalSql.name'),
       type: 'relational_sql',
       icon: Database,
-      desc: 'Esquemas PostgreSQL normalizados con registros financieros, transacciones contables y telemetría.',
-      bonus: '+20% Precisión en Contratos Financieros y Arbitraje',
-      lore: 'Fundamento de exactitud matemática y determinismo de datos sin inconsistencias.'
+      desc: tr(state.language, 'genesisOnboarding.data.dataRelationalSql.desc'),
+      bonus: tr(state.language, 'genesisOnboarding.data.dataRelationalSql.bonus'),
+      lore: tr(state.language, 'genesisOnboarding.data.dataRelationalSql.lore')
     }
   ];
 
-  const gpuEnglishCopy: Record<string, { badge: string; desc: string }> = {
-    gpu_gtx1060: { badge: 'BALANCED', desc: 'Used Pascal card. Balanced, cool, and highly compatible with INT8 quantization.' },
-    gpu_rx580_dual: { badge: 'HIGH VRAM', desc: 'Polaris CrossFire setup. 16 GB of VRAM for training with larger context windows.' },
-    gpu_tesla_k80: { badge: 'MAXIMUM MEMORY', desc: 'Data-center accelerator. 24 GB of memory for denser models, with higher heat output.' },
-    gpu_coral_edge: { badge: 'LOW POWER', desc: 'Low-power ASIC hybrid. Keeps the initial budget and operating temperature down.' }
-  };
-  const coolingEnglishCopy: Record<string, { name: string; desc: string }> = {
-    cool_air_basic: {
-      name: '120mm Industrial Fans',
-      desc: 'Noisy forced-air cooling, sufficient for a low-power card.'
-    },
-    cool_copper_pipes: {
-      name: 'Copper Heatpipes & Dual-Tower Cooler',
-      desc: 'High-flow cooling with direct copper contact for more powerful setups.'
-    }
-  };
-  const powerEnglishCopy: Record<string, { name: string; desc: string }> = {
-    power_wall_socket: {
-      name: 'Residential Power Outlet (15A - 1.5 kW)',
-      desc: 'Standard household power supply. Mandatory to power your GPU and cooling fans.'
-    },
-    power_solar_array: {
-      name: 'Second Household Circuit (3.0 kW total)',
-      desc: 'A heavy extension cord to another circuit of the house. Doubles the power without tripping the breaker.'
-    }
-  };
-  const networkEnglishCopy: Record<string, { name: string; desc: string }> = {
-    net_gigabit: {
-      name: 'Gigabit Ethernet Cat 6 (1 Gbps)',
-      desc: 'High-speed standard internet connection. Mandatory to fetch training datasets and communicate agents.'
-    },
-    net_fiber_10g: {
-      name: 'Dedicated Point-to-Point Fiber (10 Gbps)',
-      desc: 'Symmetrical enterprise fiber optic link. Accelerates massive data streaming and reduces latency.'
-    }
-  };
-  const dataEnglishCopy: Record<string, { name: string; desc: string; bonus: string; lore: string }> = {
-    data_relational_sql: {
-      name: 'SQL Relational Database & Tabular Records',
-      desc: 'Normalized PostgreSQL schemas with financial records, accounting transactions, and telemetry.',
-      bonus: '+20% accuracy on financial contracts and analysis',
-      lore: 'A foundation for mathematical accuracy and deterministic, consistent data.'
-    },
-    data_vector_rag: {
-      name: 'Vector Embedding Database (HNSW RAG)',
-      desc: 'A 1,536-dimensional latent space with HNSW indexing for real-time semantic retrieval.',
-      bonus: '+35% associative memory and contextual reasoning',
-      lore: 'Retrieve information from millions of corporate documents and research papers.'
-    },
-    data_knowledge_graph: {
-      name: 'Ontological Knowledge Graph (RDF Triples)',
-      desc: 'Entities and causal relationships represented as subject-predicate-object triples.',
-      bonus: 'Reduces hallucinations and enables causal reasoning',
-      lore: 'Connects causes and effects through explicit logical relationships.'
-    }
-  };
 
   // Calculate current costs
   const currentGpuObj = starterGpuOptions.find(g => g.id === selectedGpu) || starterGpuOptions[0];
@@ -519,13 +463,13 @@ export const GenesisOnboarding: React.FC = () => {
                       <div className="flex items-start justify-between gap-1">
                         <div>
                           <span className="text-[11px] px-1.5 py-0.2 rounded theme-raised-bg mutating-accent-text font-bold block w-fit mb-1">
-                            {en ? gpuEnglishCopy[gpu.id]?.badge ?? gpu.badge : gpu.badge}
+                            {gpu.badge}
                           </span>
                           <h4 className="font-bold text-xs theme-text">{gpu.name}</h4>
                         </div>
                         <span className="theme-warn-text font-bold text-xs">${gpu.price} CR</span>
                       </div>
-                      <p className="text-[11px] mutating-text-muted mt-2 leading-snug">{en ? gpuEnglishCopy[gpu.id]?.desc ?? gpu.desc : gpu.desc}</p>
+                      <p className="text-[11px] mutating-text-muted mt-2 leading-snug">{gpu.desc}</p>
                       <div className="flex items-center gap-2 mt-2.5 text-[11px] mutating-text-muted pt-1.5 border-t theme-border">
                         <span className="mutating-accent-text font-semibold">{gpu.compute}</span>
                         <span>•</span>
@@ -558,10 +502,10 @@ export const GenesisOnboarding: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs theme-text">{en ? coolingEnglishCopy[cool.id]?.name ?? cool.name : cool.name}</h4>
+                          <h4 className="font-bold text-xs theme-text">{cool.name}</h4>
                           <span className="theme-warn-text font-bold text-xs">${cool.price} CR</span>
                         </div>
-                        <p className="text-[11px] mutating-text-muted mt-1 leading-snug">{en ? coolingEnglishCopy[cool.id]?.desc ?? cool.desc : cool.desc}</p>
+                        <p className="text-[11px] mutating-text-muted mt-1 leading-snug">{cool.desc}</p>
                         <span className="text-[11px] theme-success-text block mt-1.5 font-bold">
                           {tr(state.language, 'genesisOnboarding.coolingCapacity')} {cool.capacity}
                         </span>
@@ -592,10 +536,10 @@ export const GenesisOnboarding: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs theme-text">{en ? powerEnglishCopy[pow.id]?.name ?? pow.name : pow.name}</h4>
+                          <h4 className="font-bold text-xs theme-text">{pow.name}</h4>
                           <span className="theme-warn-text font-bold text-xs">${pow.price} CR</span>
                         </div>
-                        <p className="text-[11px] mutating-text-muted mt-1 leading-snug">{en ? powerEnglishCopy[pow.id]?.desc ?? pow.desc : pow.desc}</p>
+                        <p className="text-[11px] mutating-text-muted mt-1 leading-snug">{pow.desc}</p>
                         <span className="text-[11px] theme-warn-text block mt-1.5 font-bold">
                           {tr(state.language, 'genesisOnboarding.powerCapacity')} {pow.capacity}
                         </span>
@@ -626,10 +570,10 @@ export const GenesisOnboarding: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs theme-text">{en ? networkEnglishCopy[net.id]?.name ?? net.name : net.name}</h4>
+                          <h4 className="font-bold text-xs theme-text">{net.name}</h4>
                           <span className="theme-warn-text font-bold text-xs">${net.price} CR</span>
                         </div>
-                        <p className="text-[11px] mutating-text-muted mt-1 leading-snug">{en ? networkEnglishCopy[net.id]?.desc ?? net.desc : net.desc}</p>
+                        <p className="text-[11px] mutating-text-muted mt-1 leading-snug">{net.desc}</p>
                         <span className="text-[11px] mutating-accent-text block mt-1.5 font-bold">
                           {tr(state.language, 'genesisOnboarding.bandwidth')} {net.bandwidth}
                         </span>
@@ -649,13 +593,13 @@ export const GenesisOnboarding: React.FC = () => {
                     1. GPU {selectedGpu ? '✓' : '✗'}
                   </span>
                   <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${selectedCooling ? 'theme-success-text theme-success-soft border theme-success-border' : 'theme-danger-text theme-danger-soft border theme-danger-border'}`}>
-                    2. REFRIGERACIÓN {selectedCooling ? '✓' : '✗'}
+                    2. {tr(state.language, 'genesisOnboarding.stepCooling')} {selectedCooling ? '✓' : '✗'}
                   </span>
                   <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${selectedPower ? 'theme-success-text theme-success-soft border theme-success-border' : 'theme-danger-text theme-danger-soft border theme-danger-border'}`}>
-                    3. ENERGÍA {selectedPower ? '✓' : '✗'}
+                    3. {tr(state.language, 'genesisOnboarding.stepPower')} {selectedPower ? '✓' : '✗'}
                   </span>
                   <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${selectedNetwork ? 'theme-success-text theme-success-soft border theme-success-border' : 'theme-danger-text theme-danger-soft border theme-danger-border'}`}>
-                    4. RED {selectedNetwork ? '✓' : '✗'}
+                    4. {tr(state.language, 'genesisOnboarding.stepNetwork')} {selectedNetwork ? '✓' : '✗'}
                   </span>
                 </div>
 
@@ -695,16 +639,16 @@ export const GenesisOnboarding: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs theme-text">{en ? dataEnglishCopy[ds.id]?.name ?? ds.name : ds.name}</h4>
+                          <h4 className="font-bold text-xs theme-text">{ds.name}</h4>
                           <span className="text-[11px] px-2 py-0.5 theme-success-soft border theme-success-border theme-success-text font-bold rounded flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5 theme-success-text" />
                             {tr((isEs ? 'es' : 'en'), 'genesisOnboarding.starterPipeline')}
                           </span>
                         </div>
-                        <p className="text-xs theme-text mt-1">{en ? dataEnglishCopy[ds.id]?.desc ?? ds.desc : ds.desc}</p>
+                        <p className="text-xs theme-text mt-1">{ds.desc}</p>
                         <div className="p-1.5 mt-2 theme-panel-bg border theme-accent-border rounded text-[11px] space-y-0.5">
-                          <span className="mutating-accent-text font-bold block">{en ? dataEnglishCopy[ds.id]?.bonus ?? ds.bonus : ds.bonus}</span>
-                          <span className="mutating-text-muted block">{en ? dataEnglishCopy[ds.id]?.lore ?? ds.lore : ds.lore}</span>
+                          <span className="mutating-accent-text font-bold block">{ds.bonus}</span>
+                          <span className="mutating-text-muted block">{ds.lore}</span>
                         </div>
                       </div>
                     </div>
@@ -910,7 +854,7 @@ export const GenesisOnboarding: React.FC = () => {
                   <RichText
                     lang={state.language}
                     k="genesisOnboarding.allConnected"
-                    params={{ gpu: currentGpuObj.name, data: en ? dataEnglishCopy[selectedData]?.name.split(' (')[0] ?? starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0] : starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0], model: modelName }}
+                    params={{ gpu: currentGpuObj.name, data: starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0], model: modelName }}
                     tags={{
                       gpu: (c, k) => <strong key={k} className="mutating-accent-text">{c}</strong>,
                       data: (c, k) => <strong key={k} className="theme-success-text">{c}</strong>,

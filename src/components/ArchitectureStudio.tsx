@@ -733,7 +733,7 @@ export const ArchitectureStudio: React.FC = () => {
                 <div className="space-y-2 p-3.5 rounded-lg theme-sub-bg border theme-border">
                   <label className="text-xs font-semibold theme-text flex items-center justify-between">
                     <span>{t(state.language, 'quantization')}</span>
-                    <span className="text-[11px] mutating-text-muted font-mono">WEIGHT MEMORY</span>
+                    <span className="text-[11px] mutating-text-muted font-mono">{tr(state.language, 'architectureStudio.label.weightMemory')}</span>
                   </label>
                   <div className="space-y-2">
                     {[
@@ -787,7 +787,7 @@ export const ArchitectureStudio: React.FC = () => {
                 <div className="space-y-2 p-3.5 rounded-lg theme-sub-bg border theme-border">
                   <label className="text-xs font-semibold theme-text flex items-center justify-between">
                     <span>{tr(state.language, 'architectureStudio.attentionMechanism')}</span>
-                    <span className="text-[11px] mutating-text-muted font-mono">KV CACHE SPEED</span>
+                    <span className="text-[11px] mutating-text-muted font-mono">{tr(state.language, 'architectureStudio.label.kvCacheSpeed')}</span>
                   </label>
                   <div className="space-y-2">
                     {[
@@ -917,7 +917,7 @@ export const ArchitectureStudio: React.FC = () => {
                   <Sparkles className="w-3.5 h-3.5 mutating-accent-text" />
                   {tr(state.language, 'architectureStudio.contextWindowTokens')}
                 </span>
-                <span className="text-[11px] mutating-text-muted font-mono">TOKEN RETENTION</span>
+                <span className="text-[11px] mutating-text-muted font-mono">{tr(state.language, 'architectureStudio.label.tokenRetention')}</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {contextPresets.map(ctx => {
@@ -948,7 +948,7 @@ export const ArchitectureStudio: React.FC = () => {
             <div className="space-y-2 p-3.5 rounded-lg theme-sub-bg border theme-border">
               <label className="text-xs font-semibold theme-text flex items-center justify-between">
                 <span>{tr(state.language, 'architectureStudio.lossFunctionAlignmentObjective')}</span>
-                <span className="text-[11px] mutating-text-muted font-mono">OBJECTIVE GRADIENT</span>
+                <span className="text-[11px] mutating-text-muted font-mono">{tr(state.language, 'architectureStudio.label.objectiveGradient')}</span>
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {[
@@ -1005,7 +1005,7 @@ export const ArchitectureStudio: React.FC = () => {
                   <Database className="w-3.5 h-3.5 mutating-accent-text" />
                   {tr(state.language, 'architectureStudio.connectedCognitiveDataPipelines')}
                 </span>
-                <span className="text-[11px] mutating-text-muted font-mono">RETRIEVAL & SYNTHESIS</span>
+                <span className="text-[11px] mutating-text-muted font-mono">{tr(state.language, 'architectureStudio.label.retrievalSynthesis')}</span>
               </label>
               <p className="text-xs mutating-text-muted">
                 {tr(state.language, 'architectureStudio.connectDataEnginesEnrichTraining')}
@@ -1029,7 +1029,7 @@ export const ArchitectureStudio: React.FC = () => {
                     >
                       <div className="flex items-center justify-between text-xs font-semibold">
                         <span className="truncate">{displaySource.name.split(' (')[0]}</span>
-                        {isConnected && <span className="mutating-accent-text text-[11px] font-mono">LINKED</span>}
+                        {isConnected && <span className="mutating-accent-text text-[11px] font-mono">{tr(state.language, 'architectureStudio.label.linked')}</span>}
                       </div>
                       <div className="text-[11px] theme-text mt-1">{displaySource.bonusAttribute}</div>
                       <div className="text-[11px] mutating-text-muted mt-1.5 font-mono">
@@ -1067,7 +1067,7 @@ export const ArchitectureStudio: React.FC = () => {
                   <Sparkles className="w-4 h-4 theme-warn-text" />
                   {tr(state.language, 'architectureStudio.syntheticModelBenchmarks')}
                 </span>
-                <span className="text-[11px] mutating-text-muted font-mono">EVALUATION METRICS</span>
+                <span className="text-[11px] mutating-text-muted font-mono">{tr(state.language, 'architectureStudio.label.evaluationMetrics')}</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1080,19 +1080,19 @@ export const ArchitectureStudio: React.FC = () => {
                 <div className="p-2.5 rounded theme-sub-bg border theme-border">
                   <div className="text-[11px] mutating-text-muted">{tr(state.language, 'architectureStudio.reliabilitySafety')}</div>
                   <div className="text-lg font-bold font-mono theme-success-text mt-1">{Math.round(modelEvaluation.reliability)}%</div>
-                  <div className="text-[11px] mutating-text-muted mt-0.5">Hallucination Control</div>
+                  <div className="text-[11px] mutating-text-muted mt-0.5">{tr(state.language, 'architectureStudio.label.hallucinationControl')}</div>
                 </div>
 
                 <div className="p-2.5 rounded theme-sub-bg border theme-border">
                   <div className="text-[11px] mutating-text-muted">{tr(state.language, 'architectureStudio.specializationIndex')}</div>
                   <div className="text-lg font-bold font-mono mutating-accent-text mt-1">{Math.round(modelEvaluation.specialization)}</div>
-                  <div className="text-[11px] mutating-text-muted mt-0.5">Task Proficiency</div>
+                  <div className="text-[11px] mutating-text-muted mt-0.5">{tr(state.language, 'architectureStudio.label.taskProficiency')}</div>
                 </div>
 
                 <div className="p-2.5 rounded theme-sub-bg border theme-border">
                   <div className="text-[11px] mutating-text-muted">{tr(state.language, 'architectureStudio.dataReadiness')}</div>
                   <div className="text-lg font-bold font-mono theme-warn-text mt-1">{Math.round(modelEvaluation.dataReadiness)}%</div>
-                  <div className="text-[11px] mutating-text-muted mt-0.5">Pipeline Integration</div>
+                  <div className="text-[11px] mutating-text-muted mt-0.5">{tr(state.language, 'architectureStudio.label.pipelineIntegration')}</div>
                 </div>
               </div>
             </div>
@@ -1103,7 +1103,7 @@ export const ArchitectureStudio: React.FC = () => {
                 <span className="text-xs font-semibold theme-text">
                   {t(state.language, 'inference_hyperparams')}
                 </span>
-                <span className="text-[11px] mutating-text-muted font-mono">TEMPERATURE & TOP-P SAMPLING</span>
+                <span className="text-[11px] mutating-text-muted font-mono">{tr(state.language, 'architectureStudio.label.temperatureTopP')}</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

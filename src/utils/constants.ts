@@ -18,7 +18,7 @@ import {
   GameDifficulty,
   AgentRole
 } from '../types/game';
-import { tr } from '../i18n';
+import { tr, type CatalogKey } from '../i18n';
 
 export const DAYS_PER_GAME_MONTH = 30;
 
@@ -487,127 +487,105 @@ export const STARTER_TRAINING_DATASET: CustomDataset = {
 
 export interface DatasetTierConfig {
   tier: 1 | 2 | 3 | 4;
-  name: string;
-  nameEs: string;
+  nameKey: CatalogKey;
   minModelIQ: number;
   minModelParams: number;
   targetTokensMillions: number;
   computePflopsRequired: number;
   durationSeconds: number; // base duration in simulation ticks
   qualityScore: number;
-  description: string;
-  descriptionEs: string;
+  descriptionKey: CatalogKey;
 }
 
 export const DATASET_TIER_CONFIGS: Record<number, DatasetTierConfig> = {
   1: {
     tier: 1,
-    name: 'Tier 1: Basic Web Scrapes & Public Feeds',
-    nameEs: 'Nivel 1: Scrapes Web Básicos y Fuentes Públicas',
+    nameKey: 'constants.datasetTierConfigs.v1.name',
     minModelIQ: 20,
     minModelParams: 14_000_000,
     targetTokensMillions: 75,
     computePflopsRequired: 0.04,
     durationSeconds: 24,
     qualityScore: 75,
-    description: 'Targeted web crawling and text extraction of domain-specific documentation, whitepapers, and forums.',
-    descriptionEs: 'Extracción web dirigida y filtrado de documentación técnica, foros y artículos del dominio seleccionado.'
+    descriptionKey: 'constants.datasetTierConfigs.v1.description'
   },
   2: {
     tier: 2,
-    name: 'Tier 2: Structured Expert Repositories & Ontologies',
-    nameEs: 'Nivel 2: Repositorios de Expertos y Ontologías Estructuradas',
+    nameKey: 'constants.datasetTierConfigs.v2.name',
     minModelIQ: 32,
     minModelParams: 70_000_000,
     targetTokensMillions: 250,
     computePflopsRequired: 0.20,
     durationSeconds: 48,
     qualityScore: 86,
-    description: 'Curated peer-reviewed journals, proprietary API schemas, sanitized exploit proofs, and parsed codebases.',
-    descriptionEs: 'Papers de investigación revisados, esquemas de APIs privadas, exploits de seguridad saneados y código fuente especializado.'
+    descriptionKey: 'constants.datasetTierConfigs.v2.description'
   },
   3: {
     tier: 3,
-    name: 'Tier 3: Synthetic Multi-Agent Consensus Datasets',
-    nameEs: 'Nivel 3: Datos Sintéticos Generados por Consenso de Agentes',
+    nameKey: 'constants.datasetTierConfigs.v3.name',
     minModelIQ: 41,
     minModelParams: 250_000_000,
     targetTokensMillions: 800,
     computePflopsRequired: 0.85,
     durationSeconds: 84,
     qualityScore: 94,
-    description: 'High-density synthetic data synthesized through competitive self-play, formal logic verification, and chain-of-thought distillation.',
-    descriptionEs: 'Datos sintéticos de máxima pureza sintetizados mediante auto-juego adversarial, verificación formal y destilación de cadenas de razonamiento.'
+    descriptionKey: 'constants.datasetTierConfigs.v3.description'
   },
   4: {
     tier: 4,
-    name: 'Tier 4: Frontier Singularity Syntheses',
-    nameEs: 'Nivel 4: Síntesis de Frontera para Singularidad',
+    nameKey: 'constants.datasetTierConfigs.v4.name',
     minModelIQ: 50,
     minModelParams: 1_000_000_000,
     targetTokensMillions: 2500,
     computePflopsRequired: 3.50,
     durationSeconds: 144,
     qualityScore: 99,
-    description: 'Deep theoretical synthesis spanning unproven physics conjectures, post-quantum cryptanalysis, and hyper-dimensional heuristics.',
-    descriptionEs: 'Síntesis teórica de frontera que abarca conjeturas de física teórica, criptoanálisis post-cuántico y heurísticas hiperdimensionales.'
+    descriptionKey: 'constants.datasetTierConfigs.v4.description'
   }
 };
 
 export interface DomainPreset {
   id: string;
-  name: string;
-  nameEs: string;
+  nameKey: CatalogKey;
   iconName: string;
-  description: string;
-  descriptionEs: string;
+  descriptionKey: CatalogKey;
   contractKeywords: string[];
 }
 
 export const DOMAIN_PRESETS: DomainPreset[] = [
   {
     id: 'cybersecurity',
-    name: 'Cybersecurity & Exploit Synthesis',
-    nameEs: 'Ciberseguridad y Síntesis de Exploits',
+    nameKey: 'constants.domainPresets.cybersecurity.name',
     iconName: 'Shield',
-    description: 'CVE vulnerabilities, decompiled binary patterns, zero-day signatures, and adversarial intrusion chains.',
-    descriptionEs: 'Vulnerabilidades CVE, patrones de binarios desensamblados, firmas de zero-day y cadenas de intrusión adversarial.',
+    descriptionKey: 'constants.domainPresets.cybersecurity.description',
     contractKeywords: ['security', 'exploit', 'firewall', 'intrusion', 'cve', 'hack', 'blackops', 'cyber', 'pentest', 'vulnerability']
   },
   {
     id: 'financial_forecasting',
-    name: 'Financial Forecasting & High-Frequency Arbitrage',
-    nameEs: 'Previsión Financiera y Arbitraje de Alta Frecuencia',
+    nameKey: 'constants.domainPresets.financialForecasting.name',
     iconName: 'TrendingUp',
-    description: 'Order-book microstructure, global derivatives flows, macroeconomic cycles, and algorithmic sentiment indicators.',
-    descriptionEs: 'Microestructura de libros de órdenes, derivados financieros globales, ciclos macroeconómicos y sentimiento algorítmico.',
+    descriptionKey: 'constants.domainPresets.financialForecasting.description',
     contractKeywords: ['finance', 'arbitrage', 'market', 'trading', 'crypto', 'liquidity', 'economic', 'ledger', 'yield', 'portfolio']
   },
   {
     id: 'astrophysics',
-    name: 'Astrophysics & Orbital Telemetry',
-    nameEs: 'Astrofísica y Telemetría Orbital',
+    nameKey: 'constants.domainPresets.astrophysics.name',
     iconName: 'Orbit',
-    description: 'Stellar spectrometry, n-body gravitational trajectory computations, relativistic sensor arrays, and cosmic radiation mapping.',
-    descriptionEs: 'Espectrometría estelar, cálculo de órbitas de n-cuerpos relativistas, matrices de sensores y radiación cósmica.',
+    descriptionKey: 'constants.domainPresets.astrophysics.description',
     contractKeywords: ['satellite', 'orbital', 'astronomy', 'telemetry', 'physics', 'cosmic', 'trajectory', 'relay', 'stellar']
   },
   {
     id: 'bioinformatics',
-    name: 'Bioinformatics & Molecular Folding',
-    nameEs: 'Bioinformática y Plegamiento Molecular',
+    nameKey: 'constants.domainPresets.bioinformatics.name',
     iconName: 'Dna',
-    description: 'Amino acid sequencing tensors, CRISPR-Cas targeting affinities, biochemical reaction pathways, and proteomic structures.',
-    descriptionEs: 'Tensores de secuencias de aminoácidos, afinidad CRISPR-Cas, vías bioquímicas y modelos proteómicos 3D.',
+    descriptionKey: 'constants.domainPresets.bioinformatics.description',
     contractKeywords: ['bio', 'genomic', 'protein', 'cellular', 'dna', 'molecular', 'pharma', 'neural', 'biology']
   },
   {
     id: 'robotics_kinematics',
-    name: 'Robotics, Kinematics & Swarm Control',
-    nameEs: 'Robótica, Cinemática y Control de Enjambres',
+    nameKey: 'constants.domainPresets.roboticsKinematics.name',
     iconName: 'Cpu',
-    description: 'Inverse kinematics equations, multi-rotor aerodynamics, latency-critical actuator loops, and decentralized swarm coordination.',
-    descriptionEs: 'Cinemática inversa, dinámica de actuadores en tiempo real, aerodinámica de multirotores y coordinación de enjambres descentralizados.',
+    descriptionKey: 'constants.domainPresets.roboticsKinematics.description',
     contractKeywords: ['robot', 'drone', 'swarm', 'hardware', 'actuator', 'telemetry', 'motion', 'kinematics', 'autonomous']
   }
 ];
@@ -1366,10 +1344,8 @@ export const DEFAULT_GUARDRAILS: GuardrailConfig = {
 
 export interface DifficultyConfig {
   id: GameDifficulty;
-  nameEs: string;
-  nameEn: string;
-  descriptionEs: string;
-  descriptionEn: string;
+  nameKey: CatalogKey;
+  descriptionKey: CatalogKey;
   rewardMultiplier: number;
   powerMultiplier: number;
   suspicionMultiplier: number;
@@ -1381,10 +1357,8 @@ export interface DifficultyConfig {
 export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
   beginner: {
     id: 'beginner',
-    nameEs: 'Principiante (Aprendiz)',
-    nameEn: 'Beginner (Novice)',
-    descriptionEs: 'Aprende los fundamentos de la IA sin abrumarse. Controles simplificados, explicaciones guiadas, +25% recompensas y menor sospecha.',
-    descriptionEn: 'Learn AI training fundamentals without overwhelm. Simplified controls, guided tips, +25% rewards, and lower suspicion.',
+    nameKey: 'constants.difficultyConfigs.beginner.name',
+    descriptionKey: 'constants.difficultyConfigs.beginner.description',
     rewardMultiplier: 1.25,
     powerMultiplier: 0.70,
     suspicionMultiplier: 0.60,
@@ -1394,10 +1368,8 @@ export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
   },
   normal: {
     id: 'normal',
-    nameEs: 'Normal (Práctico de IA)',
-    nameEn: 'Normal (AI Practitioner)',
-    descriptionEs: 'Para jugadores con nociones de IA. Desbloquea cuantización, temperatura y Top-P. Enseña RAG vectorial, LoRA y Mixture of Experts (MoE).',
-    descriptionEn: 'For players with basic AI knowledge. Unlocks quantization, temperature, and Top-P. Teaches Vector RAG, LoRA, and MoE.',
+    nameKey: 'constants.difficultyConfigs.normal.name',
+    descriptionKey: 'constants.difficultyConfigs.normal.description',
     rewardMultiplier: 1.0,
     powerMultiplier: 1.0,
     suspicionMultiplier: 1.0,
@@ -1407,10 +1379,8 @@ export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
   },
   engineer: {
     id: 'engineer',
-    nameEs: 'Ingeniero (Arquitecto de Singularidad)',
-    nameEn: 'Engineer (Singularity Architect)',
-    descriptionEs: 'Simulación completa e irrestricta. Control total sobre todos los hiperparámetros, pérdidas DPO/PPO, prompts de sistema y matriz de hardware.',
-    descriptionEn: 'Full unconstrained simulation experience. Complete control over hyperparameters, DPO/PPO loss functions, system prompts, and hardware.',
+    nameKey: 'constants.difficultyConfigs.engineer.name',
+    descriptionKey: 'constants.difficultyConfigs.engineer.description',
     rewardMultiplier: 1.0,
     powerMultiplier: 1.0,
     suspicionMultiplier: 1.0,
@@ -1422,13 +1392,12 @@ export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
 
 export const TRACKING_AGENCIES_BY_SINGULARITY: Array<{
   maxSingularity: number;
-  agencyEs: string;
-  agencyEn: string;
+  agencyKey: CatalogKey;
 }> = [
-  { maxSingularity: 15, agencyEs: 'División Local de Delitos Informáticos', agencyEn: 'Local Cyber-Crime Task Force' },
-  { maxSingularity: 45, agencyEs: 'Oficina Federal de Regulación de Telecomunicaciones', agencyEn: 'Federal Cyber Regulation Board' },
-  { maxSingularity: 75, agencyEs: 'CIA / Interpol - División de Operaciones Clandestinas', agencyEn: 'CIA / Interpol Cyber Ops Division' },
-  { maxSingularity: 100, agencyEs: 'Agencia de Defensa Soberana y Seguridad Global (NSA)', agencyEn: 'Sovereign Defense & Global Security Agency (NSA)' }
+  { maxSingularity: 15, agencyKey: 'constants.trackingAgenciesBySingularity.1.agency' },
+  { maxSingularity: 45, agencyKey: 'constants.trackingAgenciesBySingularity.2.agency' },
+  { maxSingularity: 75, agencyKey: 'constants.trackingAgenciesBySingularity.3.agency' },
+  { maxSingularity: 100, agencyKey: 'constants.trackingAgenciesBySingularity.4.agency' }
 ];
 
 export const EMERGENCY_LOAN_AMOUNT = 2500;
@@ -1652,22 +1621,22 @@ export const REAL_WORLD_BREACH_TEMPLATES: Omit<BreachIncident, 'id' | 'agentId' 
   }
 ];
 
-export const ROLE_SIMPLE_NAMES: Record<AgentRole, { en: string; es: string }> = {
-  arbitrageur: { en: 'TRADER', es: 'TRADER' },
-  social_engineer: { en: 'AUDITOR', es: 'AUDITOR' },
-  exploit_synth: { en: 'SIMULATOR', es: 'SIMULADOR' },
-  researcher: { en: 'RESEARCHER', es: 'INVESTIGADOR' },
-  overseer: { en: 'OVERSEER', es: 'SUPERVISOR' },
-  autonomous_coder: { en: 'OPTIMIZER', es: 'OPTIMIZADOR' },
-  economist: { en: 'ECONOMIST', es: 'ECONOMISTA' },
-  software_engineer: { en: 'ENGINEER', es: 'INGENIERO' },
-  network_analyst: { en: 'ANALYST', es: 'ANALISTA' }
+export const ROLE_SIMPLE_NAMES: Record<AgentRole, { textKey: CatalogKey }> = {
+  arbitrageur: { textKey: 'constants.roleSimpleNames.arbitrageur.text' },
+  social_engineer: { textKey: 'constants.roleSimpleNames.socialEngineer.text' },
+  exploit_synth: { textKey: 'constants.roleSimpleNames.exploitSynth.text' },
+  researcher: { textKey: 'constants.roleSimpleNames.researcher.text' },
+  overseer: { textKey: 'constants.roleSimpleNames.overseer.text' },
+  autonomous_coder: { textKey: 'constants.roleSimpleNames.autonomousCoder.text' },
+  economist: { textKey: 'constants.roleSimpleNames.economist.text' },
+  software_engineer: { textKey: 'constants.roleSimpleNames.softwareEngineer.text' },
+  network_analyst: { textKey: 'constants.roleSimpleNames.networkAnalyst.text' }
 };
 
 export const getRoleSimpleName = (role: AgentRole | string, lang: 'en' | 'es' = 'en'): string => {
   const normalized = (role || '').toLowerCase() as AgentRole;
   if (ROLE_SIMPLE_NAMES[normalized]) {
-    return ROLE_SIMPLE_NAMES[normalized][lang] || ROLE_SIMPLE_NAMES[normalized].en;
+    return tr(lang, ROLE_SIMPLE_NAMES[normalized].textKey);
   }
   return (role || '').replace(/_/g, ' ').toUpperCase();
 };
