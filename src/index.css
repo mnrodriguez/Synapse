@@ -397,3 +397,22 @@
 #app-shell input[type='radio'] {
   accent-color: var(--accent-primary);
 }
+
+/* Accessibility: on touch screens every control is at least 24 x 24 px (WCAG 2.2, target size).
+   Mouse users keep the compact layout. */
+@media (pointer: coarse) {
+  button,
+  [role='tab'],
+  a.inline-flex,
+  a.flex,
+  input[type='text'],
+  input[type='number'],
+  input[type='search'],
+  select {
+    min-height: 24px;
+  }
+  button,
+  [role='tab'] {
+    min-width: 24px;
+  }
+}

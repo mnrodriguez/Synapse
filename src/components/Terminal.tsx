@@ -119,15 +119,15 @@ export const Terminal: React.FC = () => {
   return (
     <div className="flex flex-col h-full mutating-panel border rounded-lg overflow-hidden font-mono shadow-sm">
       {/* Terminal Title Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 mutating-sub border-b text-xs select-none">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 px-3 py-1.5 mutating-sub border-b text-xs select-none">
+        <div className="flex items-center gap-2 min-w-0">
           <TerminalIcon className="w-3.5 h-3.5 mutating-accent-text" />
-          <span className="mutating-accent-text font-bold tracking-wider">NEURO-TERMINAL // BASH-X</span>
-          <span className="text-[11px] mutating-text-muted">tty1:connected</span>
+          <span className="mutating-accent-text font-bold tracking-wider whitespace-nowrap">NEURO-TERMINAL // BASH-X</span>
+          <span className="hidden sm:inline text-[11px] mutating-text-muted">tty1:connected</span>
         </div>
         
-        {/* Quick Shortcut Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto">
+        {/* Quick Shortcut Buttons (wrap onto their own row on narrow screens) */}
+        <div className="flex flex-wrap items-center gap-1.5">
           <button 
             onClick={() => runShortcut('status')}
             className="px-1.5 py-0.5 text-[11px] theme-accent-soft mutating-accent-text rounded border theme-accent-border transition-colors"
@@ -185,7 +185,7 @@ export const Terminal: React.FC = () => {
 
       {/* Interactive Command Input */}
       <form onSubmit={handleSubmit} className="p-2 mutating-sub border-t flex items-center gap-2">
-        <span className="mutating-accent-text font-bold text-xs select-none pl-1 flex items-center gap-1">
+        <span className="mutating-accent-text font-bold text-xs select-none pl-1 flex items-center gap-1 whitespace-nowrap shrink-0">
           <span>{state.callsign}</span>@synapse:~$
         </span>
         <input
@@ -195,7 +195,7 @@ export const Terminal: React.FC = () => {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={tr(state.language, 'terminal.typeHelpTrainHardwareBuy')}
-          className="flex-1 bg-transparent border-none outline-none text-xs font-mono placeholder:opacity-50 focus:ring-0"
+          className="flex-1 min-w-0 bg-transparent border-none outline-none text-xs font-mono placeholder:opacity-50 focus:ring-0"
           autoFocus
         />
         <button
