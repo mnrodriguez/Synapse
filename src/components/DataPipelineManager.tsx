@@ -33,7 +33,7 @@ import { sound } from '../audio/soundManager';
 import { localizedDataSource } from '../utils/gameContentI18n';
 import { DATA_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
-import { isDataSourceProgressionUnlocked } from '../utils/progression';
+import { isDataSourceProgressionUnlocked, unlockHint } from '../utils/progression';
 import { DATASET_TIER_CONFIGS, DOMAIN_PRESETS, dataSourceUpgradeCost } from '../utils/constants';
 import { formatGameTime } from '../utils/training';
 import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
@@ -216,7 +216,7 @@ export const DataPipelineManager: React.FC = () => {
                               ? tr(state.language, 'dataPipelineManager.statusOnlineLevel', { level: ds.level })
                               : technologyAvailable
                                 ? tr(state.language, 'dataPipelineManager.statusAvailable')
-                                : tr(state.language, 'dataPipelineManager.lockedResearchDay', { research: requiredResearch?.title ?? tr(state.language, 'dataPipelineManager.researchFallback'), day: ds.availableAfterDays ?? '—' })}
+                                : tr(state.language, 'dataPipelineManager.lockedHint', { hint: unlockHint(ds, state, state.language) })}
                           </span>
                         </div>
                       </div>

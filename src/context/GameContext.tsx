@@ -54,7 +54,7 @@ import {
   DOMAIN_PRESETS,
   dataSourceUpgradeCost
 } from '../utils/constants';
-import { isProgressionUnlocked, getModelOptionRequirement, researchStatus } from '../utils/progression';
+import { isProgressionUnlocked, getModelOptionRequirement, researchStatus, unlockHint } from '../utils/progression';
 import { sound } from '../audio/soundManager';
 import { 
   auth, 
@@ -269,8 +269,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (node) return `"${localizedResearch(lang, node).title}"`;
     return tr(lang, 'gameContext.requiredTechnology');
   };
-  const campaignDayLabel = (days: number | undefined, lang: 'es' | 'en'): string =>
-    typeof days === 'number' ? String(days + 1) : (tr(lang, 'gameContext.shown'));
 
   const addLog = useCallback((message: string, type: TerminalLog['type'] = 'info') => {
     const newLog: TerminalLog = {
@@ -906,7 +904,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     if (!isProgressionUnlocked(facility, current)) {
       addLog(
-        tr(stateRef.current.language, 'gameContext.facilityUpgradeLockedFundWait', { research: researchName(facility.requiredResearchId, stateRef.current.language), availableAfterDays: campaignDayLabel(facility.availableAfterDays, stateRef.current.language) }),
+        tr(stateRef.current.language, 'gameContext.facilityUpgradeLocked', { hint: unlockHint(facility, stateRef.current, stateRef.current.language) }),
         'warning'
       );
       return false;
@@ -1314,7 +1312,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       !isProgressionUnlocked(item, stateRef.current)
     ) {
       addLog(
-        tr(stateRef.current.language, 'gameContext.hardwareLockedResearchWaitCampaign', { research: researchName(item.requiredResearchId, stateRef.current.language), availableAfterDays: campaignDayLabel(item.availableAfterDays, stateRef.current.language) }),
+        tr(stateRef.current.language, 'gameContext.hardwareLocked', { hint: unlockHint(item, stateRef.current, stateRef.current.language) }),
         'warning'
       );
       return false;
@@ -1358,7 +1356,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (ds.unlocked) return false;
     if (!isProgressionUnlocked(ds, stateRef.current)) {
       addLog(
-        tr(stateRef.current.language, 'gameContext.dataEngineLockedResearchWait', { research: researchName(ds.requiredResearchId, stateRef.current.language), availableAfterDays: campaignDayLabel(ds.availableAfterDays, stateRef.current.language) }),
+        tr(stateRef.current.language, 'gameContext.dataEngineLocked', { hint: unlockHint(ds, stateRef.current, stateRef.current.language) }),
         'warning'
       );
       return false;
@@ -1521,7 +1519,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         !isProgressionUnlocked(getModelOptionRequirement(field, value), stateRef.current)
       ) {
         addLog(
-          tr(stateRef.current.language, 'gameContext.modelSettingLockedFundIts', { availableAfterDays: campaignDayLabel(getModelOptionRequirement(field, value).availableAfterDays, stateRef.current.language) }),
+          tr(stateRef.current.language, 'gameContext.modelSettingLocked', { hint: unlockHint(getModelOptionRequirement(field, value), stateRef.current, stateRef.current.language) }),
           'warning'
         );
         return;
@@ -1551,7 +1549,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (
         changedAdvancedSampling &&
         !isProgressionUnlocked(
-          { requiredResearchId: 'res_lora_peft', availableAfterDays: 30 },
+          { requiredResearchId: 'res_lora_peft' },
           stateRef.current
         )
       ) {

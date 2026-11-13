@@ -32,7 +32,7 @@ import {
 } from '../utils/constants';
 import { HARDWARE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
-import { isProgressionUnlocked } from '../utils/progression';
+import { isProgressionUnlocked, unlockHint } from '../utils/progression';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { formatCompute, externalComputePflops, COVERT_NODE_PFLOPS, UNIVERSITY_LOAN_PFLOPS, formatGameTime, GAME_HOURS_PER_TICK } from '../utils/training';
 import { PHASE_SCALES, toDisplayProgress, type UiVersion } from '../utils/singularityGoals';
@@ -320,7 +320,7 @@ export const HardwareRack: React.FC = () => {
                               <Lock className="w-2.5 h-2.5" />
                               {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                                 ? `${progressRequirement(item.minSingularityRequired)}`
-                                : `${researchTitle ?? tr(state.language, 'hardwareRack.futureTechnology')} · ${item.availableAfterDays ?? '—'} ${tr(state.language, 'hardwareRack.days')}`}
+                                : researchTitle ?? tr(state.language, 'hardwareRack.futureTechnology')}
                             </span>
                           )}
                         </div>
@@ -375,7 +375,7 @@ export const HardwareRack: React.FC = () => {
                         <span>
                           {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                             ? `${t(state.language, 'blocked')} (${progressRequirement(item.minSingularityRequired)})`
-                            : tr(state.language, 'hardwareRack.researchOrWait', { research: researchTitle ?? tr(state.language, 'hardwareRack.theTechnology'), day: item.availableAfterDays ?? '—' })}
+                            : unlockHint(item, state, state.language)}
                         </span>
                       </span>
                     ) : (
@@ -508,7 +508,7 @@ export const HardwareRack: React.FC = () => {
                               <Lock className="w-2.5 h-2.5" />
                               {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                                 ? `${progressRequirement(item.minSingularityRequired)}`
-                                : `${researchTitle ?? tr(state.language, 'hardwareRack.futureTechnology')} · ${item.availableAfterDays ?? '—'} ${tr(state.language, 'hardwareRack.days')}`}
+                                : researchTitle ?? tr(state.language, 'hardwareRack.futureTechnology')}
                             </span>
                           )}
                         </div>
@@ -548,7 +548,7 @@ export const HardwareRack: React.FC = () => {
                         <span>
                           {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                             ? `${t(state.language, 'blocked')} (${progressRequirement(item.minSingularityRequired)})`
-                            : tr(state.language, 'hardwareRack.researchOrWait', { research: researchTitle ?? tr(state.language, 'hardwareRack.theTechnology'), day: item.availableAfterDays ?? '—' })}
+                            : unlockHint(item, state, state.language)}
                         </span>
                       </span>
                     ) : (

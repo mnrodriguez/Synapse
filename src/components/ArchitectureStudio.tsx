@@ -43,7 +43,7 @@ import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 import { BATCH_SIZES, runConfigFor } from '../utils/trainingRun';
 import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime, externalComputePflops } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
-import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
+import { getModelOptionRequirement, isProgressionUnlocked, unlockHint } from '../utils/progression';
 import { DocLinkBadge } from './DocLinkBadge';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { tr } from '../i18n';
@@ -100,7 +100,7 @@ export const ArchitectureStudio: React.FC = () => {
     state
   );
   const advancedSamplingUnlocked = isProgressionUnlocked(
-    { requiredResearchId: 'res_lora_peft', availableAfterDays: 30 },
+    { requiredResearchId: 'res_lora_peft' },
     state
   );
 
@@ -679,7 +679,7 @@ export const ArchitectureStudio: React.FC = () => {
                   key={preset.label}
                   disabled={!unlocked}
                   title={!unlocked
-                    ? tr(state.language, 'architectureStudio.researchAdvanceDay', { research: requirement.requiredResearchId, availableAfterDays: requirement.availableAfterDays })
+                    ? unlockHint(requirement, state, state.language)
                     : undefined}
                   onClick={() => handleParamsPreset(preset.value, preset.label)}
                   className={`px-3 py-1.5 rounded text-xs font-mono font-bold border transition-all disabled:cursor-not-allowed disabled:opacity-35 ${
