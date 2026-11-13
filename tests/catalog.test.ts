@@ -4,7 +4,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { en } from '../src/i18n/en';
 import { es } from '../src/i18n/es';
-import { tr, trv } from '../src/i18n';
+import { tr, trv, registerCatalog, localizedTable, getCatalogRevision } from '../src/i18n';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RichText, stripTags } from '../src/i18n/RichText';
@@ -100,5 +100,18 @@ describe('text catalog', () => {
     expect(custom).toContain('<b class="g">GTX &lt;1060&gt;</b>');
     expect(custom).toContain('&lt;data&gt;Wiki&lt;/data&gt;');
     expect(stripTags(tr('en', 'terminal.helpHint'))).toBe('Type help to see all available commands, or use the modules above.');
+  });
+
+  test('a language loaded later rebuilds the tables, and missing texts fall back to English', () => {
+    const table = localizedTable<{ title: string }>({ title: 'ui.blocked' });
+    expect(table.es.title).toBe(es['ui.blocked']);
+    const before = getCatalogRevision();
+    registerCatalog('es', { ...es, 'ui.blocked': 'BLOQUEO DE PRUEBA' });
+    expect(getCatalogRevision()).toBe(before + 1);
+    expect(table.es.title).toBe('BLOQUEO DE PRUEBA');
+    registerCatalog('es', { ...es, 'ui.blocked': undefined as unknown as string });
+    expect(tr('es', 'ui.blocked')).toBe(en['ui.blocked']);
+    registerCatalog('es', es);
+    expect(table.es.title).toBe(es['ui.blocked']);
   });
 });

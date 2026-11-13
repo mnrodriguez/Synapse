@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-import { localizeTree, type KeyTree } from '../i18n';
+import { localizedTable, type KeyTree } from '../i18n';
 
 export interface VersionProfile {
   appTitle: string;
@@ -336,10 +336,7 @@ const VERSION_PROFILES_KEYS: Record<1 | 2 | 3 | 4, KeyTree<VersionProfile>> = {
   }
 };
 
-export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, VersionProfile>> = {
-  en: localizeTree('en', VERSION_PROFILES_KEYS),
-  es: localizeTree('es', VERSION_PROFILES_KEYS)
-};
+export const VERSION_PROFILES: Record<'en' | 'es', Record<1 | 2 | 3 | 4, VersionProfile>> = localizedTable(VERSION_PROFILES_KEYS);
 
 // Texts live in the catalog (src/i18n/) under upgradeModal.*; this tree only holds their keys.
 const UPGRADE_MODAL_SCRIPTS_KEYS: Record<2 | 3 | 4, KeyTree<UpgradeModalData>> = {
@@ -381,7 +378,4 @@ const UPGRADE_MODAL_SCRIPTS_KEYS: Record<2 | 3 | 4, KeyTree<UpgradeModalData>> =
   }
 };
 
-export const UPGRADE_MODAL_SCRIPTS: Record<'en' | 'es', Record<2 | 3 | 4, UpgradeModalData>> = {
-  en: localizeTree('en', UPGRADE_MODAL_SCRIPTS_KEYS),
-  es: localizeTree('es', UPGRADE_MODAL_SCRIPTS_KEYS)
-};
+export const UPGRADE_MODAL_SCRIPTS: Record<'en' | 'es', Record<2 | 3 | 4, UpgradeModalData>> = localizedTable(UPGRADE_MODAL_SCRIPTS_KEYS);
