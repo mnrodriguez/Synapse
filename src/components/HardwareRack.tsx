@@ -669,7 +669,7 @@ export const HardwareRack: React.FC = () => {
                   <span>{t(state.language, 'shadow_capacity')} · {t(state.language, 'fictional_event')}</span>
                 </div>
                 <p className="mt-1 text-xs mutating-text-muted leading-relaxed max-w-xl">
-                  {t(state.language, 'shadow_compute_description')} Riesgo de detección: <strong className="theme-warn-text">{shadowDetectionChance.toFixed(0)}%</strong>. 
+                  {t(state.language, 'shadow_compute_description')} <strong className="theme-warn-text">{shadowDetectionChance.toFixed(0)}%</strong>. 
                   {state.borrowedComputeSeconds > 0 && (
                     <span className="mutating-accent-text ml-1">
                       {t(state.language, 'temporary_capacity')}: {formatCompute(state.borrowedComputePflops)} · {formatGameTime(state.borrowedComputeSeconds)} {tr(state.language, 'hardwareRack.left')}.

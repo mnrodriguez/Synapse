@@ -116,7 +116,7 @@ const agentParamBonus = (params: number): number => Math.min(2.5, 1 + params / 5
 const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 7.5)));
 import { evaluateMissionTeam, findAutonomousMission, weakestTeamFactors } from '../utils/missionEvaluation';
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
-import { tr } from '../i18n';
+import { tr, type CatalogKey } from '../i18n';
 import { MANUAL_PDF_URL } from '../utils/assets';
 
 interface GameContextType {
@@ -1056,7 +1056,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let trackingAgency = prev.trackingAgency || 'Local Cyber-Crime Task Force';
         for (const entry of TRACKING_AGENCIES_BY_SINGULARITY) {
           if (singularityProgress <= entry.maxSingularity) {
-            trackingAgency = prev.language === 'es' ? entry.agencyEs : entry.agencyEn;
+            trackingAgency = tr(prev.language, entry.agencyKey);
             break;
           }
         }
@@ -1716,7 +1716,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const preset = DOMAIN_PRESETS.find(p => p.id === domain);
     const domainLabel = preset
-      ? (current.language === 'en' ? preset.name : preset.nameEs)
+      ? tr(current.language, preset.nameKey)
       : domain.charAt(0).toUpperCase() + domain.slice(1);
 
     const newJob: ActiveDatasetScrapeJob = {
@@ -1864,7 +1864,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
     if (!hasQualifiedModel) {
       sound.playWarning();
-      addLog(tr(stateRef.current.language, 'gameContext.contractRejectedTeamRequiresLeast', { _000_000: (gig.requiredParams / 1_000_000).toFixed(0), requiredMinReasoning: gig.requiredMinReasoning }), 'danger');
+      addLog(tr(stateRef.current.language, 'gameContext.contractRejectedTeamRequiresLeast', { paramsM: (gig.requiredParams / 1_000_000).toFixed(0), requiredMinReasoning: gig.requiredMinReasoning }), 'danger');
       return false;
     }
 
@@ -2056,53 +2056,53 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let baseRev = 10;
     let baseSusp = 0.2;
-    let roleDesc = '';
+    let roleDescKey: CatalogKey | null = null;
 
     switch (role) {
       case 'arbitrageur':
         baseRev = 3;
         baseSusp = 0.15;
-        roleDesc = 'Arbitraje Flash DeFi y Algorithmic Trading';
+        roleDescKey = 'gameContext.agentFocus.arbitrageur';
         break;
       case 'social_engineer':
         baseRev = 2.5;
         baseSusp = 0.35;
-        roleDesc = 'Manipulación Psicológica e Infiltración de Credenciales';
+        roleDescKey = 'gameContext.agentFocus.socialEngineer';
         break;
       case 'exploit_synth':
         baseRev = 3.2;
         baseSusp = 0.55;
-        roleDesc = 'Síntesis Zero-Day y Fuzzing Automatizado de Redes';
+        roleDescKey = 'gameContext.agentFocus.exploitSynth';
         break;
       case 'researcher':
         baseRev = 0.8;
         baseSusp = 0.05;
-        roleDesc = 'Ingeniería Inversa de Papers y Búsqueda de Arquitecturas';
+        roleDescKey = 'gameContext.agentFocus.researcher';
         break;
       case 'overseer':
         baseRev = 0.3;
         baseSusp = -0.15;
-        roleDesc = 'Monitoreo de Alineamiento y Detección de Fugas';
+        roleDescKey = 'gameContext.agentFocus.overseer';
         break;
       case 'autonomous_coder':
         baseRev = 2.8;
         baseSusp = 0.25;
-        roleDesc = 'Optimización Recursiva de Kernels y Scraping';
+        roleDescKey = 'gameContext.agentFocus.autonomousCoder';
         break;
       case 'economist':
         baseRev = 2.1;
         baseSusp = 0.08;
-        roleDesc = 'Modelado Económico y Análisis de Riesgo';
+        roleDescKey = 'gameContext.agentFocus.economist';
         break;
       case 'software_engineer':
         baseRev = 2.4;
         baseSusp = 0.12;
-        roleDesc = 'Arquitectura de Software y Verificación';
+        roleDescKey = 'gameContext.agentFocus.softwareEngineer';
         break;
       case 'network_analyst':
         baseRev = 2.0;
         baseSusp = 0.16;
-        roleDesc = 'Observabilidad y Diagnóstico de Redes Simuladas';
+        roleDescKey = 'gameContext.agentFocus.networkAnalyst';
         break;
     }
 
@@ -2121,20 +2121,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initialAlignment = finalInference.temperature < 0.4 ? 98 : finalInference.temperature > 1.2 ? 78 : 92;
 
-    const roleDescriptionsEn: Partial<Record<AgentRole, string>> = {
-      arbitrageur: 'simulated market analysis',
-      social_engineer: 'fictional social research',
-      exploit_synth: 'simulated system resilience',
-      researcher: 'model research and evaluation',
-      overseer: 'safety oversight and alignment',
-      autonomous_coder: 'software architecture',
-      economist: 'economics and risk analysis',
-      software_engineer: 'software engineering and verification',
-      network_analyst: 'simulated network diagnostics'
-    };
-    const displayedRoleDesc = stateRef.current.language === 'en'
-      ? roleDescriptionsEn[role] ?? roleDesc
-      : roleDesc;
+    const displayedRoleDesc = roleDescKey ? tr(stateRef.current.language, roleDescKey) : '';
 
     const newAgent: AgentInstance = {
       id: `agent_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
@@ -2635,7 +2622,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const missingDetails: string[] = [];
       if (maxAssignedParams < dynamicGig.requiredParams) {
-        missingDetails.push(tr(current.language, 'gameContext.paramsMHaveM', { _000_000: (dynamicGig.requiredParams / 1_000_000).toFixed(0), _000_0002: (maxAssignedParams / 1_000_000).toFixed(0) }));
+        missingDetails.push(tr(current.language, 'gameContext.paramsMHaveM', { paramsM: (dynamicGig.requiredParams / 1_000_000).toFixed(0), haveParamsM: (maxAssignedParams / 1_000_000).toFixed(0) }));
       }
       if (maxAssignedReasoning < (dynamicGig.requiredMinReasoning || 0)) {
         missingDetails.push(tr(current.language, 'gameContext.evaluationScorePtsHavePts', { requiredMinReasoning: dynamicGig.requiredMinReasoning, maxAssignedReasoning }));
@@ -2958,7 +2945,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           callsign: resetState.callsign,
           computePFLOPS: 0.001,
           singularityProgress: 0.0,
-          activeArchitecture: 'Reinicio Génesis',
+          activeArchitecture: tr(resetState.language, 'gameContext.leaderboardReset'),
           achievedSingularity: false,
           updatedAt: new Date().toISOString()
         }, { merge: true });
@@ -3172,7 +3159,7 @@ ${tr(stateRef.current.language, 'terminal.winConditionReach100Complete')}`;
     setState(prev => {
       const config = DIFFICULTY_CONFIGS[diff];
       addLog(
-        tr(prev.language, 'gameContext.difficultyLevelAdjusted', { name: (prev.language === 'es' ? config.nameEs : config.nameEn) }),
+        tr(prev.language, 'gameContext.difficultyLevelAdjusted', { name: tr(prev.language, config.nameKey) }),
         'info'
       );
       return { ...prev, difficulty: diff };
@@ -3470,16 +3457,16 @@ ${tr(stateRef.current.language, 'terminal.winConditionReach100Complete')}`;
       sound.playBreakthrough();
     }
 
-    const versionNames: Record<1 | 2 | 3 | 4, { en: string; es: string }> = {
-      1: { en: 'MyFirstLLM Studio v1.0', es: 'MiPrimerLLM Studio v1.0' },
-      2: { en: 'Synapse Pro Workspace v2.0', es: 'Synapse Pro Workspace v2.0' },
-      3: { en: 'SYNAPSE // BLACKBOX OS v3.0', es: 'SYNAPSE // BLACKBOX OS v3.0' },
-      4: { en: 'CORE // SOVEREIGN NEXUS v4.0', es: 'CORE // NEXO SOBERANO v4.0' }
+    const versionNames: Record<1 | 2 | 3 | 4, { textKey: CatalogKey }> = {
+      1: { textKey: 'gameContext.versionNames.v1.text' },
+      2: { textKey: 'gameContext.versionNames.v2.text' },
+      3: { textKey: 'gameContext.versionNames.v3.text' },
+      4: { textKey: 'gameContext.versionNames.v4.text' }
     };
 
     const targetInfo = versionNames[targetVersion];
     addLog(
-      tr((isEs ? 'es' : 'en'), 'gameContext.kernelUpdatedInterfaceKernelMutated', { version: isEs ? targetInfo.es : targetInfo.en }),
+      tr((isEs ? 'es' : 'en'), 'gameContext.kernelUpdatedInterfaceKernelMutated', { version: tr(isEs ? 'es' : 'en', targetInfo.textKey) }),
       targetVersion === 4 ? 'danger' : 'success'
     );
 

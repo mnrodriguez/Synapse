@@ -307,7 +307,7 @@ export const TrainingMonitor: React.FC = () => {
             </span>
             {job.targetModelType === 'micro_model' ? (
               <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px] font-bold">
-                MICRO-MODEL ({job.datasetDomain || 'SPECIALIST'})
+                {tr(state.language, 'trainingMonitor.microModel')} ({job.datasetDomain || tr(state.language, 'trainingMonitor.specialist')})
               </span>
             ) : (
               <span className="px-2 py-0.5 rounded theme-success-soft border theme-success-border theme-success-text text-[11px]">

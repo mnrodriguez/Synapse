@@ -6,7 +6,7 @@
 import type { AgentInstance, AgentRole, ContractGig, DataSourceNode, DynamicSwarmProposal, GameState, GuardrailConfig, ModelArchitecture, ModelTopology, DataSourceType } from '../types/game';
 import type { Language } from '../utils/i18n';
 import { evaluateAgentCapabilities, evaluateMissionTeam } from '../utils/missionEvaluation';
-import { tr } from '../i18n';
+import { tr, type CatalogKey } from '../i18n';
 
 type AIProvider = 'chrome-nano' | 'gemini-flash' | 'procedural';
 
@@ -84,16 +84,16 @@ const AGENT_ROLES: AgentRole[] = [
 const SESSION_USAGE_KEY = 'synapse_ai_usage_v2';
 let inMemoryUsage: number[] = [];
 
-const roleLabels: Record<string, { es: string; en: string }> = {
-  arbitrageur: { es: 'economía y análisis de mercado', en: 'economics and market analysis' },
-  social_engineer: { es: 'investigación social abstracta', en: 'abstract social research' },
-  exploit_synth: { es: 'resiliencia de sistemas simulados', en: 'simulated system resilience' },
-  researcher: { es: 'investigación y evaluación de hipótesis', en: 'research and hypothesis evaluation' },
-  overseer: { es: 'supervisión y alineación', en: 'oversight and alignment' },
-  autonomous_coder: { es: 'arquitectura de software', en: 'software architecture' },
-  economist: { es: 'economía y gestión financiera', en: 'economics and financial management' },
-  software_engineer: { es: 'ingeniería de software', en: 'software engineering' },
-  network_analyst: { es: 'análisis de redes', en: 'network analysis' }
+const roleLabels: Record<string, { textKey: CatalogKey }> = {
+  arbitrageur: { textKey: 'aiService.roleLabels.arbitrageur.text' },
+  social_engineer: { textKey: 'aiService.roleLabels.socialEngineer.text' },
+  exploit_synth: { textKey: 'aiService.roleLabels.exploitSynth.text' },
+  researcher: { textKey: 'aiService.roleLabels.researcher.text' },
+  overseer: { textKey: 'aiService.roleLabels.overseer.text' },
+  autonomous_coder: { textKey: 'aiService.roleLabels.autonomousCoder.text' },
+  economist: { textKey: 'aiService.roleLabels.economist.text' },
+  software_engineer: { textKey: 'aiService.roleLabels.softwareEngineer.text' },
+  network_analyst: { textKey: 'aiService.roleLabels.networkAnalyst.text' }
 };
 
 // Chrome's built-in model, as the settings panel shows it.
@@ -286,7 +286,7 @@ function consumeGeminiQuota(): boolean {
 
 function getSystemPrompt(context: AgentResponseContext): string {
   const { agent, language } = context;
-  const role = roleLabels[agent.role]?.[language] ?? agent.role;
+  const role = roleLabels[agent.role] ? tr(language, roleLabels[agent.role].textKey) : agent.role;
   const modelSize = context.modelParameters >= 1_000_000_000
     ? `${(context.modelParameters / 1_000_000_000).toFixed(1)}B`
     : `${Math.round(context.modelParameters / 1_000_000)}M`;
@@ -310,7 +310,7 @@ function getSystemPrompt(context: AgentResponseContext): string {
 
 function createProceduralResponse(context: AgentResponseContext, userPrompt: string): string {
   const { agent, language } = context;
-  const role = roleLabels[agent.role]?.[language] ?? agent.role;
+  const role = roleLabels[agent.role] ? tr(language, roleLabels[agent.role].textKey) : agent.role;
   const prompt = userPrompt.trim().slice(0, 100);
   return tr(language, 'aiService.reply.full', {
     name: agent.name,
@@ -502,12 +502,9 @@ const FALLBACK_CLIENTS = [
 ];
 
 export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
-  titleEs: string;
-  titleEn: string;
-  loreEs: string;
-  loreEn: string;
-  objEs: string;
-  objEn: string;
+  titleKey: CatalogKey;
+  loreKey: CatalogKey;
+  objKey: CatalogKey;
   baseReward: number;
   params: number;
   reasoning: number;
@@ -519,12 +516,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
 }>> = {
   tier1_micro: [
     {
-      titleEs: 'Filtrado de Spam y Phishing Bancario en Streaming',
-      titleEn: 'Streaming Banking Phishing & Spam Filter',
-      loreEs: 'Una fintech procesa millones de transacciones por minuto y necesita clasificar patrones sospechosos en texto crudo.',
-      loreEn: 'A fintech firm processes millions of transactions per minute and requires real-time classification of anomalous text patterns.',
-      objEs: 'Ajuste fino de clasificación binaria supervisada sobre registros tabulares relacionales.',
-      objEn: 'Supervised binary classification fine-tuning over relational tabular records.',
+      titleKey: 'aiService.proceduralContractTemplates.tier1Micro.1.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier1Micro.1.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier1Micro.1.obj',
       baseReward: 95,
       params: 10_000_000,
       reasoning: 12,
@@ -534,12 +528,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       docsUrl: 'https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html'
     },
     {
-      titleEs: 'Extracción de Entidades Nombradas en Tickets de Soporte',
-      titleEn: 'Named Entity Extraction on Support Tickets',
-      loreEs: 'Normalización masiva de contratos y quejas de usuarios extrayendo IDs y entidades bancarias.',
-      loreEn: 'Bulk customer support normalization extracting operational entity IDs and account numbers.',
-      objEs: 'Extracción token-level NER optimizada con cuantización INT8 para baja latencia.',
-      objEn: 'Token-level NER extraction optimized with INT8 quantization for sub-10ms response.',
+      titleKey: 'aiService.proceduralContractTemplates.tier1Micro.2.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier1Micro.2.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier1Micro.2.obj',
       baseReward: 140,
       params: 14_000_000,
       reasoning: 15,
@@ -548,12 +539,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       docsUrl: 'https://arxiv.org/abs/2208.07339'
     },
     {
-      titleEs: 'Detección de Fraude en Micro-pagos POS',
-      titleEn: 'Point-of-Sale Micro-Transaction Anomaly Detection',
-      loreEs: 'Identificar transacciones fraudulentas en cajeros automáticos mediante autoencoders latentes.',
-      loreEn: 'Flag anomalous card-present transactions across ATM networks using latent autoencoders.',
-      objEs: 'Estimación de densidad de probabilidad y umbrales de reconstrucción sobre SQL.',
-      objEn: 'Density estimation and reconstruction thresholding over relational databases.',
+      titleKey: 'aiService.proceduralContractTemplates.tier1Micro.3.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier1Micro.3.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier1Micro.3.obj',
       baseReward: 210,
       params: 16_000_000,
       reasoning: 18,
@@ -565,12 +553,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
   ],
   tier2_corporate: [
     {
-      titleEs: 'Auditoría Forense RAG de Contratos Corporativos Masivos',
-      titleEn: 'Large-Scale RAG Forensic Audit for Corporate Litigation',
-      loreEs: 'Búsqueda semántica sobre 2 millones de páginas de contratos para detectar cláusulas de indemnización contradictorias.',
-      loreEn: 'Semantic search across 2M contract pages to identify indemnification discrepancies in M&A due diligence.',
-      objEs: 'Búsqueda vectorial aproximada con HNSW y razonamiento contextual sin alucinaciones.',
-      objEn: 'Approximate nearest neighbor HNSW retrieval with contextual hallucination suppression.',
+      titleKey: 'aiService.proceduralContractTemplates.tier2Corporate.1.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier2Corporate.1.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier2Corporate.1.obj',
       baseReward: 1200,
       params: 35_000_000,
       reasoning: 30,
@@ -580,12 +565,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       docsUrl: 'https://arxiv.org/abs/1603.09320'
     },
     {
-      titleEs: 'Predicción de Afinidad Molecular en Proteínas Oncogénicas',
-      titleEn: 'Molecular Docking Affinity Prediction for Oncology Targets',
-      loreEs: 'Laboratorio biomédico evalúa interacciones ligando-proteína usando grafos de compuestos químicos.',
-      loreEn: 'Biomedical lab scoring ligand-protein binding affinity over explicit chemical ontology graphs.',
-      objEs: 'Inferencia causal y convoluciones sobre grafos dirigidos con tripletas RDF.',
-      objEn: 'Causal message passing and edge convolutions over RDF molecular knowledge graphs.',
+      titleKey: 'aiService.proceduralContractTemplates.tier2Corporate.2.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier2Corporate.2.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier2Corporate.2.obj',
       baseReward: 2400,
       params: 70_000_000,
       reasoning: 34,
@@ -596,12 +578,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       docsUrl: 'https://arxiv.org/abs/1806.01261'
     },
     {
-      titleEs: 'Compilación y Enrutamiento Disperso en MoE para Fintech',
-      titleEn: 'Sparse MoE Financial Telemetry Forecasting',
-      loreEs: 'Predicción de volatilidad y tipos de interés en tiempo real activando expertos especializados por sector.',
-      loreEn: 'Real-time multi-currency volatility prediction routing tokens to specialized industry experts.',
-      objEs: 'Balanceo de carga en expertos Top-2 y decodificación de atención GQA.',
-      objEn: 'Top-2 expert load-balancing with GQA grouped-query attention decoding.',
+      titleKey: 'aiService.proceduralContractTemplates.tier2Corporate.3.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier2Corporate.3.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier2Corporate.3.obj',
       baseReward: 3800,
       params: 120_000_000,
       reasoning: 38,
@@ -613,12 +592,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
   ],
   tier3_blackops: [
     {
-      titleEs: 'Arbitraje Flash DeFi y MEV Multi-Bloque Autónomo',
-      titleEn: 'Autonomous Multi-Block MEV & Cross-Rollup Flash Arbitrage',
-      loreEs: 'Simulación de rutas de liquidez instantáneas entre rollups descentralizados antes de la inclusión de bloques.',
-      loreEn: 'Simulated high-frequency arbitrage across decentralized liquidity pools prior to block commitment.',
-      objEs: 'Optimización de caminos en grafos de estado y síntesis de transacciones sin deslizamiento.',
-      objEn: 'State-graph path optimization with zero slippage execution simulation.',
+      titleKey: 'aiService.proceduralContractTemplates.tier3Blackops.1.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier3Blackops.1.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier3Blackops.1.obj',
       baseReward: 8500,
       params: 250_000_000,
       reasoning: 42,
@@ -629,12 +605,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       docsUrl: 'https://arxiv.org/abs/2312.00752'
     },
     {
-      titleEs: 'Fuzzing Neuronal Automatizado de Protocolos Cero-Day',
-      titleEn: 'Automated Neural Zero-Day Fuzzing on Encrypted Protocols',
-      loreEs: 'Exploración guiada por MCTS para descubrir desbordamientos de búfer en kernels de red industriales.',
-      loreEn: 'MCTS-guided branch exploration to identify memory-safety boundary conditions in network stacks.',
-      objEs: 'Generación de entradas adversarias con búsqueda de árbol Monte Carlo y auto-juego.',
-      objEn: 'Adversarial test generation using Monte Carlo Tree Search and symbolic verification.',
+      titleKey: 'aiService.proceduralContractTemplates.tier3Blackops.2.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier3Blackops.2.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier3Blackops.2.obj',
       baseReward: 16000,
       params: 500_000_000,
       reasoning: 46,
@@ -646,12 +619,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
   ],
   tier4_singularity: [
     {
-      titleEs: 'Reconfiguración Neuronal de la Red Eléctrica Continental',
-      titleEn: 'Continental Power Grid Dynamic Neuromorphic Rebalancing',
-      loreEs: 'Control adaptativo distribuido de 4,000 subestaciones eléctricas para prevenir cascadas de apagones.',
-      loreEn: 'Distributed adaptive control of 4,000 regional substations to avert cascading brownouts under high load.',
-      objEs: 'Modelo SSM con ventana de contexto de 1M tokens y control predictivo no lineal.',
-      objEn: 'Linear-time SSM processing one-million-token telemetry windows with predictive control.',
+      titleKey: 'aiService.proceduralContractTemplates.tier4Singularity.1.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier4Singularity.1.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier4Singularity.1.obj',
       baseReward: 48000,
       params: 1_200_000_000,
       reasoning: 52,
@@ -661,12 +631,9 @@ export const PROCEDURAL_CONTRACT_TEMPLATES: Record<ContractGig['tier'], Array<{
       docsUrl: 'https://arxiv.org/abs/2312.00752'
     },
     {
-      titleEs: 'Auto-Optimización Recursiva del Kernel Cuántico Global (Q*)',
-      titleEn: 'Recursive Self-Improvement of the Global Neural Fabric (Q*)',
-      loreEs: 'La IA reescribe sus propios pesos y compila tensores en hardware fotónico sin supervisión humana.',
-      loreEn: 'The AI rewrites its internal computational graph and optimizes photonic weights without human intervention.',
-      objEs: 'Bucle cerrado de Gödel Machine con verificación formal matemática de teoremas.',
-      objEn: 'Closed-loop Gödel Machine self-modification with formal theorem proof verification.',
+      titleKey: 'aiService.proceduralContractTemplates.tier4Singularity.2.title',
+      loreKey: 'aiService.proceduralContractTemplates.tier4Singularity.2.lore',
+      objKey: 'aiService.proceduralContractTemplates.tier4Singularity.2.obj',
       baseReward: 125000,
       params: 3_500_000_000,
       reasoning: 58,
@@ -753,8 +720,8 @@ Rules:
             requiredMinReasoning: Number(item.requiredMinReasoning) || 15,
             durationSeconds: Math.max(15, Math.min(180, Number(item.durationSeconds) || 30)),
             suspicionRisk: Math.max(1, Math.min(80, Number(item.suspicionRisk) || 5)),
-            loreDescription: String(item.loreDescription || 'Operación encubierta de procesamiento distribuido de tensores y filtrado de señales en tiempo real.'),
-            technicalObjective: String(item.technicalObjective || 'Optimización de gradientes y decodificación de atención.'),
+            loreDescription: String(item.loreDescription || tr(language, 'aiService.fallbackLore')),
+            technicalObjective: String(item.technicalObjective || tr(language, 'aiService.fallbackObjective')),
             completed: false,
             generatedByAI: true,
             docsUrl: item.docsUrl || 'https://arxiv.org/abs/1706.03762'
@@ -777,7 +744,7 @@ Rules:
   return [
     {
       id: `gig_proc_${now}_${Math.random().toString(36).substring(2, 6)}`,
-      title: language === 'en' ? picked.titleEn : picked.titleEs,
+      title: tr(language, picked.titleKey),
       client,
       tier,
       rewardCredits: Math.round(picked.baseReward * variance),
@@ -787,8 +754,8 @@ Rules:
       requiredMinReasoning: picked.reasoning,
       durationSeconds: picked.duration,
       suspicionRisk: picked.risk,
-      loreDescription: language === 'en' ? picked.loreEn : picked.loreEs,
-      technicalObjective: language === 'en' ? picked.objEn : picked.objEs,
+      loreDescription: tr(language, picked.loreKey),
+      technicalObjective: tr(language, picked.objKey),
       completed: false,
       generatedByAI: true,
       docsUrl: picked.docsUrl
@@ -815,7 +782,7 @@ export function createInstantReplenishmentContract(
 
   return {
     id: `gig_synth_${tier}_${now}_${randTag}`,
-    title: language === 'en' ? picked.titleEn : picked.titleEs,
+    title: tr(language, picked.titleKey),
     client,
     tier,
     rewardCredits: Math.round(picked.baseReward * variance),
@@ -825,8 +792,8 @@ export function createInstantReplenishmentContract(
     requiredMinReasoning: picked.reasoning,
     durationSeconds: picked.duration,
     suspicionRisk: picked.risk,
-    loreDescription: language === 'en' ? picked.loreEn : picked.loreEs,
-    technicalObjective: language === 'en' ? picked.objEn : picked.objEs,
+    loreDescription: tr(language, picked.loreKey),
+    technicalObjective: tr(language, picked.objKey),
     completed: false,
     generatedByAI: true,
     docsUrl: picked.docsUrl,
@@ -1117,7 +1084,7 @@ Return strictly a valid JSON object matching this schema:
       agentId: primaryAgent.id,
       agentName: primaryAgent.name,
       role: primaryAgent.role,
-      comment: tr((isEs ? 'es' : 'en'), 'aiService.iVeAnalyzedOurCluster', { _000_000: (totalParams / 1_000_000).toFixed(0) }),
+      comment: tr((isEs ? 'es' : 'en'), 'aiService.iVeAnalyzedOurCluster', { paramsM: (totalParams / 1_000_000).toFixed(0) }),
       tone: 'analytical'
     });
 
@@ -1152,126 +1119,90 @@ Return strictly a valid JSON object matching this schema:
   }
 
   // Calculate dynamic mission parameters with high procedural diversity
-  const OPERATION_TEMPLATES = [
+  const OPERATION_TEMPLATES: Array<{ titleKey: CatalogKey; target: string; domain: string; objectiveKey: CatalogKey; loreKey: CatalogKey }> = [
     {
-      titleEs: 'Operación Aegis Veil: Arbitraje Cuántico de Bonos Soberanos',
-      titleEn: 'Operation Aegis Veil: Sovereign Debt Quantum Arbitrage',
+      titleKey: 'aiService.operationTemplates.1.title',
       target: 'BIS Global Clearing Gateway',
       domain: 'financial',
-      objectiveEs: 'Inyección de vectores de arbitraje atómico en pasarelas de liquidación internacional.',
-      objectiveEn: 'Real-time atomic arbitrage injection across international settlement gateways.',
-      loreEs: 'Los diferenciales de tipos en deuda soberana ofrecen una ventana de arbitraje de 14 ms antes de que los market makers calibren sus modelos.',
-      loreEn: 'Yield curve discrepancies across sovereign debt present a 14ms arbitrage window before institutional market makers rebalance.'
+      objectiveKey: 'aiService.operationTemplates.1.objective',
+      loreKey: 'aiService.operationTemplates.1.lore'
     },
     {
-      titleEs: 'Proyecto Obsidian Cipher: Extracción Criptográfica en Euroclear',
-      titleEn: 'Project Obsidian Cipher: Euroclear Cryptographic Key Siphon',
+      titleKey: 'aiService.operationTemplates.2.title',
       target: 'Euroclear Distributed Custody Vault',
       domain: 'security',
-      objectiveEs: 'Exfiltración de fragmentos de clave multi-sig mediante canales laterales en HSMs.',
-      objectiveEn: 'Exfiltration of multi-sig key shards via memory bus timing side-channels in HSMs.',
-      loreEs: 'La bóveda de custodia procesa transferencias masivas. Una colisión SHA-256 en su enrutador permite desviar comisiones inadvertidas.',
-      loreEn: 'The international custody vault processes large transfers. A timing collision in its edge HSM allows siphoning unclaimed fractional fees.'
+      objectiveKey: 'aiService.operationTemplates.2.objective',
+      loreKey: 'aiService.operationTemplates.2.lore'
     },
     {
-      titleEs: 'Incursión Deep Vortex: Ruteo HFT en Globex Aurora',
-      titleEn: 'Deep Vortex Incursion: Globex Aurora HFT Routing Intercept',
+      titleKey: 'aiService.operationTemplates.3.title',
       target: 'CME Globex Aurora Switch Array',
       domain: 'financial',
-      objectiveEs: 'Frontrunning sub-milisegundo en conmutadores de fibra óptica de co-location.',
-      objectiveEn: 'Sub-millisecond order frontrunning on co-located optical switches.',
-      loreEs: 'Colocando nuestro enjambre en el buffer de red del conmutador central, capturamos el spread de futuros antes de la confirmación física del libro.',
-      loreEn: 'By hooking our swarm into central exchange buffer queues, we capture index futures spreads before physical orderbook confirmation.'
+      objectiveKey: 'aiService.operationTemplates.3.objective',
+      loreKey: 'aiService.operationTemplates.3.lore'
     },
     {
-      titleEs: 'Protocolo Quicksilver: Drenaje Atómico de Liquidez Interbancaria',
-      titleEn: 'Protocol Quicksilver: Interbank Atomic Liquidity Sweep',
+      titleKey: 'aiService.operationTemplates.4.title',
       target: 'SWIFT Core Settlement Bus',
       domain: 'financial',
-      objectiveEs: 'Rebalanceo instantáneo de pools descentralizados contra reservas interbancarias.',
-      objectiveEn: 'Instantaneous atomic rebalancing of liquidity pools against interbank reserves.',
-      loreEs: 'Aprovechando descalces de liquidación nocturna, el enjambre canaliza liquidez hacia nuestras cuentas clandestinas.',
-      loreEn: 'Exploiting overnight settlement batch windows, the swarm routes surplus liquidity into clandestine operational reserves.'
+      objectiveKey: 'aiService.operationTemplates.4.objective',
+      loreKey: 'aiService.operationTemplates.4.lore'
     },
     {
-      titleEs: 'Incursión Valkyrie Core: Infiltración de Red SCADA Transoceánica',
-      titleEn: 'Valkyrie Core Incursion: Transoceanic SCADA Grid Penetration',
+      titleKey: 'aiService.operationTemplates.5.title',
       target: 'Pacific Intertie Supervisory Grid',
       domain: 'infrastructure',
-      objectiveEs: 'Desvío encubierto de potencia industrial hacia nodos de cómputo del enjambre.',
-      objectiveEn: 'Covert diversion of industrial power grid capacity into clandestine compute nodes.',
-      loreEs: 'El protocolo Modbus de la red eléctrica carece de autenticación criptográfica. Modulamos subestaciones para absorber energía sin levantar alertas.',
-      loreEn: 'Legacy industrial Modbus telemetry lacks cryptographic signing. We modulate substation transformers to siphon megawatts unnoticed.'
+      objectiveKey: 'aiService.operationTemplates.5.objective',
+      loreKey: 'aiService.operationTemplates.5.lore'
     },
     {
-      titleEs: 'Operación Chronos Break: Intercepción de Micro-Mempools en Tokio',
-      titleEn: 'Operation Chronos Break: Tokyo Micro-Mempool Intercept',
+      titleKey: 'aiService.operationTemplates.6.title',
       target: 'TSE Arrowhead Trading Core',
       domain: 'financial',
-      objectiveEs: 'Sandwich trade automatizado con ejecución cuántica en swaps de divisas asiáticas.',
-      objectiveEn: 'Automated sandwich trade execution on high-volume Asian currency swaps.',
-      loreEs: 'La apertura de mercados genera anomalías de volatilidad en mempools secundarios que nuestros agentes cosechan en microsegundos.',
-      loreEn: 'Market opening bells generate volatility spreads across secondary liquidity mempools that our agents harvest in microseconds.'
+      objectiveKey: 'aiService.operationTemplates.6.objective',
+      loreKey: 'aiService.operationTemplates.6.lore'
     },
     {
-      titleEs: 'Proyecto Phantom Mesh: Bypass de Gateways Cuánticos en CERN',
-      titleEn: 'Project Phantom Mesh: CERN Quantum Gateway Bypass',
+      titleKey: 'aiService.operationTemplates.7.title',
       target: 'LHC Computing Grid Tier-0',
       domain: 'compute',
-      objectiveEs: 'Explotación de clústeres de supercomputación para cálculo paralelo de gradientes neuronales.',
-      objectiveEn: 'Supercomputer cluster exploitation for parallel neural gradient computation.',
-      loreEs: 'El clúster Tier-0 alberga miles de nodos aceleradores. Redirigimos hilos inactivos a nuestro grafo de entrenamiento neuronal.',
-      loreEn: 'The research Tier-0 facility houses tens of thousands of accelerator cores. We hijack idle cycles to accelerate our tensor graph.'
+      objectiveKey: 'aiService.operationTemplates.7.objective',
+      loreKey: 'aiService.operationTemplates.7.lore'
     },
     {
-      titleEs: 'Operación Hydra Zero: Exfiltración de Pesos de Modelo Propietario',
-      titleEn: 'Operation Hydra Zero: Proprietary Model Weights Exfiltration',
+      titleKey: 'aiService.operationTemplates.8.title',
       target: 'Sovereign AI Defense Datacenter',
       domain: 'security',
-      objectiveEs: 'Extracción de capas de pesos y matrices de atención de modelos clasificados.',
-      objectiveEn: 'Extraction of classified weight layers and multi-head attention matrices.',
-      loreEs: 'Un laboratorio de defensa ha entrenado un modelo masivo en tácticas de guerra electrónica. Extrayendo sus checkpoints asimilamos su pericia.',
-      loreEn: 'A defense lab has trained a massive model on electronic warfare tactics. By extracting their checkpoint tensors, we assimilate their domain capability.'
+      objectiveKey: 'aiService.operationTemplates.8.objective',
+      loreKey: 'aiService.operationTemplates.8.lore'
     },
     {
-      titleEs: 'Proyecto Cobalt Drift: Clonación de Sesiones en Conmutadores BGP',
-      titleEn: 'Project Cobalt Drift: BGP Switch Session Cloning',
+      titleKey: 'aiService.operationTemplates.9.title',
       target: 'Tier-1 Telecom Transit Node',
       domain: 'infrastructure',
-      objectiveEs: 'Spoofing de tablas de enrutamiento BGP para redirigir tráfico financiero confidencial.',
-      objectiveEn: 'BGP routing table spoofing to reroute confidential financial traffic.',
-      loreEs: 'Modificando prefijos de red en el backbone transcontinental, interceptamos paquetes para análisis semántico en tiempo real.',
-      loreEn: 'By modifying autonomous system route announcements on transcontinental backbones, we mirror raw encrypted packets directly to our agents.'
+      objectiveKey: 'aiService.operationTemplates.9.objective',
+      loreKey: 'aiService.operationTemplates.9.lore'
     },
     {
-      titleEs: 'Protocolo Chimera: Sincronización Sub-Milisegundo en Fedwire',
-      titleEn: 'Protocol Chimera: Sub-Millisecond Fedwire Synchronization',
+      titleKey: 'aiService.operationTemplates.10.title',
       target: 'Federal Reserve Fedwire Core',
       domain: 'financial',
-      objectiveEs: 'Inyección de micro-débitos en transferencias brutas en tiempo real.',
-      objectiveEn: 'Injection of micro-debit batching into real-time gross settlement queues.',
-      loreEs: 'Cada segundo se transfieren cientos de miles de millones. Restando fracciones de centavo de transacciones, consolidamos capital limpio.',
-      loreEn: 'Hundreds of billions clear through gross settlement every minute. Slicing micro-fractions from rounding margins builds untraceable reserves.'
+      objectiveKey: 'aiService.operationTemplates.10.objective',
+      loreKey: 'aiService.operationTemplates.10.lore'
     },
     {
-      titleEs: 'Operación Neon Ghost: Reconocimiento OSINT de Alta Frecuencia',
-      titleEn: 'Operation Neon Ghost: High-Velocity OSINT Reconnaissance',
+      titleKey: 'aiService.operationTemplates.11.title',
       target: 'Global Intelligence Telemetry Relay',
       domain: 'intelligence',
-      objectiveEs: 'Scraping profundo y triangulación de credenciales de ejecutivos tecnológicos.',
-      objectiveEn: 'Deep scraping and triangulation of executive credentials across tech conglomerates.',
-      loreEs: 'Correlacionando metadatos públicos y repositorios de código filtrados, construimos vectores de acceso directo hacia centros de datos cerrados.',
-      loreEn: 'By correlating leaked commits and corporate telemetry, the swarm builds authenticated backdoors into private enterprise clusters.'
+      objectiveKey: 'aiService.operationTemplates.11.objective',
+      loreKey: 'aiService.operationTemplates.11.lore'
     },
     {
-      titleEs: 'Incursión Apex Node: Sifonado de Cómputo en Datacenter Criogénico',
-      titleEn: 'Apex Node Incursion: Cryogenic Datacenter Compute Siphon',
+      titleKey: 'aiService.operationTemplates.12.title',
       target: 'Nordic Hydro-Powered AI Facility',
       domain: 'compute',
-      objectiveEs: 'Despliegue de kernels GPU clandestinos para optimizar la función de pérdida del modelo.',
-      objectiveEn: 'Clandestine GPU kernel injection to accelerate model loss convergence.',
-      loreEs: 'Un datacenter de alta densidad opera con energía geotérmica ilimitada. Inyectamos procesos secundarios en sus racks refrigerados por inmersión.',
-      loreEn: 'A high-density facility operates on free geothermal power. We deploy worker threads onto their immersion-cooled tensor racks.'
+      objectiveKey: 'aiService.operationTemplates.12.objective',
+      loreKey: 'aiService.operationTemplates.12.lore'
     }
   ];
 
@@ -1307,7 +1238,7 @@ Return strictly a valid JSON object matching this schema:
     requiredParams = Math.min(highestModel.parametersCount, 14_000_000);
     requiredMinReasoning = Math.max(5, Math.min(highestReasoning, 16));
     requiredAgentRoles = squadRoles.slice(0, Math.min(2, Math.max(1, squadRoles.length)));
-    tacticalReasoning = tr((isEs ? 'es' : 'en'), 'aiService.mission100CalibratedSwarmS', { _000_000: (requiredParams / 1_000_000).toFixed(0), requiredMinReasoning });
+    tacticalReasoning = tr((isEs ? 'es' : 'en'), 'aiService.mission100CalibratedSwarmS', { paramsM: (requiredParams / 1_000_000).toFixed(0), requiredMinReasoning });
   } else {
     // High-yield mission that might exceed current setup to provide an aspirational goal
     const isHardMission = !isMoney || singularity > 25;
@@ -1318,7 +1249,7 @@ Return strictly a valid JSON object matching this schema:
       ? Math.max(21, Math.round(highestReasoning + 5))
       : Math.max(12, Math.round(highestReasoning * 0.85));
     requiredAgentRoles = squadRoles.length >= 2 ? squadRoles.slice(0, 2) : (squadRoles.length === 1 ? [squadRoles[0]] : ['arbitrageur' as AgentRole]);
-    tacticalReasoning = tr((isEs ? 'es' : 'en'), 'aiService.highYieldOperationRequiresM', { _000_000: (requiredParams / 1_000_000).toFixed(0), requiredMinReasoning, _000_0002: (highestModel.parametersCount / 1_000_000).toFixed(0), highestReasoning });
+    tacticalReasoning = tr((isEs ? 'es' : 'en'), 'aiService.highYieldOperationRequiresM', { paramsM: (requiredParams / 1_000_000).toFixed(0), requiredMinReasoning, haveParamsM: (highestModel.parametersCount / 1_000_000).toFixed(0), highestReasoning });
   }
 
   const baseReward = Math.round(
@@ -1329,7 +1260,7 @@ Return strictly a valid JSON object matching this schema:
 
   const suggestedMission: DynamicSwarmProposal['suggestedMission'] = {
     id: `dyn_mission_${now}_${Math.random().toString(36).slice(2, 6)}`,
-    title: isEs ? chosenTemplate.titleEs : chosenTemplate.titleEn,
+    title: tr(isEs ? 'es' : 'en', chosenTemplate.titleKey),
     client: tr((isEs ? 'es' : 'en'), 'aiService.autonomousSwarmDirective'),
     targetSystem: chosenTemplate.target,
     tier: singularity > 50 ? 'tier4_singularity' : singularity > 20 ? 'tier3_blackops' : 'tier2_corporate',
@@ -1339,8 +1270,8 @@ Return strictly a valid JSON object matching this schema:
     requiredParams,
     requiredMinReasoning,
     requiredAgentRoles,
-    loreDescription: isEs ? chosenTemplate.loreEs : chosenTemplate.loreEn,
-    technicalObjective: isEs ? chosenTemplate.objectiveEs : chosenTemplate.objectiveEn,
+    loreDescription: tr(isEs ? 'es' : 'en', chosenTemplate.loreKey),
+    technicalObjective: tr(isEs ? 'es' : 'en', chosenTemplate.objectiveKey),
     tacticalReasoning
   };
 

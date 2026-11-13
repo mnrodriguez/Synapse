@@ -139,7 +139,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
 
             {/* Explanation / Summary */}
             <div className="p-3 theme-panel-bg border theme-accent-border rounded-lg space-y-1.5 theme-text text-xs leading-relaxed">
-              <p>{isEs ? doc.summaryEs : doc.summaryEn}</p>
+              <p>{tr((isEs ? 'es' : 'en'), doc.summaryKey)}</p>
               {doc.keySpecs && (
                 <div className="mt-2 pt-2 border-t theme-border text-[11px] mutating-accent-text font-mono">
                   <span className="mutating-text-muted">{tr((isEs ? 'es' : 'en'), 'docLinkBadge.keySpecifications')}</span>

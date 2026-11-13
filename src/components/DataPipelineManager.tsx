@@ -311,7 +311,7 @@ export const DataPipelineManager: React.FC = () => {
             </h4>
             <div className="flex flex-wrap items-center justify-center gap-2 py-2 text-center">
               <div className="px-2 py-1 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px]">
-                SQL Relacional (Tablas ACID)
+                {tr(state.language, 'dataPipelineManager.relationalSql')}
               </div>
               <ArrowRight className="w-3 h-3 mutating-text-muted" />
               <div className="px-2 py-1 rounded theme-success-soft border theme-success-border theme-success-text text-[11px]">
@@ -432,7 +432,7 @@ export const DataPipelineManager: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
                   {Object.values(DATASET_TIER_CONFIGS).map(tc => (
                     <div key={tc.tier} className="p-2 rounded theme-sub-bg border theme-border">
-                      <div className="font-bold theme-text">{state.language === 'en' ? tc.name : tc.nameEs}</div>
+                      <div className="font-bold theme-text">{tr(state.language, tc.nameKey)}</div>
                       <div className="mutating-text-muted mt-1">{tr(state.language, 'dataPipelineManager.reqModelScore')} {tc.minModelIQ}</div>
                       <div className="mutating-accent-text mt-0.5">{tc.targetTokensMillions}M tokens · {tc.computePflopsRequired} PF</div>
                     </div>
@@ -522,12 +522,12 @@ export const DataPipelineManager: React.FC = () => {
                           <div className="flex items-center justify-between text-xs font-bold">
                             <span className="flex items-center gap-1.5">
                               {getDomainIcon(preset.iconName)}
-                              {state.language === 'en' ? preset.name : preset.nameEs}
+                              {tr(state.language, preset.nameKey)}
                             </span>
                             {isSelected && <CheckCircle2 className="w-3.5 h-3.5 mutating-accent-text" />}
                           </div>
                           <p className="text-[11px] mutating-text-muted mt-1 line-clamp-2">
-                            {state.language === 'en' ? preset.description : preset.descriptionEs}
+                            {tr(state.language, preset.descriptionKey)}
                           </p>
                         </button>
                       );
@@ -583,20 +583,20 @@ export const DataPipelineManager: React.FC = () => {
                           } ${!modelMeetsIQ ? 'opacity-60' : ''}`}
                         >
                           <div className="flex items-center justify-between text-xs font-bold">
-                            <span>{state.language === 'en' ? tc.name.split(':')[0] : tc.nameEs.split(':')[0]}</span>
+                            <span>{tr(state.language, tc.nameKey).split(':')[0]}</span>
                             {!modelMeetsIQ ? (
                               <span className="text-[11px] theme-warn-text flex items-center gap-0.5">
                                 <Lock className="w-2.5 h-2.5" /> {tr(state.language, 'dataPipelineManager.score')} ≥ {tc.minModelIQ}
                               </span>
                             ) : (
-                              <span className="text-[11px] theme-success-text font-bold">✓ APTO</span>
+                              <span className="text-[11px] theme-success-text font-bold">✓ {tr(state.language, 'dataPipelineManager.eligible')}</span>
                             )}
                           </div>
                           <div className="text-[11px] mutating-accent-text font-bold mt-1">
                             {tc.targetTokensMillions}M tok · {tc.computePflopsRequired} PF
                           </div>
                           <p className="text-[11px] mutating-text-muted mt-1 line-clamp-2">
-                            {state.language === 'en' ? tc.description : tc.descriptionEs}
+                            {tr(state.language, tc.descriptionKey)}
                           </p>
                         </button>
                       );
@@ -691,7 +691,7 @@ export const DataPipelineManager: React.FC = () => {
 
                           <div className="grid grid-cols-3 gap-1 my-2 text-[11px] mutating-text-muted border-y theme-border py-1.5">
                             <div>
-                              <span className="mutating-text-muted block text-[11px]">VOLUMEN</span>
+                              <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'dataPipelineManager.volume')}</span>
                               <span className="theme-text font-bold">{ds.tokensCount}M tok</span>
                             </div>
                             <div>
@@ -699,7 +699,7 @@ export const DataPipelineManager: React.FC = () => {
                               <span className="theme-success-text font-bold">{ds.qualityScore}%</span>
                             </div>
                             <div>
-                              <span className="mutating-text-muted block text-[11px]">CÓMPUTO</span>
+                              <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'dataPipelineManager.compute')}</span>
                               <span className="theme-warn-text font-bold">{ds.computeSpentPflops} PF</span>
                             </div>
                           </div>

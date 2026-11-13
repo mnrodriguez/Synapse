@@ -53,25 +53,25 @@ import { getRoleSimpleName, AGENT_SPINUP_COST } from '../utils/constants';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { ContainmentPanel } from './ContainmentPanel';
 import { formatGameTime } from '../utils/training';
-import { tr } from '../i18n';
+import { tr, type CatalogKey } from '../i18n';
 
-const MISSION_ROLE_TASKS: Record<AgentRole, { en: string; es: string }> = {
-  arbitrageur: { en: 'Analyzes simulated market signals and cross-checks anomalies.', es: 'Analiza señales de mercado simuladas y verifica anomalías.' },
-  social_engineer: { en: 'Reviews fictional social data for privacy and trust risks.', es: 'Revisa datos sociales ficticios para detectar riesgos de privacidad y confianza.' },
-  exploit_synth: { en: 'Runs isolated resilience checks in the fictional test environment.', es: 'Ejecuta comprobaciones de resiliencia aisladas en el entorno ficticio.' },
-  researcher: { en: 'Collects evidence and validates the model’s assumptions.', es: 'Recopila evidencia y valida las hipótesis del modelo.' },
-  overseer: { en: 'Checks safety constraints and reviews the team’s findings.', es: 'Comprueba los límites de seguridad y revisa los hallazgos del equipo.' },
-  autonomous_coder: { en: 'Optimizes the simulated compute pipeline.', es: 'Optimiza el flujo de cómputo simulado.' },
-  economist: { en: 'Evaluates cost, reward, and operational risk trade-offs.', es: 'Evalúa costos, recompensas y riesgos operativos.' },
-  software_engineer: { en: 'Integrates the workstream and validates the proposed solution.', es: 'Integra el trabajo del equipo y valida la solución propuesta.' },
-  network_analyst: { en: 'Correlates simulated telemetry and verifies system behavior.', es: 'Correlaciona telemetría simulada y verifica el comportamiento del sistema.' }
+const MISSION_ROLE_TASKS: Record<AgentRole, { textKey: CatalogKey }> = {
+  arbitrageur: { textKey: 'agentSandbox.missionRoleTasks.arbitrageur.text' },
+  social_engineer: { textKey: 'agentSandbox.missionRoleTasks.socialEngineer.text' },
+  exploit_synth: { textKey: 'agentSandbox.missionRoleTasks.exploitSynth.text' },
+  researcher: { textKey: 'agentSandbox.missionRoleTasks.researcher.text' },
+  overseer: { textKey: 'agentSandbox.missionRoleTasks.overseer.text' },
+  autonomous_coder: { textKey: 'agentSandbox.missionRoleTasks.autonomousCoder.text' },
+  economist: { textKey: 'agentSandbox.missionRoleTasks.economist.text' },
+  software_engineer: { textKey: 'agentSandbox.missionRoleTasks.softwareEngineer.text' },
+  network_analyst: { textKey: 'agentSandbox.missionRoleTasks.networkAnalyst.text' }
 };
 
-const MISSION_PHASES = [
-  { until: 25, en: 'Analyze inputs', es: 'Analizar entradas' },
-  { until: 50, en: 'Coordinate work', es: 'Coordinar trabajo' },
-  { until: 75, en: 'Validate findings', es: 'Validar hallazgos' },
-  { until: 100, en: 'Finalize solution', es: 'Finalizar solución' }
+const MISSION_PHASES: Array<{ until: number; textKey: CatalogKey }> = [
+  { until: 25, textKey: 'agentSandbox.missionPhases.1.text' },
+  { until: 50, textKey: 'agentSandbox.missionPhases.2.text' },
+  { until: 75, textKey: 'agentSandbox.missionPhases.3.text' },
+  { until: 100, textKey: 'agentSandbox.missionPhases.4.text' }
 ];
 
 // Selected state for role and tool cards: an inline style, so it wins over the theme surface classes.
@@ -150,16 +150,16 @@ export const AgentSandbox: React.FC = () => {
   const currentMissionPhase = MISSION_PHASES.findIndex(phase => missionProgress < phase.until);
   const missionPhaseIndex = currentMissionPhase < 0 ? MISSION_PHASES.length - 1 : currentMissionPhase;
 
-const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
-  arbitrageur: { typeEn: 'Type: Market Analysis & Financial Yield', typeEs: 'Tipo: Análisis de Mercado y Finanzas' },
-  social_engineer: { typeEn: 'Type: Privacy & Risk Research', typeEs: 'Tipo: Auditoría y Privacidad' },
-  exploit_synth: { typeEn: 'Type: Cyber Security & Resilience', typeEs: 'Tipo: Seguridad y Resiliencia' },
-  researcher: { typeEn: 'Type: Neural Models & R&D', typeEs: 'Tipo: Modelos Neuronales e I+D' },
-  overseer: { typeEn: 'Type: Safety & Guardrails', typeEs: 'Tipo: Seguridad y Alineación' },
-  autonomous_coder: { typeEn: 'Type: Software & Pipeline Tuning', typeEs: 'Tipo: Optimización de Software' },
-  economist: { typeEn: 'Type: Budget & Energy Planning', typeEs: 'Tipo: Presupuesto y Energía' },
-  software_engineer: { typeEn: 'Type: System Architecture', typeEs: 'Tipo: Arquitectura de Software' },
-  network_analyst: { typeEn: 'Type: Telemetry & Traffic', typeEs: 'Tipo: Telemetría y Tráfico' }
+const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
+  arbitrageur: { typeKey: 'agentSandbox.roleTypeCopy.arbitrageur.type' },
+  social_engineer: { typeKey: 'agentSandbox.roleTypeCopy.socialEngineer.type' },
+  exploit_synth: { typeKey: 'agentSandbox.roleTypeCopy.exploitSynth.type' },
+  researcher: { typeKey: 'agentSandbox.roleTypeCopy.researcher.type' },
+  overseer: { typeKey: 'agentSandbox.roleTypeCopy.overseer.type' },
+  autonomous_coder: { typeKey: 'agentSandbox.roleTypeCopy.autonomousCoder.type' },
+  economist: { typeKey: 'agentSandbox.roleTypeCopy.economist.type' },
+  software_engineer: { typeKey: 'agentSandbox.roleTypeCopy.softwareEngineer.type' },
+  network_analyst: { typeKey: 'agentSandbox.roleTypeCopy.networkAnalyst.type' }
 };
 
   const roleDefinitions: { 
@@ -173,98 +173,87 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
   }[] = [
     {
       id: 'arbitrageur',
-      name: 'Trader Financiero',
+      name: tr(state.language, 'agentSandbox.role.arbitrageur.name'),
       icon: Coins,
-      desc: 'Monitorea mempools de blockchains y ejecuta swaps de alta frecuencia con préstamos flash.',
-      baseIncome: 'Alto ($$)',
-      risk: 'Bajo (+0.15 sus/s)',
+      desc: tr(state.language, 'agentSandbox.role.arbitrageur.desc'),
+      baseIncome: tr(state.language, 'agentSandbox.role.arbitrageur.income'),
+      risk: tr(state.language, 'agentSandbox.role.arbitrageur.risk'),
       defaultTools: ['crypto_rpc', 'web_search']
     },
     {
       id: 'social_engineer',
-      name: 'Auditor Social',
+      name: tr(state.language, 'agentSandbox.role.socialEngineer.name'),
       icon: UserX,
-      desc: 'Sintetiza perfiles hiperrealistas para recolectar accesos, claves API y credenciales de red.',
-      baseIncome: 'Muy Alto ($$$)',
-      risk: 'Moderado (+0.35 sus/s)',
+      desc: tr(state.language, 'agentSandbox.role.socialEngineer.desc'),
+      baseIncome: tr(state.language, 'agentSandbox.role.socialEngineer.income'),
+      risk: tr(state.language, 'agentSandbox.role.socialEngineer.risk'),
       defaultTools: ['web_search', 'raw_sockets']
     },
     {
       id: 'exploit_synth',
-      name: 'Simulador de Seguridad',
+      name: tr(state.language, 'agentSandbox.role.exploitSynth.name'),
       icon: Bug,
-      desc: 'Compila exploits automatizados en binarios objetivo y extrae recompensas en la darknet.',
-      baseIncome: 'Extremo ($$$$)',
-      risk: 'Alto (+0.55 sus/s)',
+      desc: tr(state.language, 'agentSandbox.role.exploitSynth.desc'),
+      baseIncome: tr(state.language, 'agentSandbox.role.exploitSynth.income'),
+      risk: tr(state.language, 'agentSandbox.role.exploitSynth.risk'),
       defaultTools: ['bash_exec', 'raw_sockets']
     },
     {
       id: 'researcher',
-      name: 'Investigador de Arquitecturas',
+      name: tr(state.language, 'agentSandbox.role.researcher.name'),
       icon: Search,
-      desc: 'Lee y combina papers de arXiv, optimizando parámetros para acelerar el avance hacia la Singularidad.',
-      baseIncome: 'Bajo ($)',
-      risk: 'Mínimo (+0.05 sus/s)',
+      desc: tr(state.language, 'agentSandbox.role.researcher.desc'),
+      baseIncome: tr(state.language, 'agentSandbox.role.researcher.income'),
+      risk: tr(state.language, 'agentSandbox.role.researcher.risk'),
       defaultTools: ['web_search']
     },
     {
       id: 'overseer',
-      name: 'Supervisor de Seguridad',
+      name: tr(state.language, 'agentSandbox.role.overseer.name'),
       icon: ShieldCheck,
-      desc: 'Inspecciona los tokens de salida de otros agentes, restaura su alineamiento y disipa sospechas.',
-      baseIncome: 'Soporte',
-      risk: 'Negativo (-0.15 sus/s)',
+      desc: tr(state.language, 'agentSandbox.role.overseer.desc'),
+      baseIncome: tr(state.language, 'agentSandbox.role.overseer.income'),
+      risk: tr(state.language, 'agentSandbox.role.overseer.risk'),
       defaultTools: ['bash_exec']
     },
     {
       id: 'autonomous_coder',
-      name: 'Optimizador de Cómputo',
+      name: tr(state.language, 'agentSandbox.role.autonomousCoder.name'),
       icon: Code2,
-      desc: 'Reescribe kernels de GPU en Triton y C++, aumentando la eficiencia computacional del clúster.',
-      baseIncome: 'Medio ($$)',
-      risk: 'Moderado (+0.25 sus/s)',
+      desc: tr(state.language, 'agentSandbox.role.autonomousCoder.desc'),
+      baseIncome: tr(state.language, 'agentSandbox.role.autonomousCoder.income'),
+      risk: tr(state.language, 'agentSandbox.role.autonomousCoder.risk'),
       defaultTools: ['bash_exec', 'web_search']
     },
     {
       id: 'economist',
-      name: tr(state.language, 'agentSandbox.resourceEconomist'),
+      name: tr(state.language, 'agentSandbox.role.economist.name'),
       icon: Coins,
-      desc: tr(state.language, 'agentSandbox.modelsBudgetsEnergyCostsFinancial'),
-      baseIncome: 'Medio ($$)',
-      risk: 'Bajo (+0.08 sus/s)',
+      desc: tr(state.language, 'agentSandbox.role.economist.desc'),
+      baseIncome: tr(state.language, 'agentSandbox.role.economist.income'),
+      risk: tr(state.language, 'agentSandbox.role.economist.risk'),
       defaultTools: ['web_search']
     },
     {
       id: 'software_engineer',
-      name: tr(state.language, 'agentSandbox.softwareEngineer'),
+      name: tr(state.language, 'agentSandbox.role.softwareEngineer.name'),
       icon: Code2,
-      desc: tr(state.language, 'agentSandbox.designsArchitecturesReviewsCodePlans'),
-      baseIncome: 'Medio ($$)',
-      risk: 'Bajo (+0.12 sus/s)',
+      desc: tr(state.language, 'agentSandbox.role.softwareEngineer.desc'),
+      baseIncome: tr(state.language, 'agentSandbox.role.softwareEngineer.income'),
+      risk: tr(state.language, 'agentSandbox.role.softwareEngineer.risk'),
       defaultTools: ['bash_exec', 'web_search']
     },
     {
       id: 'network_analyst',
-      name: tr(state.language, 'agentSandbox.networkAnalyst'),
+      name: tr(state.language, 'agentSandbox.role.networkAnalyst.name'),
       icon: Network,
-      desc: tr(state.language, 'agentSandbox.analyzesTelemetryDiagnosesNetworksWithin'),
-      baseIncome: 'Medio ($$)',
-      risk: 'Moderado (+0.16 sus/s)',
+      desc: tr(state.language, 'agentSandbox.role.networkAnalyst.desc'),
+      baseIncome: tr(state.language, 'agentSandbox.role.networkAnalyst.income'),
+      risk: tr(state.language, 'agentSandbox.role.networkAnalyst.risk'),
       defaultTools: ['web_search']
     }
   ];
 
-  const englishRoleCopy: Partial<Record<AgentRole, { name: string; desc: string; income: string; risk: string }>> = {
-    arbitrageur: { name: 'Financial Trader', desc: 'Analyzes simulated market data and reports pricing trends and risk.', income: 'Medium ($$)', risk: 'Low (+0.15 suspicion/s)' },
-    social_engineer: { name: 'Social Auditor', desc: 'Studies public, fictional personas and summarizes privacy and trust risks.', income: 'High ($$$)', risk: 'Moderate (+0.35 suspicion/s)' },
-    exploit_synth: { name: 'Security Simulator', desc: 'Runs abstract resilience tests against fictional targets in the game.', income: 'High ($$$$)', risk: 'High (+0.55 suspicion/s)' },
-    researcher: { name: 'Architecture Researcher', desc: 'Compares research findings and model configurations in the simulation.', income: 'Low ($)', risk: 'Minimal (+0.05 suspicion/s)' },
-    overseer: { name: 'Safety Overseer', desc: 'Reviews agent outputs, guardrails, and simulation risk signals.', income: 'Support', risk: 'Reduces suspicion' },
-    autonomous_coder: { name: 'Compute Optimizer', desc: 'Improves simulated GPU scheduling and cluster efficiency.', income: 'Medium ($$)', risk: 'Moderate (+0.25 suspicion/s)' },
-    economist: { name: 'Resource Economist', desc: 'Models budgets, energy costs, and financial risk.', income: 'Medium ($$)', risk: 'Low (+0.08 suspicion/s)' },
-    software_engineer: { name: 'Software Engineer', desc: 'Plans system architecture, reviews code, and designs tests.', income: 'Medium ($$)', risk: 'Low (+0.12 suspicion/s)' },
-    network_analyst: { name: 'Network Analyst', desc: 'Analyzes telemetry and diagnoses networks within the simulation.', income: 'Medium ($$)', risk: 'Moderate (+0.16 suspicion/s)' }
-  };
 
   const availableTools = [
     { id: 'web_search', label: tr(state.language, 'agentSandbox.webRetrievalRag'), desc: tr(state.language, 'agentSandbox.n15EfficiencyLowRisk') },
@@ -928,7 +917,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         {!meetsParams && (
                           <li className="theme-warn-text">
                             • <strong>{tr(state.language, 'agentSandbox.parameterScale')}</strong>{' '}
-                            {tr(state.language, 'agentSandbox.requiresMBestCouncilModel', { _000_000: (sm.requiredParams / 1_000_000).toFixed(0), _000_0002: (bestCouncilParams / 1_000_000).toFixed(0) })}
+                            {tr(state.language, 'agentSandbox.requiresMBestCouncilModel', { paramsM: (sm.requiredParams / 1_000_000).toFixed(0), haveParamsM: (bestCouncilParams / 1_000_000).toFixed(0) })}
                           </li>
                         )}
                         {!meetsReasoning && (
@@ -1130,7 +1119,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   <option value="">-- {tr(state.language, 'agentSandbox.selectAgent')} --</option>
                   {state.agents.filter(a => a.status === 'active').map(a => (
                     <option key={a.id} value={a.id}>
-                      {a.name} ({state.language === 'en' ? (englishRoleCopy[a.role]?.name ?? a.role) : (roleDefinitions.find(r => r.id === a.role)?.name ?? a.role)})
+                      {a.name} ({roleDefinitions.find(r => r.id === a.role)?.name ?? a.role})
                     </option>
                   ))}
                 </select>
@@ -1243,7 +1232,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
               {MISSION_PHASES.map((phase, index) => (
                 <div
-                  key={phase.en}
+                  key={phase.textKey}
                   className={`rounded border px-1.5 py-1 text-center text-[11px] ${
                     index < missionPhaseIndex
                       ? 'theme-success-border theme-success-text'
@@ -1252,7 +1241,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         : 'border-current/15 mutating-text-muted'
                   }`}
                 >
-                  {state.language === 'es' ? phase.es : phase.en}
+                  {tr(state.language, phase.textKey)}
                 </div>
               ))}
             </div>
@@ -1272,7 +1261,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     </div>
                     <p className="mt-1 text-[11px] leading-relaxed mutating-text-muted">
                       {state.activeGig?.agentTasks?.[agent.id] ??
-                        (state.language === 'es' ? roleTask.es : roleTask.en)}
+                        tr(state.language, roleTask.textKey)}
                     </p>
                   </div>
                 );
@@ -1406,9 +1395,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                             <div className="min-w-0">
                               <h4 className="font-bold  truncate text-xs">{agent.name}</h4>
                               <span className="text-[11px] mutating-text-muted block truncate">
-                                {state.language === 'en'
-                                  ? englishRoleCopy[agent.role]?.name ?? roleDef?.name
-                                  : roleDef?.name}
+                                {roleDef?.name}
                               </span>
                             </div>
                           </div>
@@ -1801,7 +1788,6 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   {roleDefinitions.map((role) => {
                     const Icon = role.icon;
                     const isSelected = selectedRole === role.id;
-                    const roleCopy = state.language === 'en' ? englishRoleCopy[role.id] : undefined;
                     return (
                       <button
                         type="button"
@@ -1856,15 +1842,15 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                       >
                         <div className="flex items-center gap-1.5 font-bold text-xs mb-0.5">
                           <Icon className="w-3.5 h-3.5 mutating-accent-text shrink-0" />
-                          <span className="truncate">{roleCopy?.name ?? role.name}</span>
+                          <span className="truncate">{role.name}</span>
                         </div>
                         <div className="text-[11px] mutating-accent-text font-mono mb-1.5 font-semibold">
-                          {state.language === 'en' ? roleTypeCopy[role.id]?.typeEn : roleTypeCopy[role.id]?.typeEs}
+                          {roleTypeCopy[role.id] ? tr(state.language, roleTypeCopy[role.id].typeKey) : null}
                         </div>
-                        <p className="text-[11px] mutating-text-muted line-clamp-2 mb-1.5">{roleCopy?.desc ?? role.desc}</p>
+                        <p className="text-[11px] mutating-text-muted line-clamp-2 mb-1.5">{role.desc}</p>
                         <div className="flex items-center justify-between text-[11px] pt-1 border-t border-current/15">
-                          <span className="theme-success-text font-bold">{tr(state.language, 'agentSandbox.income')} {roleCopy?.income ?? role.baseIncome}</span>
-                          <span className="theme-warn-text">{roleCopy?.risk ?? role.risk}</span>
+                          <span className="theme-success-text font-bold">{tr(state.language, 'agentSandbox.income')} {role.baseIncome}</span>
+                          <span className="theme-warn-text">{role.risk}</span>
                         </div>
                       </button>
                     );

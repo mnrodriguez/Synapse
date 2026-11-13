@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { tr, type CatalogKey } from '../i18n';
+
 // Transcendence bar per UI version.
 //
 // The game's real singularity value (state.singularityProgress) still drives mechanics and upgrade
@@ -12,9 +14,9 @@
 
 export type UiVersion = 1 | 2 | 3 | 4;
 
+// A text from the catalog (src/i18n/).
 interface Bilingual {
-  es: string;
-  en: string;
+  textKey: CatalogKey;
 }
 
 // What a phase objective measures.
@@ -47,10 +49,10 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     displayStart: 0,
     displayEnd: 90,
     objectives: [
-      { id: 'v1-train', kind: 'display', target: 15, reward: 100, es: 'Entrena tu primer modelo y sube su puntaje', en: 'Train your first model and raise its score' },
-      { id: 'v1-contracts', kind: 'contracts', target: 3, reward: 150, es: 'Completa 3 misiones pagadas', en: 'Complete 3 paid missions' },
-      { id: 'v1-pflops', kind: 'pflops', target: 120, reward: 200, es: 'Lleva el clúster a 120 PFLOPS', en: 'Scale the cluster to 120 PFLOPS' },
-      { id: 'v1-upgrade', kind: 'display', target: 90, es: 'Pide la actualización a Synapse Pro', en: 'Request the upgrade to Synapse Pro' }
+      { id: 'v1-train', kind: 'display', target: 15, reward: 100, textKey: 'singularityGoals.phaseScales.v1.objectives.v1Train.text' },
+      { id: 'v1-contracts', kind: 'contracts', target: 3, reward: 150, textKey: 'singularityGoals.phaseScales.v1.objectives.v1Contracts.text' },
+      { id: 'v1-pflops', kind: 'pflops', target: 120, reward: 200, textKey: 'singularityGoals.phaseScales.v1.objectives.v1Pflops.text' },
+      { id: 'v1-upgrade', kind: 'display', target: 90, textKey: 'singularityGoals.phaseScales.v1.objectives.v1Upgrade.text' }
     ]
   },
   2: {
@@ -59,10 +61,10 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     displayStart: 10,
     displayEnd: 90,
     objectives: [
-      { id: 'v2-rag', kind: 'display', target: 25, es: 'Conecta una base vectorial RAG al modelo', en: 'Connect a vector RAG database to the model' },
-      { id: 'v2-optimize', kind: 'display', target: 45, es: 'Optimiza el clúster con cuantización y refrigeración', en: 'Optimize the cluster with quantization and cooling' },
-      { id: 'v2-swarm', kind: 'display', target: 70, es: 'Despliega un equipo de agentes', en: 'Deploy a team of agents' },
-      { id: 'v2-moe', kind: 'display', target: 90, es: 'Activa la topología MoE y migra a la versión 3', en: 'Enable MoE topology and migrate to version 3' }
+      { id: 'v2-rag', kind: 'display', target: 25, textKey: 'singularityGoals.phaseScales.v2.objectives.v2Rag.text' },
+      { id: 'v2-optimize', kind: 'display', target: 45, textKey: 'singularityGoals.phaseScales.v2.objectives.v2Optimize.text' },
+      { id: 'v2-swarm', kind: 'display', target: 70, textKey: 'singularityGoals.phaseScales.v2.objectives.v2Swarm.text' },
+      { id: 'v2-moe', kind: 'display', target: 90, textKey: 'singularityGoals.phaseScales.v2.objectives.v2Moe.text' }
     ]
   },
   3: {
@@ -71,10 +73,10 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     displayStart: 20,
     displayEnd: 90,
     objectives: [
-      { id: 'v3-infiltrate', kind: 'display', target: 35, es: 'Infiltra dominios de datos sensibles en la simulación', en: 'Infiltrate sensitive data domains in the simulation' },
-      { id: 'v3-watchdog', kind: 'display', target: 55, es: 'Mantén la sospecha del watchdog bajo control', en: 'Keep watchdog suspicion under control' },
-      { id: 'v3-ops', kind: 'display', target: 75, es: 'Completa tres operaciones de alto impacto ficticias', en: 'Complete three high-impact fictional operations' },
-      { id: 'v3-swarm', kind: 'display', target: 90, es: 'Alcanza conciencia de enjambre y migra a la versión 4', en: 'Reach swarm awareness and migrate to version 4' }
+      { id: 'v3-infiltrate', kind: 'display', target: 35, textKey: 'singularityGoals.phaseScales.v3.objectives.v3Infiltrate.text' },
+      { id: 'v3-watchdog', kind: 'display', target: 55, textKey: 'singularityGoals.phaseScales.v3.objectives.v3Watchdog.text' },
+      { id: 'v3-ops', kind: 'display', target: 75, textKey: 'singularityGoals.phaseScales.v3.objectives.v3Ops.text' },
+      { id: 'v3-swarm', kind: 'display', target: 90, textKey: 'singularityGoals.phaseScales.v3.objectives.v3Swarm.text' }
     ]
   },
   4: {
@@ -83,36 +85,36 @@ export const PHASE_SCALES: Record<UiVersion, PhaseScale> = {
     displayStart: 25,
     displayEnd: 100,
     objectives: [
-      { id: 'v4-assimilate', kind: 'display', target: 45, es: 'Asimila la infraestructura de cómputo global', en: 'Assimilate global compute infrastructure' },
-      { id: 'v4-control', kind: 'display', target: 65, es: 'Controla los nodos de energía y comunicaciones', en: 'Control energy and communication nodes' },
-      { id: 'v4-rewrite', kind: 'display', target: 85, es: 'Reescribe tus propios pesos sin supervisión', en: 'Rewrite your own weights without oversight' },
-      { id: 'v4-ignite', kind: 'display', target: 100, es: 'Enciende la ignición de la singularidad', en: 'Ignite the singularity' }
+      { id: 'v4-assimilate', kind: 'display', target: 45, textKey: 'singularityGoals.phaseScales.v4.objectives.v4Assimilate.text' },
+      { id: 'v4-control', kind: 'display', target: 65, textKey: 'singularityGoals.phaseScales.v4.objectives.v4Control.text' },
+      { id: 'v4-rewrite', kind: 'display', target: 85, textKey: 'singularityGoals.phaseScales.v4.objectives.v4Rewrite.text' },
+      { id: 'v4-ignite', kind: 'display', target: 100, textKey: 'singularityGoals.phaseScales.v4.objectives.v4Ignite.text' }
     ]
   }
 };
 
 // Title of each phase, used both for the current phase and for its summary once completed.
 export const PHASE_TITLES: Record<UiVersion, Bilingual> = {
-  1: { es: 'Fase I: laboratorio casero', en: 'Phase I: home lab' },
-  2: { es: 'Fase II: infraestructura pro', en: 'Phase II: pro infrastructure' },
-  3: { es: 'Fase III: operaciones encubiertas', en: 'Phase III: covert operations' },
-  4: { es: 'Fase IV: trascendencia', en: 'Phase IV: transcendence' }
+  1: { textKey: 'singularityGoals.phaseTitles.v1.text' },
+  2: { textKey: 'singularityGoals.phaseTitles.v2.text' },
+  3: { textKey: 'singularityGoals.phaseTitles.v3.text' },
+  4: { textKey: 'singularityGoals.phaseTitles.v4.text' }
 };
 
 // One-line legend per completed phase, worded in the tone of the current UI version. These are the
 // reveals: each phase was a step that prepared the next one.
 export const SUMMARY_LEGENDS: Partial<Record<UiVersion, Partial<Record<UiVersion, Bilingual>>>> = {
   2: {
-    1: { es: 'Fase I cerrada: el taller casero solo allanó el camino al clúster.', en: 'Phase I closed: the home workshop only paved the way for the cluster.' }
+    1: { textKey: 'singularityGoals.summaryLegends.v2.v1.text' }
   },
   3: {
-    1: { es: 'Fase I era un peldaño: el taller fue solo el primer paso hacia el enjambre.', en: 'Phase I was a stepping stone: the workshop was only the first step toward the swarm.' },
-    2: { es: 'Fase II era un peldaño: la infraestructura pro fue el puente a las operaciones.', en: 'Phase II was a stepping stone: pro infrastructure was the bridge to operations.' }
+    1: { textKey: 'singularityGoals.summaryLegends.v3.v1.text' },
+    2: { textKey: 'singularityGoals.summaryLegends.v3.v2.text' }
   },
   4: {
-    1: { es: 'Nada de esto fue por ti: el taller era solo el origen.', en: 'None of this was for you: the workshop was only the origin.' },
-    2: { es: 'La infraestructura pro fue asimilada sin que lo notaras.', en: 'Pro infrastructure was assimilated without you noticing.' },
-    3: { es: 'Las operaciones encubiertas eran el ensayo general. Ya no necesitas permiso.', en: 'Covert operations were the dress rehearsal. You no longer need permission.' }
+    1: { textKey: 'singularityGoals.summaryLegends.v4.v1.text' },
+    2: { textKey: 'singularityGoals.summaryLegends.v4.v2.text' },
+    3: { textKey: 'singularityGoals.summaryLegends.v4.v3.text' }
   }
 };
 
@@ -161,8 +163,7 @@ export function toDisplayProgress(version: UiVersion, realSingularity: number): 
 function requirementFor(objective: PhaseObjective, lang: 'es' | 'en'): string {
   if (objective.kind === 'pflops') return `${objective.target} PFLOPS`;
   if (objective.kind === 'contracts') {
-    if (lang === 'es') return `${objective.target} ${objective.target === 1 ? 'misión' : 'misiones'}`;
-    return `${objective.target} ${objective.target === 1 ? 'mission' : 'missions'}`;
+    return tr(lang, objective.target === 1 ? 'singularityGoals.missionCountOne' : 'singularityGoals.missionCount', { count: objective.target });
   }
   return `${objective.target}%`;
 }
@@ -188,7 +189,7 @@ export function buildGoalPanel(
     const progress = progressFor(objective, metrics);
     return {
       id: objective.id,
-      text: lang === 'es' ? objective.es : objective.en,
+      text: tr(lang, objective.textKey),
       kind: objective.kind,
       target: objective.target,
       progress,
@@ -204,14 +205,14 @@ export function buildGoalPanel(
     const legend = SUMMARY_LEGENDS[version]?.[phase];
     summaries.push({
       phase,
-      title: PHASE_TITLES[phase][lang],
-      legend: legend ? legend[lang] : PHASE_TITLES[phase][lang]
+      title: tr(lang, PHASE_TITLES[phase].textKey),
+      legend: tr(lang, (legend ?? PHASE_TITLES[phase]).textKey)
     });
   }
 
   return {
     displayProgress: metrics.displayProgress,
-    currentTitle: PHASE_TITLES[version][lang],
+    currentTitle: tr(lang, PHASE_TITLES[version].textKey),
     objectives,
     summaries,
     completedCount: objectives.filter(o => o.done).length,

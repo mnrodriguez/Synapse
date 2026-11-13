@@ -40,13 +40,7 @@ export function calendarTick(input: CalendarInput) {
   if (loanAuditDue) {
     storyEvents.push(loanMisuse ? 'loan_audit_misuse' : 'loan_audit');
     addLog(
-      prev.language === "es"
-        ? (loanMisuse
-          ? "[AUDITORÍA UNIVERSITARIA] Uso desmedido del préstamo de cómputo detectado durante la semana de prueba. Acceso revocado."
-          : "[AUDITORÍA UNIVERSITARIA] Fin de la semana de prueba gratuita. Acceso al clúster universitario revocado.")
-        : (loanMisuse
-          ? "[UNIVERSITY AUDIT] Excessive use of the compute loan detected during the trial week. Access revoked."
-          : "[UNIVERSITY AUDIT] Free trial week ended. University cluster access revoked."),
+      tr(prev.language, loanMisuse ? 'calendarTick.auditMisuse' : 'calendarTick.auditTrialEnded'),
       "danger"
     );
   }

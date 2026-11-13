@@ -47,6 +47,25 @@ describe('text catalog', () => {
     expect(classes).toEqual([]);
   });
 
+  test('no Spanish text written in the code (it belongs in src/i18n/es.ts)', () => {
+    // The mission-evaluation prompt in aiService is sent to a language model, not shown to the player.
+    const PROMPT_FILE = join('src', 'services', 'aiService.ts');
+    const found: string[] = [];
+    for (const f of files(SRC).filter(f => !f.includes(join('src', 'i18n')))) {
+      const src = readFileSync(f, 'utf8');
+      const texts = [
+        ...[...src.matchAll(/(['"`])(?:(?!\1)[^\\\n]|\\.)*\1/g)].map(m => m[0]),
+        ...[...src.matchAll(/>([^<>{}\n]+)</g)].map(m => m[1])
+      ];
+      for (const t of texts) {
+        if (!/[áéíóúñÁÉÍÓÚÑ¿¡]/.test(t)) continue;
+        if (f.endsWith(PROMPT_FILE) && /^['`](Evalúa|Devuelve|Basa|Las tareas|Misión:)/.test(t)) continue;
+        found.push(`${f.slice(SRC.length + 1)}: ${t.slice(0, 60)}`);
+      }
+    }
+    expect(found).toEqual([]);
+  });
+
   test('every key is used by the code', () => {
     const unused = Object.keys(en).filter(key => {
       const base = key.replace(/@v[1-4]$/, '');

@@ -22,6 +22,7 @@ import {
 import { sound } from '../audio/soundManager';
 import { AiSettingsPanel } from './AiSettingsPanel';
 import { tr } from '../i18n';
+import { RichText } from '../i18n/RichText';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -114,9 +115,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <span>{tr(state.language, 'authModal.freePlanNoCost')}</span>
             </div>
             <p className="text-[11px] mutating-text-muted">
-              {en
-                ? <>This app uses the <strong>Firebase Spark Free Tier</strong>. Saves and reads run within Google Cloud's free daily quotas; usage charges are not enabled by this app.</>
-                : <>Esta aplicación utiliza el plan <strong>Firebase Spark Free Tier</strong>. Las operaciones de guardado y lectura se ejecutan dentro de las cuotas gratuitas diarias de Google Cloud sin posibilidad de generar cobros por uso.</>}
+              <RichText lang={state.language} k="authModal.freeTierNote" />
             </p>
           </div>
 
@@ -125,7 +124,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-3 theme-panel-bg border theme-accent-border p-3 rounded-lg">
               <div className="flex items-center gap-3">
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full border theme-accent-border" />
+                  <img src={user.photoURL} alt={tr(state.language, 'authModal.userPhoto')} className="w-10 h-10 rounded-full border theme-accent-border" />
                 ) : (
                   <div className="w-10 h-10 rounded-full theme-accent-soft border theme-accent-border flex items-center justify-center">
                     <User className="w-5 h-5 mutating-accent-text" />

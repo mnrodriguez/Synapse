@@ -237,7 +237,7 @@ export const BentoHUD: React.FC = () => {
                   setLanguage(state.language === 'es' ? 'en' : 'es');
                 }}
                 className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-black/10 border border-current/20 mutating-accent-text hover:opacity-80 transition cursor-pointer"
-                title="Toggle Language EN | ES"
+                title={tr(state.language, 'bentoHUD.toggleLanguage')}
               >
                 🌐 {state.language.toUpperCase()}
               </button>
@@ -251,7 +251,7 @@ export const BentoHUD: React.FC = () => {
             </span>
             <span className="text-[11px] mutating-text-muted font-mono flex items-center gap-1">
               <Clock className="w-3 h-3 mutating-accent-text" />
-              Day {state.gameDay}, Cycle {state.dayTicks + 1}/48
+              {tr(state.language, 'bentoHUD.dayCycle', { day: state.gameDay, cycle: state.dayTicks + 1 })}
             </span>
           </div>
 
@@ -264,7 +264,7 @@ export const BentoHUD: React.FC = () => {
                 ? 'theme-warn-text'
                 : 'mutating-text-muted'
             }`}>
-              ${Math.round(state.utilityDebt).toLocaleString()} / $5,000 max
+              ${Math.round(state.utilityDebt).toLocaleString()} / {tr(state.language, 'bentoHUD.debtMax')}
             </span>
           </div>
         </div>
