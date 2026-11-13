@@ -75,6 +75,7 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 7 | UI-5 revisión móvil a 390 px de todas las pestañas y secciones (v1–v4, ambos idiomas): sin desborde horizontal ni elementos fuera de pantalla; en pantallas táctiles todo control mide al menos 24 px (WCAG 2.2); cabecera y prompt de la terminal reorganizados | Aplicado |
 | 7 | D-4 el catálogo en español se descarga solo si se usa: el archivo principal baja de 807 kB a 559 kB (245 → 161 kB gzip); el inglés sigue incluido porque los datos del juego lo leen al cargar | Aplicado |
 | 7 | L-5 (cierre) hardware, motores de datos, instalaciones y opciones de modelo se abren con su paper o, sin él, una versión después de la etapa del paper; ningún bloqueo depende ya del día de campaña | Aplicado |
+| 8 | Ajustes tras probar el juego: textos en español en el onboarding en inglés, reloj detenido hasta terminar el onboarding, tamaño de 28 M en Arquitectura (gratis, como en el onboarding), Contratos sin filtro ni etiquetas de tier | Aplicado |
 | 6 | R-6 los roles en español dejan de describir operaciones reales (credenciales, darknet) y quedan abstractos como en inglés; las misiones apuntan a instituciones ficticias en lugar de SWIFT, Fedwire, Euroclear, CME, el LHC o CISA | Aplicado |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).

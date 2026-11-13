@@ -17,7 +17,6 @@ import {
   Check, 
   Sparkles, 
   BookOpen, 
-  Filter, 
   X, 
   RotateCcw, 
   Bot, 
@@ -95,7 +94,7 @@ export const ContractBoard: React.FC = () => {
 
   // Top level views for expansive, uncluttered organization
   const [activeBoardView, setActiveBoardView] = useState<'contracts' | 'squads'>('contracts');
-  const [activeTierFilter, setActiveTierFilter] = useState<'all' | ContractGig['tier'] | 'completed'>('all');
+  const [missionView, setMissionView] = useState<'all' | 'completed'>('all');
   // Only the tier of the current UI version is offered on the board.
   const versionTier = tierForUiVersion(state.uiVersion || 1);
   const [isGeneratingMissions, setIsGeneratingMissions] = useState(false);
@@ -190,32 +189,14 @@ export const ContractBoard: React.FC = () => {
     setIsSquadModalOpen(false);
   };
 
-  const getTierBadge = (tier: string, contract?: ContractGig) => {
-    if (contract?.isMandatory || (state.uiVersion === 4 && tier === 'tier4_singularity')) {
-      return (
-        <span className="px-2 py-0.5 rounded text-[11px] theme-danger-soft theme-danger-text border theme-danger-border font-bold animate-pulse">
-          {tr(state.language, 'contractBoard.mandatoryDirective')}
-        </span>
-      );
-    }
-    switch (tier) {
-      case 'tier1_micro':
-        return (
-          <span className="px-2 py-0.5 rounded theme-raised-bg theme-text text-[11px] border theme-border">
-            {state.uiVersion === 1
-              ? tr(state.language, 'contractBoard.t1Hobbyist')
-              : t(state.language, 'micro_script')}
-          </span>
-        );
-      case 'tier2_corporate':
-        return <span className="px-2 py-0.5 rounded theme-accent-soft mutating-accent-text text-[11px] border theme-accent-border">{t(state.language, 'corporate')}</span>;
-      case 'tier3_blackops':
-        return <span className="px-2 py-0.5 rounded theme-danger-soft theme-danger-text text-[11px] border theme-danger-border font-bold">{t(state.language, 'black_ops')}</span>;
-      case 'tier4_singularity':
-        return <span className="px-2 py-0.5 rounded theme-accent-soft mutating-accent-text text-[11px] border theme-accent-border font-bold animate-pulse">{t(state.language, 'tier_singularity')}</span>;
-      default:
-        return null;
-    }
+  // The only label a mission carries is the mandatory directive of the last version; tiers are not shown.
+  const getMissionBadge = (contract?: ContractGig) => {
+    if (!(contract?.isMandatory || (state.uiVersion === 4 && contract?.tier === 'tier4_singularity'))) return null;
+    return (
+      <span className="px-2 py-0.5 rounded text-[11px] theme-danger-soft theme-danger-text border theme-danger-border font-bold animate-pulse">
+        {tr(state.language, 'contractBoard.mandatoryDirective')}
+      </span>
+    );
   };
 
   // Helper to resolve currently selected agents for a specific contract
@@ -449,7 +430,7 @@ export const ContractBoard: React.FC = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {contract && getTierBadge(contract.tier, contract)}
+                        {getMissionBadge(contract)}
                         <span className="font-bold text-xs theme-text truncate max-w-[200px]">
                           {contract?.title ?? gig.contractId}
                         </span>
@@ -593,17 +574,13 @@ export const ContractBoard: React.FC = () => {
             </div>
           </div>
 
-          {/* Tier Filter Tabs */}
+          {/* Available / done. Mission tiers follow the UI version, so the player never picks one. */}
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/10 pb-2">
             <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-              <span className="text-[11px] mutating-text-muted uppercase tracking-widest mr-1 flex items-center gap-1">
-                <Filter className="w-3 h-3 mutating-accent-text" />
-                {tr(state.language, 'contractBoard.tier')}
-              </span>
               <button
-                onClick={() => setActiveTierFilter('all')}
+                onClick={() => setMissionView('all')}
                 className={`px-2.5 py-1 rounded-md text-[11px] transition-all cursor-pointer ${
-                  activeTierFilter === 'all'
+                  missionView === 'all'
                     ? 'mutating-btn-primary font-bold shadow-sm'
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
@@ -611,49 +588,9 @@ export const ContractBoard: React.FC = () => {
                 {tr(state.language, 'contractBoard.all')} ({state.contracts.filter(c => !c.completed && c.tier === versionTier).length})
               </button>
               <button
-                onClick={() => setActiveTierFilter('tier1_micro')}
-                className={`${versionTier === 'tier1_micro' ? '' : 'hidden '}px-2.5 py-1 rounded-md text-[11px] transition-all cursor-pointer ${
-                  activeTierFilter === 'tier1_micro'
-                    ? 'mutating-btn-primary font-bold shadow-sm'
-                    : 'mutating-sub mutating-text-muted hover:opacity-100'
-                }`}
-              >
-                T1: {state.uiVersion === 1 ? (tr(state.language, 'contractBoard.hobby')) : (tr(state.language, 'contractBoard.micro'))} ({state.contracts.filter(c => !c.completed && c.tier === 'tier1_micro').length})
-              </button>
-              <button
-                onClick={() => setActiveTierFilter('tier2_corporate')}
-                className={`${versionTier === 'tier2_corporate' ? '' : 'hidden '}px-2.5 py-1 rounded-md text-[11px] transition-all cursor-pointer ${
-                  activeTierFilter === 'tier2_corporate'
-                    ? 'mutating-btn-primary font-bold shadow-sm'
-                    : 'mutating-sub mutating-text-muted hover:opacity-100'
-                }`}
-              >
-                T2: {tr(state.language, 'contractBoard.corp')} ({state.contracts.filter(c => !c.completed && c.tier === 'tier2_corporate').length})
-              </button>
-              <button
-                onClick={() => setActiveTierFilter('tier3_blackops')}
-                className={`${versionTier === 'tier3_blackops' ? '' : 'hidden '}px-2.5 py-1 rounded-md text-[11px] transition-all cursor-pointer ${
-                  activeTierFilter === 'tier3_blackops'
-                    ? 'mutating-btn-primary font-bold shadow-sm'
-                    : 'mutating-sub mutating-text-muted hover:opacity-100'
-                }`}
-              >
-                T3: {tr(state.language, 'contractBoard.blackOps')} ({state.contracts.filter(c => !c.completed && c.tier === 'tier3_blackops').length})
-              </button>
-              <button
-                onClick={() => setActiveTierFilter('tier4_singularity')}
-                className={`${versionTier === 'tier4_singularity' ? '' : 'hidden '}px-2.5 py-1 rounded-md text-[11px] transition-all cursor-pointer ${
-                  activeTierFilter === 'tier4_singularity'
-                    ? 'mutating-btn-primary font-bold shadow-sm animate-pulse'
-                    : 'mutating-sub mutating-text-muted hover:opacity-100'
-                }`}
-              >
-                T4: {tr(state.language, 'contractBoard.singularity')} ({state.contracts.filter(c => !c.completed && c.tier === 'tier4_singularity').length})
-              </button>
-              <button
-                onClick={() => setActiveTierFilter('completed')}
+                onClick={() => setMissionView('completed')}
                 className={`px-2.5 py-1 rounded-md text-[11px] transition-all cursor-pointer ${
-                  activeTierFilter === 'completed'
+                  missionView === 'completed'
                     ? 'mutating-btn-primary font-bold shadow-sm'
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
@@ -677,12 +614,11 @@ export const ContractBoard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {state.contracts
               .filter(contract => {
-                if (activeTierFilter === 'completed') return contract.completed && contract.tier === versionTier;
+                if (missionView === 'completed') return contract.completed && contract.tier === versionTier;
                 if (contract.completed) return false;
                 // Only the missions of the current UI version's tier are offered.
                 if (contract.tier !== tierForUiVersion(state.uiVersion || 1)) return false;
-                if (activeTierFilter === 'all') return true;
-                return contract.tier === activeTierFilter;
+                return true;
               })
               .sort((a, b) => {
                 // Priority to contracts matching active UI stage or mandatory directives
@@ -713,7 +649,7 @@ export const ContractBoard: React.FC = () => {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            {getTierBadge(contract.tier, contract)}
+                            {getMissionBadge(contract)}
                             <span className="text-[11px] mutating-text-muted font-mono">{t(state.language, 'client')}: {displayContract.client}</span>
                             {contract.lastAttemptFailed && (
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold theme-warn-text theme-warn-soft border theme-warn-border animate-pulse">

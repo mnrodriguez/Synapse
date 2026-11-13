@@ -197,10 +197,12 @@ export const ArchitectureStudio: React.FC = () => {
 
   const paramPresets = isBeginner ? [
     { label: '14M (Proto)', value: 14_000_000 },
+    { label: '28M (Plus)', value: 28_000_000 },
     { label: '70M (Compact)', value: 70_000_000 },
     { label: '500M (Standard)', value: 500_000_000 }
   ] : [
     { label: '14M', value: 14_000_000 },
+    { label: '28M', value: 28_000_000 },
     { label: '70M', value: 70_000_000 },
     { label: '500M', value: 500_000_000 },
     { label: '1.5B', value: 1_500_000_000 },

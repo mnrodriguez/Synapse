@@ -19,7 +19,7 @@ import { HARDWARE_SPEC_NOTES } from '../src/utils/hardwareSpecs';
 import { planTrainingRun, lossAt, vramForRun, sanitizeTrainingConfig, DEFAULT_TRAINING_CONFIG, MAX_EPOCHS, runConfigFor } from '../src/utils/trainingRun';
 import { buildEpilogue, canAttemptContainment, endingTitle, CONTAINMENT_MAX_SUBVERSION } from '../src/utils/epilogue';
 import { agentChatter, AGENT_DIALOGUE_ROLES, STORY_LINES_FOR_TESTS, COVERT_LINES_FOR_TESTS } from '../src/utils/agentDialogues';
-import { researchStatus, isProgressionUnlocked, unlockHint } from '../src/utils/progression';
+import { researchStatus, isProgressionUnlocked, unlockHint, getModelOptionRequirement } from '../src/utils/progression';
 
 const STARTER_GPU_PFLOPS = 0.0044; // GTX 1060
 
@@ -404,5 +404,14 @@ describe('items open by stage, not by date', () => {
     expect(isProgressionUnlocked(quantum, at(4))).toBe(false);
     expect(unlockHint(quantum, at(4), 'es')).not.toMatch(/versión posterior/);
     expect(isProgressionUnlocked(quantum, { ...at(4, ['res_speculative_compute']), singularityProgress: 0 })).toBe(false);
+  });
+});
+
+describe('starter model sizes', () => {
+  test('every size the setup offers (7M, 14M, 28M) is free in the architecture studio, and the next one is not', () => {
+    for (const size of [7_000_000, 14_000_000, 28_000_000]) {
+      expect(getModelOptionRequirement('parametersCount', size)).toEqual({});
+    }
+    expect(getModelOptionRequirement('parametersCount', 70_000_000).requiredResearchId).toBe('res_lora_peft');
   });
 });
