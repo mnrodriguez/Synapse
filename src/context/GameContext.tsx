@@ -943,9 +943,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Simulation tick loop (respects gameSpeed: 0=paused, 1x, 5x, 20x, 50x)
   const gameSpeed = state.gameSpeed ?? 1;
+  // The campaign starts when the setup (Genesis) ends: until then no tick runs, so the player does not
+  // lose days of the university loan or get its warnings while still choosing a name and hardware.
+  const setupDone = state.hasCompletedOnboarding !== false;
 
   useEffect(() => {
-    if (gameSpeed === 0) return; // Simulation paused
+    if (gameSpeed === 0 || !setupDone) return; // Simulation paused, or still in the setup
 
     // At high speeds several ticks run per frame instead of shortening the interval, so the state is
     // rendered at most MAX_FRAMES_PER_SECOND times a second. A batch stops early when a tick changes the
@@ -1301,7 +1304,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [gameSpeed, addLog, recalculateMetrics]);
+  }, [gameSpeed, setupDone, addLog, recalculateMetrics]);
 
   // Action: Buy Hardware
   const buyHardware = useCallback((id: string): boolean => {

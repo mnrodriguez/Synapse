@@ -360,7 +360,7 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       await interrogateCouncil(text, missionAiApiKey || undefined);
       if (!customPrompt) setInterrogationPrompt('');
     } catch (error) {
-      addLog(error instanceof Error ? error.message : 'Error al consultar al consejo de agentes.', 'danger');
+      addLog(error instanceof Error ? error.message : tr(state.language, 'agentSandbox.councilQueryFailed'), 'danger');
     } finally {
       setIsInterrogating(false);
     }

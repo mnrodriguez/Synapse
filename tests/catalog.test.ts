@@ -66,6 +66,32 @@ describe('text catalog', () => {
     expect(found).toEqual([]);
   });
 
+  test('no Spanish-only words in the texts the code shows directly', () => {
+    // Words found in the Spanish catalog and nowhere in the English one catch Spanish without accents too
+    // ("RECOMPENSAS"). Only text that reaches the screen is checked: labels, descriptions, tooltips, JSX text.
+    const words = (t: string) => t.toLowerCase().match(/[a-záéíóúñü]{5,}/g) ?? [];
+    const englishWords = new Set(Object.values(en).flatMap(words));
+    const spanishOnly = new Set(Object.values(es).flatMap(words).filter(w => !englishWords.has(w)));
+    // English names that happen to be missing from the English catalog.
+    const english = new Set(['docker', 'thoughts', 'machines']);
+    const shown = /\b(?:title|desc|description|badge|label|name|text|hint|placeholder|message|summary)\s*:\s*(['"`])((?:(?!\1)[^\\\n]|\\.)*)\1/g;
+    const attrs = /\b(?:title|placeholder|aria-label|alt)="([^"]*)"/g;
+    const found: string[] = [];
+    for (const f of files(SRC).filter(f => !f.includes(join('src', 'i18n')))) {
+      const src = readFileSync(f, 'utf8');
+      const texts = [
+        ...[...src.matchAll(shown)].map(m => m[2]),
+        ...[...src.matchAll(attrs)].map(m => m[1]),
+        ...[...src.matchAll(/>([^<>{}\n]+)</g)].map(m => m[1])
+      ];
+      for (const t of texts) {
+        const hits = words(t).filter(w => spanishOnly.has(w) && !english.has(w));
+        if (hits.length) found.push(`${f.slice(SRC.length + 1)}: ${hits.join(',')} in "${t.slice(0, 50)}"`);
+      }
+    }
+    expect(found).toEqual([]);
+  });
+
   test('every key is used by the code', () => {
     const unused = Object.keys(en).filter(key => {
       const base = key.replace(/@v[1-4]$/, '');

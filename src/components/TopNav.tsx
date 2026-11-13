@@ -157,7 +157,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               setLanguage(state.language === 'es' ? 'en' : 'es');
             }}
             className="px-2.5 py-1 rounded-xl mutating-sub hover:opacity-90 border text-xs font-mono font-semibold flex items-center gap-1.5 transition cursor-pointer"
-            title="Language Switcher / Selector de Idioma"
+            title={tr(lang, 'topNav.languageSwitcher')}
           >
             <Languages className="w-3.5 h-3.5 mutating-accent-text" />
             <span className={`px-1.5 py-0.2 rounded font-bold ${languageChip('en')}`}>EN</span>

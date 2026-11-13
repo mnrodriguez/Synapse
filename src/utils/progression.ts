@@ -64,7 +64,7 @@ export function getModelOptionRequirement(
 ): ProgressionRequirement {
   if (field === 'parametersCount') {
     const parameters = value as number;
-    if (parameters <= 14_000_000) return {};
+    if (parameters <= 28_000_000) return {};
     if (parameters <= 70_000_000) return { requiredResearchId: 'res_lora_peft', minSingularityRequired: 5 };
     if (parameters <= 500_000_000) return { requiredResearchId: 'res_flash_attention', minSingularityRequired: 15 };
     if (parameters <= 7_000_000_000) return { requiredResearchId: 'res_moe_architecture', minSingularityRequired: 30 };

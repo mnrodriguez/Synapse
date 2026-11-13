@@ -390,19 +390,19 @@ export const GenesisOnboarding: React.FC = () => {
                       id: 'beginner',
                       title: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.beginnerNovice'),
                       desc: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.learnAiTrainingFundamentalsSimplified'),
-                      badge: '+25% RECOMPENSAS'
+                      badge: tr(state.language, 'genesisOnboarding.badgeRewards')
                     },
                     {
                       id: 'normal',
                       title: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.normalPractitioner'),
                       desc: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.intermediateLevelEssentialHyperparametersQuantization'),
-                      badge: 'BALANCEADO'
+                      badge: tr(state.language, 'genesisOnboarding.badgeBalanced')
                     },
                     {
                       id: 'engineer',
                       title: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.engineerArchitect'),
                       desc: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.fullUnconstrainedSimulationFullControl'),
-                      badge: 'EXPERIENCIA COMPLETA'
+                      badge: tr(state.language, 'genesisOnboarding.badgeFullExperience')
                     }
                   ].map(diffOption => {
                     const isSelected = difficulty === diffOption.id;
