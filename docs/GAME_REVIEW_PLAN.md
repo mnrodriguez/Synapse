@@ -68,6 +68,8 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 6 | L-6 misiones generadas por IA validadas contra los rangos de su tier, con puntaje alcanzable y enlaces https | Aplicado |
 | 6 | L-3 la sospecha suma el riesgo de cada agente (que antes se mostraba y no se aplicaba) y el tráfico de scraping; el HUD muestra por día cuánto aporta cada fuente | Aplicado |
 | 6 | L-5 los papers se habilitan por versión y puntaje del mejor modelo, se financian siempre (ya no se regalan al llegar un día de campaña) | Aplicado |
+| 6 | L-8 el ranking queda informal, sin límites en Firestore; la ventana lo dice | Decidido y aplicado |
+| 6 | R-6 los roles en español dejan de describir operaciones reales (credenciales, darknet) y quedan abstractos como en inglés; las misiones apuntan a instituciones ficticias en lugar de SWIFT, Fedwire, Euroclear, CME, el LHC o CISA | Aplicado |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).
 
@@ -469,5 +471,6 @@ Resueltas por el autor el 2026-11-12. Ya están aplicadas en las secciones de ar
 | 4 | Español | Neutro con tuteo | T-1 |
 | 5 | Modo aula | No se hace | R-6 |
 | 6 | Ruta de progreso | Se borra | UI-4 |
+| 7 | Ranking | Informal, sin validación en el servidor (2026-11-13) | L-8 |
 
 Queda por validar con tests, no por decidir: la calibración exacta de techos y umbrales de R-1.

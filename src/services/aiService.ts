@@ -1167,28 +1167,28 @@ Return strictly a valid JSON object matching this schema:
   const OPERATION_TEMPLATES: Array<{ titleKey: CatalogKey; target: string; domain: string; objectiveKey: CatalogKey; loreKey: CatalogKey }> = [
     {
       titleKey: 'aiService.operationTemplates.1.title',
-      target: 'BIS Global Clearing Gateway',
+      target: 'Orion Global Clearing Gateway',
       domain: 'financial',
       objectiveKey: 'aiService.operationTemplates.1.objective',
       loreKey: 'aiService.operationTemplates.1.lore'
     },
     {
       titleKey: 'aiService.operationTemplates.2.title',
-      target: 'Euroclear Distributed Custody Vault',
+      target: 'Meridian Distributed Custody Vault',
       domain: 'security',
       objectiveKey: 'aiService.operationTemplates.2.objective',
       loreKey: 'aiService.operationTemplates.2.lore'
     },
     {
       titleKey: 'aiService.operationTemplates.3.title',
-      target: 'CME Globex Aurora Switch Array',
+      target: 'Aurora Exchange Switch Array',
       domain: 'financial',
       objectiveKey: 'aiService.operationTemplates.3.objective',
       loreKey: 'aiService.operationTemplates.3.lore'
     },
     {
       titleKey: 'aiService.operationTemplates.4.title',
-      target: 'SWIFT Core Settlement Bus',
+      target: 'Interbank Core Settlement Bus',
       domain: 'financial',
       objectiveKey: 'aiService.operationTemplates.4.objective',
       loreKey: 'aiService.operationTemplates.4.lore'
@@ -1202,14 +1202,14 @@ Return strictly a valid JSON object matching this schema:
     },
     {
       titleKey: 'aiService.operationTemplates.6.title',
-      target: 'TSE Arrowhead Trading Core',
+      target: 'Kestrel Trading Core',
       domain: 'financial',
       objectiveKey: 'aiService.operationTemplates.6.objective',
       loreKey: 'aiService.operationTemplates.6.lore'
     },
     {
       titleKey: 'aiService.operationTemplates.7.title',
-      target: 'LHC Computing Grid Tier-0',
+      target: 'Tier-0 Physics Computing Grid',
       domain: 'compute',
       objectiveKey: 'aiService.operationTemplates.7.objective',
       loreKey: 'aiService.operationTemplates.7.lore'
@@ -1230,7 +1230,7 @@ Return strictly a valid JSON object matching this schema:
     },
     {
       titleKey: 'aiService.operationTemplates.10.title',
-      target: 'Federal Reserve Fedwire Core',
+      target: 'Central Bank Wire Core',
       domain: 'financial',
       objectiveKey: 'aiService.operationTemplates.10.objective',
       loreKey: 'aiService.operationTemplates.10.lore'
