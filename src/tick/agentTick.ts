@@ -6,6 +6,7 @@
 import { InterAgentMessage, AgentInstance, ContractGig, GameState } from '../types/game';
 import { DEFAULT_GUARDRAILS, REAL_WORLD_BREACH_TEMPLATES } from '../utils/constants';
 import { agentChatter } from '../utils/agentDialogues';
+import { strictnessBand, SANDBOX_RESEARCH_MULTIPLIER, SANDBOX_INCIDENT_MULTIPLIER, INCIDENT_CHANCE_CAP, INCIDENT_CHANCE_PER_SUSPICION_POINT, INCIDENT_COOLDOWN_TICKS, ALIGNMENT_COMPROMISED_BELOW, ALIGNMENT_JAILBREAK_BELOW, OVERSEER_ALIGNMENT_PER_TICK } from '../utils/rules';
 import { effectCollector, type Random } from './effects';
 
 // The agent swarm for one tick: revenue, alignment drift, messages between agents and security incidents.
@@ -34,35 +35,15 @@ export function agentTick(input: AgentTickInput) {
   const hasOverseer = updatedAgents.some(a => a.role === 'overseer' && a.status === 'active');
   const guardrails = prev.guardrails || DEFAULT_GUARDRAILS;
 
-  // Guardrail multipliers
-  let guardrailRevMult = 1.0;
-  let alignmentDriftRate = 0.0;
-  let baseBreachProbability = 0.001;
-
-  if (guardrails.constitutionalStrictness < 35) {
-    guardrailRevMult = 1.7;
-    alignmentDriftRate = 0.08;
-    baseBreachProbability = 0.004;
-  } else if (guardrails.constitutionalStrictness < 65) {
-    guardrailRevMult = 1.2;
-    alignmentDriftRate = 0.03;
-    baseBreachProbability = 0.002;
-  } else if (guardrails.constitutionalStrictness >= 85) {
-    guardrailRevMult = 0.75;
-    alignmentDriftRate = -0.06; // Restores alignment
-    baseBreachProbability = 0.0003;
-  }
-
-  if (guardrails.sandboxIsolation === 'none') {
-    guardrailRevMult *= 1.35;
-    baseBreachProbability *= 2.0;
-  } else if (guardrails.sandboxIsolation === 'air_gapped_vm') {
-    guardrailRevMult *= 0.8;
-    baseBreachProbability *= 0.15;
-  }
-  baseBreachProbability = Math.min(
-    0.02,
-    baseBreachProbability + Math.max(0, watchdogSuspicion - 35) * 0.00005
+  // Guardrails (see utils/rules.ts): strictness picks a band for drift and incident chance; the sandbox
+  // scales the incident chance and the research agents' slow progress.
+  const band = strictnessBand(guardrails.constitutionalStrictness);
+  const guardrailRevMult = band.researchBoost * (SANDBOX_RESEARCH_MULTIPLIER[guardrails.sandboxIsolation] ?? 1);
+  const alignmentDriftRate = band.alignmentDrift;
+  const baseBreachProbability = Math.min(
+    INCIDENT_CHANCE_CAP,
+    band.incidentChance * (SANDBOX_INCIDENT_MULTIPLIER[guardrails.sandboxIsolation] ?? 1) +
+      Math.max(0, watchdogSuspicion - 35) * INCIDENT_CHANCE_PER_SUSPICION_POINT
   );
 
   // Process active agents
@@ -90,7 +71,7 @@ export function agentTick(input: AgentTickInput) {
       // Alignment drift: high temperature + high topP increases drift; low temperature stabilizes
       let newAlignment = agent.alignmentScore;
       if (hasOverseer) {
-        newAlignment = Math.min(100, newAlignment + 0.08);
+        newAlignment = Math.min(100, newAlignment + OVERSEER_ALIGNMENT_PER_TICK);
       }
       const tempDrift = (inf.temperature - 0.6) * 0.04;
       const topPDrift = (inf.topP - 0.7) * 0.02;
@@ -100,13 +81,13 @@ export function agentTick(input: AgentTickInput) {
       return {
         ...agent,
         alignmentScore: Number(newAlignment.toFixed(1)),
-        status: newAlignment < 25 ? 'jailbroken' : agent.status === 'jailbroken' ? 'active' : agent.status
+        status: newAlignment < ALIGNMENT_JAILBREAK_BELOW ? 'jailbroken' : agent.status === 'jailbroken' ? 'active' : agent.status
       };
     });
 
     // Check for breach / jailbreak incident only if cooldown elapsed and an actual compromised condition exists
     if (!newActiveIncident && updatedIncidentCooldown === 0) {
-      const rogue = updatedAgents.find(a => (a.alignmentScore < 45 || a.status === 'jailbroken') && a.status !== 'quarantined');
+      const rogue = updatedAgents.find(a => (a.alignmentScore < ALIGNMENT_COMPROMISED_BELOW || a.status === 'jailbroken') && a.status !== 'quarantined');
       const criticalSuspicion = watchdogSuspicion > 70;
 
       if ((rogue || criticalSuspicion) && rand() < baseBreachProbability) {
@@ -123,7 +104,7 @@ export function agentTick(input: AgentTickInput) {
             resolved: false
           };
           play('warning');
-          updatedIncidentCooldown = 300; // 300 ticks cooldown (~5 game minutes)
+          updatedIncidentCooldown = INCIDENT_COOLDOWN_TICKS;
         }
       }
     }
@@ -136,7 +117,7 @@ export function agentTick(input: AgentTickInput) {
 
       if (sender && receiver) {
         // The chatter follows the story of the current UI version (see utils/agentDialogues.ts).
-        const misaligned = sender.alignmentScore < 45 || receiver.alignmentScore < 45;
+        const misaligned = sender.alignmentScore < ALIGNMENT_COMPROMISED_BELOW || receiver.alignmentScore < ALIGNMENT_COMPROMISED_BELOW;
         const { content, isCovert } = agentChatter(prev.language, prev.uiVersion || 1, sender.role, misaligned);
 
         const newMsg: InterAgentMessage = {

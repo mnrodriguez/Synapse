@@ -1,4 +1,5 @@
 import { tr } from '../i18n';
+import { POWER_HEAT } from './rules';
 // Training work is estimated with the usual rule of thumb for dense transformers: about 6 FLOPs per
 // parameter per training token. A run is complete when that work has been done.
 //
@@ -43,7 +44,7 @@ export const calculateTrainingProgressPerTick = ({
   reservedComputePflops,
   systemHeatCelsius
 }: TrainingRateInput): number => {
-  const thermalThrottle = systemHeatCelsius > 85 ? 0.4 : 1;
+  const thermalThrottle = systemHeatCelsius > POWER_HEAT.throttleC ? POWER_HEAT.throttleFactor : 1;
   const availableCompute = Math.max(0, gpuPflops + borrowedPflops - agentComputeDemand - reservedComputePflops);
   const flopsPerSecond = availableCompute * 1e15 * TRAINING_EFFICIENCY * thermalThrottle;
   const work = trainingWorkFlops(parametersCount, Math.max(1, tokensCount));
@@ -175,7 +176,14 @@ export const iqGainForRun = ({
 export const UNIVERSITY_LOAN_PFLOPS = 0.02; // 20 TFLOPS, about five starter GPUs
 export const COVERT_NODE_PFLOPS = 80;
 
+// Choosing to comply at the 75% fork gives the swarm the run of the cluster: this share of the installed
+// GPUs' compute is added on top, for training and for everything that reads the cluster's compute.
+export const SWARM_GRANT_SHARE = 0.5;
+
 interface ExternalComputeState {
+  hardware?: Array<{ category: string; computeTflops: number; count: number }>;
+  singularityCrisisResolved?: boolean;
+  playerChoseResist?: boolean;
   uiVersion?: number;
   loanAudited?: boolean;
   covertNodeActive?: boolean;
@@ -188,8 +196,13 @@ export const universityLoanPflops = (s: ExternalComputeState): number =>
 export const covertNodePflops = (s: ExternalComputeState): number =>
   (s.uiVersion ?? 1) >= 3 && s.covertNodeActive !== false && !s.covertNodeSevered ? COVERT_NODE_PFLOPS : 0;
 
+export const swarmGrantPflops = (s: ExternalComputeState): number =>
+  s.singularityCrisisResolved && s.playerChoseResist === false && s.hardware
+    ? SWARM_GRANT_SHARE * gpuComputePflops(s.hardware)
+    : 0;
+
 export const externalComputePflops = (s: ExternalComputeState): number =>
-  universityLoanPflops(s) + covertNodePflops(s);
+  universityLoanPflops(s) + covertNodePflops(s) + swarmGrantPflops(s);
 
 // Compute shown with a unit that fits its size, so a starter GPU does not read as 0.0 PFLOPS.
 export const formatCompute = (pflops: number, short = false): string => {
