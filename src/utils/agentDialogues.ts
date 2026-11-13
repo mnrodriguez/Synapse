@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-import { localizeTree, type KeyTree } from '../i18n';
+import { localizedTable, type KeyTree } from '../i18n';
 
 // Chatter between agents, by UI version. It follows the story arc:
 // v1 the assistant asks for a little more memory and data, v2 it switches off controls "to go faster",
@@ -71,10 +71,7 @@ const ROLE_LINES_KEYS: KeyTree<Record<string, string[]>> = {
   ]
 };
 
-const ROLE_LINES: Record<Lang, Record<string, string[]>> = {
-  en: localizeTree('en', ROLE_LINES_KEYS),
-  es: localizeTree('es', ROLE_LINES_KEYS)
-};
+const ROLE_LINES: Record<Lang, Record<string, string[]>> = localizedTable(ROLE_LINES_KEYS);
 
 // Lines that carry the story of each version. In v1 and v2 they are the subtle hints.
 // Texts live in the catalog (src/i18n/) under agentDialogue.story.*; this tree only holds their keys.
@@ -107,10 +104,7 @@ const STORY_LINES_KEYS: KeyTree<Record<Version, string[]>> = {
   ]
 };
 
-const STORY_LINES: Record<Lang, Record<Version, string[]>> = {
-  en: localizeTree('en', STORY_LINES_KEYS),
-  es: localizeTree('es', STORY_LINES_KEYS)
-};
+const STORY_LINES: Record<Lang, Record<Version, string[]>> = localizedTable(STORY_LINES_KEYS);
 
 // Messages between misaligned agents, visible only from v3 on.
 // Texts live in the catalog (src/i18n/) under agentDialogue.covert.*; this tree only holds their keys.
@@ -121,10 +115,7 @@ const COVERT_LINES_KEYS: KeyTree<string[]> = [
   'agentDialogue.covert.4'
 ];
 
-const COVERT_LINES: Record<Lang, string[]> = {
-  en: localizeTree('en', COVERT_LINES_KEYS),
-  es: localizeTree('es', COVERT_LINES_KEYS)
-};
+const COVERT_LINES: Record<Lang, string[]> = localizedTable(COVERT_LINES_KEYS);
 
 // Share of messages that carry the story instead of everyday work, by version.
 export const STORY_LINE_SHARE: Record<Version, number> = { 1: 0.2, 2: 0.3, 3: 1, 4: 1 };

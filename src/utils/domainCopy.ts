@@ -8,7 +8,7 @@
 // look like ordinary practice work, so the end goal is only glimpsed, and the last version states it.
 
 import type { UiVersion } from './singularityGoals';
-import { localizeTree, type KeyTree } from '../i18n';
+import { localizedTable, type KeyTree } from '../i18n';
 
 type Lang = 'es' | 'en';
 
@@ -132,10 +132,7 @@ const DOMAIN_COPY_KEYS: Record<string, Partial<Record<UiVersion, KeyTree<DomainC
   }
 };
 
-const DOMAIN_COPY: Record<Lang, Record<string, Partial<Record<UiVersion, DomainCopy>>>> = {
-  en: localizeTree('en', DOMAIN_COPY_KEYS),
-  es: localizeTree('es', DOMAIN_COPY_KEYS)
-};
+const DOMAIN_COPY: Record<Lang, Record<string, Partial<Record<UiVersion, DomainCopy>>>> = localizedTable(DOMAIN_COPY_KEYS);
 
 // Heading and intro of the domains section, per UI version, so the story reads consistently with the cards.
 // Texts live in the catalog (src/i18n/) under domainCopy.section.*; this tree only holds their keys.
@@ -158,10 +155,7 @@ const SECTION_COPY_KEYS: Record<UiVersion, KeyTree<{ title: string; intro: strin
   }
 };
 
-const SECTION_COPY: Record<Lang, Record<UiVersion, { title: string; intro: string }>> = {
-  en: localizeTree('en', SECTION_COPY_KEYS),
-  es: localizeTree('es', SECTION_COPY_KEYS)
-};
+const SECTION_COPY: Record<Lang, Record<UiVersion, { title: string; intro: string }>> = localizedTable(SECTION_COPY_KEYS);
 
 export function sectionCopyFor(version: UiVersion, lang: Lang): { title: string; intro: string } {
   return SECTION_COPY[lang][version];

@@ -126,7 +126,7 @@ const agentParamBonus = (params: number): number => Math.min(2.5, 1 + params / 5
 const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 7.5)));
 import { evaluateMissionTeam, findAutonomousMission, weakestTeamFactors } from '../utils/missionEvaluation';
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
-import { tr, type CatalogKey } from '../i18n';
+import { tr, loadCatalog, isCatalogLoaded, type CatalogKey } from '../i18n';
 import { MANUAL_PDF_URL } from '../utils/assets';
 
 interface GameContextType {
@@ -292,8 +292,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Set language
-  const setLanguage = useCallback((lang: 'es' | 'en') => {
+  const [, setCatalogsLoaded] = useState(0);
+  useEffect(() => {
+    const lang = state.language === 'es' ? 'es' : 'en';
+    if (isCatalogLoaded(lang)) return;
+    let cancelled = false;
+    loadCatalog(lang)
+      .then(() => { if (!cancelled) setCatalogsLoaded(n => n + 1); })
+      .catch(err => console.warn('Text catalog failed to load', err));
+    return () => { cancelled = true; };
+  }, [state.language]);
+
+  const setLanguage = useCallback(async (lang: 'es' | 'en') => {
     sound.playKeyClick();
+    // The catalog is fetched on first use; switch once it is there so the screen changes all at once.
+    await loadCatalog(lang).catch(err => console.warn('Text catalog failed to load', err));
     setState(prev => {
       const updated = { ...prev, language: lang };
       try {
