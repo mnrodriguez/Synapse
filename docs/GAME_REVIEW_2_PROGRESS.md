@@ -4,11 +4,16 @@ Report: `docs/GAME_REVIEW_2.md` · Branch: `claude/trusting-bardeen-kpx3qj` · P
 
 - [x] Part A.1: check out `docs/manual`, run `bun install`, `bun test`, `bun run lint`
   - Result: PR branch `docs/manual` @ 49dfb67: `bun install` ok (157 packages); `bun test` 150 pass, 0 fail, 12818 expect() calls, 8 files; `bun run lint` (tsc --noEmit) exit 0, no output.
-- [ ] Part A.2: verify numeric claims of the new manual against code
-- [ ] Part A.3: backward compatibility and save migration
-- [ ] Part A.4: EN/ES parity
-- [ ] Part A.5: spoilers in v1/v2
-- [ ] Part A.6: merge decision
+- [x] Part A.2: verify numeric claims of the new manual against code
+  - Result: ~60 numeric claims traced; 2 false as written (score bonus "+15" unreachable, real max 8.25; trading gains round to 0 on small capital), 1 incomplete list (gauge sources), 1 game text contradicting the manual (shadow compute duration). Details: report 1.3.
+- [x] Part A.3: backward compatibility and save migration
+  - Result: No stored field added; SAVE_SCHEMA_VERSION 11 is correct, no migration needed; save tests pass. One intended behavior change (comply = permanent +50% GPU compute). Unknown trading tier would now throw (hardening, A-6).
+- [x] Part A.4: EN/ES parity
+  - Result: 2619 keys in both catalogs, none missing, placeholders match; Spanish manual reads natural (tuteo). Minor: "enlentece", mixed decimal separators, facility names in English.
+- [x] Part A.5: spoilers in v1/v2
+  - Result: No forbidden words in v1/v2 manual (EN+ES). One mild new spoiler: "an upgrade may change more than its offer says" shown in v1/v2. Spoiler test covers only English and 5 words.
+- [x] Part A.6: merge decision
+  - Result: MERGE AFTER FIXES (A-1 to A-5 in report 1.7). Not merged.
 - [ ] Part B.1: story and narrative coherence
 - [ ] Part B.2: scientific accuracy
 - [ ] Part B.3: progression, pacing, engagement (simulation)
@@ -18,4 +23,4 @@ Report: `docs/GAME_REVIEW_2.md` · Branch: `claude/trusting-bardeen-kpx3qj` · P
 
 Partial findings are kept in `docs/GAME_REVIEW_2.md` (grows step by step).
 
-STOPPED AT: finished "Part A.1". NEXT: Part A.2 (trace manual numbers to code).
+STOPPED AT: finished Part A (A.1-A.6, written in report section 1). NEXT: Part B.5 quick items, then B.3 simulation, B.1, B.2, B.4.
