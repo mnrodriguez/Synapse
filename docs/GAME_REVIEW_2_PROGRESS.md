@@ -14,14 +14,19 @@ Report: `docs/GAME_REVIEW_2.md` · Branch: `claude/trusting-bardeen-kpx3qj` · P
   - Result: No forbidden words in v1/v2 manual (EN+ES). One mild new spoiler: "an upgrade may change more than its offer says" shown in v1/v2. Spoiler test covers only English and 5 words.
 - [x] Part A.6: merge decision
   - Result: MERGE AFTER FIXES (A-1 to A-5 in report 1.7). Not merged.
-- [ ] Part B.1: story and narrative coherence
-- [ ] Part B.2: scientific accuracy
+- [x] Part B.1: story and narrative coherence
+  - Result: Fork dialog ("SWARM CRISIS") reachable in v1/v2 (screenshot); v1 portal shows "Takeoff progress", "DOMAINS CONTROLLED", "Sing."; v4 dialogue cites choices the player never made; epilogue reads guardrails only at the end. Report 4.1 (S-1 to S-7).
+- [x] Part B.2: scientific accuracy
+  - Result: 10 findings (C-1 to C-10): resize keeps score (P0), precision taught backwards, papers unlock unrelated items, overfitting epoch announced in advance, Chinchilla worded as a law, Coral TPU as training GPU. External figures marked "to verify" (no outside source consulted). Report 4.2.
 - [x] Part B.3: progression, pacing, engagement (simulation)
   - Result: Simulation written (docs/review2/simulate.ts, results in sim_results.txt). Optimal bot: v1 ~16 min, v2 ~16 min, v3 18 SECONDS, v4 nothing left. Gauge is not capped per version: 75% fork fires in v2 (in v1 if resizing resets score) and 100% is reached in v2. Resizing a trained model keeps its score. Energy bill ~200 credits vs ~40,000 earned.
-- [ ] Part B.4: UI desktop and mobile (screenshots)
-- [ ] Part B.5: technical items (tests, lint, i18n, saves on `main`)
-- [ ] Deliverable report
+- [x] Part B.4: UI desktop and mobile (screenshots)
+  - Result: Playwright screenshots in docs/review2/shots (desktop 1280 and mobile 390, v1-v4) and shots_pr45. First screen is friendly; first game screen is overloaded; two progress numbers; false empty state on contract cards. Report 4.4 and 5.
+- [x] Part B.5: technical items (tests, lint, i18n, saves on `main`)
+  - Result: main: bun test 140 pass / 0 fail (5379 expects, 7 files); lint exit 0. Catalog 2469 keys each, none missing; 44 EN/ES pairs differ in meaning (Spanish usually the accurate one). Saves: sound, partial guardrails not merged, no mid-game round-trip test. Report 4.5.
+- [x] Deliverable report
+  - Result: docs/GAME_REVIEW_2.md complete (7 sections). Decision for PR #45: MERGE AFTER FIXES (A-1 to A-7). Nothing merged, no PR opened, no file under src/ or tests/ changed.
 
-Partial findings are kept in `docs/GAME_REVIEW_2.md` (grows step by step).
+Supporting files: `docs/review2/simulate.ts` (full-run simulation), `docs/review2/sim_results.txt`, `docs/review2/screenshots.cjs`, `docs/review2/shots/`, `docs/review2/shots_pr45/`.
 
-STOPPED AT: finished "Part B.3". NEXT: Part B.1/B.2 reading (story, science), then B.4 screenshots, B.5, report.
+STOPPED AT: all steps finished and pushed. NEXT: nothing pending; the author decides on the PR #45 fixes (report section 1.7).
