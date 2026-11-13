@@ -1511,8 +1511,6 @@ export const en = {
   "topNav.leaderboard": "Leaderboard",
   "topNav.manual": "Manual",
   "topNav.manualTitle": "Open the manual (in-game viewer and PDF)",
-  "topNav.mutatingBtnPrimary": "mutating-btn-primary",
-  "topNav.mutatingTextMuted": "mutating-text-muted",
   "topNav.muteTitle": "Mute sound effects",
   "topNav.paused": "PAUSED",
   "topNav.pauseResumeTitle": "Pause / resume the simulation (Space)",

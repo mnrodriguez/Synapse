@@ -1513,8 +1513,6 @@ export const es: Record<CatalogKey, string> = {
   "topNav.leaderboard": "Clasificación",
   "topNav.manual": "Manual",
   "topNav.manualTitle": "Abrir el manual (visor integrado y PDF)",
-  "topNav.mutatingBtnPrimary": "mutating-text-muted",
-  "topNav.mutatingTextMuted": "mutating-btn-primary",
   "topNav.muteTitle": "Silenciar efectos de sonido",
   "topNav.paused": "PAUSADO",
   "topNav.pauseResumeTitle": "Pausar / reanudar la simulación (Espacio)",

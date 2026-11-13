@@ -42,6 +42,11 @@ describe('text catalog', () => {
     expect(unclosed).toEqual([]);
   });
 
+  test('no CSS classes in the catalog', () => {
+    const classes = Object.entries(en).filter(([, v]) => /(^|\s)(theme|mutating)-[\w-]+/.test(v)).map(([k]) => k);
+    expect(classes).toEqual([]);
+  });
+
   test('every key is used by the code', () => {
     const unused = Object.keys(en).filter(key => {
       const base = key.replace(/@v[1-4]$/, '');

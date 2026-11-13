@@ -83,6 +83,8 @@ export const TopNav: React.FC<TopNavProps> = ({
   };
 
   const lang = state.language === 'es' ? 'es' : 'en';
+  // Highlights the active language in the EN | ES toggle.
+  const languageChip = (code: 'es' | 'en') => (state.language === code ? 'mutating-btn-primary' : 'mutating-text-muted');
   const ver = state.uiVersion || 1;
   const p = VERSION_PROFILES[lang][ver];
 
@@ -158,9 +160,9 @@ export const TopNav: React.FC<TopNavProps> = ({
             title="Language Switcher / Selector de Idioma"
           >
             <Languages className="w-3.5 h-3.5 mutating-accent-text" />
-            <span className={`px-1.5 py-0.2 rounded font-bold ${tr(state.language, 'topNav.mutatingBtnPrimary')}`}>EN</span>
+            <span className={`px-1.5 py-0.2 rounded font-bold ${languageChip('en')}`}>EN</span>
             <span className="opacity-40">|</span>
-            <span className={`px-1.5 py-0.2 rounded font-bold ${tr(state.language, 'topNav.mutatingTextMuted')}`}>ES</span>
+            <span className={`px-1.5 py-0.2 rounded font-bold ${languageChip('es')}`}>ES</span>
           </button>
 
           {/* Manual (in-game viewer and PDF) */}
