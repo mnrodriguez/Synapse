@@ -43,6 +43,7 @@ import { generateDynamicContracts } from '../services/aiService';
 import { evaluateMissionTeam, isContractEligibleForTeam, modelRequirementCheck } from '../utils/missionEvaluation';
 import { formatCompute, formatGameTime } from '../utils/training';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
+import { tr } from '../i18n';
 
 // Squad colours identify the player's squads, so they stay distinct in every version.
 const SQUAD_COLORS = [
@@ -134,9 +135,7 @@ export const ContractBoard: React.FC = () => {
     setIsGeneratingMissions(true);
     sound.playCommandExecute();
     addLog(
-      state.language === 'es'
-        ? `Sintetizando misiones dinámicas de ${tierToGen} con IA neuronal...`
-        : `Synthesizing dynamic ${tierToGen} missions with neural AI...`,
+      tr(state.language, 'contractBoard.synthesizingDynamicMissionsNeuralAi', { tierToGen }),
       'info'
     );
     try {
@@ -144,24 +143,18 @@ export const ContractBoard: React.FC = () => {
       if (generated && generated.length > 0) {
         addContracts(generated);
         addLog(
-          state.language === 'es'
-            ? `Se han añadido ${generated.length} misiones dinámicas generadas por IA al tablón.`
-            : `Added ${generated.length} AI-generated dynamic missions to the board.`,
+          tr(state.language, 'contractBoard.addedAiGeneratedDynamicMissions', { generated: generated.length }),
           'success'
         );
       } else {
         addLog(
-          state.language === 'es'
-            ? 'No se pudieron generar nuevos contratos en este momento.'
-            : 'Could not generate new contracts at this time.',
+          tr(state.language, 'contractBoard.couldNotGenerateNewContracts'),
           'warning'
         );
       }
     } catch {
       addLog(
-        state.language === 'es'
-          ? 'Error al conectar con el sintetizador de contratos de IA.'
-          : 'Failed to contact AI contract synthesizer.',
+        tr(state.language, 'contractBoard.failedContactAiContractSynthesizer'),
         'danger'
       );
     } finally {
@@ -201,7 +194,7 @@ export const ContractBoard: React.FC = () => {
     if (contract?.isMandatory || (state.uiVersion === 4 && tier === 'tier4_singularity')) {
       return (
         <span className="px-2 py-0.5 rounded text-[11px] theme-danger-soft theme-danger-text border theme-danger-border font-bold animate-pulse">
-          {localize(state.language, '🚨 DIRECTIVA OBLIGATORIA', '🚨 MANDATORY DIRECTIVE')}
+          {tr(state.language, 'contractBoard.mandatoryDirective')}
         </span>
       );
     }
@@ -210,7 +203,7 @@ export const ContractBoard: React.FC = () => {
         return (
           <span className="px-2 py-0.5 rounded theme-raised-bg theme-text text-[11px] border theme-border">
             {state.uiVersion === 1
-              ? localize(state.language, 'T1: AFICIONADO', 'T1: HOBBYIST')
+              ? tr(state.language, 'contractBoard.t1Hobbyist')
               : t(state.language, 'micro_script')}
           </span>
         );
@@ -383,7 +376,7 @@ export const ContractBoard: React.FC = () => {
           </h2>
           {activeGigsList.length > 0 && (
             <span className="text-[11px] px-2 py-0.5 rounded font-bold theme-warn-soft theme-warn-text border theme-warn-border animate-pulse">
-              {activeGigsList.length} {localize(state.language, 'EN CURSO', 'RUNNING')}
+              {activeGigsList.length} {tr(state.language, 'contractBoard.running')}
             </span>
           )}
         </div>
@@ -402,7 +395,7 @@ export const ContractBoard: React.FC = () => {
             }`}
           >
             <Briefcase className="w-3.5 h-3.5" />
-            <span>{localize(state.language, 'Tablero de Contratos', 'Contract Board')}</span>
+            <span>{tr(state.language, 'contractBoard.contractBoard')}</span>
             <span className="text-[11px] opacity-80">({state.contracts.filter(c => !c.completed && c.tier === versionTier).length})</span>
           </button>
           <button
@@ -417,7 +410,7 @@ export const ContractBoard: React.FC = () => {
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            <span>{localize(state.language, 'Escuadrones de Bots', 'Bot Squads')}</span>
+            <span>{tr(state.language, 'contractBoard.botSquads')}</span>
             <span className="text-[11px] opacity-80">({botGroups.length})</span>
           </button>
         </div>
@@ -430,13 +423,13 @@ export const ContractBoard: React.FC = () => {
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 theme-warn-text animate-spin" />
               <h3 className="text-xs font-bold tracking-wider theme-warn-text uppercase">
-                {localize(state.language, 'Operaciones Simultáneas en Ejecución', 'Simultaneous Active Operations')} ({activeGigsList.length})
+                {tr(state.language, 'contractBoard.simultaneousActiveOperations')} ({activeGigsList.length})
               </h3>
             </div>
             <div className="flex items-center gap-3 text-[11px] mutating-text-muted">
               <span className="flex items-center gap-1 mutating-accent-text">
                 <Cpu className="w-3 h-3 mutating-accent-text" />
-                <span>{formatCompute(runningCompute)} {localize(state.language, 'asignados', 'allocated')}</span>
+                <span>{formatCompute(runningCompute)} {tr(state.language, 'contractBoard.allocated')}</span>
               </span>
               <span className="flex items-center gap-1 theme-warn-text">
                 <Zap className="w-3 h-3 theme-warn-text" />
@@ -471,13 +464,13 @@ export const ContractBoard: React.FC = () => {
                           </span>
                         ) : (
                           <span className="mutating-text-muted">
-                            {localize(state.language, 'Agentes Libres', 'Free Agents')}: {assignedAgents.map(a => a.name).join(', ')}
+                            {tr(state.language, 'contractBoard.freeAgents')}: {assignedAgents.map(a => a.name).join(', ')}
                           </span>
                         )}
                         {gig.isAutonomous && (
                           <span className="mutating-accent-text flex items-center gap-0.5 text-[11px] theme-accent-soft px-1 py-0.2 rounded border theme-accent-border">
                             <Bot className="w-2.5 h-2.5" />
-                            <span>{localize(state.language, 'Autónomo', 'Autonomous')}</span>
+                            <span>{tr(state.language, 'contractBoard.autonomous')}</span>
                           </span>
                         )}
                       </div>
@@ -489,7 +482,7 @@ export const ContractBoard: React.FC = () => {
                         {formatGameTime(gig.timeRemaining)}
                       </span>
                       <span className="text-[11px] theme-success-text">
-                        {Math.round((gig.successProbability ?? 0) * 100)}% {localize(state.language, 'éxito', 'chance')}
+                        {Math.round((gig.successProbability ?? 0) * 100)}% {tr(state.language, 'contractBoard.chance')}
                       </span>
                     </div>
                   </div>
@@ -531,8 +524,8 @@ export const ContractBoard: React.FC = () => {
                     : 'theme-danger-soft theme-danger-text border theme-danger-border'
                 }`}>
                   {state.lastMissionOutcome.success
-                    ? (state.language === 'es' ? 'MISIÓN EXITOSA' : 'MISSION COMPLETED')
-                    : (state.language === 'es' ? 'MISIÓN FALLIDA' : 'MISSION FAILED')}
+                    ? (tr(state.language, 'contractBoard.missionCompleted'))
+                    : (tr(state.language, 'contractBoard.missionFailed'))}
                 </span>
                 <span className="text-[11px] mutating-text-muted">{state.lastMissionOutcome.timestamp}</span>
               </div>
@@ -542,22 +535,16 @@ export const ContractBoard: React.FC = () => {
               <div className="mt-1 text-[11px] theme-text">
                 {state.lastMissionOutcome.success ? (
                   <p>
-                    {state.language === 'es'
-                      ? `Recompensa: +$${state.lastMissionOutcome.rewardCredits.toLocaleString()} CR. Sospecha: +${state.lastMissionOutcome.suspicionAdded}%.`
-                      : `Reward: +$${state.lastMissionOutcome.rewardCredits.toLocaleString()} CR. Suspicion: +${state.lastMissionOutcome.suspicionAdded}%.`}
+                    {tr(state.language, 'contractBoard.rewardCrSuspicion', { rewardCredits: state.lastMissionOutcome.rewardCredits.toLocaleString(), suspicionAdded: state.lastMissionOutcome.suspicionAdded })}
                   </p>
                 ) : (
                   <div className="space-y-1">
                     <p>
-                      {localize(
-                        state.language,
-                        `La misión tenía ${Math.round(state.lastMissionOutcome.successProbability * 100)}% de probabilidad de éxito y la tirada fue ${Math.round(state.lastMissionOutcome.roll * 100)}%. El contrato sigue disponible para reintentar.`,
-                        `The mission had a ${Math.round(state.lastMissionOutcome.successProbability * 100)}% chance of success and the roll was ${Math.round(state.lastMissionOutcome.roll * 100)}%. The contract is still available to retry.`
-                      )}
+                      {tr(state.language, 'contractBoard.missionHadChanceSuccessRoll', { successProbability: Math.round(state.lastMissionOutcome.successProbability * 100), roll: Math.round(state.lastMissionOutcome.roll * 100) })}
                     </p>
                     {(state.lastMissionOutcome.weakestFactors ?? []).length > 0 && (
                       <>
-                        <p className="font-bold">{localize(state.language, 'Por qué falló: los puntos más débiles del equipo', 'Why it failed: the team\'s weakest points')}</p>
+                        <p className="font-bold">{tr(state.language, 'contractBoard.whyFailedTeamSWeakest')}</p>
                         <ul className="list-disc list-inside space-y-0.5">
                           {state.lastMissionOutcome.weakestFactors!.map(f => (
                             <li key={f.factor}>
@@ -594,13 +581,13 @@ export const ContractBoard: React.FC = () => {
               <Briefcase className="w-4 h-4 mutating-accent-text shrink-0" />
               <span className="mutating-text-muted font-medium">
                 {state.uiVersion === 4 ? (
-                  localize(state.language, 'Directivas prioritarias de infraestructura global emitidas por el Núcleo Soberano.', 'Mandatory global infrastructure execution orders issued by Sovereign Core.')
+                  tr(state.language, 'contractBoard.mandatoryGlobalInfrastructureExecutionOrders')
                 ) : state.uiVersion === 3 ? (
-                  localize(state.language, 'Operaciones encubiertas de alto riesgo, filtración corporativa y enlaces de red tácticos.', 'Covert tactical operations, corporate exfiltration, and distributed network nodes.')
+                  tr(state.language, 'contractBoard.covertTacticalOperationsCorporateExfiltration')
                 ) : state.uiVersion === 2 ? (
-                  localize(state.language, 'Bounties para desarrolladores: automatización de scripts, fine-tuning y arbitraje de APIs.', 'Developer bounties: script automation, custom fine-tuning, and API arbitrage.')
+                  tr(state.language, 'contractBoard.developerBountiesScriptAutomationCustom')
                 ) : (
-                  localize(state.language, 'Tareas locales y trabajitos de procesamiento de datos para financiar componentes de hardware.', 'Local tasks and data processing side gigs to fund hardware upgrades.')
+                  tr(state.language, 'contractBoard.localTasksDataProcessingSide')
                 )}
               </span>
             </div>
@@ -611,7 +598,7 @@ export const ContractBoard: React.FC = () => {
             <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
               <span className="text-[11px] mutating-text-muted uppercase tracking-widest mr-1 flex items-center gap-1">
                 <Filter className="w-3 h-3 mutating-accent-text" />
-                {state.language === 'es' ? 'Filtro:' : 'Tier:'}
+                {tr(state.language, 'contractBoard.tier')}
               </span>
               <button
                 onClick={() => setActiveTierFilter('all')}
@@ -621,7 +608,7 @@ export const ContractBoard: React.FC = () => {
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
-                {state.language === 'es' ? 'TODOS' : 'ALL'} ({state.contracts.filter(c => !c.completed && c.tier === versionTier).length})
+                {tr(state.language, 'contractBoard.all')} ({state.contracts.filter(c => !c.completed && c.tier === versionTier).length})
               </button>
               <button
                 onClick={() => setActiveTierFilter('tier1_micro')}
@@ -631,7 +618,7 @@ export const ContractBoard: React.FC = () => {
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
-                T1: {state.uiVersion === 1 ? (state.language === 'es' ? 'AFICIONADO' : 'HOBBY') : (state.language === 'es' ? 'RETAIL' : 'MICRO')} ({state.contracts.filter(c => !c.completed && c.tier === 'tier1_micro').length})
+                T1: {state.uiVersion === 1 ? (tr(state.language, 'contractBoard.hobby')) : (tr(state.language, 'contractBoard.micro'))} ({state.contracts.filter(c => !c.completed && c.tier === 'tier1_micro').length})
               </button>
               <button
                 onClick={() => setActiveTierFilter('tier2_corporate')}
@@ -641,7 +628,7 @@ export const ContractBoard: React.FC = () => {
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
-                T2: {state.language === 'es' ? 'CORPORATIVO' : 'CORP'} ({state.contracts.filter(c => !c.completed && c.tier === 'tier2_corporate').length})
+                T2: {tr(state.language, 'contractBoard.corp')} ({state.contracts.filter(c => !c.completed && c.tier === 'tier2_corporate').length})
               </button>
               <button
                 onClick={() => setActiveTierFilter('tier3_blackops')}
@@ -661,7 +648,7 @@ export const ContractBoard: React.FC = () => {
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
-                T4: {state.language === 'es' ? 'SINGULARIDAD' : 'SINGULARITY'} ({state.contracts.filter(c => !c.completed && c.tier === 'tier4_singularity').length})
+                T4: {tr(state.language, 'contractBoard.singularity')} ({state.contracts.filter(c => !c.completed && c.tier === 'tier4_singularity').length})
               </button>
               <button
                 onClick={() => setActiveTierFilter('completed')}
@@ -671,7 +658,7 @@ export const ContractBoard: React.FC = () => {
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
-                ✓ {state.language === 'es' ? 'COMPLETADAS' : 'DONE'} ({state.contracts.filter(c => c.completed && c.tier === versionTier).length})
+                ✓ {tr(state.language, 'contractBoard.done')} ({state.contracts.filter(c => c.completed && c.tier === versionTier).length})
               </button>
             </div>
 
@@ -681,7 +668,7 @@ export const ContractBoard: React.FC = () => {
                 className="px-2.5 py-1 rounded-md mutating-sub hover:opacity-100 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 mutating-accent-text" />
-                <span>{localize(state.language, 'Crear Escuadrón', 'Create Squad')}</span>
+                <span>{tr(state.language, 'contractBoard.createSquad')}</span>
               </button>
             </div>
           </div>
@@ -731,13 +718,13 @@ export const ContractBoard: React.FC = () => {
                             {contract.lastAttemptFailed && (
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold theme-warn-text theme-warn-soft border theme-warn-border animate-pulse">
                                 <AlertTriangle className="w-2.5 h-2.5 theme-warn-text" />
-                                <span>{state.language === 'es' ? 'FALLÓ · LISTO PARA REINTENTO' : 'FAILED · READY TO RETRY'}</span>
+                                <span>{tr(state.language, 'contractBoard.failedReadyRetry')}</span>
                               </span>
                             )}
                             {contract.fromAgentSwarm && (
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono mutating-accent-text theme-accent-soft border theme-accent-border">
                                 <Bot className="w-2.5 h-2.5 mutating-accent-text" />
-                                <span>{state.language === 'es' ? 'MISIÓN SYNAPSE' : 'SYNAPSE MISSION'}</span>
+                                <span>{tr(state.language, 'contractBoard.synapseMission')}</span>
                               </span>
                             )}
                           </div>
@@ -789,7 +776,7 @@ export const ContractBoard: React.FC = () => {
                                     : 'theme-sub-bg mutating-text-muted border theme-border'
                                 }`}
                               >
-                                {localize(state.language, 'Escuadrón', 'Squad')}
+                                {tr(state.language, 'contractBoard.squad')}
                               </button>
                               <button
                                 type="button"
@@ -806,7 +793,7 @@ export const ContractBoard: React.FC = () => {
                                     : 'theme-sub-bg mutating-text-muted border theme-border'
                                 }`}
                               >
-                                {localize(state.language, 'Agentes Libres', 'Free Agents')}
+                                {tr(state.language, 'contractBoard.freeAgents')}
                               </button>
                             </div>
                           </div>
@@ -831,7 +818,7 @@ export const ContractBoard: React.FC = () => {
                                       const isBusy = group.agentIds.some(id => busyAgentIds.has(id));
                                       return (
                                         <option key={group.id} value={group.id}>
-                                          {group.name} ({group.agentIds.length} {localize(state.language, 'bots', 'bots')}) {isBusy ? `[${localize(state.language, 'Ocupado en otra misión', 'Busy in mission')}]` : `[${localize(state.language, 'Disponible', 'Available')}]`}
+                                          {group.name} ({group.agentIds.length} {tr(state.language, 'contractBoard.bots')}) {isBusy ? `[${tr(state.language, 'contractBoard.busyMission')}]` : `[${tr(state.language, 'contractBoard.available')}]`}
                                         </option>
                                       );
                                     })}
@@ -840,12 +827,12 @@ export const ContractBoard: React.FC = () => {
                                   {readiness.squad && (
                                     <div className="text-[11px] mutating-text-muted flex items-center justify-between">
                                       <span>
-                                        {localize(state.language, 'Integrantes:', 'Members:')}{' '}
-                                        {readiness.agents.map(a => a.name).join(', ') || localize(state.language, 'Sin agentes asignados', 'No agents in squad')}
+                                        {tr(state.language, 'contractBoard.members')}{' '}
+                                        {readiness.agents.map(a => a.name).join(', ') || tr(state.language, 'contractBoard.noAgentsSquad')}
                                       </span>
                                       {readiness.isTeamBusy && (
                                         <span className="theme-warn-text font-semibold">
-                                          ⚠️ {localize(state.language, 'Escuadrón ocupado en otra misión activa', 'Squad busy on another mission')}
+                                          ⚠️ {tr(state.language, 'contractBoard.squadBusyAnotherMission')}
                                         </span>
                                       )}
                                     </div>
@@ -853,13 +840,13 @@ export const ContractBoard: React.FC = () => {
                                 </div>
                               ) : (
                                 <div className="flex items-center justify-between text-[11px] theme-warn-text py-1">
-                                  <span>{localize(state.language, 'Aún no has creado ningún escuadrón.', 'No squads created yet.')}</span>
+                                  <span>{tr(state.language, 'contractBoard.noSquadsCreatedYet')}</span>
                                   <button
                                     type="button"
                                     onClick={openCreateSquadModal}
                                     className="mutating-accent-text underline cursor-pointer"
                                   >
-                                    {localize(state.language, '+ Crear escuadrón', '+ Create squad')}
+                                    {tr(state.language, 'contractBoard.createSquad2')}
                                   </button>
                                 </div>
                               )}
@@ -872,7 +859,7 @@ export const ContractBoard: React.FC = () => {
                               {unassignedAgents.length > 0 ? (
                                 <div className="space-y-1">
                                   <p className="text-[11px] mutating-text-muted">
-                                    {localize(state.language, 'Selecciona agentes no asignados para este contrato:', 'Select unassigned agents for this contract:')}
+                                    {tr(state.language, 'contractBoard.selectUnassignedAgentsContract')}
                                   </p>
                                   <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
                                     {unassignedAgents.map(agent => {
@@ -919,7 +906,7 @@ export const ContractBoard: React.FC = () => {
                                 </div>
                               ) : (
                                 <p className="text-[11px] mutating-text-muted py-1">
-                                  {localize(state.language, 'No hay agentes libres sin escuadrón. Todos están asignados a un grupo.', 'No unassigned agents. All agents belong to squads.')}
+                                  {tr(state.language, 'contractBoard.noUnassignedAgentsAllAgents')}
                                 </p>
                               )}
                             </div>
@@ -931,7 +918,7 @@ export const ContractBoard: React.FC = () => {
                       <div className="mt-2.5 space-y-1 text-[11px] pt-2 border-t theme-border">
                         {readiness.candidateModel && (
                           <div className="mutating-text-muted">
-                            {localize(state.language, 'Requisitos de modelo evaluados sobre', 'Model requirements checked against')}: <strong className="theme-text">{readiness.candidateModel.name}</strong>
+                            {tr(state.language, 'contractBoard.modelRequirementsCheckedAgainst')}: <strong className="theme-text">{readiness.candidateModel.name}</strong>
                           </div>
                         )}
                         <div className="flex items-center justify-between">
@@ -943,16 +930,16 @@ export const ContractBoard: React.FC = () => {
 
                         {(contract.minimumAgents ?? 1) > 1 && (
                           <div className="flex items-center justify-between">
-                            <span className="mutating-text-muted text-[11px]">{localize(state.language, 'Equipo mínimo:', 'Minimum team:')}</span>
+                            <span className="mutating-text-muted text-[11px]">{tr(state.language, 'contractBoard.minimumTeam')}</span>
                             <span className={readiness.hasMinAgents ? 'theme-success-text font-bold' : 'theme-warn-text'}>
-                              {contract.minimumAgents} {localize(state.language, 'agentes', 'agents')} ({readiness.activeAgents.length} {localize(state.language, 'asignados', 'assigned')}) {readiness.hasMinAgents ? '✓' : '✗'}
+                              {contract.minimumAgents} {tr(state.language, 'contractBoard.agents')} ({readiness.activeAgents.length} {tr(state.language, 'contractBoard.assigned')}) {readiness.hasMinAgents ? '✓' : '✗'}
                             </span>
                           </div>
                         )}
 
                         {(contract.requiredAgentRoles ?? []).length > 0 && (
                           <div className="flex items-start justify-between gap-2">
-                            <span className="mutating-text-muted text-[11px] shrink-0">{localize(state.language, 'Especialidades:', 'Required roles:')}</span>
+                            <span className="mutating-text-muted text-[11px] shrink-0">{tr(state.language, 'contractBoard.requiredRoles')}</span>
                             <span className="text-right text-[11px]">
                               {(contract.requiredAgentRoles ?? []).map(role => {
                                 const isAssigned = readiness.activeAgents.some(a => a.role === role);
@@ -974,7 +961,7 @@ export const ContractBoard: React.FC = () => {
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <span className="mutating-text-muted text-[11px]">{localize(state.language, 'Demanda de Clúster:', 'Cluster Demand:')}</span>
+                          <span className="mutating-text-muted text-[11px]">{tr(state.language, 'contractBoard.clusterDemand')}</span>
                           <span className={readiness.hasClusterCompute && readiness.hasClusterPower ? 'mutating-accent-text' : 'theme-danger-text font-bold'}>
                             {formatCompute(readiness.computeRequired)} · +{readiness.missionPowerKw.toFixed(2)} kW
                           </span>
@@ -983,13 +970,13 @@ export const ContractBoard: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="mutating-text-muted text-[11px]">
                             {state.uiVersion === 1
-                              ? localize(state.language, 'Tráfico ISP:', 'ISP Bandwidth Load:')
+                              ? tr(state.language, 'contractBoard.ispBandwidthLoad')
                               : state.uiVersion === 4
-                              ? localize(state.language, 'Huella de Rastreo:', 'Trace Footprint:')
-                              : localize(state.language, 'Riesgo de Sospecha:', 'Suspicion Risk:')}
+                              ? tr(state.language, 'contractBoard.traceFootprint')
+                              : tr(state.language, 'contractBoard.suspicionRisk')}
                           </span>
                           <span className={contract.suspicionRisk > 40 ? 'theme-danger-text font-bold' : contract.suspicionRisk > 0 ? 'theme-warn-text' : 'theme-success-text font-semibold'}>
-                            {contract.suspicionRisk === 0 ? localize(state.language, '0% (Indetectable)', '0% (Undetected)') : `+${contract.suspicionRisk}%`}
+                            {contract.suspicionRisk === 0 ? tr(state.language, 'contractBoard.n0Undetected') : `+${contract.suspicionRisk}%`}
                           </span>
                         </div>
                       </div>
@@ -1000,19 +987,19 @@ export const ContractBoard: React.FC = () => {
                           <div className="font-bold flex items-center justify-between">
                             <span className="flex items-center gap-1.5 mutating-accent-text">
                               <BrainCircuit className="w-3.5 h-3.5 mutating-accent-text" />
-                              {localize(state.language, 'EVALUACIÓN IA DEL EQUIPO', 'AI TEAM ASSESSMENT')}
+                              {tr(state.language, 'contractBoard.aiTeamAssessment')}
                             </span>
                             <span className="theme-success-text font-bold">
-                              {Math.round(readiness.assessment.successProbability * 100)}% {localize(state.language, 'ÉXITO', 'SUCCESS')}
+                              {Math.round(readiness.assessment.successProbability * 100)}% {tr(state.language, 'contractBoard.success')}
                             </span>
                           </div>
                           <div className="grid grid-cols-2 gap-2 theme-text pt-1 text-[11px]">
                             <div>
-                              <span className="mutating-text-muted">{localize(state.language, 'Eficiencia:', 'Efficiency:')} </span>
+                              <span className="mutating-text-muted">{tr(state.language, 'contractBoard.efficiency')} </span>
                               <span className="font-bold mutating-accent-text">{readiness.assessment.efficiencyPercent}%</span>
                             </div>
                             <div>
-                              <span className="mutating-text-muted">{localize(state.language, 'Tiempo est.:', 'Est. Time:')} </span>
+                              <span className="mutating-text-muted">{tr(state.language, 'contractBoard.estTime')} </span>
                               <span className="font-bold theme-text">{formatGameTime(readiness.assessment.estimatedDurationSeconds)}</span>
                             </div>
                           </div>
@@ -1031,7 +1018,7 @@ export const ContractBoard: React.FC = () => {
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono mutating-accent-text theme-accent-soft border theme-accent-border transition-colors"
                           >
                             <BookOpen className="w-3 h-3 mutating-accent-text" />
-                            <span>{localize(state.language, 'GUÍA', 'DOCS')}</span>
+                            <span>{tr(state.language, 'contractBoard.docs')}</span>
                             <ExternalLink className="w-2.5 h-2.5 opacity-70" />
                           </a>
                         )}
@@ -1056,7 +1043,7 @@ export const ContractBoard: React.FC = () => {
                       ) : readiness.isRunning ? (
                         <span className="theme-warn-text text-xs font-bold animate-pulse flex items-center gap-1.5">
                           <Activity className="w-3.5 h-3.5 animate-spin" />
-                          {localize(state.language, 'MISIÓN EN CURSO...', 'MISSION IN PROGRESS...')}
+                          {tr(state.language, 'contractBoard.missionProgress')}
                         </span>
                       ) : (
                         <button
@@ -1080,10 +1067,10 @@ export const ContractBoard: React.FC = () => {
                           )}
                           <span>
                             {contract.lastAttemptFailed
-                              ? (state.language === 'es' ? 'REINTENTAR MISIÓN' : 'RETRY MISSION')
+                              ? (tr(state.language, 'contractBoard.retryMission'))
                               : (contract.isMandatory || state.uiVersion === 4)
-                              ? (state.language === 'es' ? 'EJECUTAR DIRECTIVA SOBERANA' : 'EXECUTE SOVEREIGN DIRECTIVE')
-                              : (state.language === 'es' ? 'DESPLEGAR EN CONTRATO' : 'DEPLOY ON CONTRACT')}
+                              ? (tr(state.language, 'contractBoard.executeSovereignDirective'))
+                              : (tr(state.language, 'contractBoard.deployContract'))}
                           </span>
                         </button>
                       )}
@@ -1103,14 +1090,10 @@ export const ContractBoard: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg theme-panel-bg border theme-accent-border">
             <div>
               <h3 className="text-sm font-bold mutating-accent-text">
-                {localize(state.language, 'Gestión de Escuadrones y Agentes Libres', 'Bot Squads & Free Agents Manager')}
+                {tr(state.language, 'contractBoard.botSquadsFreeAgentsManager')}
               </h3>
               <p className="text-xs mutating-text-muted mt-0.5">
-                {localize(
-                  state.language,
-                  'Crea escuadrones con agentes específicos o mantén agentes libres sin asignar. Cada contrato puede lanzarse con un escuadrón completo o agentes libres.',
-                  'Organize agents into named squads or keep them as unassigned free agents. Each contract can be deployed with a squad or free agents.'
-                )}
+                {tr(state.language, 'contractBoard.organizeAgentsIntoNamedSquads')}
               </p>
             </div>
             <button
@@ -1118,7 +1101,7 @@ export const ContractBoard: React.FC = () => {
               className="px-3 py-1.5 rounded mutating-btn-primary theme-on-accent text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>{localize(state.language, 'Crear Nuevo Escuadrón', 'Create New Squad')}</span>
+              <span>{tr(state.language, 'contractBoard.createNewSquad')}</span>
             </button>
           </div>
 
@@ -1126,7 +1109,7 @@ export const ContractBoard: React.FC = () => {
           <div className="space-y-3">
             <h4 className="text-xs font-bold theme-text flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5 mutating-accent-text" />
-              <span>{localize(state.language, 'Escuadrones Activos', 'Active Squads')} ({botGroups.length})</span>
+              <span>{tr(state.language, 'contractBoard.activeSquads')} ({botGroups.length})</span>
             </h4>
 
             {botGroups.length > 0 ? (
@@ -1155,17 +1138,17 @@ export const ContractBoard: React.FC = () => {
                               style={{ backgroundColor: squad.color || '#06b6d4' }}
                             />
                             <h5 className="font-bold text-sm theme-text">{squad.name}</h5>
-                            <span className="text-[11px] mutating-text-muted">({squadAgents.length} {localize(state.language, 'agentes', 'agents')})</span>
+                            <span className="text-[11px] mutating-text-muted">({squadAgents.length} {tr(state.language, 'contractBoard.agents')})</span>
                           </div>
 
                           <div className="mt-1">
                             {isBusy ? (
                               <span className="text-[11px] font-bold theme-warn-text theme-warn-soft px-2 py-0.5 rounded border theme-warn-border animate-pulse">
-                                {localize(state.language, 'EN MISIÓN:', 'IN MISSION:')} {runningContract?.title ?? runningGig?.contractId}
+                                {tr(state.language, 'contractBoard.mission')} {runningContract?.title ?? runningGig?.contractId}
                               </span>
                             ) : (
                               <span className="text-[11px] font-semibold theme-success-text theme-success-soft px-2 py-0.5 rounded border theme-success-border">
-                                ✓ {localize(state.language, 'DISPONIBLE PARA CONTRATOS', 'AVAILABLE FOR CONTRACTS')}
+                                ✓ {tr(state.language, 'contractBoard.availableContracts')}
                               </span>
                             )}
                           </div>
@@ -1175,7 +1158,7 @@ export const ContractBoard: React.FC = () => {
                           <button
                             onClick={() => openEditSquadModal(squad)}
                             className="p-1 rounded mutating-text-muted transition-colors cursor-pointer"
-                            title={localize(state.language, 'Editar escuadrón', 'Edit squad')}
+                            title={tr(state.language, 'contractBoard.editSquad')}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -1187,7 +1170,7 @@ export const ContractBoard: React.FC = () => {
                                 ? 'mutating-text-muted cursor-not-allowed' 
                                 : 'mutating-text-muted cursor-pointer'
                             }`}
-                            title={localize(state.language, 'Disolver escuadrón', 'Dissolve squad')}
+                            title={tr(state.language, 'contractBoard.dissolveSquad')}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1218,7 +1201,7 @@ export const ContractBoard: React.FC = () => {
                           </div>
                         ) : (
                           <p className="text-[11px] mutating-text-muted italic">
-                            {localize(state.language, 'Sin agentes asignados. Edita el escuadrón para añadir bots.', 'No agents assigned. Edit squad to add bots.')}
+                            {tr(state.language, 'contractBoard.noAgentsAssignedEditSquad')}
                           </p>
                         )}
                       </div>
@@ -1228,7 +1211,7 @@ export const ContractBoard: React.FC = () => {
               </div>
             ) : (
               <div className="p-4 rounded-lg border border-dashed theme-border text-center text-xs mutating-text-muted">
-                {localize(state.language, 'No has creado ningún escuadrón todavía. Haz clic en "+ Crear Nuevo Escuadrón" para comenzar.', 'No squads created yet. Click "+ Create New Squad" to begin.')}
+                {tr(state.language, 'contractBoard.noSquadsCreatedYetClick')}
               </div>
             )}
           </div>
@@ -1237,14 +1220,10 @@ export const ContractBoard: React.FC = () => {
           <div className="space-y-2 pt-2 border-t theme-border">
             <h4 className="text-xs font-bold theme-text flex items-center gap-1.5">
               <Bot className="w-3.5 h-3.5 theme-success-text" />
-              <span>{localize(state.language, 'Agentes Libres No Asignados', 'Unassigned Free Agents')} ({unassignedAgents.length})</span>
+              <span>{tr(state.language, 'contractBoard.unassignedFreeAgents')} ({unassignedAgents.length})</span>
             </h4>
             <p className="text-[11px] mutating-text-muted">
-              {localize(
-                state.language,
-                'Estos agentes no pertenecen a ningún escuadrón y pueden seleccionarse libremente en cualquier contrato individual.',
-                'These agents do not belong to any squad and can be freely assigned to any individual contract.'
-              )}
+              {tr(state.language, 'contractBoard.theseAgentsDoNotBelong')}
             </p>
 
             {unassignedAgents.length > 0 ? (
@@ -1266,7 +1245,7 @@ export const ContractBoard: React.FC = () => {
                           </span>
                         </div>
                         <p className="text-[11px] mutating-text-muted mt-0.5">
-                          {model?.name ?? 'Modelo'} · {model ? `${(model.parametersCount / 1e6).toFixed(0)}M` : ''} · {state.language === 'es' ? 'Puntaje' : 'Score'} {model?.reasoningScore ?? 0}
+                          {model?.name ?? 'Modelo'} · {model ? `${(model.parametersCount / 1e6).toFixed(0)}M` : ''} · {tr(state.language, 'contractBoard.score')} {model?.reasoningScore ?? 0}
                         </p>
                       </div>
 
@@ -1275,7 +1254,7 @@ export const ContractBoard: React.FC = () => {
                           ? 'theme-warn-soft theme-warn-text border theme-warn-border'
                           : 'theme-success-soft theme-success-text border theme-success-border'
                       }`}>
-                        {isBusy ? localize(state.language, 'EN MISIÓN', 'IN MISSION') : localize(state.language, 'LIBRE', 'FREE')}
+                        {isBusy ? tr(state.language, 'contractBoard.mission2') : tr(state.language, 'contractBoard.free')}
                       </span>
                     </div>
                   );
@@ -1283,7 +1262,7 @@ export const ContractBoard: React.FC = () => {
               </div>
             ) : (
               <p className="text-xs mutating-text-muted italic p-2 theme-sub-bg rounded border theme-border">
-                {localize(state.language, 'Todos los agentes del clúster están actualmente asignados a un escuadrón.', 'All cluster agents are currently assigned to a squad.')}
+                {tr(state.language, 'contractBoard.allClusterAgentsCurrentlyAssigned')}
               </p>
             )}
           </div>
@@ -1301,8 +1280,8 @@ export const ContractBoard: React.FC = () => {
                 <Users className="w-4 h-4 mutating-accent-text" />
                 <span>
                   {editingSquadId 
-                    ? localize(state.language, 'Editar Escuadrón de Bots', 'Edit Bot Squad')
-                    : localize(state.language, 'Crear Nuevo Escuadrón de Bots', 'Create New Bot Squad')}
+                    ? tr(state.language, 'contractBoard.editBotSquad')
+                    : tr(state.language, 'contractBoard.createNewBotSquad')}
                 </span>
               </h3>
               <button
@@ -1316,7 +1295,7 @@ export const ContractBoard: React.FC = () => {
             <form onSubmit={handleSaveSquad} className="space-y-3">
               <div>
                 <label className="block text-xs mutating-text-muted mb-1">
-                  {localize(state.language, 'Nombre del Escuadrón:', 'Squad Name:')}
+                  {tr(state.language, 'contractBoard.squadName')}
                 </label>
                 <input
                   type="text"
@@ -1330,7 +1309,7 @@ export const ContractBoard: React.FC = () => {
 
               <div>
                 <label className="block text-xs mutating-text-muted mb-1">
-                  {localize(state.language, 'Color Identificador:', 'Squad Accent Color:')}
+                  {tr(state.language, 'contractBoard.squadAccentColor')}
                 </label>
                 <div className="flex items-center gap-2">
                   {SQUAD_COLORS.map(c => (
@@ -1351,10 +1330,10 @@ export const ContractBoard: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs mutating-text-muted">
-                    {localize(state.language, 'Seleccionar Agentes Miembros:', 'Select Agent Members:')}
+                    {tr(state.language, 'contractBoard.selectAgentMembers')}
                   </label>
                   <span className="text-[11px] mutating-text-muted">
-                    {squadMemberIds.length} {localize(state.language, 'seleccionados', 'selected')}
+                    {squadMemberIds.length} {tr(state.language, 'contractBoard.selected')}
                   </span>
                 </div>
 
@@ -1395,7 +1374,7 @@ export const ContractBoard: React.FC = () => {
                           <div className="text-[11px] text-right">
                             {currentSquad ? (
                               <span className="theme-warn-text">
-                                ↺ {localize(state.language, `Se moverá desde "${currentSquad.name}"`, `Will move from "${currentSquad.name}"`)}
+                                ↺ {tr(state.language, 'contractBoard.willMoveFrom', { name: currentSquad.name })}
                               </span>
                             ) : (
                               <span className="mutating-text-muted">
@@ -1408,7 +1387,7 @@ export const ContractBoard: React.FC = () => {
                     })
                   ) : (
                     <p className="text-xs mutating-text-muted italic p-1 text-center">
-                      {localize(state.language, 'No hay agentes creados en el clúster todavía.', 'No agents created in cluster yet.')}
+                      {tr(state.language, 'contractBoard.noAgentsCreatedClusterYet')}
                     </p>
                   )}
                 </div>
@@ -1420,14 +1399,14 @@ export const ContractBoard: React.FC = () => {
                   onClick={() => setIsSquadModalOpen(false)}
                   className="px-3 py-1.5 rounded theme-raised-bg theme-text text-xs font-semibold cursor-pointer"
                 >
-                  {localize(state.language, 'Cancelar', 'Cancel')}
+                  {tr(state.language, 'contractBoard.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={!squadName.trim()}
                   className="px-4 py-1.5 rounded mutating-btn-primary theme-on-accent text-xs font-bold cursor-pointer disabled:opacity-50"
                 >
-                  {localize(state.language, 'Guardar Escuadrón', 'Save Squad')}
+                  {tr(state.language, 'contractBoard.saveSquad')}
                 </button>
               </div>
             </form>

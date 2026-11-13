@@ -16,10 +16,10 @@ import {
   Briefcase
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { localize } from '../utils/i18n';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { lowestOpenIqForVersion, FIRST_MISSION_IQ } from '../utils/missionTiers';
 import confetti from 'canvas-confetti';
+import { tr } from '../i18n';
 
 interface TutorialMissionBannerProps {
   onNavigateTab: (tab: string) => void;
@@ -48,28 +48,20 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
     if (step === 0 && hasStarterHardware) {
       sound.playCredit();
       advanceTutorialStep(1);
-      addLog(isEs 
-        ? 'Protocolo Génesis [1/5]: Rig inicial completo: GPU, refrigeración, fuente de alimentación y red instaladas.'
-        : 'Genesis Protocol [1/5]: Starter rig complete: GPU, cooling, power supply, and network installed.', 'success');
+      addLog(tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.genesisProtocol15Starter'), 'success');
     } else if (step === 2 && state.savedModels.some(m => m.reasoningScore >= FIRST_MISSION_IQ)) {
       sound.playBreakthrough();
       advanceTutorialStep(3);
-      addLog(isEs
-        ? 'Protocolo Génesis [3/5]: Entrenamiento completado con éxito. Despliega tu primer agente.'
-        : 'Genesis Protocol [3/5]: Training completed successfully. Deploy your first agent.', 'success');
+      addLog(tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.genesisProtocol35Training'), 'success');
     } else if (step === 3 && hasAgent) {
       sound.playBreakthrough();
       advanceTutorialStep(4);
-      addLog(isEs
-        ? 'Protocolo Génesis [4/5]: Primer agente autónomo desplegado. Paso completado.'
-        : 'Genesis Protocol [4/5]: First autonomous agent deployed. Step complete.', 'success');
+      addLog(tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.genesisProtocol45First'), 'success');
     } else if (step === 4 && hasFinishedContract) {
       sound.playBreakthrough();
       confetti({ particleCount: 120, spread: 80 });
       advanceTutorialStep(5);
-      addLog(isEs
-        ? 'PROTOCOLO GÉNESIS COMPLETADO: Primera misión comercial ejecutada con éxito. ¡+50 CR otorgados!'
-        : 'GENESIS PROTOCOL COMPLETE: First commercial gig executed successfully. +50 CR rewarded!', 'success');
+      addLog(tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.genesisProtocolCompleteFirstCommercial'), 'success');
     }
   }, [hasStarterHardware, hasAgent, hasFinishedContract, step, state.savedModels, advanceTutorialStep, addLog, isEs]);
 
@@ -82,56 +74,56 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
     {
       id: 0,
       tab: 'hardware',
-      title: isEs ? 'Fase 1: Adquirir Hardware Inicial' : 'Stage 1: Acquire Starter Hardware',
+      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage1AcquireStarterHardware'),
       desc: isEs 
         ? 'Tienes $500 CR de fondo semilla. Ve a {hardware} y equipa una GPU inicial, refrigeración básica, una fuente de alimentación y una conexión de red. Esta fase no avanzará hasta que los cuatro componentes estén instalados.'
         : 'You have a $500 CR initial grant. Open {hardware} and install a starter GPU, basic cooling, a power supply, and a network connection. This stage will not advance until all four are installed.',
       icon: Server,
-      buttonText: isEs ? `IR A ${tabLabels.hardware.toUpperCase()}` : `GO TO ${tabLabels.hardware.toUpperCase()}`,
+      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go', { hardware: tabLabels.hardware.toUpperCase() }),
       isCompleted: hasStarterHardware
     },
     {
       id: 1,
       tab: 'architecture',
-      title: isEs ? 'Fase 2: Arquitectura del Modelo' : 'Stage 2: Model Architecture',
+      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage2ModelArchitecture'),
       desc: isEs 
         ? 'Ve a {architecture} para inspeccionar la topología Transformer, cuantización INT8 y parámetros del modelo inicial SYNAPSE-Proto.'
         : 'Open {architecture} to inspect the Transformer topology, INT8 quantization, and parameters of your first model.',
       icon: Layers,
-      buttonText: isEs ? `IR A ${tabLabels.architecture.toUpperCase()}` : `GO TO ${tabLabels.architecture.toUpperCase()}`,
+      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go2', { architecture: tabLabels.architecture.toUpperCase() }),
       isCompleted: step > 1
     },
     {
       id: 2,
       tab: 'training',
-      title: isEs ? 'Fase 3: Entrenar Pesos Neuronales' : 'Stage 3: Train Neural Weights',
+      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage3TrainNeuralWeights'),
       desc: isEs 
         ? 'Ve a {training} y entrena hasta que el puntaje del modelo llegue a 10. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.'
         : 'Open {training} and train until the model score reaches 10. Each run raises it further; the university loan already provides the compute.',
       icon: Activity,
-      buttonText: isEs ? `IR A ${tabLabels.training.toUpperCase()}` : `GO TO ${tabLabels.training.toUpperCase()}`,
+      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go3', { training: tabLabels.training.toUpperCase() }),
       isCompleted: step > 2
     },
     {
       id: 3,
       tab: 'agents',
-      title: isEs ? 'Fase 4: Desplegar tu Primer Agente' : 'Stage 4: Deploy Your First Agent',
+      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage4DeployFirstAgent'),
       desc: isEs 
         ? 'Ve a {agents} y despliega un agente autónomo (ej. Trader o Researcher) conectado a tu modelo entrenado.'
         : 'Open {agents} and deploy your first autonomous agent (e.g. Trader or Researcher) bound to your trained model.',
       icon: Bot,
-      buttonText: isEs ? `IR A ${tabLabels.agents.toUpperCase()}` : `GO TO ${tabLabels.agents.toUpperCase()}`,
+      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go4', { agents: tabLabels.agents.toUpperCase() }),
       isCompleted: hasAgent || step > 3
     },
     {
       id: 4,
       tab: 'contracts',
-      title: isEs ? 'Fase 5: Resolver la Primera Misión' : 'Stage 5: Solve the First Mission',
+      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage5SolveFirstMission'),
       desc: isEs 
         ? 'Ve a {contracts}, selecciona a tu agente activo y ejecuta tu primer contrato comercial para cobrar tu primera recompensa.'
         : 'Open {contracts}, assign your active agent, and execute your first paid commercial mission.',
       icon: Briefcase,
-      buttonText: isEs ? `IR A ${tabLabels.contracts.toUpperCase()}` : `GO TO ${tabLabels.contracts.toUpperCase()}`,
+      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go5', { contracts: tabLabels.contracts.toUpperCase() }),
       isCompleted: hasFinishedContract
     }
   ];
@@ -144,13 +136,9 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
   // On the training stage, the goal is the IQ the first mission needs; show progress toward it.
   const trainingGoalOpen = currentStepInfo.tab === 'training' && bestIq < FIRST_MISSION_IQ;
   const guidanceText = trainingGoalOpen
-    ? (isEs
-      ? `Entrena ${tabLabels.training} hasta que el puntaje llegue a ${FIRST_MISSION_IQ}. Ahora tienes ${bestIq}. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.`
-      : `Train in ${tabLabels.training} until score reaches ${FIRST_MISSION_IQ}. You have ${bestIq} now. Each run raises it further; the university loan already provides the compute.`)
+    ? (tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.trainUntilScoreReachesYou', { training: tabLabels.training, fIRST_MISSION_IQ: FIRST_MISSION_IQ, bestIq }))
     : blockedByIq
-    ? (isEs
-      ? `Tu mejor modelo tiene puntaje ${bestIq} y la misión más accesible pide puntaje ${lowestOpenIq}. Ve a ${tabLabels.training} y entrena: cada corrida sube el puntaje. Después asigna agentes con el modelo entrenado.`
-      : `Your best model has score ${bestIq} and the easiest open mission needs score ${lowestOpenIq}. Go to ${tabLabels.training} and train: each run raises score. Then assign agents using the trained model.`)
+    ? (tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.bestModelHasScoreEasiest', { bestIq, lowestOpenIq, training: tabLabels.training }))
     : null;
 
   return (
@@ -166,13 +154,13 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] uppercase tracking-widest font-black mutating-accent-text mutating-sub px-2 py-0.5 rounded border">
-                {isEs ? 'MISIÓN INICIAL // PROTOCOLO GÉNESIS' : 'FIRST MISSION // GENESIS PROTOCOL'}
+                {tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.firstMissionGenesisProtocol')}
               </span>
               <span className="text-xs font-bold font-sans flex items-center gap-1">
                 {currentStepInfo.title}
               </span>
               <span className="text-[11px] theme-warn-text font-bold mutating-sub px-1.5 py-0.2 rounded border theme-warn-border">
-                {isEs ? `Paso ${step + 1}/5` : `Step ${step + 1}/5`}
+                {tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.step5', { step: step + 1 })}
               </span>
             </div>
 
@@ -190,7 +178,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
             aria-expanded={detailsOpen}
             className="md:hidden px-2 py-1 text-[11px] font-bold rounded border mutating-sub cursor-pointer"
           >
-            {detailsOpen ? (isEs ? 'Ocultar' : 'Hide') : (isEs ? 'Detalles' : 'Details')}
+            {detailsOpen ? (tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.hide')) : (tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.details'))}
           </button>
 
           {/* Progress dots */}

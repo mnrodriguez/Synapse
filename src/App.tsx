@@ -32,11 +32,11 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { sound } from './audio/soundManager';
-import { localize } from './utils/i18n';
 import { VERSION_PROFILES } from './utils/versionProfiles';
 import { tierForUiVersion } from './utils/missionTiers';
 import { toDisplayProgress, UiVersion } from './utils/singularityGoals';
 import { formatCompute } from './utils/training';
+import { tr } from './i18n';
 
 // Tabs and large dialogs load on demand, so the first screen does not wait for the whole game.
 const lazyNamed = <K extends string>(loader: () => Promise<Record<K, React.ComponentType<any>>>, name: K) =>
@@ -125,7 +125,7 @@ const MainGameScreen: React.FC = () => {
       label: p.tabs.agents, 
       icon: Users, 
       pulse: !!state.activeIncident, 
-      badge: state.activeIncident ? (lang === 'es' ? 'ALERTA' : 'ALERT') : `${state.agents.length}` 
+      badge: state.activeIncident ? (tr(lang, 'app.alert')) : `${state.agents.length}` 
     },
     { 
       id: 'research' as WorkspaceTab, 
@@ -276,7 +276,7 @@ const MainGameScreen: React.FC = () => {
 
         {/* Central Workspace Module Panel */}
         <main className="workspace-container flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-4">
-          <Suspense fallback={<div className="p-4 text-xs mutating-text-muted font-mono" role="status">{lang === 'es' ? 'Cargando…' : 'Loading…'}</div>}>
+          <Suspense fallback={<div className="p-4 text-xs mutating-text-muted font-mono" role="status">{tr(lang, 'app.loading')}</div>}>
             {activeTab === 'architecture' && <ArchitectureStudio />}
             {activeTab === 'training' && <TrainingMonitor />}
             {activeTab === 'hardware' && <HardwareRack />}
@@ -335,7 +335,7 @@ const MainGameScreen: React.FC = () => {
           className={`flex flex-col items-center py-1 px-2 text-center ${moreOpen || moreNavItems.some(i => i.id === activeTab) ? 'mutating-accent-text font-bold' : 'mutating-text-muted'}`}
         >
           <MoreHorizontal className="w-4 h-4" />
-          <span className="text-[11px] mt-0.5">{lang === 'es' ? 'Más' : 'More'}</span>
+          <span className="text-[11px] mt-0.5">{tr(lang, 'app.more')}</span>
         </button>
       </nav>
 

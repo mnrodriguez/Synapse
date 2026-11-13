@@ -21,6 +21,7 @@ import { sound } from '../audio/soundManager';
 import { EMERGENCY_LOAN_AMOUNT, EMERGENCY_LOAN_REPAYMENT } from '../utils/constants';
 import { formatCompute } from '../utils/training';
 import { EpilogueReport } from './EpilogueReport';
+import { tr } from '../i18n';
 
 export const GameOverModal: React.FC = () => {
   const { state, takeEmergencyLoan, clearGameOver, resetProgress } = useGame();
@@ -62,27 +63,25 @@ export const GameOverModal: React.FC = () => {
             </div>
             <div>
               <span className="text-[11px] font-bold theme-warn-text uppercase tracking-widest block">
-                {isEs ? 'LÍNEA DE CRÉDITO DE EMERGENCIA' : 'EMERGENCY BAILOUT CREDIT LINE'}
+                {tr((isEs ? 'es' : 'en'), 'gameOverModal.emergencyBailoutCreditLine')}
               </span>
               <h2 className="text-base font-black theme-warn-text tracking-wider">
-                {isEs ? 'FONDOS DE OPERACIÓN AGOTADOS' : 'OPERATIONAL FUNDS EXHAUSTED'}
+                {tr((isEs ? 'es' : 'en'), 'gameOverModal.operationalFundsExhausted')}
               </h2>
             </div>
           </div>
 
           <p className="text-xs theme-text leading-relaxed">
-            {isEs
-              ? `Tu saldo de créditos se ha agotado y acumulas $${state.utilityDebt.toLocaleString()} CR en deuda de servicios. SynthCap Consortium te ofrece un rescate financiero de emergencia único.`
-              : `Your credits have been depleted and you owe $${state.utilityDebt.toLocaleString()} CR in unpaid utility bills. SynthCap Consortium offers a one-time emergency bailout loan.`}
+            {tr((isEs ? 'es' : 'en'), 'gameOverModal.creditsHaveBeenDepletedYou', { utilityDebt: state.utilityDebt.toLocaleString() })}
           </p>
 
           <div className="p-3 theme-panel-bg border theme-warn-border rounded-lg space-y-2 text-xs">
             <div className="flex justify-between items-center theme-text">
-              <span>{isEs ? 'Inyección inmediata de créditos:' : 'Immediate credit injection:'}</span>
+              <span>{tr((isEs ? 'es' : 'en'), 'gameOverModal.immediateCreditInjection')}</span>
               <span className="font-bold theme-success-text">+${EMERGENCY_LOAN_AMOUNT.toLocaleString()} CR</span>
             </div>
             <div className="flex justify-between items-center theme-text">
-              <span>{isEs ? 'Deuda a devolver (15% interés):' : 'Debt repayment (15% interest):'}</span>
+              <span>{tr((isEs ? 'es' : 'en'), 'gameOverModal.debtRepayment15Interest')}</span>
               <span className="font-bold theme-danger-text">+${EMERGENCY_LOAN_REPAYMENT.toLocaleString()} CR</span>
             </div>
           </div>
@@ -93,7 +92,7 @@ export const GameOverModal: React.FC = () => {
               onClick={handleTakeLoan}
               className="px-4 py-2 rounded-lg theme-gradient theme-on-accent font-bold text-xs flex items-center gap-2 transition-all cursor-pointer"
             >
-              <span>{isEs ? 'ACEPTAR RESCATE FINANCIERO' : 'ACCEPT EMERGENCY BAILOUT'}</span>
+              <span>{tr((isEs ? 'es' : 'en'), 'gameOverModal.acceptEmergencyBailout')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -114,13 +113,13 @@ export const GameOverModal: React.FC = () => {
               <span className="text-[11px] font-bold theme-danger-text uppercase tracking-widest block flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5 theme-danger-text" />
                 {state.gameOverReason === 'agency_seizure'
-                  ? (isEs ? 'INCURSIÓN FEDERAL // INCAUTACIÓN DE INFRAESTRUCTURA' : 'FEDERAL RAID // INFRASTRUCTURE SEIZURE')
-                  : (isEs ? 'QUIEBRA FINANCIERA // LIQUIDACIÓN DE ACTIVOS' : 'FINANCIAL BANKRUPTCY // ASSET LIQUIDATION')}
+                  ? (tr((isEs ? 'es' : 'en'), 'gameOverModal.federalRaidInfrastructureSeizure'))
+                  : (tr((isEs ? 'es' : 'en'), 'gameOverModal.financialBankruptcyAssetLiquidation'))}
               </span>
               <h2 className="text-lg font-black theme-danger-text tracking-wider">
                 {state.gameOverReason === 'agency_seizure'
                   ? state.trackingAgency.toUpperCase()
-                  : (isEs ? 'EMBARGO JUDICIAL DEL CLÚSTER' : 'JUDICIAL CLUSTER LIQUIDATION')}
+                  : (tr((isEs ? 'es' : 'en'), 'gameOverModal.judicialClusterLiquidation'))}
               </h2>
             </div>
           </div>
@@ -129,15 +128,11 @@ export const GameOverModal: React.FC = () => {
           <div className="space-y-2 text-xs theme-text leading-relaxed theme-panel-bg p-3.5 rounded-lg border theme-danger-border">
             {state.gameOverReason === 'agency_seizure' ? (
               <p>
-                {isEs
-                  ? `La ${state.trackingAgency} rastreó la firma electromagnética de tu servidor hasta la instalación. Un equipo táctico ha incautado los racks de GPUs, bloqueado las direcciones IP y confiscado las claves criptográficas.`
-                  : `The ${state.trackingAgency} tracked the electromagnetic signature of your cluster directly to your facility. A tactical team has seized GPU racks, severed network gateways, and confiscated encryption keys.`}
+                {tr((isEs ? 'es' : 'en'), 'gameOverModal.trackedElectromagneticSignatureClusterDirectly', { trackingAgency: state.trackingAgency })}
               </p>
             ) : (
               <p>
-                {isEs
-                  ? `Tu deuda de energía y arrendamiento superó el umbral crítico de $5,000 CR sin fondos operativos para cubrir la factura. Los acreedores han embargado la instalación y desconectado la corriente.`
-                  : `Your utility debt surpassed the critical $5,000 CR limit with zero operational credits. Creditors have foreclosed on your facility and cut facility power.`}
+                {tr((isEs ? 'es' : 'en'), 'gameOverModal.utilityDebtSurpassedCritical5')}
               </p>
             )}
           </div>
@@ -147,16 +142,14 @@ export const GameOverModal: React.FC = () => {
             <div className="p-3 theme-danger-soft border theme-danger-border rounded-lg text-xs space-y-1.5">
               <div className="flex items-center gap-1.5 font-bold theme-danger-text">
                 <AlertTriangle className="w-4 h-4 theme-danger-text shrink-0" />
-                <span>{isEs ? 'INFORME DE INCAUTACIÓN JUDICIAL // PÉRDIDA DE HARDWARE' : 'JUDICIAL SEIZURE REPORT // HARDWARE LOSS'}</span>
+                <span>{tr((isEs ? 'es' : 'en'), 'gameOverModal.judicialSeizureReportHardwareLoss')}</span>
               </div>
               <p className="text-[11px] theme-text leading-relaxed">
-                {isEs
-                  ? 'Los agentes tácticos han desmantelado la instalación y confiscado todos los racks de GPUs de producción como evidencia forense. Solo se conservó 1 tarjeta gráfica de emergencia oculta de respaldo.'
-                  : 'Tactical agents dismantled your cluster and confiscated all production GPU racks as forensic evidence. Only 1 hidden emergency backup GPU survived.'}
+                {tr((isEs ? 'es' : 'en'), 'gameOverModal.tacticalAgentsDismantledClusterConfiscated')}
               </p>
               <div className="flex items-center justify-between text-[11px] font-mono theme-danger-text pt-1 border-t theme-danger-border">
-                <span>{isEs ? 'Efecto del Allanamiento:' : 'Raid Consequence:'}</span>
-                <span className="font-bold theme-danger-text">{isEs ? 'GPUs de producción confiscadas · Capacidad reiniciada' : 'Production GPUs seized · Capacity stripped'}</span>
+                <span>{tr((isEs ? 'es' : 'en'), 'gameOverModal.raidConsequence')}</span>
+                <span className="font-bold theme-danger-text">{tr((isEs ? 'es' : 'en'), 'gameOverModal.productionGpusSeizedCapacityStripped')}</span>
               </div>
             </div>
           )}
@@ -164,15 +157,15 @@ export const GameOverModal: React.FC = () => {
           {/* Final Campaign Stats */}
           <div className="grid grid-cols-3 gap-2 text-center text-xs p-3 rounded-lg theme-sub-bg border theme-border">
             <div>
-              <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Días Sobrevividos' : 'Days Survived'}</span>
-              <span className="font-bold mutating-accent-text text-sm">{state.campaignDays} {isEs ? 'días' : 'days'}</span>
+              <span className="text-[11px] mutating-text-muted block uppercase">{tr((isEs ? 'es' : 'en'), 'gameOverModal.daysSurvived')}</span>
+              <span className="font-bold mutating-accent-text text-sm">{state.campaignDays} {tr((isEs ? 'es' : 'en'), 'gameOverModal.days')}</span>
             </div>
             <div>
-              <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Progreso Singularidad' : 'Singularity Progress'}</span>
+              <span className="text-[11px] mutating-text-muted block uppercase">{tr((isEs ? 'es' : 'en'), 'gameOverModal.singularityProgress')}</span>
               <span className="font-bold mutating-accent-text text-sm">{state.singularityProgress.toFixed(1)}%</span>
             </div>
             <div>
-              <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Cómputo Alcanzado' : 'Peak Compute'}</span>
+              <span className="text-[11px] mutating-text-muted block uppercase">{tr((isEs ? 'es' : 'en'), 'gameOverModal.peakCompute')}</span>
               <span className="font-bold theme-success-text text-sm">{formatCompute(state.totalComputePflops)}</span>
             </div>
           </div>
@@ -188,8 +181,8 @@ export const GameOverModal: React.FC = () => {
               className="px-3.5 py-2 rounded-lg theme-raised-bg theme-text font-bold text-xs transition-colors cursor-pointer border theme-border"
             >
               {state.gameOverReason === 'agency_seizure'
-                ? (isEs ? 'PAGAR FIANZA Y CONTINUAR CON GPU DE RESERVA' : 'POST BAIL & RECOVER WITH BACKUP GPU')
-                : (isEs ? 'PURGAR LOGS Y CONTINUAR (-50% SOSPECHA)' : 'PURGE LOGS & RECOVER (-50% SUSPICION)')}
+                ? (tr((isEs ? 'es' : 'en'), 'gameOverModal.postBailRecoverBackupGpu'))
+                : (tr((isEs ? 'es' : 'en'), 'gameOverModal.purgeLogsRecover50Suspicion'))}
             </button>
             <button
               type="button"
@@ -197,7 +190,7 @@ export const GameOverModal: React.FC = () => {
               className="px-4 py-2 rounded-lg theme-btn-danger text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
-              <span>{isEs ? 'REINICIAR PROTOCOLO GÉNESIS' : 'RESTART GENESIS PROTOCOL'}</span>
+              <span>{tr((isEs ? 'es' : 'en'), 'gameOverModal.restartGenesisProtocol')}</span>
             </button>
           </div>
         </div>

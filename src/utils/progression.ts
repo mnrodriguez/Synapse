@@ -7,6 +7,7 @@ import type {
   ModelTopology,
   QuantizationType
 } from '../types/game';
+import { tr } from '../i18n';
 
 export type ProgressionRequirement = {
   requiredResearchId?: string;
@@ -48,27 +49,21 @@ export function getUnlockReason(
     requirement.minSingularityRequired !== undefined &&
     state.singularityProgress < requirement.minSingularityRequired
   ) {
-    return isEs
-      ? `Requiere Singularidad ≥ ${requirement.minSingularityRequired}%`
-      : `Requires Singularity ≥ ${requirement.minSingularityRequired}%`;
+    return tr((isEs ? 'es' : 'en'), 'progression.requiresSingularity', { minSingularityRequired: requirement.minSingularityRequired });
   }
   if (requirement.requiredResearchId) {
     const researchNode = state.researchTree.find(r => r.id === requirement.requiredResearchId);
     if (researchNode && !researchNode.unlocked) {
-      return isEs
-        ? `Requiere I+D: "${researchNode.title}"`
-        : `Requires Research: "${researchNode.title}"`;
+      return tr((isEs ? 'es' : 'en'), 'progression.requiresResearch', { title: researchNode.title });
     }
   }
   if (
     requirement.availableAfterDays !== undefined &&
     state.campaignDays < requirement.availableAfterDays
   ) {
-    return isEs
-      ? `Disponible en el Día ${requirement.availableAfterDays}`
-      : `Available on Day ${requirement.availableAfterDays}`;
+    return tr((isEs ? 'es' : 'en'), 'progression.availableDay', { availableAfterDays: requirement.availableAfterDays });
   }
-  return isEs ? 'Desbloqueado' : 'Unlocked';
+  return tr((isEs ? 'es' : 'en'), 'progression.unlocked');
 }
 
 export function getModelOptionRequirement(

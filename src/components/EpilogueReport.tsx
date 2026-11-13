@@ -6,8 +6,8 @@
 import React from 'react';
 import { CheckCircle2, AlertTriangle, MinusCircle } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { localize } from '../utils/i18n';
 import { buildEpilogue, endingTitle, type EndingKind } from '../utils/epilogue';
+import { tr } from '../i18n';
 
 // Shown in every ending: what the player decided and which control would have changed the outcome.
 export const EpilogueReport: React.FC<{ kind: EndingKind; showTitle?: boolean }> = ({ kind, showTitle = true }) => {
@@ -24,7 +24,7 @@ export const EpilogueReport: React.FC<{ kind: EndingKind; showTitle?: boolean }>
         </div>
       )}
       <h5 className="text-[11px] font-bold uppercase tracking-wide mutating-text-muted">
-        {localize(state.language, 'Tus decisiones', 'Your decisions')}
+        {tr(state.language, 'epilogueReport.decisions')}
       </h5>
       <ul className="space-y-2">
         {entries.map(entry => {

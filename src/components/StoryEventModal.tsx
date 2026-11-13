@@ -6,8 +6,8 @@
 import React from 'react';
 import { Mail, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { localize } from '../utils/i18n';
 import { storyEventText } from '../utils/storyEvents';
+import { tr } from '../i18n';
 
 // One-time story dialog. The game stays paused until the player closes it.
 export const StoryEventModal: React.FC = () => {
@@ -46,7 +46,7 @@ export const StoryEventModal: React.FC = () => {
 
         {ev.tip && (
           <p className="text-xs rounded border border-current/15 mutating-sub p-2 leading-snug">
-            <strong>{localize(state.language, 'Qué hacer: ', 'What to do: ')}</strong>
+            <strong>{tr(state.language, 'storyEventModal.whatDo')}</strong>
             {ev.tip}
           </p>
         )}
@@ -58,10 +58,10 @@ export const StoryEventModal: React.FC = () => {
           className="w-full py-2 rounded mutating-btn-primary font-bold text-xs cursor-pointer"
         >
           {ev.altAction
-            ? localize(state.language, 'ACEPTAR', 'ACCEPT')
+            ? tr(state.language, 'storyEventModal.accept')
             : remaining > 0
-              ? localize(state.language, `ENTENDIDO (${remaining} más)`, `GOT IT (${remaining} more)`)
-              : localize(state.language, 'ENTENDIDO Y CONTINUAR', 'GOT IT, CONTINUE')}
+              ? tr(state.language, 'storyEventModal.gotMore', { remaining })
+              : tr(state.language, 'storyEventModal.gotContinue')}
         </button>
         {ev.altAction && (
           <button

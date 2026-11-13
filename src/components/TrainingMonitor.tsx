@@ -21,9 +21,9 @@ import {
 import { sound } from '../audio/soundManager';
 import { gpuComputePflops, formatTrainingTime, externalComputePflops, formatCompute } from '../utils/training';
 import { STARTER_TRAINING_DATASET } from '../utils/constants';
-import { localize } from '../utils/i18n';
 import { TrainingConfigPanel } from './TrainingConfigPanel';
 import { sanitizeTrainingConfig, vramForRun, BATCH_SIZES, learningRateLabel } from '../utils/trainingRun';
+import { tr } from '../i18n';
 
 // Selected dataset: an inline style so the accent border and tint win over the theme surface classes.
 const DATASET_SELECTED_STYLE: React.CSSProperties = {
@@ -54,7 +54,7 @@ export const TrainingMonitor: React.FC = () => {
   const unlockedDatasets = [
     {
       id: STARTER_TRAINING_DATASET.id,
-      name: localize(state.language, 'Corpus de arranque (Wikipedia / Libros / Noticias)', 'Starter Corpus (Web / Books / News)'),
+      name: tr(state.language, 'trainingMonitor.starterCorpusWebBooksNews'),
       domain: 'general',
       tier: 1,
       // Show the tokens the run will actually use: the saved general corpus when present.
@@ -80,13 +80,13 @@ export const TrainingMonitor: React.FC = () => {
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 mutating-accent-text" />
             <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
-              {localize(state.language, 'MONITOR DE ENTRENAMIENTO // DESPACHADOR DE MODELOS', 'TRAINING MONITOR // MODEL DISPATCHER')}
+              {tr(state.language, 'trainingMonitor.trainingMonitorModelDispatcher')}
             </h2>
           </div>
           <div className="flex items-center gap-2 text-[11px] mutating-text-muted">
-            <span>{localize(state.language, 'Cómputo:', 'Compute:')} <strong>{formatCompute((gpuComputePflops(state.hardware) + state.borrowedComputePflops + externalComputePflops(state)))}</strong></span>
+            <span>{tr(state.language, 'trainingMonitor.compute')} <strong>{formatCompute((gpuComputePflops(state.hardware) + state.borrowedComputePflops + externalComputePflops(state)))}</strong></span>
             <span>•</span>
-            <span>{localize(state.language, 'VRAM Total:', 'Total VRAM:')} <strong className="theme-success-text">{totalClusterVram} GB</strong></span>
+            <span>{tr(state.language, 'trainingMonitor.totalVram')} <strong className="theme-success-text">{totalClusterVram} GB</strong></span>
           </div>
         </div>
 
@@ -95,10 +95,10 @@ export const TrainingMonitor: React.FC = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold mutating-accent-text uppercase tracking-wider flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5" />
-              {localize(state.language, '1. Selecciona el Modelo para Entrenar', '1. Select Model to Train')}
+              {tr(state.language, 'trainingMonitor.n1SelectModelTrain')}
             </h3>
             <span className="text-[11px] mutating-text-muted">
-              {state.savedModels.length} {localize(state.language, 'modelo(s) en biblioteca', 'model(s) in library')}
+              {state.savedModels.length} {tr(state.language, 'trainingMonitor.modelSLibrary')}
             </span>
           </div>
 
@@ -134,7 +134,7 @@ export const TrainingMonitor: React.FC = () => {
                     </div>
                     {isSelected && (
                       <span className="text-[11px] px-1.5 py-0.5 rounded font-bold mutating-btn-primary shrink-0 shadow-sm">
-                        {localize(state.language, 'ACTIVO ✓', 'ACTIVE ✓')}
+                        {tr(state.language, 'trainingMonitor.active')}
                       </span>
                     )}
                   </div>
@@ -142,7 +142,7 @@ export const TrainingMonitor: React.FC = () => {
                   <div className="pt-1 border-t border-current/10 flex items-center justify-between text-[11px]">
                     <span className="mutating-accent-text font-bold flex items-center gap-1">
                       <Brain className="w-3 h-3 mutating-accent-text" />
-                      {state.language === 'es' ? 'Puntaje' : 'Score'} {model.reasoningScore ?? 0}
+                      {tr(state.language, 'trainingMonitor.score')} {model.reasoningScore ?? 0}
                     </span>
                     <span className={`text-[11px] ${hasVram ? 'mutating-text-muted' : 'theme-danger-text font-bold'}`}>
                       {model.vramRequiredGb} GB VRAM
@@ -160,18 +160,14 @@ export const TrainingMonitor: React.FC = () => {
             <div>
               <h3 className="text-xs font-bold mutating-accent-text uppercase tracking-wider flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5" />
-                {localize(state.language, '2. Dataset de Entrenamiento & Cuantización', '2. Training Dataset & Quantization')}
+                {tr(state.language, 'trainingMonitor.n2TrainingDatasetQuantization')}
               </h3>
               <p className="text-[11px] mutating-text-muted mt-0.5">
-                {localize(
-                  state.language,
-                  'Los datos procesados reducirán la función de pérdida y aumentarán el puntaje de evaluación del modelo seleccionado.',
-                  'Processed training data will decrease loss and elevate the evaluation score of the selected model.'
-                )}
+                {tr(state.language, 'trainingMonitor.processedTrainingDataWillDecrease')}
               </p>
             </div>
             <div className="text-right">
-              <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'Objetivo:', 'Target Model:')}</span>
+              <span className="text-[11px] mutating-text-muted block">{tr(state.language, 'trainingMonitor.targetModel')}</span>
               <span className="text-xs font-bold mutating-accent-text font-mono">{current.name}</span>
             </div>
           </div>
@@ -179,7 +175,7 @@ export const TrainingMonitor: React.FC = () => {
           {/* Dataset Selector Dropdown */}
           <div className="space-y-1">
             <label className="text-[11px] mutating-text-muted block uppercase tracking-wider font-semibold">
-              {localize(state.language, 'Seleccionar Dataset:', 'Select Dataset:')}
+              {tr(state.language, 'trainingMonitor.selectDataset')}
             </label>
             <div className="flex flex-wrap gap-2">
               {unlockedDatasets.map(ds => (
@@ -223,16 +219,16 @@ export const TrainingMonitor: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Cpu className="w-4 h-4 theme-success-text" />
                 <span className="font-bold">
-                  {localize(state.language, 'Verificación de Memoria VRAM:', 'VRAM Memory Audit:')}
+                  {tr(state.language, 'trainingMonitor.vramMemoryAudit')}
                 </span>
                 <span className={isVramSufficient ? 'theme-success-text font-bold' : 'theme-danger-text font-bold'}>
-                  {runVramGb} GB {localize(state.language, 'requeridos', 'required')} / {totalClusterVram} GB {localize(state.language, 'disponibles', 'available')}
+                  {runVramGb} GB {tr(state.language, 'trainingMonitor.required')} / {totalClusterVram} GB {tr(state.language, 'trainingMonitor.available')}
                 </span>
               </div>
               <p className="text-[11px] mutating-text-muted">
                 {isVramSufficient
-                  ? localize(state.language, 'El clúster cuenta con memoria VRAM suficiente para alojar los tensores y el búfer de gradientes.', 'Cluster has sufficient VRAM to hold weights and gradient optimizer buffers.')
-                  : localize(state.language, '¡VRAM insuficiente! Cuantiza el modelo (INT8/FP4) en Arquitectura o adquiere más GPUs en Hardware.', 'Insufficient VRAM! Quantize the model (INT8/FP4) in Architecture or purchase GPUs in Hardware.')}
+                  ? tr(state.language, 'trainingMonitor.clusterHasSufficientVramHold')
+                  : tr(state.language, 'trainingMonitor.insufficientVramQuantizeModelInt8')}
               </p>
             </div>
 
@@ -251,7 +247,7 @@ export const TrainingMonitor: React.FC = () => {
             >
               <Play className="w-4 h-4 fill-current" />
               <span>
-                {localize(state.language, 'INICIAR ENTRENAMIENTO DE', 'START TRAINING')} {current.name}
+                {tr(state.language, 'trainingMonitor.startTraining')} {current.name}
               </span>
             </button>
           </div>
@@ -286,7 +282,7 @@ export const TrainingMonitor: React.FC = () => {
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 theme-success-text animate-pulse" />
           <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
-            {localize(state.language, 'MONITOR DE CONVERGENCIA // TELEMETRÍA DE ENTRENAMIENTO', 'CONVERGENCE MONITOR // TRAINING TELEMETRY')}
+            {tr(state.language, 'trainingMonitor.convergenceMonitorTrainingTelemetry')}
           </h2>
         </div>
 
@@ -295,7 +291,7 @@ export const TrainingMonitor: React.FC = () => {
           className="flex items-center gap-1.5 px-3 py-1 theme-danger-soft border theme-danger-border theme-danger-text rounded text-xs transition-colors cursor-pointer"
         >
           <AlertCircle className="w-3.5 h-3.5" />
-          <span>{localize(state.language, 'CANCELAR CORRIDA', 'CANCEL RUN')}</span>
+          <span>{tr(state.language, 'trainingMonitor.cancelRun')}</span>
         </button>
       </div>
 
@@ -304,7 +300,7 @@ export const TrainingMonitor: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between text-xs font-bold gap-2">
           <div className="flex items-center gap-2">
             <span className="mutating-accent-text">
-              {localize(state.language, 'PROGRESO TOTAL:', 'TOTAL PROGRESS:')} {Math.floor(job.progressPercent)}%
+              {tr(state.language, 'trainingMonitor.totalProgress')} {Math.floor(job.progressPercent)}%
             </span>
             <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px] font-bold">
               {job.modelName}
@@ -315,7 +311,7 @@ export const TrainingMonitor: React.FC = () => {
               </span>
             ) : (
               <span className="px-2 py-0.5 rounded theme-success-soft border theme-success-border theme-success-text text-[11px]">
-                {localize(state.language, 'MODELO GENERAL', 'GENERAL MODEL')}
+                {tr(state.language, 'trainingMonitor.generalModel')}
               </span>
             )}
             {job.datasetName && (
@@ -325,7 +321,7 @@ export const TrainingMonitor: React.FC = () => {
             )}
           </div>
           <span className="theme-warn-text font-mono">
-            {localize(state.language, 'Época', 'Epoch')} {job.currentEpoch} / {job.totalEpochs} ({localize(state.language, 'Paso', 'Step')} #{job.step})
+            {tr(state.language, 'trainingMonitor.epoch')} {job.currentEpoch} / {job.totalEpochs} ({tr(state.language, 'trainingMonitor.step')} #{job.step})
           </span>
         </div>
 
@@ -338,16 +334,16 @@ export const TrainingMonitor: React.FC = () => {
 
         <div className="flex flex-wrap items-center justify-between text-xs pt-1 mutating-text-muted gap-2">
           <div>
-            <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'CÓMPUTO ASIGNADO A LA CORRIDA:', 'COMPUTE ALLOCATED TO RUN:')}</span>
+            <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'trainingMonitor.computeAllocatedRun')}</span>
             <span className="mutating-accent-text font-bold">
-              {formatCompute((gpuComputePflops(state.hardware) + state.borrowedComputePflops + externalComputePflops(state)))} {localize(state.language, '(GPU instaladas + préstamo)', '(installed GPUs + loan)')}
+              {formatCompute((gpuComputePflops(state.hardware) + state.borrowedComputePflops + externalComputePflops(state)))} {tr(state.language, 'trainingMonitor.installedGpusLoan')}
             </span>
           </div>
           <div>
-            <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'TIEMPO RESTANTE (TIEMPO DE JUEGO):', 'TIME LEFT (GAME TIME):')}</span>
+            <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'trainingMonitor.timeLeftGameTime')}</span>
             <span className="theme-success-text font-bold">
               {job.timeRemainingSeconds === null
-                ? localize(state.language, 'N/A', 'N/A')
+                ? tr(state.language, 'trainingMonitor.n')
                 : formatTrainingTime(job.timeRemainingSeconds, state.language)}
             </span>
           </div>
@@ -359,12 +355,12 @@ export const TrainingMonitor: React.FC = () => {
         <div className="flex items-center justify-between text-xs">
           <span className="font-bold mutating-accent-text flex items-center gap-1.5">
             <TrendingDown className="w-3.5 h-3.5" />
-            {localize(state.language, 'CURVAS DE PÉRDIDA: ENTRENAMIENTO Y VALIDACIÓN', 'LOSS CURVES: TRAINING AND VALIDATION')}
+            {tr(state.language, 'trainingMonitor.lossCurvesTrainingValidation')}
           </span>
           <span className="font-bold font-mono flex flex-wrap gap-3">
-            <span className="mutating-accent-text">{localize(state.language, 'Entrenamiento', 'Training')}: {job.currentLoss.toFixed(4)}</span>
+            <span className="mutating-accent-text">{tr(state.language, 'trainingMonitor.training')}: {job.currentLoss.toFixed(4)}</span>
             {job.currentValLoss !== undefined && (
-              <span className="theme-warn-text">{localize(state.language, 'Validación', 'Validation')}: {job.currentValLoss.toFixed(4)}</span>
+              <span className="theme-warn-text">{tr(state.language, 'trainingMonitor.validation')}: {job.currentValLoss.toFixed(4)}</span>
             )}
           </span>
         </div>
@@ -403,11 +399,11 @@ export const TrainingMonitor: React.FC = () => {
           </svg>
         </div>
         <div className="flex items-center justify-between text-[11px] mutating-text-muted">
-          <span>{localize(state.language, 'Paso Inicial:', 'Initial step:')} {job.initialLoss}</span>
+          <span>{tr(state.language, 'trainingMonitor.initialStep')} {job.initialLoss}</span>
           <span className={valRising ? 'theme-danger-text font-bold' : 'mutating-accent-text'}>
             {valRising
-              ? localize(state.language, 'La validación sube: el modelo empieza a memorizar (sobreajuste)', 'Validation is rising: the model is starting to memorise (overfitting)')
-              : localize(state.language, 'Línea llena: entrenamiento · punteada: validación', 'Solid: training · dashed: validation')}
+              ? tr(state.language, 'trainingMonitor.validationRisingModelStartingMemorise')
+              : tr(state.language, 'trainingMonitor.solidTrainingDashedValidation')}
           </span>
           <span>LR {learningRateLabel(state.language, job.plan ? job.plan.config.learningRate : 'balanced')} · batch {job.plan ? BATCH_SIZES[job.plan.config.batchSize].value : 64}</span>
         </div>
@@ -416,27 +412,27 @@ export const TrainingMonitor: React.FC = () => {
       {/* Numerical Metrics Cards */}
       <div className="triple-grid grid gap-2.5 text-xs">
         <div className="p-3 rounded-lg mutating-sub">
-          <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'PERPLEJIDAD', 'PERPLEXITY')}</span>
+          <span className="text-[11px] mutating-text-muted block">{tr(state.language, 'trainingMonitor.perplexity')}</span>
           <span className="mutating-accent-text font-bold text-sm">{job.perplexity}</span>
           <span className="text-[11px] mutating-text-muted block mt-0.5">e^(loss)</span>
         </div>
 
         <div className="p-3 rounded-lg mutating-sub">
-          <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'NORMA DE GRADIENTE', 'GRADIENT NORM')}</span>
+          <span className="text-[11px] mutating-text-muted block">{tr(state.language, 'trainingMonitor.gradientNorm')}</span>
           <span className="theme-warn-text font-bold text-sm">{job.gradientNorm}</span>
           <span className="text-[11px] mutating-text-muted block mt-0.5">Clip: 1.0</span>
         </div>
 
         <div className="p-3 rounded-lg mutating-sub">
-          <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'TEMPERATURA GPU', 'GPU TEMPERATURE')}</span>
+          <span className="text-[11px] mutating-text-muted block">{tr(state.language, 'trainingMonitor.gpuTemperature')}</span>
           <span className={`font-bold text-sm ${state.systemHeatCelsius > 80 ? 'theme-danger-text' : 'theme-success-text'}`}>
             {state.systemHeatCelsius}°C
           </span>
-          <span className="text-[11px] mutating-text-muted block mt-0.5">{localize(state.language, 'Disipación', 'Cooling')} {state.maxCoolingKw} kW</span>
+          <span className="text-[11px] mutating-text-muted block mt-0.5">{tr(state.language, 'trainingMonitor.cooling')} {state.maxCoolingKw} kW</span>
         </div>
 
         <div className="p-3 rounded-lg mutating-sub">
-          <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'TOPOLOGÍA ACTIVA', 'ACTIVE TOPOLOGY')}</span>
+          <span className="text-[11px] mutating-text-muted block">{tr(state.language, 'trainingMonitor.activeTopology')}</span>
           <span className="mutating-accent-text font-bold text-xs truncate block">{current.topology}</span>
           <span className="text-[11px] mutating-text-muted block mt-0.5">{current.quantization.toUpperCase()}</span>
         </div>

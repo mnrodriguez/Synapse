@@ -1,3 +1,4 @@
+import { tr } from '../i18n';
 // Training work is estimated with the usual rule of thumb for dense transformers: about 6 FLOPs per
 // parameter per training token. A run is complete when that work has been done.
 //
@@ -86,17 +87,15 @@ export const formatTrainingDaysPrediction = (
   const inGameDays = totalTicks / TICKS_PER_GAME_DAY;
 
   const inGameDaysText = inGameDays < 0.1
-    ? (language === 'es' ? '< 0.1 días' : '< 0.1 days')
+    ? (tr(language, 'training.n01Days'))
     : inGameDays < 1
-    ? (language === 'es' ? `${inGameDays.toFixed(1)} día` : `${inGameDays.toFixed(1)} day`)
-    : (language === 'es' ? `${inGameDays.toFixed(1)} días` : `${inGameDays.toFixed(1)} days`);
+    ? (tr(language, 'training.day', { inGameDays: inGameDays.toFixed(1) }))
+    : (tr(language, 'training.days', { inGameDays: inGameDays.toFixed(1) }));
 
   const speed = Math.max(1, gameSpeed);
   const hardwareRuntimeText = formatTrainingDuration(totalTicks / speed);
 
-  const summaryText = language === 'es'
-    ? `${inGameDaysText} (~${hardwareRuntimeText} con hardware actual)`
-    : `${inGameDaysText} (~${hardwareRuntimeText} with current hardware)`;
+  const summaryText = tr(language, 'training.currentHardware', { inGameDaysText, hardwareRuntimeText });
 
   return {
     inGameDays,
@@ -136,7 +135,7 @@ export const formatGameTime = (ticks: number): string => {
 export const formatTrainingTime = (ticks: number | null, language: 'en' | 'es' = 'en'): string => {
   if (ticks === null) return 'N/A';
   const duration = formatGameTime(Math.ceil(ticks));
-  return language === 'es' ? `${duration} de juego` : `${duration} of game time`;
+  return tr(language, 'training.gameTime', { duration });
 };
 
 // Evaluation score: one scale from 0 to 100, the share of the game's evaluation suite a model solves.

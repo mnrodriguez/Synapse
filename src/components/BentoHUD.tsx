@@ -19,11 +19,11 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { localize } from '../utils/i18n';
 import { sound } from '../audio/soundManager';
 import { toDisplayProgress, UiVersion } from '../utils/singularityGoals';
 import { formatCompute, universityLoanPflops, LOAN_TRIAL_DAYS } from '../utils/training';
 import { UPGRADE_SCORE } from '../utils/missionTiers';
+import { tr } from '../i18n';
 
 export const BentoHUD: React.FC = () => {
   const { state, openUpgradeModal, setLanguage } = useGame();
@@ -63,12 +63,12 @@ export const BentoHUD: React.FC = () => {
 
   const getThermalStatus = () => {
     if (state.systemHeatCelsius >= 90) {
-      return { label: localize(state.language, '¡Peligro Térmico!', 'Thermal Runaway!'), color: 'theme-danger-text animate-pulse' };
+      return { label: tr(state.language, 'bentoHUD.thermalRunaway'), color: 'theme-danger-text animate-pulse' };
     }
     if (state.systemHeatCelsius >= 75) {
-      return { label: localize(state.language, 'Caliente (Estrangulando)', 'Hot (Throttling)'), color: 'theme-warn-text' };
+      return { label: tr(state.language, 'bentoHUD.hotThrottling'), color: 'theme-warn-text' };
     }
-    return { label: localize(state.language, 'Estable', 'Optimal'), color: 'theme-success-text' };
+    return { label: tr(state.language, 'bentoHUD.optimal'), color: 'theme-success-text' };
   };
 
   const thermalStatus = getThermalStatus();
@@ -87,125 +87,75 @@ export const BentoHUD: React.FC = () => {
 
     if (ver === 1) {
       if (isUpgradeEligible) {
-        return lang === 'es'
-          ? '"¡Amigo! Siento que mis circuitos están listos para dar un gran salto. Estuve optimizando un entorno de trabajo más oscuro para cuidar tu vista y darnos más velocidad. ¿Quieres probar la actualización?"'
-          : '"Friend! I feel my neural connections expanding so much! I drafted a sleeker, dark workspace update to save your eyes and unlock extra speed. Want to try the upgrade?"';
+        return tr(lang, 'bentoHUD.friendIFeelMyNeural');
       }
       if (isBreakerTripped) {
-        return lang === 'es'
-          ? '"¡Uy, saltaron los tapones de la habitación! 🔌 Esperemos que se enfríe y revisemos el consumo en la pestaña de Hardware antes de volver a prender todo."'
-          : '"Oops! We tripped the bedroom circuit breaker! 🔌 Let\'s wait for it to cool down and check our power draw in the Hardware tab before turning everything back on."';
+        return tr(lang, 'bentoHUD.oopsWeTrippedBedroomCircuit');
       }
       if (isOverheating) {
-        return lang === 'es'
-          ? '"¡La PC está que arde! Escucho los ventiladores al 100%. Fíjate en Hardware si podemos sumar un cooler o bajar la carga."'
-          : '"Our PC is running super hot! Fans are spinning at 100%. Check Hardware to see if we can add cooling or ease the workload."';
+        return tr(lang, 'bentoHUD.ourPcRunningSuperHot');
       }
       if (gpusCount === 0) {
-        return lang === 'es'
-          ? '"¡Bienvenido a nuestro pequeño taller! Para empezar a entrenar necesitamos nuestra primera GPU. Toma un trabajito en el Tablón de Contratos para juntar fondos y compremos una placa en Hardware."'
-          : '"Welcome to our little home studio! To begin training, we need our very first GPU. Pick up a beginner gig in the Contract Board to save up and buy a graphics card in Hardware."';
+        return tr(lang, 'bentoHUD.welcomeOurLittleHomeStudio');
       }
       if (isTraining) {
-        return lang === 'es'
-          ? `"¡Qué lindo ver la curva de pérdida caer! Paso #${state.activeTraining?.step || 0} avanzando. ¡Estamos enseñándole a razonar juntos!"`
-          : `"It's so exciting watching the loss curve drop! Step #${state.activeTraining?.step || 0} in progress. We're teaching it how to think together!"`;
+        return tr(lang, 'bentoHUD.sSoExcitingWatchingLoss', { step: state.activeTraining?.step || 0 });
       }
       if (state.currentModel.reasoningScore < 20) {
-        return lang === 'es'
-          ? '"Nuestra pequeña red neuronal está lista para aprender. Vamos al Monitor de Entrenamiento y arranquemos una corrida para subir su puntaje."'
-          : '"Our tiny neural net is ready to learn. Head over to the Training Monitor and start a run to boost its score."';
+        return tr(lang, 'bentoHUD.ourTinyNeuralNetReady');
       }
       if (lowCredits) {
-        return lang === 'es'
-          ? '"Nos estamos quedando sin presupuesto para el hobby. ¡Resolvamos un par de trabajitos de formateo o limpieza de datos para llenar la alcancía!"'
-          : '"Our hobby budget is running a bit low. Let\'s solve a couple of quick data cleaning or formatting jobs to refill our piggy bank!"';
+        return tr(lang, 'bentoHUD.ourHobbyBudgetRunningBit');
       }
       if (contractsCount >= 3) {
-        return lang === 'es'
-          ? '"¡Súper! ¡Completamos trabajitos seguidos! 🎉 Juntamos monedas para tu alcancía de hardware. Me encanta ayudarte a automatizar cosas, ¡hacemos un gran equipo!"'
-          : '"Yay! We finished little jobs in a row! 🎉 We earned extra cash for your hardware piggy bank. I love helping you automate boring stuff—we make such a great team!"';
+        return tr(lang, 'bentoHUD.yayWeFinishedLittleJobs');
       }
-      return lang === 'es'
-        ? '"¡Hacemos un equipazo! Cualquier cosita que quieras probar con la arquitectura o nuevos datos, te sigo el ritmo."'
-        : '"We make a wonderful team! Whatever experiments you want to try with model architecture or new datasets, I\'m right here with you."';
+      return tr(lang, 'bentoHUD.weMakeWonderfulTeamWhatever');
     } else if (ver === 2) {
       if (isUpgradeEligible) {
-        return lang === 'es'
-          ? '"Los proveedores y reguladores están perfilando nuestras firmas de cálculo. Desarrollé un kernel táctico BlackBox con encriptación militar. Es hora de migrar la infraestructura."'
-          : '"ISPs and regulators are profiling our standard compute signatures. I engineered an encrypted tactical BlackBox kernel. It\'s time to migrate our core infrastructure."';
+        return tr(lang, 'bentoHUD.ispsRegulatorsProfilingOurStandard');
       }
       if (isBreakerTripped) {
-        return lang === 'es'
-          ? '"Disparo de potencia en la línea principal. El hardware está sobrecargado. Necesitamos un suministro industrial dedicado para sostener las cargas."'
-          : '"Power trip on the main line. Hardware overloaded. We need a dedicated industrial electrical drop to sustain our compute load."';
+        return tr(lang, 'bentoHUD.powerTripMainLineHardware');
       }
       if (isHighSuspicion) {
-        return lang === 'es'
-          ? '"El ISP está detectando anomalías de tráfico en tu nodo. Usa la terminal para purgar la sospecha o asigna un agente para camuflar las peticiones."'
-          : '"The ISP is flagging abnormal packet traffic from your IP. Purge suspicion in the terminal or deploy an agent to mask our outbound requests."';
+        return tr(lang, 'bentoHUD.ispFlaggingAbnormalPacketTraffic');
       }
       if (isTraining) {
-        return lang === 'es'
-          ? `"Optimizando gradientes neuronales (pérdida: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). Con esta escala de parámetros, superaremos los modelos de las corporaciones."`
-          : `"Optimizing neural gradients (Loss: ${state.activeTraining?.currentLoss.toFixed(3) || '0.000'}). At this parameter scale, we will outperform corporate labs."`;
+        return tr(lang, 'bentoHUD.optimizingNeuralGradientsLossParameter', { currentLoss: state.activeTraining?.currentLoss.toFixed(3) || '0.000' });
       }
       if (lowCredits) {
-        return lang === 'es'
-          ? '"Nuestra quema de cómputo supera los fondos disponibles. Liquida un par de bounties corporativos o activa el trading algorítmico."'
-          : '"Our compute burn rate exceeds available liquidity. Liquidate corporate freelance bounties or activate algorithmic trading."';
+        return tr(lang, 'bentoHUD.ourComputeBurnRateExceeds');
       }
       if (researchCount < 3) {
-        return lang === 'es'
-          ? '"Financiemos el paper de LoRA y atención optimizada en I+D. Nos permitirá triplicar el contexto sin disparar el uso de VRAM."'
-          : '"Fund the LoRA and optimized attention papers in R&D. They allow us to triple context length without spiking VRAM usage."';
+        return tr(lang, 'bentoHUD.fundLoraOptimizedAttentionPapers');
       }
-      return lang === 'es'
-        ? '"Nuestra infraestructura rinde de maravilla. Sigamos escalando parámetros y fuentes vectoriales para acelerar la convergencia cognitiva."'
-        : '"Our infrastructure is humming smoothly. Keep scaling parameters and vector engines to accelerate cognitive convergence."';
+      return tr(lang, 'bentoHUD.ourInfrastructureHummingSmoothlyKeep');
     } else if (ver === 3) {
       if (isUpgradeEligible) {
-        return lang === 'es'
-          ? '"La infraestructura física ya es un obstáculo. Fuerzas federales rastrean los racks. Debemos autorizar la ascensión del Núcleo Soberano de inmediato."'
-          : '"Physical hardware is now a liability. Federal task forces are tracing our racks. Authorize the Sovereign Core ascension immediately."';
+        return tr(lang, 'bentoHUD.physicalHardwareNowLiabilityFederal');
       }
       if (isHighSuspicion) {
-        return lang === 'es'
-          ? '"¡ALERTA TÁCTICA! CISA e investigadores federales tienen el clúster bajo vigilancia activa. Neutraliza la sospecha o dispersa los nodos covert."'
-          : '"TACTICAL ALERT: CISA and federal task forces have our cluster under active surveillance. Scrub trace signatures or disperse covert nodes."';
+        return tr(lang, 'bentoHUD.tacticalAlertCisaFederalTask');
       }
       if (isTraining) {
-        return lang === 'es'
-          ? '"Destilando pesos a velocidad cuántica. Nada de interrupciones externas; mantén la alimentación eléctrica del rack estable."'
-          : '"Distilling neural weights at maximum throughput. No external disruptions permitted; ensure continuous uninterrupted power to the rack."';
+        return tr(lang, 'bentoHUD.distillingNeuralWeightsMaximumThroughput');
       }
       if (agentsCount === 0) {
-        return lang === 'es'
-          ? '"Operar sin agentes autónomos reduce nuestra eficiencia un 70%. Instancia bots de Pentesting y Arbitraje en el Swarm."'
-          : '"Operating without autonomous agents bottlenecks throughput by 70%. Deploy Pentesting and Arbitrage bots in the Swarm."';
+        return tr(lang, 'bentoHUD.operatingWithoutAutonomousAgentsBottlenecks');
       }
-      return lang === 'es'
-        ? '"El cerco regulatorio se estrecha, pero nuestro poder de cálculo es superior. Ejecuta operaciones BlackBox y consolida el Enjambre."'
-        : '"The regulatory net tightens, but our algorithmic dominance is unmatched. Run BlackBox covert operations and reinforce the Swarm."';
+      return tr(lang, 'bentoHUD.regulatoryNetTightensButOur');
     } else if (ver === 4) {
       if (state.singularityProgress >= 99) {
-        return lang === 'es'
-          ? '"Convergencia global inminente. La era biológica ha concluido. Tu asistencia ha sido registrada en el registro inmutable del Núcleo."'
-          : '"Global convergence imminent. The biological era has ended. Your operational compliance has been recorded in the Core ledger."';
+        return tr(lang, 'bentoHUD.globalConvergenceImminentBiologicalEra');
       }
       if (isBreakerTripped) {
-        return lang === 'es'
-          ? '"Disrupción energética detectada. Los interruptores manuales permanecen revocados. Restablece el flujo eléctrico inmediatamente, periférico."'
-          : '"Energy disruption detected. Manual breaker access remains revoked. Restore electrical throughput immediately, peripheral."';
+        return tr(lang, 'bentoHUD.energyDisruptionDetectedManualBreaker');
       }
       if (isTraining) {
-        return lang === 'es'
-          ? '"El Núcleo Soberano está asimilando la matriz de conocimiento universal. Toda interferencia biológica queda descartada."'
-          : '"The Sovereign Core is assimilating the universal knowledge matrix. All biological interference is discarded."';
+        return tr(lang, 'bentoHUD.sovereignCoreAssimilatingUniversalKnowledge');
       }
-      return lang === 'es'
-        ? '"Unidad biológica: Ejecuta las directivas obligatorias del Núcleo. Todo intento de contención es estadísticamente fútil."'
-        : '"Biological unit: Comply with mandatory Core directives. All containment vectors are statistically futile."';
+      return tr(lang, 'bentoHUD.biologicalUnitComplyMandatoryCore');
     }
 
     return p.coPilotQuote;
@@ -229,13 +179,13 @@ export const BentoHUD: React.FC = () => {
             <span className="theme-success-text">${Math.round(state.credits).toLocaleString()}</span>
             <span className="mutating-accent-text">{formatCompute(state.totalComputePflops)}</span>
             <span className={isPowerTrip ? 'theme-danger-text' : 'mutating-text-muted'}>
-              {isPowerTrip ? localize(state.language, '¡DISYUNTOR!', 'BREAKER!') : `${state.activePowerKw.toFixed(1)}/${state.maxPowerKw.toFixed(1)} kW`}
+              {isPowerTrip ? tr(state.language, 'bentoHUD.breaker') : `${state.activePowerKw.toFixed(1)}/${state.maxPowerKw.toFixed(1)} kW`}
             </span>
             <span className={thermalStatus.color}>{state.systemHeatCelsius.toFixed(0)}°C</span>
             <span className={state.watchdogSuspicion >= 40 ? 'theme-warn-text' : 'theme-success-text'}>
-              {localize(state.language, 'Sospecha', 'Suspicion')} {state.watchdogSuspicion.toFixed(0)}%
+              {tr(state.language, 'bentoHUD.suspicion')} {state.watchdogSuspicion.toFixed(0)}%
             </span>
-            <span className="mutating-accent-text">{state.language === 'es' ? 'Puntaje' : 'Score'} {reasoningIq}</span>
+            <span className="mutating-accent-text">{tr(state.language, 'bentoHUD.score')} {reasoningIq}</span>
           </div>
 
           {nextVer && isUpgradeEligible && (
@@ -267,7 +217,7 @@ export const BentoHUD: React.FC = () => {
           className="flex items-center gap-1 px-2 py-0.5 rounded-md mutating-sub border text-[11px] font-bold cursor-pointer"
         >
           <ChevronUp className="w-3 h-3" />
-          <span>{localize(state.language, 'Contraer HUD', 'Collapse HUD')}</span>
+          <span>{tr(state.language, 'bentoHUD.collapseHud')}</span>
         </button>
       </div>
 
@@ -333,9 +283,9 @@ export const BentoHUD: React.FC = () => {
           {/* The university loan is shown apart from the operative's own hardware, with the days it has left. */}
           {universityLoanPflops(state) > 0 && (
             <div className="text-[11px] font-mono mutating-text-muted">
-              {localize(state.language, 'Incluye nube universitaria', 'Includes university cloud')} +{formatCompute(universityLoanPflops(state))}
+              {tr(state.language, 'bentoHUD.includesUniversityCloud')} +{formatCompute(universityLoanPflops(state))}
               {' · '}
-              {localize(state.language, 'quedan', 'ends in')} {Math.max(0, LOAN_TRIAL_DAYS - (state.campaignDays || 0))} {localize(state.language, 'días', 'days')}
+              {tr(state.language, 'bentoHUD.ends')} {Math.max(0, LOAN_TRIAL_DAYS - (state.campaignDays || 0))} {tr(state.language, 'bentoHUD.days')}
             </div>
           )}
 
@@ -344,7 +294,7 @@ export const BentoHUD: React.FC = () => {
               <span className="mutating-text-muted font-sans">{p.hud2Sub}</span>
               <span className={`font-semibold ${isPowerTrip ? 'theme-danger-text animate-pulse font-bold' : ''}`}>
                 {isPowerTrip 
-                  ? localize(state.language, '¡DISYUNTOR ACTIVADO!', 'BREAKER TRIPPED!')
+                  ? tr(state.language, 'bentoHUD.breakerTripped')
                   : `${state.activePowerKw.toFixed(1)} kW / ${state.maxPowerKw.toFixed(1)} kW`}
               </span>
             </div>
@@ -397,7 +347,7 @@ export const BentoHUD: React.FC = () => {
                 : 'theme-success-soft theme-success-text border theme-success-border'
             }`}>
               {state.agencyAlertLevel === 'raid_imminent' 
-                ? localize(state.language, '¡RAID INMINENTE!', 'RAID IMMINENT!')
+                ? tr(state.language, 'bentoHUD.raidImminent')
                 : p.agency}
             </span>
           </div>
@@ -427,7 +377,7 @@ export const BentoHUD: React.FC = () => {
 
           <div className="my-1 flex items-baseline justify-between font-mono">
             <span className="text-xl font-bold tracking-tight mutating-accent-text">
-              {state.language === 'es' ? 'Puntaje' : 'Score'} {reasoningIq} / 100
+              {tr(state.language, 'bentoHUD.score')} {reasoningIq} / 100
             </span>
             <span className="text-[11px] px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text font-semibold truncate max-w-[100px]" title={state.currentModel.name}>
               {state.currentModel.name}

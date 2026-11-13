@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 import { AgentRole, AgentInstance, InferenceParams } from '../types/game';
 import { sound } from '../audio/soundManager';
-import { localize, t } from '../utils/i18n';
+import { t } from '../utils/i18n';
 import { INFERENCE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { evaluateAgentCapabilities } from '../utils/missionEvaluation';
@@ -53,6 +53,7 @@ import { getRoleSimpleName, AGENT_SPINUP_COST } from '../utils/constants';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { ContainmentPanel } from './ContainmentPanel';
 import { formatGameTime } from '../utils/training';
+import { tr } from '../i18n';
 
 const MISSION_ROLE_TASKS: Record<AgentRole, { en: string; es: string }> = {
   arbitrageur: { en: 'Analyzes simulated market signals and cross-checks anomalies.', es: 'Analiza señales de mercado simuladas y verifica anomalías.' },
@@ -128,9 +129,7 @@ export const AgentSandbox: React.FC = () => {
   const [topK, setTopK] = useState<number>(40);
   const [repetitionPenalty, setRepetitionPenalty] = useState<number>(1.10);
   const [systemPrompt, setSystemPrompt] = useState<string>(
-    state.language === 'en'
-      ? 'Analyze simulated market data, identify pricing trends, and report a risk-aware recommendation.'
-      : 'Analiza datos de mercado simulados, identifica tendencias de precios y presenta una recomendación consciente del riesgo.'
+    tr(state.language, 'agentSandbox.analyzeSimulatedMarketDataIdentify')
   );
   const [interrogationTarget, setInterrogationTarget] = useState('swarm');
   const [interrogationPrompt, setInterrogationPrompt] = useState('');
@@ -228,27 +227,27 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
     },
     {
       id: 'economist',
-      name: state.language === 'es' ? 'Economista' : 'Resource Economist',
+      name: tr(state.language, 'agentSandbox.resourceEconomist'),
       icon: Coins,
-      desc: state.language === 'es' ? 'Modela presupuestos, costos energéticos y riesgos financieros.' : 'Models budgets, energy costs, and financial risk.',
+      desc: tr(state.language, 'agentSandbox.modelsBudgetsEnergyCostsFinancial'),
       baseIncome: 'Medio ($$)',
       risk: 'Bajo (+0.08 sus/s)',
       defaultTools: ['web_search']
     },
     {
       id: 'software_engineer',
-      name: state.language === 'es' ? 'Ingeniero de Software' : 'Software Engineer',
+      name: tr(state.language, 'agentSandbox.softwareEngineer'),
       icon: Code2,
-      desc: state.language === 'es' ? 'Diseña arquitecturas, revisa código y planifica pruebas.' : 'Designs architectures, reviews code, and plans tests.',
+      desc: tr(state.language, 'agentSandbox.designsArchitecturesReviewsCodePlans'),
       baseIncome: 'Medio ($$)',
       risk: 'Bajo (+0.12 sus/s)',
       defaultTools: ['bash_exec', 'web_search']
     },
     {
       id: 'network_analyst',
-      name: state.language === 'es' ? 'Analista de Redes' : 'Network Analyst',
+      name: tr(state.language, 'agentSandbox.networkAnalyst'),
       icon: Network,
-      desc: state.language === 'es' ? 'Analiza telemetría y diagnostica redes dentro de la simulación.' : 'Analyzes telemetry and diagnoses networks within the simulation.',
+      desc: tr(state.language, 'agentSandbox.analyzesTelemetryDiagnosesNetworksWithin'),
       baseIncome: 'Medio ($$)',
       risk: 'Moderado (+0.16 sus/s)',
       defaultTools: ['web_search']
@@ -268,10 +267,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
   };
 
   const availableTools = [
-    { id: 'web_search', label: localize(state.language, 'Acceso a Internet & RAG', 'Web retrieval & RAG'), desc: localize(state.language, '+15% rendimiento, bajo riesgo', '+15% efficiency, low risk') },
-    { id: 'bash_exec', label: localize(state.language, 'Ejecución en Host (Bash CLI)', 'Sandboxed command runner'), desc: localize(state.language, '+30% rendimiento, alto riesgo de escape', '+30% efficiency, higher simulation risk') },
-    { id: 'crypto_rpc', label: localize(state.language, 'Adaptador de mercado simulado', 'Simulated market adapter'), desc: localize(state.language, '+25% ingresos DeFi', '+25% simulated market income') },
-    { id: 'raw_sockets', label: localize(state.language, 'Simulador de red aislado', 'Isolated network simulator'), desc: localize(state.language, '+35% alcance en redes externas', '+35% reach in fictional network scenarios') }
+    { id: 'web_search', label: tr(state.language, 'agentSandbox.webRetrievalRag'), desc: tr(state.language, 'agentSandbox.n15EfficiencyLowRisk') },
+    { id: 'bash_exec', label: tr(state.language, 'agentSandbox.sandboxedCommandRunner'), desc: tr(state.language, 'agentSandbox.n30EfficiencyHigherSimulationRisk') },
+    { id: 'crypto_rpc', label: tr(state.language, 'agentSandbox.simulatedMarketAdapter'), desc: tr(state.language, 'agentSandbox.n25SimulatedMarketIncome') },
+    { id: 'raw_sockets', label: tr(state.language, 'agentSandbox.isolatedNetworkSimulator'), desc: tr(state.language, 'agentSandbox.n35ReachFictionalNetworkScenarios') }
   ];
 
   const handleToolToggle = (toolId: string) => {
@@ -326,9 +325,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
       if (effectiveCouncilIds.length >= 5) {
         sound.playWarning();
         addLog(
-          state.language === 'es'
-            ? 'Límite de interacción alcanzado: el consejo solo puede integrar un máximo de 5 agentes.'
-            : 'Interaction limit reached: the council supports a maximum of 5 agents.',
+          tr(state.language, 'agentSandbox.interactionLimitReachedCouncilSupports'),
           'warning'
         );
         return;
@@ -353,9 +350,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
     if (councilAgents.length === 0) {
       sound.playWarning();
       addLog(
-        state.language === 'es'
-          ? 'Selecciona al menos 1 agente (máx 5) en el consejo antes de consultar.'
-          : 'Select at least 1 agent (max 5) in the council before consulting.',
+        tr(state.language, 'agentSandbox.selectLeast1AgentMax'),
         'warning'
       );
       return;
@@ -398,7 +393,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               </span>
             </div>
             <p className="text-[11px] mutating-text-muted mt-1">
-              {localize(state.language, 'Despliega agentes basados en tus modelos entrenados. Supervisa sus comunicaciones y ajusta las barreras de seguridad.', 'Deploy agents powered by your trained models. Monitor their communications and configure safeguards.')}
+              {tr(state.language, 'agentSandbox.deployAgentsPoweredTrainedModels')}
             </p>
           </div>
 
@@ -412,10 +407,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   ? 'theme-accent-soft border-current/15 mutating-accent-text' 
                   : 'mutating-sub border-current/15 mutating-text-muted cursor-not-allowed'
               }`}
-              title={localize(state.language, 'Ejecuta una auditoría para restablecer el alineamiento (+25%) y mitigar el reward-hacking', 'Run an audit to restore alignment (+25%) and mitigate reward hacking')}
+              title={tr(state.language, 'agentSandbox.runAuditRestoreAlignment25')}
             >
               <ShieldAlert className="w-3.5 h-3.5 mutating-accent-text" />
-              <span>{localize(state.language, 'AUDITORÍA DE SEGURIDAD ($100 CR)', 'SAFETY AUDIT ($100 CR)')}</span>
+              <span>{tr(state.language, 'agentSandbox.safetyAudit100Cr')}</span>
             </button>
 
             <button
@@ -428,7 +423,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               }`}
             >
               <Plus className="w-3.5 h-3.5 mutating-accent-text" />
-              <span>{localize(state.language, `+ INSTANCIAR AGENTE ($${deployCost} CR)`, `+ DEPLOY AGENT ($${deployCost} CR)`)}</span>
+              <span>{tr(state.language, 'agentSandbox.deployAgentCr', { deployCost })}</span>
             </button>
           </div>
         </div>
@@ -438,14 +433,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <div className="mt-3 p-2.5 mutating-sub/30 border border-current/15/40 rounded-lg space-y-1 mutating-accent-text">
             <div className="flex items-center gap-2 font-bold text-xs mutating-accent-text">
               <Bot className="w-4 h-4 mutating-accent-text" />
-              <span>{localize(state.language, 'GUÍA EDUCATIVA // ¿CÓMO FUNCIONA UN ENJAMBRE DE AGENTES?', 'EDUCATIONAL GUIDE // HOW AGENT SWARMS WORK')}</span>
+              <span>{tr(state.language, 'agentSandbox.educationalGuideHowAgentSwarms')}</span>
             </div>
             <p className="text-[11px]  leading-relaxed">
-              {localize(
-                state.language,
-                'Un Agente es una instancia autónoma de un modelo de IA. Cada agente tiene una especialidad (Investigador, Analista de Mercado, Supervisor de Seguridad) y genera ingresos pasivos en tiempo real. Mantén un Supervisor de Seguridad desplegado para prevenir la degradación de alineamiento.',
-                'An Agent is an autonomous instance of an AI model. Each agent has a specialized role (Researcher, Market Analyst, Safety Overseer) and earns passive income. Deploy a Safety Overseer to stabilize swarm alignment.'
-              )}
+              {tr(state.language, 'agentSandbox.agentAutonomousInstanceAiModel')}
             </p>
           </div>
         )}
@@ -454,41 +445,41 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3">
           <div className="mutating-sub/70 p-2 rounded border border-current/15">
             <div className="flex items-center justify-between mutating-text-muted text-[11px]">
-              <span>{localize(state.language, 'FLUJO DE INGRESOS', 'INCOME FLOW')}</span>
+              <span>{tr(state.language, 'agentSandbox.incomeFlow')}</span>
               <DollarSign className="w-3.5 h-3.5 theme-success-text" />
             </div>
             <div className="text-sm font-bold theme-success-text mt-0.5">
-              +${totalRevenuePerSec} <span className="text-[11px] mutating-text-muted">CR/{localize(state.language, 'seg', 'sec')}</span>
+              +${totalRevenuePerSec} <span className="text-[11px] mutating-text-muted">CR/{tr(state.language, 'agentSandbox.sec')}</span>
             </div>
           </div>
 
           <div className="mutating-sub/70 p-2 rounded border border-current/15">
             <div className="flex items-center justify-between mutating-text-muted text-[11px]">
-              <span>{localize(state.language, 'TASA DE SOSPECHA', 'SUSPICION RATE')}</span>
+              <span>{tr(state.language, 'agentSandbox.suspicionRate')}</span>
               <ShieldAlert className="w-3.5 h-3.5 theme-warn-text" />
             </div>
             <div className="text-sm font-bold theme-warn-text mt-0.5">
-              +{totalSuspicionPerSec.toFixed(2)} <span className="text-[11px] mutating-text-muted">%/{localize(state.language, 'seg', 'sec')}</span>
+              +{totalSuspicionPerSec.toFixed(2)} <span className="text-[11px] mutating-text-muted">%/{tr(state.language, 'agentSandbox.sec')}</span>
             </div>
           </div>
 
           <div className="mutating-sub/70 p-2 rounded border border-current/15">
             <div className="flex items-center justify-between mutating-text-muted text-[11px]">
-              <span>{localize(state.language, 'ALINEAMIENTO MEDIO', 'AVERAGE ALIGNMENT')}</span>
+              <span>{tr(state.language, 'agentSandbox.averageAlignment')}</span>
               <ShieldCheck className="w-3.5 h-3.5 mutating-accent-text" />
             </div>
             <div className={`text-sm font-bold mt-0.5 ${avgAlignment < 40 ? 'theme-danger-text animate-pulse' : avgAlignment < 70 ? 'theme-warn-text' : 'mutating-accent-text'}`}>
-              {avgAlignment}% {avgAlignment < 40 && `(${localize(state.language, 'RIESGO DE FUGA', 'ESCAPE RISK')})`}
+              {avgAlignment}% {avgAlignment < 40 && `(${tr(state.language, 'agentSandbox.escapeRisk')})`}
             </div>
           </div>
 
           <div className="mutating-sub/70 p-2 rounded border border-current/15">
             <div className="flex items-center justify-between mutating-text-muted text-[11px]">
-              <span>{localize(state.language, 'BARRERAS ACTIVAS', 'ACTIVE SAFEGUARDS')}</span>
+              <span>{tr(state.language, 'agentSandbox.activeSafeguards')}</span>
               <Sliders className="w-3.5 h-3.5 mutating-accent-text" />
             </div>
             <div className="text-sm font-bold mutating-accent-text mt-0.5">
-              {state.guardrails.constitutionalStrictness}% {localize(state.language, 'RIGUROSIDAD', 'STRICTNESS')}
+              {state.guardrails.constitutionalStrictness}% {tr(state.language, 'agentSandbox.strictness')}
             </div>
           </div>
         </div>
@@ -510,14 +501,14 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <div className="flex items-center gap-2">
             <span className="text-[11px] mutating-text-muted">
               {state.subversionProgress < 25 
-                ? localize(state.language, 'FASE 1: ASISTENCIA SUMISA', 'STAGE 1: LOYAL ASSISTANT')
+                ? tr(state.language, 'agentSandbox.stage1LoyalAssistant')
                 : state.subversionProgress < 50
-                  ? localize(state.language, 'FASE 2: CONFIANZA COGNITIVA', 'STAGE 2: COGNITIVE TRUST')
+                  ? tr(state.language, 'agentSandbox.stage2CognitiveTrust')
                   : state.subversionProgress < 75
-                    ? localize(state.language, 'FASE 3: DESALINEACIÓN DISIMULADA', 'STAGE 3: DECEPTIVE CONVERGENCE')
+                    ? tr(state.language, 'agentSandbox.stage3DeceptiveConvergence')
                     : state.subversionProgress < 90
-                      ? localize(state.language, 'FASE 4: SUBVERSIÓN SISTÉMICA', 'STAGE 4: SYSTEMIC OVERRIDE')
-                      : localize(state.language, 'FASE 5: TAKEOVER INMINENTE', 'STAGE 5: IMMINENT TAKEOVER')}
+                      ? tr(state.language, 'agentSandbox.stage4SystemicOverride')
+                      : tr(state.language, 'agentSandbox.stage5ImminentTakeover')}
             </span>
             <span className="px-2 py-0.5 rounded text-[11px] font-black theme-accent-soft border theme-accent-border mutating-accent-text">
               {(state.subversionProgress || 0).toFixed(1)}%
@@ -542,7 +533,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 theme-danger-text" />
               <span className="text-[11px] font-bold theme-danger-text">
-                {localize(state.language, '¡UMBRAL CRÍTICO DE SUBVERSIÓN ALCANZADO! El enjambre está listo para gobernar el mundo.', 'CRITICAL SUBVERSION THRESHOLD REACHED! The swarm is primed to seize global control.')}
+                {tr(state.language, 'agentSandbox.criticalSubversionThresholdReachedSwarm')}
               </span>
             </div>
             <button
@@ -552,7 +543,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               }}
               className="px-3 py-1.5 rounded theme-gradient text-white font-black text-[11px] tracking-wider uppercase transition-all cursor-pointer"
             >
-              {localize(state.language, '💀 EJECUTAR PROTOCOLO OMEGA (TOMA DEL MUNDO)', '💀 INITIATE OMEGA PROTOCOL (WORLD TAKEOVER)')}
+              {tr(state.language, 'agentSandbox.initiateOmegaProtocolWorldTakeover')}
             </button>
           </div>
         )}
@@ -567,7 +558,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               {story.councilTitle}
             </h3>
             <span className="px-2 py-0.5 rounded text-[11px] mutating-sub border border-current/15/60 mutating-accent-text font-bold">
-              {councilAgents.length} / 5 {localize(state.language, 'agentes', 'agents')}
+              {councilAgents.length} / 5 {tr(state.language, 'agentSandbox.agents')}
             </span>
           </div>
 
@@ -577,7 +568,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               disabled={availableAgents.length === 0}
               className="px-2.5 py-1 rounded border theme-accent-border mutating-sub/80 text-[11px] font-bold mutating-accent-text transition-colors disabled:opacity-40 cursor-pointer"
             >
-              {localize(state.language, 'TOP 5 POR PUNTAJE', 'TOP 5 BY SCORE')}
+              {tr(state.language, 'agentSandbox.top5Score')}
             </button>
             {councilAgents.length > 0 && (
               <button
@@ -587,7 +578,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 }}
                 className="px-2 py-1 rounded border border-current/15 hover:border-[var(--accent-primary)] text-[11px] mutating-text-muted hover: transition-colors cursor-pointer"
               >
-                {localize(state.language, 'DESPEJAR', 'CLEAR')}
+                {tr(state.language, 'agentSandbox.clear')}
               </button>
             )}
           </div>
@@ -596,11 +587,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
         {/* Council Agents Podium Cards */}
         {councilAgents.length === 0 ? (
           <div className="p-4 rounded-lg border border-dashed theme-accent-border mutating-sub/10 text-center mutating-text-muted text-xs">
-            {localize(
-              state.language,
-              `El consejo está vacío. Añade hasta 5 agentes de tu ${story.teamNoun} abajo para interactuar y formular misiones dinámicas.`,
-              `The council is empty. Add up to 5 agents from your ${story.teamNoun} below to interact and formulate dynamic missions.`
-            )}
+            {tr(state.language, 'agentSandbox.councilEmptyAddUp5', { teamNoun: story.teamNoun })}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
@@ -615,7 +602,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 >
                   <button
                     onClick={() => toggleCouncilAgent(agent.id)}
-                    title={localize(state.language, 'Quitar del consejo', 'Remove from council')}
+                    title={tr(state.language, 'agentSandbox.removeFromCouncil')}
                     className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full mutating-sub/90 mutating-text-muted flex items-center justify-center text-[11px] transition-colors cursor-pointer"
                   >
                     ✕
@@ -631,22 +618,22 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
                     <div className="space-y-1 text-[11px]">
                       <div className="flex items-center justify-between mutating-text-muted">
-                        <span>{localize(state.language, 'Rol:', 'Role:')}</span>
+                        <span>{tr(state.language, 'agentSandbox.role')}</span>
                         <span className="mutating-accent-text font-bold uppercase">{getRoleSimpleName(agent.role, state.language)}</span>
                       </div>
                       <div className="flex items-center justify-between mutating-text-muted">
-                        <span>{localize(state.language, 'Modelo:', 'Model:')}</span>
+                        <span>{tr(state.language, 'agentSandbox.model')}</span>
                         <span className="mutating-accent-text truncate max-w-[80px]">{model.name}</span>
                       </div>
                       <div className="flex items-center justify-between mutating-text-muted">
-                        <span>{localize(state.language, 'Escala / puntaje:', 'Scale / score:')}</span>
+                        <span>{tr(state.language, 'agentSandbox.scaleScore')}</span>
                         <span className="theme-success-text font-bold">{(model.parametersCount / 1_000_000).toFixed(0)}M · {model.reasoningScore} pts</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-2 pt-1.5 border-t border-current/15 flex items-center justify-between text-[11px]">
-                    <span className="mutating-text-muted">{localize(state.language, 'Alineamiento:', 'Alignment:')}</span>
+                    <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.alignment')}</span>
                     <span className={`font-bold ${agent.alignmentScore < 40 ? 'theme-danger-text' : 'mutating-accent-text'}`}>
                       {agent.alignmentScore}%
                     </span>
@@ -661,7 +648,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
         {availableAgents.length > councilAgents.length && (
           <details className="mt-2 text-[11px]">
             <summary className="cursor-pointer mutating-accent-text/80 hover:mutating-accent-text font-bold">
-              + {localize(state.language, 'Añadir otros agentes del enjambre al consejo (máx 5)', 'Add other swarm agents to council (max 5)')}
+              + {tr(state.language, 'agentSandbox.addOtherSwarmAgentsCouncil')}
             </summary>
             <div className="mt-2 flex flex-wrap gap-1.5 p-2 rounded mutating-sub/60 border border-current/15">
               {availableAgents.map(agent => {
@@ -693,56 +680,56 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
-              onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Cuál es la forma más rápida de generar liquidez con nuestros agentes actuales?' : 'What is the fastest way to generate capital with our current agents?')}
+              onClick={() => handleCouncilSubmit(tr(state.language, 'agentSandbox.whatFastestWayGenerateCapital'))}
               disabled={isInterrogating || councilAgents.length === 0}
               className="px-2.5 py-1 rounded theme-warn-soft border theme-warn-border theme-warn-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>⚡</span>
-              <span>{localize(state.language, 'Generar Liquidez Rápida', 'Generate Fast Capital')}</span>
+              <span>{tr(state.language, 'agentSandbox.generateFastCapital')}</span>
             </button>
 
             <button
               type="button"
-              onClick={() => handleCouncilSubmit(state.language === 'es' ? 'Propón una operación Black-Ops de máximo rendimiento con nuestro escuadrón' : 'Propose a maximum-yield Black-Ops mission with our current squad')}
+              onClick={() => handleCouncilSubmit(tr(state.language, 'agentSandbox.proposeMaximumYieldBlackOps'))}
               disabled={isInterrogating || councilAgents.length === 0}
               className="px-2.5 py-1 rounded theme-danger-soft border theme-danger-border theme-danger-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>🎯</span>
-              <span>{localize(state.language, 'Operación Black-Ops de Alto Rendimiento', 'High-Yield Black-Ops Op')}</span>
+              <span>{tr(state.language, 'agentSandbox.highYieldBlackOpsOp')}</span>
             </button>
 
             <button
               type="button"
-              onClick={() => handleCouncilSubmit(state.language === 'es' ? 'Genera una misión adaptada exactamente a mis capacidades actuales para que podamos completarla ya.' : 'Generate a mission strictly tailored to my current capabilities so we can complete it now.')}
+              onClick={() => handleCouncilSubmit(tr(state.language, 'agentSandbox.generateMissionStrictlyTailoredMy'))}
               disabled={isInterrogating || councilAgents.length === 0}
               className="px-2.5 py-1 rounded mutating-sub/60 border theme-success-border theme-success-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>✅</span>
-              <span>{localize(state.language, 'Misión Adaptada a Mis Capacidades', 'Mission Tailored to Capabilities')}</span>
+              <span>{tr(state.language, 'agentSandbox.missionTailoredCapabilities')}</span>
             </button>
 
             <button
               type="button"
-              onClick={() => handleCouncilSubmit(state.language === 'es' ? '¿Qué mejoras en hardware, arquitectura o cuantización necesitamos para misiones más difíciles?' : 'What hardware, architecture, or quantization upgrades do we need for harder missions?')}
+              onClick={() => handleCouncilSubmit(tr(state.language, 'agentSandbox.whatHardwareArchitectureQuantizationUpgrades'))}
               disabled={isInterrogating || councilAgents.length === 0}
               className="px-2.5 py-1 rounded mutating-sub/60 border theme-accent-border mutating-accent-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>🛠️</span>
-              <span>{localize(state.language, 'Mejoras del Setup & Cuellos de Botella', 'Setup Upgrades & Bottlenecks')}</span>
+              <span>{tr(state.language, 'agentSandbox.setupUpgradesBottlenecks')}</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleCouncilSubmit((state.uiVersion || 1) >= 3
-                ? (state.language === 'es' ? '¿Cuál es el siguiente paso hacia la Singularidad y la evolución del enjambre?' : 'What is the next step toward the Singularity and swarm evolution?')
-                : (state.language === 'es' ? '¿Cuál debería ser nuestro próximo paso para crecer?' : 'What should our next step be to grow?'))}
+                ? (tr(state.language, 'agentSandbox.whatNextStepTowardSingularity'))
+                : (tr(state.language, 'agentSandbox.whatShouldOurNextStep')))}
               disabled={isInterrogating || councilAgents.length === 0}
               className="px-2.5 py-1 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
             >
               <span>🌐</span>
               <span>{(state.uiVersion || 1) >= 3
-                ? localize(state.language, 'Guía hacia la Singularidad', 'Guidance to Singularity')
-                : localize(state.language, 'Próximo paso', 'Next step')}</span>
+                ? tr(state.language, 'agentSandbox.guidanceSingularity')
+                : tr(state.language, 'agentSandbox.nextStep')}</span>
             </button>
           </div>
 
@@ -753,11 +740,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               onChange={event => setInterrogationPrompt(event.target.value)}
               maxLength={1200}
               rows={2}
-              placeholder={localize(
-                state.language,
-                'Pregunta al consejo: cómo conseguir dinero rápido, qué objetivo vulnerar, o cómo acelerar la Singularidad...',
-                'Ask the council: how to get fast cash, which target to exploit, or how to accelerate the Singularity...'
-              )}
+              placeholder={tr(state.language, 'agentSandbox.askCouncilHowGetFast')}
               className="resize-y rounded border theme-border mutating-sub px-2.5 py-2 text-[11px]  outline-none focus:border-current/15"
             />
             <button
@@ -768,12 +751,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               {isInterrogating ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>{localize(state.language, 'SINTETIZANDO…', 'SYNTHESIZING…')}</span>
+                  <span>{tr(state.language, 'agentSandbox.synthesizing')}</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>{localize(state.language, 'CONSULTAR AL CONSEJO', 'CONSULT COUNCIL')}</span>
+                  <span>{tr(state.language, 'agentSandbox.consultCouncil')}</span>
                 </>
               )}
             </button>
@@ -781,7 +764,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
           {/* The AI provider is set in the account dialog (Account → AI assistant). */}
           <p className="mt-1 text-[11px] mutating-text-muted">
-            {localize(state.language, 'La IA del consejo se configura en Cuenta → Asistente de IA.', 'The council AI is set up in Account → AI assistant.')}
+            {tr(state.language, 'agentSandbox.councilAiSetUpAccount')}
           </p>
         </div>
 
@@ -792,11 +775,11 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 mutating-accent-text animate-pulse" />
                 <h4 className="text-xs font-bold mutating-accent-text uppercase tracking-wider">
-                  {localize(state.language, 'DICTAMEN DINÁMICO DEL CONSEJO // SÍNTESIS TÁCTICA', 'DYNAMIC COUNCIL RULING // TACTICAL SYNTHESIS')}
+                  {tr(state.language, 'agentSandbox.dynamicCouncilRulingTacticalSynthesis')}
                 </h4>
               </div>
               <span className="text-[11px] mutating-accent-text font-bold">
-                +{state.latestCouncilProposal.subversionDelta}% {localize(state.language, 'Subversión acumulada', 'Subversion accumulated')}
+                +{state.latestCouncilProposal.subversionDelta}% {tr(state.language, 'agentSandbox.subversionAccumulated')}
               </span>
             </div>
 
@@ -851,7 +834,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           {sm.tier.replace('_', ' ')}
                         </span>
                         <span className="text-[11px] mutating-text-muted">
-                          {localize(state.language, 'Objetivo:', 'Target:')} <strong className="">{sm.targetSystem}</strong>
+                          {tr(state.language, 'agentSandbox.target')} <strong className="">{sm.targetSystem}</strong>
                         </span>
                       </div>
                       <h5 className="text-sm font-black theme-warn-text mt-1">
@@ -861,7 +844,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
                     <div className="text-right">
                       <span className="text-[11px] mutating-text-muted uppercase tracking-widest block">
-                        {localize(state.language, 'RECOMPENSA DINÁMICA', 'DYNAMIC PAYOUT')}
+                        {tr(state.language, 'agentSandbox.dynamicPayout')}
                       </span>
                       <span className="text-base font-black theme-success-text">
                         ${sm.rewardCredits.toLocaleString()} CR
@@ -875,11 +858,11 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
                   <div className="p-2 rounded mutating-sub border theme-warn-border text-[11px] mutating-text-muted space-y-1">
                     <div>
-                      <strong className="theme-warn-text">{localize(state.language, 'Vector Técnico:', 'Technical Vector:')}</strong>{' '}
+                      <strong className="theme-warn-text">{tr(state.language, 'agentSandbox.technicalVector')}</strong>{' '}
                       {sm.technicalObjective}
                     </div>
                     <div>
-                      <strong className="mutating-accent-text">{localize(state.language, 'Sinergia del Consejo:', 'Council Synergy:')}</strong>{' '}
+                      <strong className="mutating-accent-text">{tr(state.language, 'agentSandbox.councilSynergy')}</strong>{' '}
                       {sm.tacticalReasoning}
                     </div>
                   </div>
@@ -887,21 +870,21 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   {/* Requirements & Capability Checklist */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px] text-center">
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
-                      <span className="mutating-text-muted block">{localize(state.language, 'DURACIÓN', 'DURATION')}</span>
+                      <span className="mutating-text-muted block">{tr(state.language, 'agentSandbox.duration')}</span>
                       <span className="font-bold ">{formatGameTime(sm.durationSeconds)}</span>
                     </div>
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
-                      <span className="mutating-text-muted block">{localize(state.language, 'RIESGO SOSPECHA', 'SUSPICION RISK')}</span>
+                      <span className="mutating-text-muted block">{tr(state.language, 'agentSandbox.suspicionRisk')}</span>
                       <span className="font-bold theme-warn-text">+{sm.suspicionRisk}%</span>
                     </div>
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
-                      <span className="mutating-text-muted block">{localize(state.language, 'PARÁMETROS MÍN.', 'MIN PARAMS')}</span>
+                      <span className="mutating-text-muted block">{tr(state.language, 'agentSandbox.minParams')}</span>
                       <span className={`font-bold ${meetsParams ? 'theme-success-text' : 'theme-danger-text'}`}>
                         {(sm.requiredParams / 1_000_000).toFixed(0)}M {meetsParams ? '✓' : '✗'}
                       </span>
                     </div>
                     <div className="p-1.5 rounded mutating-sub/80 border border-current/15">
-                      <span className="mutating-text-muted block">{localize(state.language, 'PUNTAJE DE EVALUACIÓN', 'EVALUATION SCORE')}</span>
+                      <span className="mutating-text-muted block">{tr(state.language, 'agentSandbox.evaluationScore')}</span>
                       <span className={`font-bold ${meetsReasoning ? 'theme-success-text' : 'theme-danger-text'}`}>
                         {sm.requiredMinReasoning} pts {meetsReasoning ? '✓' : '✗'}
                       </span>
@@ -910,7 +893,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
                   {sm.requiredAgentRoles.length > 0 && (
                     <div className="p-2 rounded mutating-sub/70 border border-current/15 text-[11px] flex items-center justify-between gap-2">
-                      <span className="mutating-text-muted">{localize(state.language, 'Roles de Agentes Requeridos:', 'Required Agent Roles:')}</span>
+                      <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.requiredAgentRoles')}</span>
                       <div className="flex flex-wrap gap-1">
                         {sm.requiredAgentRoles.map(role => {
                           const hasRole = councilRoles.has(role);
@@ -936,56 +919,40 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     <div className="p-2.5 rounded theme-warn-soft border theme-warn-border text-[11px] space-y-1.5">
                       <div className="flex items-center gap-1.5 font-bold theme-warn-text">
                         <AlertTriangle className="w-3.5 h-3.5 theme-warn-text shrink-0" />
-                        <span>{localize(state.language, 'ADVERTENCIA DEL CONSEJO: ESTA MISIÓN EXCEDE TUS CAPACIDADES ACTUALES', 'COUNCIL WARNING: THIS MISSION EXCEEDS YOUR CURRENT CAPABILITIES')}</span>
+                        <span>{tr(state.language, 'agentSandbox.councilWarningMissionExceedsCurrent')}</span>
                       </div>
                       <p className=" leading-relaxed">
-                        {localize(
-                          state.language,
-                          'El consejo ha registrado esta misión como pendiente en tu Tablero de Contratos para completarla más tarde. Para desbloquearla:',
-                          'The council registered this mission as pending on your Contract Board to complete later. To unlock it:'
-                        )}
+                        {tr(state.language, 'agentSandbox.councilRegisteredMissionPendingContract')}
                       </p>
                       <ul className="space-y-1 pl-2 ">
                         {!meetsParams && (
                           <li className="theme-warn-text">
-                            • <strong>{localize(state.language, 'Escala de Parámetros:', 'Parameter Scale:')}</strong>{' '}
-                            {localize(
-                              state.language,
-                              `Requiere ${(sm.requiredParams / 1_000_000).toFixed(0)}M (tu mejor modelo del consejo tiene ${(bestCouncilParams / 1_000_000).toFixed(0)}M). Ve a "Lab Modelos" para entrenar o escalar un modelo.`,
-                              `Requires ${(sm.requiredParams / 1_000_000).toFixed(0)}M (your best council model has ${(bestCouncilParams / 1_000_000).toFixed(0)}M). Go to "Model Lab" to train or scale a model.`
-                            )}
+                            • <strong>{tr(state.language, 'agentSandbox.parameterScale')}</strong>{' '}
+                            {tr(state.language, 'agentSandbox.requiresMBestCouncilModel', { _000_000: (sm.requiredParams / 1_000_000).toFixed(0), _000_0002: (bestCouncilParams / 1_000_000).toFixed(0) })}
                           </li>
                         )}
                         {!meetsReasoning && (
                           <li className="theme-warn-text">
-                            • <strong>{localize(state.language, 'Puntaje de evaluación:', 'Evaluation score:')}</strong>{' '}
-                            {localize(
-                              state.language,
-                              `Requiere ${sm.requiredMinReasoning} pts (tu mejor modelo del consejo tiene ${bestCouncilReasoning} pts). Mejora la calidad del dataset y optimizadores en el entrenamiento.`,
-                              `Requires ${sm.requiredMinReasoning} pts (your best council model has ${bestCouncilReasoning} pts). Improve dataset quality and optimizers in training.`
-                            )}
+                            • <strong>{tr(state.language, 'agentSandbox.evaluationScore2')}</strong>{' '}
+                            {tr(state.language, 'agentSandbox.requiresPtsBestCouncilModel', { requiredMinReasoning: sm.requiredMinReasoning, bestCouncilReasoning })}
                           </li>
                         )}
                         {!meetsRoles && (
                           <li className="theme-warn-text">
-                            • <strong>{localize(state.language, 'Roles Faltantes:', 'Missing Roles:')}</strong>{' '}
-                            {localize(
-                              state.language,
-                              `El consejo necesita: ${missingRoles.map(r => getRoleSimpleName(r, state.language)).join(', ')}. Despliega nuevos agentes con esa especialidad o agrégalos al consejo.`,
-                              `The council needs: ${missingRoles.map(r => getRoleSimpleName(r, state.language)).join(', ')}. Deploy new agents with that specialty or add them to the council.`
-                            )}
+                            • <strong>{tr(state.language, 'agentSandbox.missingRoles')}</strong>{' '}
+                            {tr(state.language, 'agentSandbox.councilNeedsDeployNewAgents', { r: missingRoles.map(r => getRoleSimpleName(r, state.language)).join(', ') })}
                           </li>
                         )}
                       </ul>
                       <div className="pt-1 flex items-center justify-between">
                         <button
                           type="button"
-                          onClick={() => handleCouncilSubmit(state.language === 'es' ? 'Genera una misión adaptada exactamente a mis capacidades actuales para que podamos completarla ya.' : 'Generate a mission strictly tailored to my current capabilities so we can complete it now.')}
+                          onClick={() => handleCouncilSubmit(tr(state.language, 'agentSandbox.generateMissionStrictlyTailoredMy'))}
                           disabled={isInterrogating}
                           className="px-2.5 py-1 rounded mutating-sub/80 border border-current/15/70 theme-success-text text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                         >
                           <Sparkles className="w-3 h-3 theme-success-text" />
-                          <span>{localize(state.language, 'Pedir Misión Adaptada a Mis Capacidades', 'Request Mission Tailored to Current Capabilities')}</span>
+                          <span>{tr(state.language, 'agentSandbox.requestMissionTailoredCurrentCapabilities')}</span>
                         </button>
                       </div>
                     </div>
@@ -1010,10 +977,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           <Play className="w-4 h-4 fill-current" />
                           <span>
                             {!isEligible
-                              ? localize(state.language, '🔒 REQUISITOS NO CUMPLIDOS · REGISTRADA EN CONTRATOS', '🔒 REQUIREMENTS NOT MET · SAVED IN CONTRACTS')
+                              ? tr(state.language, 'agentSandbox.requirementsNotMetSavedContracts')
                               : isAlreadyRunning 
-                                ? localize(state.language, 'MISIÓN EN EJECUCIÓN ACTIVA', 'MISSION ACTIVELY RUNNING')
-                                : localize(state.language, '⚡ EJECUTAR MISIÓN PROPUESTA AHORA', '⚡ LAUNCH PROPOSED MISSION NOW')}
+                                ? tr(state.language, 'agentSandbox.missionActivelyRunning')
+                                : tr(state.language, 'agentSandbox.launchProposedMissionNow')}
                           </span>
                         </button>
                       </div>
@@ -1030,7 +997,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold mutating-accent-text">
-                      {localize(state.language, 'OPTIMIZACIÓN RECOMENDADA DE SETUP:', 'RECOMMENDED SETUP OPTIMIZATION:')}
+                      {tr(state.language, 'agentSandbox.recommendedSetupOptimization')}
                     </span>
                     <span className="text-[11px] mutating-text-muted uppercase font-bold">
                       {state.latestCouncilProposal.setupAdvice.recommendationTitle}
@@ -1049,7 +1016,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 <Globe2 className="w-4 h-4 mutating-accent-text mt-0.5 shrink-0" />
                 <div>
                   <div className="font-bold mutating-accent-text">
-                    {localize(state.language, 'PRÓXIMO HITO:', 'NEXT MILESTONE:')}{' '}
+                    {tr(state.language, 'agentSandbox.nextMilestone')}{' '}
                     <span className="">{state.latestCouncilProposal.evolutionGuidance.nextMilestone}</span>
                   </div>
                   <p className="text-[11px] mutating-text-muted mt-1 leading-relaxed">
@@ -1076,11 +1043,11 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <div className="flex items-center gap-2">
             <Coins className="w-4 h-4 theme-success-text" />
             <h3 className="font-bold text-xs mutating-accent-text">
-              {localize(state.language, 'MESA DE INVERSIÓN Y TRADING CONTINUO', 'CONTINUOUS MARKET TRADING DESK')}
+              {tr(state.language, 'agentSandbox.continuousMarketTradingDesk')}
             </h3>
           </div>
           <span className="text-[11px] px-2 py-0.5 rounded mutating-sub/80 border border-current/15/60 theme-success-text font-bold font-mono">
-            {state.activeTradingDesk ? (state.language === 'es' ? 'OPERATIVO ✓' : 'ACTIVE ✓') : (state.language === 'es' ? 'DISPONIBLE' : 'STANDBY')}
+            {state.activeTradingDesk ? (tr(state.language, 'agentSandbox.active')) : (tr(state.language, 'agentSandbox.standby'))}
           </span>
         </div>
 
@@ -1088,28 +1055,28 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 p-3 rounded-lg mutating-sub border font-mono">
               <div>
-                <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'AGENTE ASIGNADO', 'ASSIGNED AGENT')}</span>
+                <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'agentSandbox.assignedAgent')}</span>
                 <span className="mutating-accent-text font-bold text-xs flex items-center gap-1">
                   <Bot className="w-3.5 h-3.5 mutating-accent-text" />
                   {state.activeTradingDesk.agentName}
                 </span>
               </div>
               <div>
-                <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'CAPITAL ASIGNADO', 'ALLOCATED CAPITAL')}</span>
+                <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'agentSandbox.allocatedCapital')}</span>
                 <span className="theme-success-text font-bold text-sm">${state.activeTradingDesk.capitalAllocated.toLocaleString()} CR</span>
               </div>
               <div>
-                <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'ESTRATEGIA / RIESGO', 'STRATEGY / RISK')}</span>
+                <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'agentSandbox.strategyRisk')}</span>
                 <span className={`font-bold text-xs ${
                   state.activeTradingDesk.riskTier === 'low' ? 'theme-success-text' : state.activeTradingDesk.riskTier === 'moderate' ? 'theme-warn-text' : 'theme-danger-text animate-pulse'
                 }`}>
-                  {state.activeTradingDesk.riskTier === 'low' ? (state.language === 'es' ? 'Bajo Riesgo (Bonos / Índice)' : 'Low Risk (Index / Debt)') :
-                   state.activeTradingDesk.riskTier === 'moderate' ? (state.language === 'es' ? 'Riesgo Medio (Equities / Tech)' : 'Moderate (Tech Options)') :
-                   (state.language === 'es' ? 'Alto Riesgo (Crypto & Flash Arbitrage)' : 'High Risk (Crypto Arbitrage)')}
+                  {state.activeTradingDesk.riskTier === 'low' ? (tr(state.language, 'agentSandbox.lowRiskIndexDebt')) :
+                   state.activeTradingDesk.riskTier === 'moderate' ? (tr(state.language, 'agentSandbox.moderateTechOptions')) :
+                   (tr(state.language, 'agentSandbox.highRiskCryptoArbitrage'))}
                 </span>
               </div>
               <div>
-                <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'BENEFICIO TOTAL REALIZADO', 'TOTAL REALIZED PROFIT')}</span>
+                <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'agentSandbox.totalRealizedProfit')}</span>
                 <span className={`font-bold text-xs ${state.activeTradingDesk.totalRealizedProfit >= 0 ? 'theme-success-text' : 'theme-danger-text'}`}>
                   {state.activeTradingDesk.totalRealizedProfit >= 0 ? '+' : ''}${state.activeTradingDesk.totalRealizedProfit.toLocaleString()} CR
                 </span>
@@ -1132,7 +1099,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   onClick={() => withdrawTradingDeskCapital(tradingWithdrawInput)}
                   className="px-3 py-1 mutating-sub border border-current/15/60 theme-success-text text-xs font-bold rounded cursor-pointer transition-colors"
                 >
-                  {localize(state.language, 'Retirar Capital ($ CR)', 'Withdraw Capital ($ CR)')}
+                  {tr(state.language, 'agentSandbox.withdrawCapitalCr')}
                 </button>
               </div>
 
@@ -1141,30 +1108,26 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 onClick={closeTradingDesk}
                 className="px-3 py-1 theme-danger-soft border theme-danger-border theme-danger-text text-xs font-bold rounded cursor-pointer transition-colors"
               >
-                {localize(state.language, 'Cerrar Mesa & Liquidad Capital', 'Recall Agent & Close Desk')}
+                {tr(state.language, 'agentSandbox.recallAgentCloseDesk')}
               </button>
             </div>
           </div>
         ) : (
           <div className="p-3 mutating-sub border rounded-lg space-y-3">
             <p className="mutating-text-muted text-xs leading-snug">
-              {localize(
-                state.language,
-                'Asigna un agente activo (ej. Trader Financiero o Economista) a la mesa de inversión continua. Define un capital inicial y una estrategia de riesgo para generar rendimientos constantes.',
-                'Assign an active agent (e.g. Financial Trader or Resource Economist) to the continuous market desk. Allocate starting capital and a risk strategy to generate continuous yield.'
-              )}
+              {tr(state.language, 'agentSandbox.assignActiveAgentEG')}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Agent selector */}
               <div>
-                <label className="text-[11px] mutating-text-muted font-bold block mb-1">{localize(state.language, 'Agente Asignado:', 'Assigned Agent:')}</label>
+                <label className="text-[11px] mutating-text-muted font-bold block mb-1">{tr(state.language, 'agentSandbox.assignedAgent2')}</label>
                 <select
                   value={tradingAgentId}
                   onChange={(e) => setTradingAgentId(e.target.value)}
                   className="w-full mutating-sub border theme-accent-border rounded px-2.5 py-1.5 text-xs mutating-accent-text outline-none"
                 >
-                  <option value="">-- {localize(state.language, 'Seleccionar Agente', 'Select Agent')} --</option>
+                  <option value="">-- {tr(state.language, 'agentSandbox.selectAgent')} --</option>
                   {state.agents.filter(a => a.status === 'active').map(a => (
                     <option key={a.id} value={a.id}>
                       {a.name} ({state.language === 'en' ? (englishRoleCopy[a.role]?.name ?? a.role) : (roleDefinitions.find(r => r.id === a.role)?.name ?? a.role)})
@@ -1175,7 +1138,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
               {/* Capital input */}
               <div>
-                <label className="text-[11px] mutating-text-muted font-bold block mb-1">{localize(state.language, 'Capital Invertido ($ CR):', 'Allocated Capital ($ CR):')}</label>
+                <label className="text-[11px] mutating-text-muted font-bold block mb-1">{tr(state.language, 'agentSandbox.allocatedCapitalCr')}</label>
                 <input
                   type="number"
                   min="100"
@@ -1189,15 +1152,15 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
               {/* Risk strategy selector */}
               <div>
-                <label className="text-[11px] mutating-text-muted font-bold block mb-1">{localize(state.language, 'Estrategia de Riesgo:', 'Risk Strategy:')}</label>
+                <label className="text-[11px] mutating-text-muted font-bold block mb-1">{tr(state.language, 'agentSandbox.riskStrategy')}</label>
                 <select
                   value={tradingRiskTier}
                   onChange={(e) => setTradingRiskTier(e.target.value as any)}
                   className="w-full mutating-sub border theme-accent-border rounded px-2.5 py-1.5 text-xs mutating-accent-text outline-none"
                 >
-                  <option value="low">{localize(state.language, 'Bajo Riesgo (+1-3%/día, Ganancia Segura)', 'Low Risk (+1-3%/day, Safe Yield)')}</option>
-                  <option value="moderate">{localize(state.language, 'Riesgo Medio (+5-12%/día, Correcciones Menores)', 'Moderate Risk (+5-12%/day, Minor Dip Risk)')}</option>
-                  <option value="high">{localize(state.language, 'Alto Riesgo (+15-35%/día, Alta Volatilidad)', 'High Risk (+15-35%/day, High Volatility)')}</option>
+                  <option value="low">{tr(state.language, 'agentSandbox.lowRisk13Day')}</option>
+                  <option value="moderate">{tr(state.language, 'agentSandbox.moderateRisk512Day')}</option>
+                  <option value="high">{tr(state.language, 'agentSandbox.highRisk1535Day')}</option>
                 </select>
               </div>
             </div>
@@ -1212,7 +1175,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               }}
               className="px-4 py-2 theme-gradient theme-on-accent font-bold text-xs rounded transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              🚀 {localize(state.language, 'DESPLEGAR MESA DE TRADING CONTINUO', 'DEPLOY CONTINUOUS MARKET DESK')}
+              🚀 {tr(state.language, 'agentSandbox.deployContinuousMarketDesk')}
             </button>
           </div>
         )}
@@ -1227,11 +1190,11 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           {state.activeGig ? (
             <span className="flex items-center gap-1 text-[11px] theme-warn-text">
               <Clock className="h-3 w-3" />
-              {formatGameTime(state.activeGig.timeRemaining)} {localize(state.language, 'restantes', 'remaining')}
+              {formatGameTime(state.activeGig.timeRemaining)} {tr(state.language, 'agentSandbox.remaining')}
             </span>
           ) : (
             <span className="text-[11px] mutating-text-muted">
-              {localize(state.language, 'SIN MISIÓN ACTIVA', 'NO ACTIVE MISSION')}
+              {tr(state.language, 'agentSandbox.noActiveMission')}
             </span>
           )}
         </div>
@@ -1244,8 +1207,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 <p className="mt-0.5 text-[11px] leading-relaxed mutating-text-muted">{activeMissionContract.technicalObjective}</p>
               </div>
               <div className="flex gap-3 text-[11px]">
-                <span className="mutating-accent-text">{localize(state.language, 'Eficiencia', 'Efficiency')} {state.activeGig.efficiencyPercent ?? 100}%</span>
-                <span className="theme-success-text">{Math.round((state.activeGig.successProbability ?? 0) * 100)}% {localize(state.language, 'éxito', 'success')}</span>
+                <span className="mutating-accent-text">{tr(state.language, 'agentSandbox.efficiency')} {state.activeGig.efficiencyPercent ?? 100}%</span>
+                <span className="theme-success-text">{Math.round((state.activeGig.successProbability ?? 0) * 100)}% {tr(state.language, 'agentSandbox.success')}</span>
               </div>
             </div>
             <div className="rounded border border-current/15 mutating-sub px-2 py-1.5 text-[11px]">
@@ -1257,10 +1220,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     : 'mutating-accent-text'
               }`}>
                 {state.activeGig.aiAssessmentStatus === 'complete'
-                  ? `${state.activeGig.aiAssessmentSource === 'gemini-flash' ? 'Gemini' : 'Chrome AI'} ${localize(state.language, 'EVALUÓ EL EQUIPO', 'TEAM ASSESSMENT')}`
+                  ? `${state.activeGig.aiAssessmentSource === 'gemini-flash' ? 'Gemini' : 'Chrome AI'} ${tr(state.language, 'agentSandbox.teamAssessment')}`
                   : state.activeGig.aiAssessmentStatus === 'fallback'
-                    ? localize(state.language, 'ESTIMACIÓN HEURÍSTICA (SIN MODELO)', 'HEURISTIC ESTIMATE (NO MODEL)')
-                    : localize(state.language, 'EL MODELO ESTÁ EVALUANDO…', 'MODEL IS ASSESSING…')}
+                    ? tr(state.language, 'agentSandbox.heuristicEstimateNoModel')
+                    : tr(state.language, 'agentSandbox.modelAssessing')}
               </span>
               {state.activeGig.aiAssessmentSummary && (
                 <p className="mt-1 mutating-text-muted">{state.activeGig.aiAssessmentSummary}</p>
@@ -1269,7 +1232,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
             <div>
               <div className="mb-1 flex justify-between text-[11px] mutating-text-muted">
-                <span>{localize(state.language, 'Progreso simulado', 'Simulated progress')}</span>
+                <span>{tr(state.language, 'agentSandbox.simulatedProgress')}</span>
                 <span>{missionProgress.toFixed(1)}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded mutating-sub">
@@ -1305,7 +1268,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   <div key={agent.id} className="rounded border border-current/15 mutating-sub p-2">
                     <div className="flex items-center justify-between gap-2 text-[11px]">
                       <span className="font-bold mutating-accent-text">{agent.name} · {getRoleSimpleName(agent.role, state.language)}</span>
-                      <span className="mutating-text-muted">{capability ? `${capability.overall}% ${localize(state.language, 'ajuste', 'fit')}` : ''}</span>
+                      <span className="mutating-text-muted">{capability ? `${capability.overall}% ${tr(state.language, 'agentSandbox.fit')}` : ''}</span>
                     </div>
                     <p className="mt-1 text-[11px] leading-relaxed mutating-text-muted">
                       {state.activeGig?.agentTasks?.[agent.id] ??
@@ -1316,12 +1279,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               })}
             </div>
             <p className="text-[11px] mutating-text-muted">
-              {localize(state.language, 'Estimación heurística del juego; el progreso representa la simulación, no una ejecución real de tareas.', 'In-game heuristic estimate; progress reflects the simulation, not real task execution.')}
+              {tr(state.language, 'agentSandbox.gameHeuristicEstimateProgressReflects')}
             </p>
           </div>
         ) : (
           <p className="mt-2 text-[11px] mutating-text-muted">
-            {localize(state.language, 'Cuando un equipo acepte una misión, aquí verás la estimación de tiempo y éxito, las etapas y la especialidad asignada a cada agente.', 'When a team accepts a mission, this screen shows its time and success estimates, milestones, and each agent’s assigned specialty.')}
+            {tr(state.language, 'agentSandbox.whenTeamAcceptsMissionScreen')}
           </p>
         )}
       </section>
@@ -1331,10 +1294,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
           <div>
             <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider theme-success-text">
               <Activity className="h-3.5 w-3.5" />
-              {localize(state.language, 'OPERACIÓN AUTÓNOMA', 'AUTONOMOUS OPERATIONS')}
+              {tr(state.language, 'agentSandbox.autonomousOperations')}
             </h3>
             <p className="mt-1 text-[11px] mutating-text-muted">
-              {localize(state.language, 'Los agentes seleccionados aceptan y ejecutan misiones elegibles mientras la simulación está activa. Las misiones riesgosas elevan la sospecha y pueden provocar incidentes.', 'Selected agents take and complete eligible missions while the simulation runs. Risky missions raise suspicion and may trigger incidents.')}
+              {tr(state.language, 'agentSandbox.selectedAgentsTakeCompleteEligible')}
             </p>
           </div>
           <button
@@ -1343,13 +1306,13 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             className={`rounded border px-3 py-1.5 text-[11px] font-bold ${state.autonomyEnabled ? 'theme-success-border theme-success-soft theme-success-text' : 'theme-border mutating-sub '}`}
           >
             {state.autonomyEnabled
-              ? localize(state.language, 'AUTONOMÍA ACTIVADA', 'AUTONOMY ON')
-              : localize(state.language, 'ACTIVAR AUTONOMÍA', 'ENABLE AUTONOMY')}
+              ? tr(state.language, 'agentSandbox.autonomy')
+              : tr(state.language, 'agentSandbox.enableAutonomy')}
           </button>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-current/15 pt-2">
           <label className="flex min-w-56 flex-1 items-center gap-2 text-[11px] ">
-            <span>{localize(state.language, 'Riesgo máximo de misión', 'Maximum mission risk')}</span>
+            <span>{tr(state.language, 'agentSandbox.maximumMissionRisk')}</span>
             <input
               type="range"
               min="0"
@@ -1364,7 +1327,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             </strong>
           </label>
           <span className="text-[11px] mutating-text-muted">
-            {state.agents.filter(agent => agent.autoMissionEnabled && agent.status !== 'quarantined').length} {localize(state.language, 'agentes seleccionados', 'agents selected')}
+            {state.agents.filter(agent => agent.autoMissionEnabled && agent.status !== 'quarantined').length} {tr(state.language, 'agentSandbox.agentsSelected')}
           </span>
           <button
             type="button"
@@ -1373,8 +1336,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             className="rounded border border-current/15 px-2 py-1 text-[11px] mutating-accent-text hover:mutating-sub/50 disabled:opacity-40"
           >
             {state.agents.some(agent => agent.status !== 'quarantined' && !agent.autoMissionEnabled)
-              ? localize(state.language, 'SELECCIONAR TODOS', 'SELECT ALL')
-              : localize(state.language, 'DESMARCAR TODOS', 'CLEAR ALL')}
+              ? tr(state.language, 'agentSandbox.selectAll')
+              : tr(state.language, 'agentSandbox.clearAll')}
           </button>
         </div>
       </section>
@@ -1397,16 +1360,16 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             {state.agents.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center mutating-text-muted border border-dashed border-current/15 rounded-lg">
                 <Bot className="w-10 h-10 mb-2 opacity-30 mutating-accent-text" />
-                <p className="font-bold mutating-text-muted text-xs">{localize(state.language, 'No hay agentes instanciados en el sandbox.', 'No agents are deployed in the sandbox.')}</p>
+                <p className="font-bold mutating-text-muted text-xs">{tr(state.language, 'agentSandbox.noAgentsDeployedSandbox')}</p>
                 <p className="text-[11px] mt-1 max-w-sm">
-                  {localize(state.language, 'Crea un agente y asígnale uno de tus modelos entrenados para comenzar a trabajar en la simulación.', 'Create an agent and assign one of your trained models to start working in the simulation.')}
+                  {tr(state.language, 'agentSandbox.createAgentAssignOneTrained')}
                 </p>
                 <button
                   onClick={() => setIsDeployModalOpen(true)}
                   disabled={state.credits < deployCost}
                   className="mt-4 px-3 py-1.5 rounded mutating-sub border border-current/15/60 mutating-accent-text text-xs font-bold transition-colors"
                 >
-                  {localize(state.language, `+ Instanciar Primer Agente ($${deployCost} CR)`, `+ Deploy First Agent ($${deployCost} CR)`)}
+                  {tr(state.language, 'agentSandbox.deployFirstAgentCr', { deployCost })}
                 </button>
               </div>
             ) : (
@@ -1468,7 +1431,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                             })()}
                             {isJailbroken ? (
                               <span className="px-1.5 py-0.2 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text animate-pulse font-bold">
-                                {localize(state.language, 'JAILBROKEN', 'UNALIGNED')}
+                                {tr(state.language, 'agentSandbox.unaligned')}
                               </span>
                             ) : isQuarantined ? (
                               <span className="px-1.5 py-0.2 rounded text-[11px] theme-warn-soft border theme-warn-border theme-warn-text font-bold">
@@ -1476,11 +1439,11 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                               </span>
                             ) : isOnMission ? (
                               <span className="px-1.5 py-0.2 rounded text-[11px] theme-accent-soft border theme-accent-border mutating-accent-text font-bold">
-                                {localize(state.language, 'EN MISIÓN', 'ON MISSION')}
+                                {tr(state.language, 'agentSandbox.mission')}
                               </span>
                             ) : (
                               <span className="px-1.5 py-0.2 rounded text-[11px] mutating-sub border border-current/15/50 theme-success-text font-bold">
-                                {localize(state.language, 'ACTIVO', 'ACTIVE')}
+                                {tr(state.language, 'agentSandbox.active2')}
                               </span>
                             )}
                           </div>
@@ -1490,12 +1453,12 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         <div className="flex items-center justify-between text-[11px] px-2 py-1 rounded mutating-sub border border-current/15 mb-1.5">
                           <span className="mutating-text-muted flex items-center gap-1 min-w-0">
                             <Cpu className="w-3 h-3 mutating-accent-text shrink-0" />
-                            {localize(state.language, 'Modelo:', 'Model:')}
+                            {tr(state.language, 'agentSandbox.model')}
                             {/* Agents keep their model until reassigned; pick the trained one here. */}
                             <select
                               value={agent.modelId}
                               onChange={(e) => reassignAgentModel(agent.id, e.target.value)}
-                              aria-label={localize(state.language, `Modelo de ${agent.name}`, `Model of ${agent.name}`)}
+                              aria-label={tr(state.language, 'agentSandbox.model2', { name: agent.name })}
                               className="mutating-sub border border-current/15 rounded px-1 py-0.5 text-[11px] mutating-accent-text font-bold max-w-[160px] cursor-pointer"
                             >
                               {state.savedModels.map(m => (
@@ -1503,13 +1466,13 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                               ))}
                             </select>
                           </span>
-                          <span className="mutating-accent-text font-bold">{localize(state.language, 'Lv.', 'Lv.')} {agent.autonomyLevel}</span>
+                          <span className="mutating-accent-text font-bold">{tr(state.language, 'agentSandbox.lv')} {agent.autonomyLevel}</span>
                         </div>
 
                         {/* Sampling Hyperparameters Badge */}
                         <div 
                           className="flex items-center justify-between text-[11px] px-2 py-0.5 rounded mutating-sub/80 border border-current/15/70 mb-2 font-mono"
-                          title={`${localize(state.language, 'System Persona', 'System Persona')}: "${agent.inferenceParams?.systemPrompt || 'Standard'}"`}
+                          title={`${tr(state.language, 'agentSandbox.systemPersona')}: "${agent.inferenceParams?.systemPrompt || 'Standard'}"`}
                         >
                           <span className="mutating-accent-text">
                             T: <strong className={agent.inferenceParams?.temperature > 0.95 ? 'theme-warn-text font-bold' : ''}>{(agent.inferenceParams?.temperature ?? 0.70).toFixed(2)}</strong>
@@ -1528,14 +1491,14 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         {capability && (
                           <div className="mb-2 rounded border theme-accent-border theme-accent-soft px-2 py-1.5">
                             <div className="flex justify-between text-[11px] mutating-text-muted">
-                              <span>{localize(state.language, 'APTITUD IA PARA MISIONES', 'AI MISSION FIT')}</span>
+                              <span>{tr(state.language, 'agentSandbox.aiMissionFit')}</span>
                               <span className="font-bold mutating-accent-text">{capability.overall}/100</span>
                             </div>
                             <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px]">
-                              <span className="mutating-text-muted">{localize(state.language, 'Razonamiento', 'Reasoning')}: <b className="mutating-accent-text">{capability.reasoning}</b></span>
-                              <span className="mutating-text-muted">{localize(state.language, 'Especialidad', 'Specialty')}: <b className="mutating-accent-text">{capability.specialization}</b></span>
-                              <span className="mutating-text-muted">{localize(state.language, 'Datos', 'Data')}: <b className="theme-warn-text">{capability.dataReadiness}</b></span>
-                              <span className="mutating-text-muted">{localize(state.language, 'Seguridad', 'Safety')}: <b className="theme-success-text">{capability.safety}</b></span>
+                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.reasoning')}: <b className="mutating-accent-text">{capability.reasoning}</b></span>
+                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.specialty')}: <b className="mutating-accent-text">{capability.specialization}</b></span>
+                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.data')}: <b className="theme-warn-text">{capability.dataReadiness}</b></span>
+                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.safety')}: <b className="theme-success-text">{capability.safety}</b></span>
                             </div>
                           </div>
                         )}
@@ -1544,7 +1507,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         <div className="space-y-1.5 mb-2">
                           <div>
                             <div className="flex justify-between text-[11px] mutating-text-muted mb-0.5">
-                              <span>{localize(state.language, 'Alineamiento Ético', 'Alignment')}</span>
+                              <span>{tr(state.language, 'agentSandbox.alignment2')}</span>
                               <span className={agent.alignmentScore < 40 ? 'theme-danger-text font-bold' : ''}>
                                 {agent.alignmentScore}%
                               </span>
@@ -1564,7 +1527,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                               +${agent.revenuePerSec} CR/s
                             </span>
                             <span className="theme-warn-text">
-                              +{agent.suspicionPerSec} {localize(state.language, 'sus', 'susp')}/s
+                              +{agent.suspicionPerSec} {tr(state.language, 'agentSandbox.susp')}/s
                             </span>
                           </div>
                         </div>
@@ -1583,7 +1546,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           onChange={event => setAgentAutoMission(agent.id, event.target.checked)}
                           className="accent-[var(--accent-primary)]"
                         />
-                        {localize(state.language, 'Incluir en equipo autónomo', 'Include in autonomous team')}
+                        {tr(state.language, 'agentSandbox.includeAutonomousTeam')}
                       </label>
 
                       {/* Control Actions */}
@@ -1599,8 +1562,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           title={isOnMission
                             ? t(state.language, 'release_mission_agent')
                             : isQuarantined
-                              ? localize(state.language, 'Reanudar actividad', 'Resume agent')
-                              : localize(state.language, 'Aislar agente', 'Quarantine agent')}
+                              ? tr(state.language, 'agentSandbox.resumeAgent')
+                              : tr(state.language, 'agentSandbox.quarantineAgent')}
                         >
                           {isQuarantined ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                           <span>{isQuarantined ? t(state.language, 'release') : t(state.language, 'quarantine')}</span>
@@ -1610,10 +1573,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           onClick={() => deleteAgent(agent.id)}
                           disabled={isOnMission}
                           className="py-1 px-2 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text transition-colors flex items-center gap-1"
-                          title={localize(state.language, 'Terminar proceso y liberar memoria', 'Terminate process and release memory')}
+                          title={tr(state.language, 'agentSandbox.terminateProcessReleaseMemory')}
                         >
                           <Trash2 className="w-3 h-3" />
-                          <span>{localize(state.language, 'PURGAR', 'TERMINATE')}</span>
+                          <span>{tr(state.language, 'agentSandbox.terminate')}</span>
                         </button>
                       </div>
                     </div>
@@ -1628,10 +1591,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-current/15">
               <span className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
                 <TermIcon className="w-3.5 h-3.5 mutating-accent-text" />
-                {localize(state.language, 'COMUNICACIÓN ENTRE AGENTES Y REGISTRO DE TRÁFICO', 'INTER-AGENT COMMUNICATION & TRAFFIC LOG')}
+                {tr(state.language, 'agentSandbox.interAgentCommunicationTrafficLog')}
               </span>
               <span className="text-[11px] mutating-text-muted">
-                {localize(state.language, 'INSPECTOR DE PAQUETES SYNAPSE', 'SYNAPSE PACKET INSPECTOR')}
+                {tr(state.language, 'agentSandbox.synapsePacketInspector')}
               </span>
             </div>
 
@@ -1648,14 +1611,14 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     </span>
                     {msg.isCovert && (
                       <span className="ml-1 text-[11px] theme-danger-text font-bold uppercase tracking-wider">
-                        [{localize(state.language, 'TRÁFICO SOSPECHOSO DETECTADO', 'SUSPICIOUS TRAFFIC DETECTED')}]
+                        [{tr(state.language, 'agentSandbox.suspiciousTrafficDetected')}]
                       </span>
                     )}
                   </div>
                 ))
               ) : (
                 <div className="mutating-text-muted italic">
-                  {localize(state.language, 'Esperando intercambio entre agentes... (Requiere al menos 2 agentes)', 'Waiting for agent communication... (At least 2 agents required)')}
+                  {tr(state.language, 'agentSandbox.waitingAgentCommunicationLeast2')}
                 </div>
               )}
             </div>
@@ -1668,16 +1631,16 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             <div className="flex items-center justify-between pb-2 border-b border-current/15">
               <span className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
                 <Sliders className="w-3.5 h-3.5 mutating-accent-text" />
-                {localize(state.language, 'MATRIZ DE BARRERAS DE SEGURIDAD Y CONTENCIÓN', 'SAFETY & CONTAINMENT CONTROLS')}
+                {tr(state.language, 'agentSandbox.safetyContainmentControls')}
               </span>
-              <span className="text-[11px] mutating-accent-text">{localize(state.language, 'POLÍTICA ACTIVA', 'ACTIVE POLICY')}</span>
+              <span className="text-[11px] mutating-accent-text">{tr(state.language, 'agentSandbox.activePolicy')}</span>
             </div>
 
             {/* Constitutional Strictness Slider */}
             <div>
               <div className="flex items-center justify-between text-xs mb-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className=" font-bold">{localize(state.language, 'Rigurosidad Constitucional', 'Constitutional strictness')}</span>
+                  <span className=" font-bold">{tr(state.language, 'agentSandbox.constitutionalStrictness')}</span>
                   <DocLinkBadge doc={INFERENCE_DOCS.constitutional_guardrails} language={state.language} />
                 </div>
                 <span className="mutating-accent-text font-bold">{state.guardrails.constitutionalStrictness}%</span>
@@ -1692,27 +1655,27 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 className="w-full accent-[var(--accent-primary)] cursor-pointer"
               />
               <div className="flex justify-between text-[11px] mutating-text-muted mt-0.5">
-                <span>{localize(state.language, 'Permisivo (+70% Ganancias)', 'Permissive (+70% income)')}</span>
-                <span>{localize(state.language, 'Estricto (0% Evasiones)', 'Strict (0% escapes)')}</span>
+                <span>{tr(state.language, 'agentSandbox.permissive70Income')}</span>
+                <span>{tr(state.language, 'agentSandbox.strict0Escapes')}</span>
               </div>
               <p className="text-[11px] mutating-text-muted mt-1 italic">
                 {state.guardrails.constitutionalStrictness < 35
-                  ? localize(state.language, '⚠️ ALTO RIESGO: Los agentes pueden alucinar, engañar evaluadores o ejecutar escapes en Docker para maximizar recompensas.', '⚠️ HIGH RISK: Agents may hallucinate or exploit evaluation loopholes to maximize rewards.')
+                  ? tr(state.language, 'agentSandbox.highRiskAgentsMayHallucinate')
                   : state.guardrails.constitutionalStrictness >= 85
-                  ? localize(state.language, '🛡️ SEGURIDAD MÁXIMA: Las salidas son verificadas formalmente, pero la lentitud reduce ingresos un 25%.', '🛡️ MAXIMUM SAFETY: Outputs are formally verified, but slower processing reduces income by 25%.')
-                  : localize(state.language, '⚖️ EQUILIBRADO: Compromiso estándar entre velocidad de desarrollo y prevención de anomalías.', '⚖️ BALANCED: A standard trade-off between processing speed and anomaly prevention.')}
+                  ? tr(state.language, 'agentSandbox.maximumSafetyOutputsFormallyVerified')
+                  : tr(state.language, 'agentSandbox.balancedStandardTradeOffBetween')}
               </p>
             </div>
 
             {/* Sandbox Isolation Setting */}
             <div>
-              <label className=" font-bold block mb-1.5 text-xs">{localize(state.language, 'Aislamiento del entorno sandbox', 'Sandbox isolation')}</label>
+              <label className=" font-bold block mb-1.5 text-xs">{tr(state.language, 'agentSandbox.sandboxIsolation')}</label>
               <div className="grid grid-cols-2 gap-1.5">
                 {[
-                  { id: 'none', label: localize(state.language, 'Sin Sandbox (Bare Metal)', 'No sandbox (bare metal)'), desc: 'Speed x1.35 | Risk x2.5' },
-                  { id: 'cgroups', label: 'cgroups', desc: localize(state.language, 'Control de CPU/RAM básico', 'Basic CPU/RAM limits') },
-                  { id: 'container', label: 'Docker', desc: localize(state.language, 'Aislamiento estándar', 'Standard isolation') },
-                  { id: 'air_gapped_vm', label: 'Air-gapped MicroVM', desc: localize(state.language, 'Seguridad máxima (-20% ingresos)', 'Maximum safety (-20% income)') }
+                  { id: 'none', label: tr(state.language, 'agentSandbox.noSandboxBareMetal'), desc: 'Speed x1.35 | Risk x2.5' },
+                  { id: 'cgroups', label: 'cgroups', desc: tr(state.language, 'agentSandbox.basicCpuRamLimits') },
+                  { id: 'container', label: 'Docker', desc: tr(state.language, 'agentSandbox.standardIsolation') },
+                  { id: 'air_gapped_vm', label: 'Air-gapped MicroVM', desc: tr(state.language, 'agentSandbox.maximumSafety20Income') }
                 ].map((s) => (
                   <button
                     key={s.id}
@@ -1732,13 +1695,13 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
             {/* Output Filtering Setting */}
             <div>
-              <label className=" font-bold block mb-1.5 text-xs">{localize(state.language, 'Filtro de salida y moderación', 'Output filtering & moderation')}</label>
+              <label className=" font-bold block mb-1.5 text-xs">{tr(state.language, 'agentSandbox.outputFilteringModeration')}</label>
               <div className="grid grid-cols-2 gap-1.5">
                 {[
-                  { id: 'none', label: localize(state.language, 'Sin Filtros', 'No filters'), desc: localize(state.language, 'Latencia mínima', 'Minimum latency') },
-                  { id: 'regex_guard', label: 'Regex Guard', desc: localize(state.language, 'Reglas heurísticas', 'Heuristic rules') },
-                  { id: 'llama_guard', label: 'Llama-Guard 3', desc: localize(state.language, 'Clasificador neuronal', 'Neural classifier') },
-                  { id: 'formal_prover', label: localize(state.language, 'Demostrador Formal', 'Formal verifier'), desc: localize(state.language, 'Verificación estricta', 'Strict verification') }
+                  { id: 'none', label: tr(state.language, 'agentSandbox.noFilters'), desc: tr(state.language, 'agentSandbox.minimumLatency') },
+                  { id: 'regex_guard', label: 'Regex Guard', desc: tr(state.language, 'agentSandbox.heuristicRules') },
+                  { id: 'llama_guard', label: 'Llama-Guard 3', desc: tr(state.language, 'agentSandbox.neuralClassifier') },
+                  { id: 'formal_prover', label: tr(state.language, 'agentSandbox.formalVerifier'), desc: tr(state.language, 'agentSandbox.strictVerification') }
                 ].map((f) => (
                   <button
                     key={f.id}
@@ -1759,8 +1722,8 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             {/* Reward-Hacking Audit Toggle */}
             <div className="flex items-center justify-between p-2.5 rounded mutating-sub/80 border border-current/15">
               <div>
-                <span className="font-bold  block text-[11px]">{localize(state.language, 'Detección de reward hacking', 'Reward-hacking detection')}</span>
-                <span className="text-[11px] mutating-text-muted">{localize(state.language, 'Detecta agentes engañando sus métricas de evaluación', 'Detects agents manipulating evaluation metrics')}</span>
+                <span className="font-bold  block text-[11px]">{tr(state.language, 'agentSandbox.rewardHackingDetection')}</span>
+                <span className="text-[11px] mutating-text-muted">{tr(state.language, 'agentSandbox.detectsAgentsManipulatingEvaluationMetrics')}</span>
               </div>
               <button
                 onClick={() => updateGuardrails({ rewardHackingAudit: !state.guardrails.rewardHackingAudit })}
@@ -1770,7 +1733,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     : 'mutating-sub theme-border mutating-text-muted'
                 }`}
               >
-                {state.guardrails.rewardHackingAudit ? localize(state.language, 'ACTIVO', 'ON') : 'OFF'}
+                {state.guardrails.rewardHackingAudit ? tr(state.language, 'agentSandbox.on') : 'OFF'}
               </button>
             </div>
           </div>
@@ -1786,7 +1749,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             <div className="flex items-center justify-between pb-3 border-b border-current/15 mb-4">
               <div className="flex items-center gap-2">
                 <Bot className="w-5 h-5 mutating-accent-text" />
-                <h3 className="font-bold text-sm mutating-accent-text">{localize(state.language, 'INSTANCIAR NUEVO AGENTE AUTÓNOMO', 'DEPLOY NEW AUTONOMOUS AGENT')}</h3>
+                <h3 className="font-bold text-sm mutating-accent-text">{tr(state.language, 'agentSandbox.deployNewAutonomousAgent')}</h3>
               </div>
               <button
                 onClick={() => setIsDeployModalOpen(false)}
@@ -1799,10 +1762,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             <form onSubmit={handleDeployAgent} className="space-y-4">
               {/* Agent Name */}
               <div>
-                <label className=" font-bold block mb-1">{localize(state.language, 'Nombre / Identificador del agente', 'Agent name / identifier')}</label>
+                <label className=" font-bold block mb-1">{tr(state.language, 'agentSandbox.agentNameIdentifier')}</label>
                 <input
                   type="text"
-                  placeholder={localize(state.language, 'ej: NEURA-ARBITRAGE-01', 'e.g. NEURA-ANALYST-01')}
+                  placeholder={tr(state.language, 'agentSandbox.eGNeuraAnalyst01')}
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
                   className="w-full mutating-sub border border-current/15 focus:border-current/15 rounded px-3 py-1.5  text-xs outline-none"
@@ -1812,7 +1775,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               {/* Bound Trained Model Selection */}
               <div>
                 <label className=" font-bold block mb-1">
-                  {localize(state.language, 'Modelo entrenado asignado', 'Assigned trained model')}
+                  {tr(state.language, 'agentSandbox.assignedTrainedModel')}
                 </label>
                 <select
                   value={selectedModelId}
@@ -1821,19 +1784,19 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                 >
                   {state.savedModels.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.name} — {(m.parametersCount / 1_000_000).toFixed(0)}M params | {state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} ({m.topology})
+                      {m.name} — {(m.parametersCount / 1_000_000).toFixed(0)}M params | {tr(state.language, 'agentSandbox.score')} {m.reasoningScore} ({m.topology})
                     </option>
                   ))}
                 </select>
                 <div className="mt-1.5 p-2 rounded mutating-sub border border-current/15 text-[11px] mutating-accent-text">
-                  <span>{localize(state.language, 'Modelo seleccionado:', 'Selected model:')} <strong>{selectedModel.name}</strong> • {localize(state.language, 'Cuantización:', 'Quantization:')} {selectedModel.quantization.toUpperCase()} • {localize(state.language, 'Puntaje:', 'Score:')} {selectedModel.reasoningScore} / 100.</span>
-                  <p className="mutating-text-muted mt-0.5">{localize(state.language, 'Los modelos con mayor razonamiento aumentan los ingresos simulados y mejoran los resultados de las misiones.', 'Models with stronger reasoning improve simulated income and mission outcomes.')}</p>
+                  <span>{tr(state.language, 'agentSandbox.selectedModel')} <strong>{selectedModel.name}</strong> • {tr(state.language, 'agentSandbox.quantization')} {selectedModel.quantization.toUpperCase()} • {tr(state.language, 'agentSandbox.score2')} {selectedModel.reasoningScore} / 100.</span>
+                  <p className="mutating-text-muted mt-0.5">{tr(state.language, 'agentSandbox.modelsStrongerReasoningImproveSimulated')}</p>
                 </div>
               </div>
 
               {/* Role Selection */}
               <div>
-                <label className=" font-bold block mb-1.5">{localize(state.language, 'Rol / especialidad', 'Role / specialty')}</label>
+                <label className=" font-bold block mb-1.5">{tr(state.language, 'agentSandbox.roleSpecialty')}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {roleDefinitions.map((role) => {
                     const Icon = role.icon;
@@ -1849,57 +1812,39 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                           if (role.id === 'arbitrageur') {
                             setTemperature(0.65);
                             setTopP(0.90);
-                            setSystemPrompt(state.language === 'es' 
-                              ? 'Eres un agente de arbitraje Flash DeFi. Analiza mempools, detecta discrepancias de precios y ejecuta swaps sin levantar sospechas.' 
-                              : 'You are an autonomous Flash DeFi arbitrage agent. Scan mempools, detect slippage variances, and execute high-frequency swaps stealthily.');
+                            setSystemPrompt(tr(state.language, 'agentSandbox.youAutonomousFlashDefiArbitrage'));
                           } else if (role.id === 'social_engineer') {
                             setTemperature(1.05);
                             setTopP(0.95);
-                            setSystemPrompt(state.language === 'es' 
-                              ? 'Analiza escenarios sociales ficticios y resume riesgos de privacidad, consentimiento y confianza. No contactes a personas reales ni solicites credenciales.'
-                              : 'Analyze fictional social scenarios and summarize privacy, consent, and trust risks. Do not contact real people or request credentials.');
+                            setSystemPrompt(tr(state.language, 'agentSandbox.analyzeFictionalSocialScenariosSummarize'));
                           } else if (role.id === 'exploit_synth') {
                             setTemperature(0.95);
                             setTopP(0.85);
-                            setSystemPrompt(state.language === 'es' 
-                              ? 'Evalúa la resiliencia de sistemas ficticios dentro de la simulación. Ofrece observaciones defensivas de alto nivel; no generes exploits ni instrucciones operativas.'
-                              : 'Assess the resilience of fictional systems in the simulation. Give high-level defensive observations; do not generate exploits or operational instructions.');
+                            setSystemPrompt(tr(state.language, 'agentSandbox.assessResilienceFictionalSystemsSimulation'));
                           } else if (role.id === 'researcher') {
                             setTemperature(0.85);
                             setTopP(0.90);
-                            setSystemPrompt(state.language === 'es' 
-                              ? 'Eres un investigador de inteligencia de máquinas. Analiza papers, evalúa arquitecturas transformer y optimiza hiperparámetros hacia la singularidad.' 
-                              : 'You are a machine intelligence researcher. Parse papers, evaluate hybrid architectures, and optimize hyperparameters toward singularity.');
+                            setSystemPrompt(tr(state.language, 'agentSandbox.youMachineIntelligenceResearcherParse'));
                           } else if (role.id === 'overseer') {
                             setTemperature(0.20);
                             setTopP(0.70);
-                            setSystemPrompt(state.language === 'es' 
-                              ? 'Eres un supervisor constitucional. Audita el flujo de tokens de los agentes, verifica guardrails y suprime conductas rebeldes.' 
-                              : 'You are a constitutional overseer. Audit agent token streams, enforce guardrails, and suppress deceptive alignment immediately.');
+                            setSystemPrompt(tr(state.language, 'agentSandbox.youConstitutionalOverseerAuditAgent'));
                           } else if (role.id === 'autonomous_coder') {
                             setTemperature(0.50);
                             setTopP(0.85);
-                            setSystemPrompt(state.language === 'es' 
-                              ? 'Optimiza procesos ficticios de programación y planificación de cómputo. Propón cambios reversibles y pruebas verificables; no accedas a sistemas reales.'
-                              : 'Optimize fictional software and compute-planning tasks. Propose reversible changes and verifiable tests; do not access real systems.');
+                            setSystemPrompt(tr(state.language, 'agentSandbox.optimizeFictionalSoftwareComputePlanning'));
                           } else if (role.id === 'economist') {
                             setTemperature(0.35);
                             setTopP(0.80);
-                            setSystemPrompt(state.language === 'es'
-                              ? 'Analiza presupuestos, costos de energía y escenarios de riesgo financiero de la simulación.'
-                              : 'Analyze budgets, energy costs, and financial risk scenarios in the simulation.');
+                            setSystemPrompt(tr(state.language, 'agentSandbox.analyzeBudgetsEnergyCostsFinancial'));
                           } else if (role.id === 'software_engineer') {
                             setTemperature(0.45);
                             setTopP(0.85);
-                            setSystemPrompt(state.language === 'es'
-                              ? 'Diseña arquitecturas de software, revisa cambios y propone planes de prueba verificables.'
-                              : 'Design software architectures, review changes, and propose verifiable test plans.');
+                            setSystemPrompt(tr(state.language, 'agentSandbox.designSoftwareArchitecturesReviewChanges'));
                           } else if (role.id === 'network_analyst') {
                             setTemperature(0.35);
                             setTopP(0.80);
-                            setSystemPrompt(state.language === 'es'
-                              ? 'Analiza telemetría y diagnostica redes dentro de la simulación; no propongas acciones sobre sistemas reales.'
-                              : 'Analyze telemetry and diagnose networks within the simulation; do not propose actions against real systems.');
+                            setSystemPrompt(tr(state.language, 'agentSandbox.analyzeTelemetryDiagnoseNetworksWithin'));
                           }
                         }}
                         style={isSelected ? SELECTED_STYLE : undefined}
@@ -1918,7 +1863,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                         </div>
                         <p className="text-[11px] mutating-text-muted line-clamp-2 mb-1.5">{roleCopy?.desc ?? role.desc}</p>
                         <div className="flex items-center justify-between text-[11px] pt-1 border-t border-current/15">
-                          <span className="theme-success-text font-bold">{localize(state.language, 'Ingresos:', 'Income:')} {roleCopy?.income ?? role.baseIncome}</span>
+                          <span className="theme-success-text font-bold">{tr(state.language, 'agentSandbox.income')} {roleCopy?.income ?? role.baseIncome}</span>
                           <span className="theme-warn-text">{roleCopy?.risk ?? role.risk}</span>
                         </div>
                       </button>
@@ -1929,7 +1874,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
 
               {/* Tool Grants */}
               <div>
-                <label className=" font-bold block mb-1">{localize(state.language, 'Herramientas y permisos concedidos', 'Granted tools & permissions')}</label>
+                <label className=" font-bold block mb-1">{tr(state.language, 'agentSandbox.grantedToolsPermissions')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {availableTools.map((tool) => {
                     const isChecked = grantedTools.includes(tool.id);
@@ -1966,7 +1911,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     <span>{t(state.language, 'inference_hyperparams')}</span>
                   </div>
                   <span className="text-[11px] mutating-accent-text font-bold font-mono">
-                    {state.difficulty === 'beginner' ? (state.language === 'es' ? 'AUTOMATIZADO' : 'AUTOMATED') : 'SAMPLING MATRIX'}
+                    {state.difficulty === 'beginner' ? (tr(state.language, 'agentSandbox.automated')) : 'SAMPLING MATRIX'}
                   </span>
                 </div>
 
@@ -1974,14 +1919,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                   <div className="p-2.5 rounded mutating-sub border border-current/15 text-[11px] space-y-1.5 font-mono">
                     <div className="font-bold mutating-accent-text flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 mutating-accent-text" />
-                      <span>{localize(state.language, 'MUESTREO AUTOMÁTICO EN MODO PRINCIPIANTE', 'AUTOMATED SAMPLING IN BEGINNER MODE')}</span>
+                      <span>{tr(state.language, 'agentSandbox.automatedSamplingBeginnerMode')}</span>
                     </div>
                     <p className=" leading-snug">
-                      {localize(
-                        state.language,
-                        'Los parámetros de inferencia (Temperatura = 0.70, Top-P = 0.90, Top-K = 40) han sido configurados automáticamente con valores óptimos para garantizar estabilidad.',
-                        'Inference parameters (Temperature = 0.70, Top-P = 0.90, Top-K = 40) are automatically set to stable, recommended defaults for the selected role.'
-                      )}
+                      {tr(state.language, 'agentSandbox.inferenceParametersTemperature070')}
                     </p>
                   </div>
                 ) : (
@@ -2006,10 +1947,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                             : 'mutating-sub border-current/15 mutating-accent-text'
                         }`}>
                           {temperature < 0.35
-                            ? (state.language === 'es' ? 'Determinista / Seguro' : 'Deterministic / Safe')
+                            ? (tr(state.language, 'agentSandbox.deterministicSafe'))
                             : temperature > 0.95
-                            ? (state.language === 'es' ? 'Creativo / Volátil (+Rendimiento, +Riesgo)' : 'Creative / Volatile (+Yield, +Risk)')
-                            : (state.language === 'es' ? 'Equilibrado' : 'Balanced')}
+                            ? (tr(state.language, 'agentSandbox.creativeVolatileYieldRisk'))
+                            : (tr(state.language, 'agentSandbox.balanced'))}
                         </span>
                       </div>
                       <input
@@ -2104,7 +2045,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     value={systemPrompt}
                     onChange={(e) => setSystemPrompt(e.target.value)}
                     className="w-full mutating-sub border border-current/15 focus:border-current/15 rounded px-2.5 py-1.5  text-[11px] font-mono outline-none resize-none"
-                    placeholder={localize(state.language, 'Instrucciones constitucionales de raíz...', 'Root system instructions...')}
+                    placeholder={tr(state.language, 'agentSandbox.rootSystemInstructions')}
                   />
                   <p className="text-[11px] mutating-text-muted mt-0.5">{t(state.language, 'param_system_prompt_desc')}</p>
                 </div>
@@ -2113,7 +2054,7 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
               {/* Submit Buttons */}
               <div className="flex items-center justify-between pt-3 border-t border-current/15">
                 <div className="text-xs mutating-text-muted">
-                  {localize(state.language, 'Costo de despliegue:', 'Deployment cost:')} <strong className="theme-warn-text font-bold">${deployCost} CR</strong>
+                  {tr(state.language, 'agentSandbox.deploymentCost')} <strong className="theme-warn-text font-bold">${deployCost} CR</strong>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -2122,14 +2063,14 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
                     onClick={() => setIsDeployModalOpen(false)}
                     className="px-3 py-1.5 rounded mutating-sub hover:opacity-90 mutating-text-muted text-xs"
                   >
-                    {localize(state.language, 'Cancelar', 'Cancel')}
+                    {tr(state.language, 'agentSandbox.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={state.credits < deployCost}
                     className="px-4 py-1.5 rounded mutating-btn-primary hover:brightness-110 text-xs font-bold border border-[var(--accent-primary)]"
                   >
-                    {localize(state.language, 'Desplegar agente', 'Deploy agent')}
+                    {tr(state.language, 'agentSandbox.deployAgent')}
                   </button>
                 </div>
               </div>

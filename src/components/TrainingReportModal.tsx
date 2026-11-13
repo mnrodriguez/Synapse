@@ -9,6 +9,7 @@ import { useGame } from '../context/GameContext';
 import { localize } from '../utils/i18n';
 import { learningRateLabel } from '../utils/trainingRun';
 import { sound } from '../audio/soundManager';
+import { tr } from '../i18n';
 
 // Shown once when a training run converges. The operative confirms it before continuing.
 export const TrainingReportModal: React.FC = () => {
@@ -27,10 +28,10 @@ export const TrainingReportModal: React.FC = () => {
     ceiling: { tone: 'theme-warn-text', es: 'Sin mejora: el modelo está cerca del techo de su tamaño. Para subir más necesitas más parámetros (Arquitectura) o más datos.', en: 'No gain: the model is near its size ceiling. To go further you need more parameters (Architecture) or more data.' }
   };
   const title = outcome === 'diverged'
-    ? localize(state.language, 'CORRIDA DIVERGENTE', 'RUN DIVERGED')
+    ? tr(state.language, 'trainingReportModal.runDiverged')
     : outcome === 'overfit'
-      ? localize(state.language, 'CORRIDA CON SOBREAJUSTE', 'RUN OVERFITTED')
-      : localize(state.language, 'ENTRENAMIENTO COMPLETADO', 'TRAINING COMPLETE');
+      ? tr(state.language, 'trainingReportModal.runOverfitted')
+      : tr(state.language, 'trainingReportModal.trainingComplete');
 
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center p-3 bg-black/70 backdrop-blur-sm font-mono">
@@ -44,19 +45,19 @@ export const TrainingReportModal: React.FC = () => {
 
         <div className="space-y-2 text-xs">
           <div className="flex justify-between gap-3">
-            <span className="mutating-text-muted">{localize(state.language, 'Modelo', 'Model')}</span>
+            <span className="mutating-text-muted">{tr(state.language, 'trainingReportModal.model')}</span>
             <span className="font-bold">{report.modelName}</span>
           </div>
           <div className="flex justify-between gap-3">
-            <span className="mutating-text-muted">{localize(state.language, 'Dataset', 'Dataset')}</span>
+            <span className="mutating-text-muted">{tr(state.language, 'trainingReportModal.dataset')}</span>
             <span className="font-bold text-right">{report.datasetName}</span>
           </div>
           <div className="flex justify-between gap-3">
-            <span className="mutating-text-muted">{localize(state.language, 'Tipo', 'Type')}</span>
-            <span className="font-bold">{report.isMicroModel ? localize(state.language, 'Micro-modelo', 'Micro-model') : 'General'}</span>
+            <span className="mutating-text-muted">{tr(state.language, 'trainingReportModal.type')}</span>
+            <span className="font-bold">{report.isMicroModel ? tr(state.language, 'trainingReportModal.microModel') : 'General'}</span>
           </div>
           <div className="flex justify-between gap-3">
-            <span className="mutating-text-muted">{localize(state.language, 'Puntaje de evaluación', 'Evaluation score')}</span>
+            <span className="mutating-text-muted">{tr(state.language, 'trainingReportModal.evaluationScore')}</span>
             <span className="font-bold">
               {report.reasoningBefore} → {report.reasoningAfter}
               <span className={delta > 0 ? 'theme-success-text ml-2' : delta < 0 ? 'theme-danger-text ml-2' : 'mutating-text-muted ml-2'}>
@@ -65,7 +66,7 @@ export const TrainingReportModal: React.FC = () => {
             </span>
           </div>
           <div className="flex justify-between gap-3">
-            <span className="mutating-text-muted">{localize(state.language, 'Techo de este tamaño', 'Ceiling for this size')}</span>
+            <span className="mutating-text-muted">{tr(state.language, 'trainingReportModal.ceilingSize')}</span>
             <span className="font-bold">{report.reasoningCeiling}</span>
           </div>
           <p className={`text-[11px] leading-snug ${lesson[outcome].tone}`}>
@@ -73,7 +74,7 @@ export const TrainingReportModal: React.FC = () => {
           </p>
           {report.epochsPlanned !== undefined && (
             <div className="flex justify-between gap-3">
-              <span className="mutating-text-muted">{localize(state.language, 'Épocas', 'Epochs')}</span>
+              <span className="mutating-text-muted">{tr(state.language, 'trainingReportModal.epochs')}</span>
               <span className="font-bold">
                 {report.epochsRun} / {report.epochsPlanned}
                 {report.learningRate && <span className="mutating-text-muted font-normal"> · LR {learningRateLabel(state.language, report.learningRate)}</span>}
@@ -81,17 +82,17 @@ export const TrainingReportModal: React.FC = () => {
             </div>
           )}
           <div className="flex justify-between gap-3">
-            <span className="mutating-text-muted">{localize(state.language, 'Pérdida final', 'Final loss')}</span>
+            <span className="mutating-text-muted">{tr(state.language, 'trainingReportModal.finalLoss')}</span>
             <span className="font-bold">
               {report.finalLoss.toFixed(4)}
               {report.finalValLoss !== undefined && (
-                <span className="mutating-text-muted font-normal"> · {localize(state.language, 'validación', 'validation')} {report.finalValLoss.toFixed(4)}</span>
+                <span className="mutating-text-muted font-normal"> · {tr(state.language, 'trainingReportModal.validation')} {report.finalValLoss.toFixed(4)}</span>
               )}
             </span>
           </div>
           {report.energyKwh !== undefined && (
             <div className="flex justify-between gap-3">
-              <span className="mutating-text-muted">{localize(state.language, 'Energía de las GPU', 'GPU energy')}</span>
+              <span className="mutating-text-muted">{tr(state.language, 'trainingReportModal.gpuEnergy')}</span>
               <span className="font-bold">{report.energyKwh} kWh · ${(report.energyCost ?? 0).toFixed(2)} CR</span>
             </div>
           )}
@@ -105,7 +106,7 @@ export const TrainingReportModal: React.FC = () => {
           }}
           className="w-full py-2 rounded mutating-btn-primary font-bold text-xs cursor-pointer"
         >
-          {localize(state.language, 'CONFIRMAR', 'CONFIRM')}
+          {tr(state.language, 'trainingReportModal.confirm')}
         </button>
       </div>
     </div>

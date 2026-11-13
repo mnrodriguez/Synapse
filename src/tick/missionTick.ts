@@ -6,12 +6,12 @@
 import { GameState, ModelArchitecture, ActiveGig, AgentInstance, ContractGig } from '../types/game';
 import { DEFAULT_GUARDRAILS } from '../utils/constants';
 import { createInstantReplenishmentContract, minReasoningForTier } from '../services/aiService';
-import { localize } from '../utils/i18n';
 import { localizedContractTitle } from '../utils/gameContentI18n';
 import { formatGameTime } from '../utils/training';
 import { evaluateMissionTeam, findAutonomousMission, weakestTeamFactors } from '../utils/missionEvaluation';
 import { MISSION_SINGULARITY } from '../utils/missionTiers';
 import { effectCollector, type Random } from './effects';
+import { tr } from '../i18n';
 
 // Running missions for one tick: countdown, success or failure, rewards and replacement contracts, and
 // autonomous bots taking new missions.
@@ -75,12 +75,8 @@ export function missionTick(input: MissionTickInput) {
           play('credit');
           addLog(
             isAutonomous
-              ? (prev.language === 'en'
-                  ? `Autonomous bot mission succeeded: [${contractTitle}]. Awarded $${earnedCredits.toLocaleString()} CR net (after 40% compute delegation overhead).`
-                  : `Misión de bots autónomos exitosa: [${contractTitle}]. Acreditados $${earnedCredits.toLocaleString()} CR netos (tras 40% de tasa operativa de cómputo).`)
-              : (prev.language === 'en'
-                  ? `Mission completed: [${contractTitle}]. The operative team was awarded $${gig.rewardCredits.toLocaleString()} CR.`
-                  : `Misión completada: [${contractTitle}]. El equipo recibió $${gig.rewardCredits.toLocaleString()} CR.`),
+              ? (tr(prev.language, 'missionTick.autonomousBotMissionSucceededAwarded', { contractTitle, earnedCredits: earnedCredits.toLocaleString() }))
+              : (tr(prev.language, 'missionTick.missionCompletedOperativeTeamWas', { contractTitle, rewardCredits: gig.rewardCredits.toLocaleString() })),
             'success'
           );
 
@@ -94,11 +90,7 @@ export function missionTick(input: MissionTickInput) {
             const replenishment = createInstantReplenishmentContract(gig.tier, prev.language, constraints);
             if (!replenishment) {
               addLog(
-                localize(
-                  prev.language,
-                  `No hay nuevas misiones de ${gig.tier} al alcance de tu mejor modelo (puntaje ${constraints.maxReasoning}). Entrena tu modelo hasta puntaje ${minReasoningForTier(gig.tier)} para desbloquearlas.`,
-                  `No new ${gig.tier} missions fit your best model (score ${constraints.maxReasoning}). Train your model to score ${minReasoningForTier(gig.tier)} to unlock them.`
-                ),
+                tr(prev.language, 'missionTick.noNewMissionsFitBest', { tier: gig.tier, maxReasoning: constraints.maxReasoning, tier2: minReasoningForTier(gig.tier) }),
                 'warning'
               );
             }
@@ -130,9 +122,7 @@ export function missionTick(input: MissionTickInput) {
           watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
           play('warning');
           addLog(
-            prev.language === 'en'
-              ? `[MISSION FAILED] [${contractTitle}]: Objective verification failed (Roll ${(activeGig.outcomeRoll ?? 0).toFixed(2)} vs required ${(effectiveSuccessProbability).toFixed(2)}). Watchdog suspicion +${suspicionAdded}%. Mission remains available for reattempt.`
-              : `[MISIÓN FALLIDA] [${contractTitle}]: Falló la verificación de inferencia (Tirada ${(activeGig.outcomeRoll ?? 0).toFixed(2)} vs requerido ${(effectiveSuccessProbability).toFixed(2)}). Sospecha +${suspicionAdded}%. El contrato sigue disponible para reintento.`,
+            tr(prev.language, 'missionTick.missionFailedObjectiveVerificationFailed', { contractTitle, outcomeRoll: (activeGig.outcomeRoll ?? 0).toFixed(2), effectiveSuccessProbability: (effectiveSuccessProbability).toFixed(2), suspicionAdded }),
             'danger'
           );
 
@@ -239,9 +229,7 @@ export function missionTick(input: MissionTickInput) {
         );
         const botContractTitle = localizedContractTitle(prev.language, plan.contract);
         addLog(
-          prev.language === 'en'
-            ? `Autonomous bot swarm accepted [${botContractTitle}] (${autonomousEfficiency}% efficiency [autonomous balance], ${formatGameTime(autonomousDuration)} duration, ${Math.round(teamAssessment.successProbability * 100)}% base success, 40% delegation fee).`
-            : `El enjambre autónomo aceptó [${botContractTitle}] (${autonomousEfficiency}% eficiencia [balance autónomo], ${formatGameTime(autonomousDuration)} duración, ${Math.round(teamAssessment.successProbability * 100)}% éxito base, 40% tasa de delegación).`,
+          tr(prev.language, 'missionTick.autonomousBotSwarmAcceptedEfficiency', { botContractTitle, autonomousEfficiency, autonomousDuration: formatGameTime(autonomousDuration), successProbability: Math.round(teamAssessment.successProbability * 100) }),
           plan.contract.suspicionRisk >= 40 ? 'warning' : 'info'
         );
       }

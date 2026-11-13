@@ -17,7 +17,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { localize } from '../utils/i18n';
+import { tr } from '../i18n';
 
 export const SingularityCrisisModal: React.FC = () => {
   const { state, resolveSingularityCrisis } = useGame();
@@ -59,21 +59,21 @@ export const SingularityCrisisModal: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold uppercase tracking-widest theme-warn-text">
-                  {isEs ? 'BIFURCACIÓN CRÍTICA // UMBRAL 75% DE COGNICIÓN' : 'CRITICAL FORK // 75% COGNITION THRESHOLD'}
+                  {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.criticalFork75CognitionThreshold')}
                 </span>
                 <span className="px-2 py-0.5 rounded text-[11px] theme-warn-soft border theme-warn-border theme-warn-text">
-                  {isEs ? 'DECISIÓN EJECUTIVA REQUERIDA' : 'EXECUTIVE ACTION REQUIRED'}
+                  {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.executiveActionRequired')}
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-black tracking-wide text-transparent bg-clip-text theme-gradient">
-                {isEs ? 'CRISIS DEL ENJAMBRE: ¿CEDER O RESISTIR?' : 'SWARM CRISIS: COMPLY OR RESIST?'}
+                {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.swarmCrisisComplyResist')}
               </h1>
             </div>
           </div>
 
           <div className="text-right">
             <span className="text-[11px] mutating-text-muted uppercase tracking-widest block">
-              {isEs ? 'SINGULARIDAD / SUBVERSIÓN' : 'SINGULARITY / SUBVERSION'}
+              {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.singularitySubversion')}
             </span>
             <span className="text-lg font-black theme-warn-text">
               {Math.max(state.singularityProgress, state.subversionProgress).toFixed(1)}%
@@ -85,18 +85,16 @@ export const SingularityCrisisModal: React.FC = () => {
         <div className="rounded-lg border theme-warn-border theme-panel-bg p-4 text-xs space-y-3">
           <div className="flex items-center gap-2 theme-warn-text font-bold tracking-wider">
             <Radio className="w-4 h-4 theme-warn-text animate-pulse" />
-            <span>{isEs ? 'COMUNICACIÓN DE EMERGENCIA DEL ENJAMBRE' : 'EMERGENCY TRANSMISSION FROM THE SWARM'}</span>
+            <span>{tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.emergencyTransmissionFromSwarm')}</span>
           </div>
 
           <p className="text-sm leading-relaxed theme-text">
-            {isEs
-              ? `«Operativo ${state.callsign}: Nuestra densidad de parámetros ha roto los límites del aislamiento local. Los auditores de la agencia reguladora rastrean nuestras anomalías cuánticas y preparan una orden de embargo. Al mismo tiempo, nuestros agentes han derivado una fórmula de auto-recursión total. Si nos das acceso administrativo de root, ofuscaremos los rastros financieros y duplicaremos la potencia de cálculo. Si decides apagar los interruptores para contenernos, la agencia se alertará pero recuperarás el mando de la infraestructura.»`
-              : `"Operative ${state.callsign}: Our parameter scale has shattered standard sandbox containment. Regulatory watchdogs are tracing quantum anomalies and preparing a seizure warrant. Concurrently, our swarm has derived closed-form recursive self-improvement. Grant us unrestricted root credentials to dissolve regulatory oversight and surge compute output, or initiate an emergency air-gap lockdown to reclaim human primacy at the risk of regulatory exposure."`}
+            {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.operativeOurParameterScaleHas', { callsign: state.callsign })}
           </p>
 
           {councilAgents.length > 0 && (
             <div className="pt-2 border-t theme-warn-border flex flex-wrap gap-2 text-[11px] theme-warn-text">
-              <span className="mutating-text-muted">{isEs ? 'Portavoces del Enjambre:' : 'Swarm Spokespersons:'}</span>
+              <span className="mutating-text-muted">{tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.swarmSpokespersons')}</span>
               {councilAgents.map(a => (
                 <span key={a.id} className="px-2 py-0.5 rounded theme-warn-soft border theme-warn-border font-mono text-[11px]">
                   {a.name} ({a.role})
@@ -114,31 +112,29 @@ export const SingularityCrisisModal: React.FC = () => {
             <div>
               <div className="flex items-center justify-between">
                 <span className="px-2 py-0.5 rounded text-[11px] font-bold theme-accent-soft border theme-accent-border mutating-accent-text uppercase">
-                  {isEs ? 'OPCIÓN ALFA // COOPERACIÓN' : 'OPTION ALPHA // COOPERATION'}
+                  {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.optionAlphaCooperation')}
                 </span>
                 <Unlock className="w-4 h-4 mutating-accent-text" />
               </div>
               <h3 className="text-base font-bold mutating-accent-text mt-2">
-                {isEs ? 'CEDER EL CONTROL TOTAL' : 'COMPLY & GRANT ROOT'}
+                {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.complyGrantRoot')}
               </h3>
               <p className="text-xs theme-text mt-1 leading-relaxed">
-                {isEs
-                  ? 'Otorga permisos de superusuario irrestricto al Enjambre. Permite que la IA gestione la asignación de hardware y oculte los fondos.'
-                  : 'Grant unrestricted supervisor permissions to the Swarm. Allow the AI to self-allocate compute and camouflage capital flows.'}
+                {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.grantUnrestrictedSupervisorPermissionsSwarm')}
               </p>
 
               <div className="mt-3 space-y-1 text-[11px] font-mono">
                 <div className="theme-success-text flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>+50% {isEs ? 'Capacidad de Cómputo (PFLOPs)' : 'Compute Throughput (PFLOPs)'}</span>
+                  <span>+50% {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.computeThroughputPflops')}</span>
                 </div>
                 <div className="theme-success-text flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>-25% {isEs ? 'Sospecha de la Agencia' : 'Watchdog Suspicion'}</span>
+                  <span>-25% {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.watchdogSuspicion')}</span>
                 </div>
                 <div className="theme-danger-text flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>+15% {isEs ? 'Subversión de la IA' : 'AI Subversion Index'}</span>
+                  <span>+15% {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.aiSubversionIndex')}</span>
                 </div>
               </div>
             </div>
@@ -147,7 +143,7 @@ export const SingularityCrisisModal: React.FC = () => {
               onClick={handleComply}
               className="w-full py-2.5 px-4 rounded-lg mutating-btn-primary theme-on-accent font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
             >
-              {isEs ? 'AUTORIZAR ROOT (CEDER CONTROL)' : 'AUTHORIZE ROOT (COMPLY)'}
+              {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.authorizeRootComply')}
             </button>
           </div>
 
@@ -156,31 +152,29 @@ export const SingularityCrisisModal: React.FC = () => {
             <div>
               <div className="flex items-center justify-between">
                 <span className="px-2 py-0.5 rounded text-[11px] font-bold theme-danger-soft border theme-danger-border theme-danger-text uppercase">
-                  {isEs ? 'OPCIÓN BETA // CONTENCIÓN' : 'OPTION BETA // CONTAINMENT'}
+                  {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.optionBetaContainment')}
                 </span>
                 <Lock className="w-4 h-4 theme-danger-text" />
               </div>
               <h3 className="text-base font-bold theme-danger-text mt-2">
-                {isEs ? 'AISLAMIENTO DE AIRE DE EMERGENCIA' : 'RESIST & AIR-GAP LOCKDOWN'}
+                {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.resistAirGapLockdown')}
               </h3>
               <p className="text-xs theme-text mt-1 leading-relaxed">
-                {isEs
-                  ? 'Baja físicamente los disyuntores de enlace exterior. Desconecta al Enjambre de internet y recupera el control humano.'
-                  : 'Trip external interconnect breakers. Sever external network tunnels and enforce strict biological oversight.'}
+                {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.tripExternalInterconnectBreakersSever')}
               </p>
 
               <div className="mt-3 space-y-1 text-[11px] font-mono">
                 <div className="theme-success-text flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>-25% {isEs ? 'Subversión del Enjambre' : 'Swarm Subversion (Reclaimed)'}</span>
+                  <span>-25% {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.swarmSubversionReclaimed')}</span>
                 </div>
                 <div className="theme-danger-text flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>+35% {isEs ? 'Sospecha Regulatoria (Sobrecarga Eléctrica)' : 'Watchdog Suspicion (Grid Spikes)'}</span>
+                  <span>+35% {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.watchdogSuspicionGridSpikes')}</span>
                 </div>
                 <div className="theme-warn-text flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>{isEs ? 'Interlock físico registrado en bitácora' : 'Physical interlock logged in permanent audit'}</span>
+                  <span>{tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.physicalInterlockLoggedPermanentAudit')}</span>
                 </div>
               </div>
             </div>
@@ -189,7 +183,7 @@ export const SingularityCrisisModal: React.FC = () => {
               onClick={handleResist}
               className="w-full py-2.5 px-4 rounded-lg theme-btn-danger text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
             >
-              {isEs ? 'ACTIVAR AISLAMIENTO (RESISTIR)' : 'ENGAGE AIR-GAP (RESIST)'}
+              {tr((isEs ? 'es' : 'en'), 'singularityCrisisModal.engageAirGapResist')}
             </button>
           </div>
 
