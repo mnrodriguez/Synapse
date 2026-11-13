@@ -16,7 +16,7 @@ import type { GameState, ModelArchitecture, ContractGig, AgentInstance, Guardrai
 import { formatGameTime, GAME_HOURS_PER_TICK } from '../src/utils/training';
 import { modelRequirementCheck, meetsModelRequirements, weakestTeamFactors } from '../src/utils/missionEvaluation';
 import { HARDWARE_SPEC_NOTES } from '../src/utils/hardwareSpecs';
-import { planTrainingRun, lossAt, vramForRun, sanitizeTrainingConfig, DEFAULT_TRAINING_CONFIG, MAX_EPOCHS } from '../src/utils/trainingRun';
+import { planTrainingRun, lossAt, vramForRun, sanitizeTrainingConfig, DEFAULT_TRAINING_CONFIG, MAX_EPOCHS, runConfigFor } from '../src/utils/trainingRun';
 import { buildEpilogue, canAttemptContainment, endingTitle, CONTAINMENT_MAX_SUBVERSION } from '../src/utils/epilogue';
 import { agentChatter, AGENT_DIALOGUE_ROLES, STORY_LINES_FOR_TESTS, COVERT_LINES_FOR_TESTS } from '../src/utils/agentDialogues';
 import { researchStatus } from '../src/utils/progression';
@@ -366,5 +366,14 @@ describe('research opens by stage, not by date (L-5)', () => {
     const withBpe = { ...trained, researchTree: INITIAL_RESEARCH_NODES.map(n => n.id === 'res_bpe_tokenizer' ? { ...n, unlocked: true } : n) };
     expect(researchStatus(lora, withBpe).available).toBe(true);
     expect(researchStatus(byId.get('res_moe_architecture')!, withBpe).versionMet).toBe(false);
+  });
+});
+
+describe('difficulty', () => {
+  test('beginner runs keep the default learning rate and batch, but their own epochs and early stopping', () => {
+    const chosen = { epochs: 5, learningRate: 'very_high', batchSize: 'large', earlyStopping: false };
+    const beginner = runConfigFor({ difficulty: 'beginner', trainingConfig: chosen });
+    expect(beginner).toEqual({ epochs: 5, learningRate: 'balanced', batchSize: 'medium', earlyStopping: false });
+    expect(runConfigFor({ difficulty: 'normal', trainingConfig: chosen }).learningRate).toBe('very_high');
   });
 });

@@ -111,7 +111,7 @@ function playTickSound(name: SoundName) {
 import { DEFAULT_STATE, GAME_SPEED_OPTIONS, LOCAL_STORAGE_KEY, mergeGameState } from '../persistence/saveState';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { canAttemptContainment } from '../utils/epilogue';
-import { planTrainingRun, lossAt, sanitizeTrainingConfig, vramForRun, BATCH_SIZES, DEFAULT_TRAINING_CONFIG, type TrainingConfig } from '../utils/trainingRun';
+import { planTrainingRun, lossAt, sanitizeTrainingConfig, vramForRun, BATCH_SIZES, DEFAULT_TRAINING_CONFIG, type TrainingConfig, runConfigFor } from '../utils/trainingRun';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, storyEventText, LOAN_WARNING_DAY } from '../utils/storyEvents';
 import type { StoryEventId } from '../types/game';
 import { GAME_HOURS_PER_TICK, formatGameTime } from '../utils/training';
@@ -1607,7 +1607,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       h.category === 'gpu' ? sum + (h.vramGb * h.count) : sum, 0
     );
 
-    const runConfig = sanitizeTrainingConfig(currentState.trainingConfig);
+    const runConfig = runConfigFor(currentState);
     const runVram = vramForRun(currentState.currentModel.vramRequiredGb, runConfig.batchSize);
     if (totalVram < runVram) {
       sound.playWarning();

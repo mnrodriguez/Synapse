@@ -105,7 +105,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
                 </div>
                 <div>
                   <span className="text-[11px] mutating-accent-text uppercase tracking-widest block font-bold">
-                    {doc.category}
+                    {tr((isEs ? 'es' : 'en'), doc.categoryKey)}
                   </span>
                   <h3 className="text-sm font-bold theme-text leading-snug">
                     {doc.title}

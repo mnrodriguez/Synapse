@@ -8,16 +8,7 @@ import { SlidersHorizontal, AlertTriangle, Info, Zap } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { ELECTRICITY_RATE_PER_KWH } from '../utils/constants';
 import { calculateTrainingProgressPerTick, gpuComputePflops, externalComputePflops, GAME_HOURS_PER_TICK, formatTrainingTime } from '../utils/training';
-import {
-  planTrainingRun,
-  sanitizeTrainingConfig,
-  vramForRun,
-  BATCH_SIZES,
-  LEARNING_RATES,
-  MAX_EPOCHS,
-  type LearningRatePreset,
-  type BatchSizePreset
-} from '../utils/trainingRun';
+import { planTrainingRun, vramForRun, BATCH_SIZES, LEARNING_RATES, MAX_EPOCHS, type LearningRatePreset, type BatchSizePreset, runConfigFor } from '../utils/trainingRun';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
 import { tr } from '../i18n';
 
@@ -33,7 +24,8 @@ export const TrainingConfigPanel: React.FC<Props> = ({ datasetId, datasetTokensM
   const { state, setTrainingConfig } = useGame();
   const [open, setOpen] = useState(false);
   const lang = state.language;
-  const config = sanitizeTrainingConfig(state.trainingConfig);
+  const config = runConfigFor(state);
+  const simplified = state.difficulty === 'beginner';
   const model = state.currentModel;
   const priorRuns = model.datasetRuns?.[datasetId] ?? 0;
 
@@ -119,6 +111,9 @@ export const TrainingConfigPanel: React.FC<Props> = ({ datasetId, datasetTokensM
             </span>
           </label>
 
+          {simplified ? (
+            <p className="text-[11px] mutating-text-muted">{tr(lang, 'trainingConfigPanel.beginnerAuto')}</p>
+          ) : (<>
           <div className="space-y-1">
             <span className="font-bold block">Learning rate</span>
             <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Learning rate">
@@ -146,6 +141,8 @@ export const TrainingConfigPanel: React.FC<Props> = ({ datasetId, datasetTokensM
               {tr(lang, 'trainingConfigPanel.biggerBatchFasterButUses')}
             </span>
           </div>
+
+          </>)}
 
           <label className="flex items-start gap-2 cursor-pointer">
             <input type="checkbox" checked={config.earlyStopping} onChange={e => setTrainingConfig({ earlyStopping: e.target.checked })} className="mt-0.5" />

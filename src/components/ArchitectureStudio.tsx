@@ -40,7 +40,7 @@ import {
 } from '../utils/aiDocumentation';
 import { AGENT_COMPUTE_DEMAND_PFLOPS } from '../utils/constants';
 import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
-import { sanitizeTrainingConfig, BATCH_SIZES } from '../utils/trainingRun';
+import { BATCH_SIZES, runConfigFor } from '../utils/trainingRun';
 import { gpuComputePflops, calculateTrainingProgressPerTick, estimateTrainingSeconds, formatTrainingDuration, formatTrainingTime, externalComputePflops } from '../utils/training';
 import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
@@ -79,7 +79,7 @@ export const ArchitectureStudio: React.FC = () => {
   const isVramSufficient = totalClusterVram >= current.vramRequiredGb;
   const agentComputeDemand = state.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
   // Same estimate as the training panel: dataset tokens × epochs, sped up by the batch.
-  const runConfig = sanitizeTrainingConfig(state.trainingConfig);
+  const runConfig = runConfigFor(state);
   const trainingProgressPerTick = BATCH_SIZES[runConfig.batchSize].speed * calculateTrainingProgressPerTick({
     parametersCount: current.parametersCount,
     tokensCount: DEFAULT_TRAINING_TOKENS_ESTIMATE * runConfig.epochs,
@@ -945,6 +945,12 @@ export const ArchitectureStudio: React.FC = () => {
             </div>
 
             {/* Loss Function & Alignment Objective */}
+            {isBeginner ? (
+              <div className="p-3.5 rounded-lg theme-sub-bg border theme-accent-border text-xs space-y-1">
+                <div className="font-semibold mutating-accent-text flex items-center gap-2"><Sparkles className="w-4 h-4 mutating-accent-text" /><span>{tr(state.language, 'architectureStudio.beginnerLossTitle')}</span></div>
+                <p className="mutating-text-muted">{tr(state.language, 'architectureStudio.beginnerLossText')}</p>
+              </div>
+            ) : (
             <div className="space-y-2 p-3.5 rounded-lg theme-sub-bg border theme-border">
               <label className="text-xs font-semibold theme-text flex items-center justify-between">
                 <span>{tr(state.language, 'architectureStudio.lossFunctionAlignmentObjective')}</span>
@@ -997,6 +1003,7 @@ export const ArchitectureStudio: React.FC = () => {
                 })}
               </div>
             </div>
+            )}
 
             {/* Connected Data Pipelines */}
             <div className="space-y-2 p-3.5 rounded-lg theme-sub-bg border theme-border">
@@ -1098,6 +1105,12 @@ export const ArchitectureStudio: React.FC = () => {
             </div>
 
             {/* Inference Parameters */}
+            {isBeginner ? (
+              <div className="p-4 rounded-lg theme-sub-bg border theme-accent-border text-xs space-y-1">
+                <div className="font-semibold mutating-accent-text flex items-center gap-2"><Sparkles className="w-4 h-4 mutating-accent-text" /><span>{tr(state.language, 'architectureStudio.beginnerSamplingTitle')}</span></div>
+                <p className="mutating-text-muted">{tr(state.language, 'architectureStudio.beginnerSamplingText')}</p>
+              </div>
+            ) : (
             <div className="p-4 rounded-lg theme-sub-bg border theme-border space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold theme-text">
@@ -1196,6 +1209,7 @@ export const ArchitectureStudio: React.FC = () => {
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
     </div>
