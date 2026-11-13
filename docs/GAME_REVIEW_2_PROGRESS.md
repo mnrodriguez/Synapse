@@ -2,7 +2,8 @@
 
 Report: `docs/GAME_REVIEW_2.md` · Branch: `claude/trusting-bardeen-kpx3qj` · PR under review: #45 (`docs/manual` @ `49dfb67`, base `main` @ `53ad084`)
 
-- [ ] Part A.1: check out `docs/manual`, run `bun install`, `bun test`, `bun run lint`
+- [x] Part A.1: check out `docs/manual`, run `bun install`, `bun test`, `bun run lint`
+  - Result: PR branch `docs/manual` @ 49dfb67: `bun install` ok (157 packages); `bun test` 150 pass, 0 fail, 12818 expect() calls, 8 files; `bun run lint` (tsc --noEmit) exit 0, no output.
 - [ ] Part A.2: verify numeric claims of the new manual against code
 - [ ] Part A.3: backward compatibility and save migration
 - [ ] Part A.4: EN/ES parity
@@ -17,4 +18,4 @@ Report: `docs/GAME_REVIEW_2.md` · Branch: `claude/trusting-bardeen-kpx3qj` · P
 
 Partial findings are kept in `docs/GAME_REVIEW_2.md` (grows step by step).
 
-STOPPED AT: nothing done yet. NEXT: Part A.1.
+STOPPED AT: finished "Part A.1". NEXT: Part A.2 (trace manual numbers to code).
