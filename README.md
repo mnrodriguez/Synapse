@@ -8,7 +8,7 @@ Funciona en español e inglés, en navegador de escritorio y en el celular.
 
 La versión publicada está en GitHub Pages: `https://mnrodriguez.github.io/Synapse/`.
 
-No hace falta ninguna clave para jugar. Las funciones de IA usan, en orden: el modelo integrado de Chrome si está disponible, la clave de Gemini propia del jugador si la carga (queda solo en su navegador), o una respuesta local.
+No hace falta ninguna clave para jugar. Las funciones de IA usan, en orden: el modelo integrado de Chrome si está activo, la clave de Gemini propia del jugador si la carga (queda solo en su navegador, fuera de la partida guardada), o una respuesta local. Las dos primeras se configuran en **Cuenta → Asistente de IA**.
 
 ## Desarrollo
 

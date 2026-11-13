@@ -40,9 +40,16 @@ interface BrowserLanguageSession {
   destroy?: () => void;
 }
 
+interface BrowserDownloadMonitor {
+  addEventListener(type: 'downloadprogress', listener: (event: { loaded: number }) => void): void;
+}
+
 interface BrowserLanguageModelApi {
   availability?: () => Promise<string>;
-  create(options?: { initialPrompts?: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> }): Promise<BrowserLanguageSession>;
+  create(options?: {
+    initialPrompts?: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+    monitor?: (monitor: BrowserDownloadMonitor) => void;
+  }): Promise<BrowserLanguageSession>;
 }
 
 // Older Chrome builds (origin trial) exposed window.ai.languageModel instead.
@@ -87,6 +94,41 @@ const roleLabels: Record<string, { es: string; en: string }> = {
   software_engineer: { es: 'ingeniería de software', en: 'software engineering' },
   network_analyst: { es: 'análisis de redes', en: 'network analysis' }
 };
+
+// Chrome's built-in model, as the settings panel shows it.
+export type BrowserAiStatus = 'unsupported' | 'unavailable' | 'downloadable' | 'downloading' | 'available';
+
+export async function browserAiStatus(): Promise<BrowserAiStatus> {
+  if (typeof window === 'undefined') return 'unsupported';
+  const lm = window.LanguageModel;
+  if (!lm?.create) return window.ai?.languageModel ? 'available' : 'unsupported';
+  try {
+    const status = lm.availability ? await lm.availability() : 'available';
+    return status === 'available' || status === 'downloadable' || status === 'downloading' || status === 'unavailable'
+      ? status
+      : 'unavailable';
+  } catch {
+    return 'unavailable';
+  }
+}
+
+// Downloading the model needs a user gesture, so this runs from the "Enable" button.
+// onProgress receives 0..1 while Chrome downloads it.
+export async function enableBrowserAi(onProgress: (loaded: number) => void): Promise<boolean> {
+  const lm = typeof window !== 'undefined' ? window.LanguageModel : undefined;
+  if (!lm?.create) return false;
+  try {
+    const session = await lm.create({
+      monitor(monitor) {
+        monitor.addEventListener('downloadprogress', event => onProgress(event.loaded));
+      }
+    });
+    session.destroy?.();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // Only a key the player typed in-game is used. No API key is bundled with the build.
 function getEffectiveApiKey(providedKey?: string): string | undefined {
