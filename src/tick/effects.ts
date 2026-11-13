@@ -8,7 +8,7 @@ import type { TerminalLog } from '../types/game';
 // Tick steps are pure: instead of writing to the terminal or playing sounds, they return effects that
 // the game context applies in order. That keeps them testable outside React.
 
-export type SoundName = 'warning' | 'breakthrough' | 'epochTick';
+export type SoundName = 'warning' | 'breakthrough' | 'epochTick' | 'credit';
 
 export type TickEffect =
   | { kind: 'log'; message: string; type: TerminalLog['type'] }

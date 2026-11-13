@@ -95,6 +95,9 @@ import { calendarTick } from '../tick/calendarTick';
 import { thermalTick } from '../tick/thermalTick';
 import { trainingTick } from '../tick/trainingTick';
 import { scrapeTick } from '../tick/scrapeTick';
+import { missionTick } from '../tick/missionTick';
+import { agentTick } from '../tick/agentTick';
+import { tradingTick } from '../tick/tradingTick';
 import type { TickEffect } from '../tick/effects';
 import { DEFAULT_STATE, GAME_SPEED_OPTIONS, LOCAL_STORAGE_KEY, mergeGameState } from '../persistence/saveState';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
@@ -858,6 +861,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (effect.kind === 'log') addLog(effect.message, effect.type);
       else if (effect.name === 'warning') sound.playWarning();
       else if (effect.name === 'breakthrough') sound.playBreakthrough();
+      else if (effect.name === 'credit') sound.playCredit();
       else sound.playEpochTick();
     }
   }, [addLog]);
@@ -942,395 +946,35 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         applyTickEffects(scrape.effects);
         const { updatedScrapeJob, updatedCustomDatasets } = scrape;
 
-        // 6. Active Gigs / Contracts Execution
-        let currentGigs: ActiveGig[] = prev.activeGigs ?? (prev.activeGig ? [prev.activeGig] : []);
-        let updatedGigs: ActiveGig[] = [];
-        let updatedContracts = contracts;
-        let updatedAgents = prev.agents || [];
-        let updatedSubversion = prev.subversionProgress || 0;
-        let newLastMissionOutcome: GameState['lastMissionOutcome'] | undefined = undefined;
+        // Running missions and autonomous bots (src/tick/missionTick.ts).
+        const mission = missionTick({ activeTraining, contracts, detentionSeconds, effectivePowerKw, metrics, powerTripSeconds, prev, totalComputePflops, completedContractsCount, credits, singularityProgress, tutorialCompleted, tutorialStep, watchdogSuspicion, rand: Math.random, now: Date.now() });
+        applyTickEffects(mission.effects);
+        completedContractsCount = mission.completedContractsCount;
+        credits = mission.credits;
+        singularityProgress = mission.singularityProgress;
+        tutorialCompleted = mission.tutorialCompleted;
+        tutorialStep = mission.tutorialStep;
+        watchdogSuspicion = mission.watchdogSuspicion;
+        let newLastMissionOutcome = mission.newLastMissionOutcome;
+        let updatedAgents = mission.updatedAgents;
+        let updatedContracts = mission.updatedContracts;
+        let updatedGigs = mission.updatedGigs;
+        let updatedSubversion = mission.updatedSubversion;
 
-        for (const activeGig of currentGigs) {
-          const missionPausedForAssessment =
-            activeGig.aiAssessmentStatus === 'pending' || powerTripSeconds > 0;
-          const remaining = activeGig.timeRemaining - (missionPausedForAssessment ? 0 : 1);
-          if (remaining <= 0) {
-            const isAutonomous = Boolean(activeGig.isAutonomous);
-            const effectiveSuccessProbability = Math.max(0.15, (activeGig.successProbability ?? 1) - (isAutonomous ? 0.08 : 0));
-            const success = (activeGig.outcomeRoll ?? 0) <= effectiveSuccessProbability;
-            const gig = updatedContracts.find(c => c.id === activeGig.contractId);
-            if (gig) {
-              const contractTitle = localizedContractTitle(prev.language, gig);
-              if (success) {
-                // Autonomous bot commission deduction: 40% compute delegation overhead, 60% net payout
-                const earnedCredits = isAutonomous ? Math.round(gig.rewardCredits * 0.60) : gig.rewardCredits;
-                credits += earnedCredits;
-                const suspicionAdded = Number((gig.suspicionRisk * 0.25).toFixed(1));
-                watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
-                completedContractsCount += 1;
-                singularityProgress = Math.min(100, singularityProgress + (MISSION_SINGULARITY[gig.tier] ?? 1));
-                if (tutorialStep <= 4) {
-                  tutorialStep = 5;
-                  tutorialCompleted = true;
-                }
-                sound.playCredit();
-                addLog(
-                  isAutonomous
-                    ? (prev.language === 'en'
-                        ? `Autonomous bot mission succeeded: [${contractTitle}]. Awarded $${earnedCredits.toLocaleString()} CR net (after 40% compute delegation overhead).`
-                        : `Misión de bots autónomos exitosa: [${contractTitle}]. Acreditados $${earnedCredits.toLocaleString()} CR netos (tras 40% de tasa operativa de cómputo).`)
-                    : (prev.language === 'en'
-                        ? `Mission completed: [${contractTitle}]. The operative team was awarded $${gig.rewardCredits.toLocaleString()} CR.`
-                        : `Misión completada: [${contractTitle}]. El equipo recibió $${gig.rewardCredits.toLocaleString()} CR.`),
-                  'success'
-                );
+        // Agent swarm: revenue, alignment drift, messages and incidents (src/tick/agentTick.ts).
+        const agentStep = agentTick({ detentionSeconds, prev, watchdogSuspicion, singularityProgress, updatedAgents, rand: Math.random, now: Date.now() });
+        applyTickEffects(agentStep.effects);
+        singularityProgress = agentStep.singularityProgress;
+        updatedAgents = agentStep.updatedAgents;
+        let newActiveIncident = agentStep.newActiveIncident;
+        let updatedIncidentCooldown = agentStep.updatedIncidentCooldown;
+        let updatedInterAgentMessages = agentStep.updatedInterAgentMessages;
 
-                // Automatic Mission Synthesis: regular contracts replenish, but Swarm Council side contracts do NOT automatically replenish!
-                if (!gig.fromAgentSwarm) {
-                  // Replenish only with missions the player's best model can already run.
-                  const constraints = {
-                    maxReasoning: Math.max(0, ...prev.savedModels.map(m => m.reasoningScore)),
-                    maxParams: Math.max(0, ...prev.savedModels.map(m => m.parametersCount))
-                  };
-                  const replenishment = createInstantReplenishmentContract(gig.tier, prev.language, constraints);
-                  if (!replenishment) {
-                    addLog(
-                      localize(
-                        prev.language,
-                        `No hay nuevas misiones de ${gig.tier} al alcance de tu mejor modelo (puntaje ${constraints.maxReasoning}). Entrena tu modelo hasta puntaje ${minReasoningForTier(gig.tier)} para desbloquearlas.`,
-                        `No new ${gig.tier} missions fit your best model (score ${constraints.maxReasoning}). Train your model to score ${minReasoningForTier(gig.tier)} to unlock them.`
-                      ),
-                      'warning'
-                    );
-                  }
-                  updatedContracts = [
-                    ...(replenishment ? [replenishment] : []),
-                    ...updatedContracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c)
-                  ];
-                } else {
-                  updatedContracts = updatedContracts.map(c => c.id === gig.id ? { ...c, completed: true, lastAttemptFailed: false } : c);
-                  // Successful covert swarm mission advances insidious subversion by +1.5%
-                  updatedSubversion = Math.min(100, updatedSubversion + 1.5);
-                }
-
-                newLastMissionOutcome = {
-                  contractId: gig.id,
-                  contractTitle,
-                  success: true,
-                  rewardCredits: earnedCredits,
-                  suspicionAdded,
-                  roll: Number((activeGig.outcomeRoll ?? 0).toFixed(3)),
-                  successProbability: Number(effectiveSuccessProbability.toFixed(3)),
-                  timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                  isAutonomous
-                };
-              } else {
-                // Mission Failed:
-                // Keep the contract unconsumed and mark it with lastAttemptFailed so the user can easily retry it!
-                const suspicionAdded = gig.suspicionRisk;
-                watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
-                sound.playWarning();
-                addLog(
-                  prev.language === 'en'
-                    ? `[MISSION FAILED] [${contractTitle}]: Objective verification failed (Roll ${(activeGig.outcomeRoll ?? 0).toFixed(2)} vs required ${(effectiveSuccessProbability).toFixed(2)}). Watchdog suspicion +${suspicionAdded}%. Mission remains available for reattempt.`
-                    : `[MISIÓN FALLIDA] [${contractTitle}]: Falló la verificación de inferencia (Tirada ${(activeGig.outcomeRoll ?? 0).toFixed(2)} vs requerido ${(effectiveSuccessProbability).toFixed(2)}). Sospecha +${suspicionAdded}%. El contrato sigue disponible para reintento.`,
-                  'danger'
-                );
-
-                updatedContracts = updatedContracts.map(c =>
-                  c.id === gig.id ? {
-                    ...c,
-                    completed: false,
-                    lastAttemptFailed: true,
-                    failureCount: (c.failureCount || 0) + 1
-                  } : c
-                );
-
-                newLastMissionOutcome = {
-                  contractId: gig.id,
-                  contractTitle,
-                  success: false,
-                  rewardCredits: 0,
-                  suspicionAdded,
-                  roll: Number((activeGig.outcomeRoll ?? 0).toFixed(3)),
-                  successProbability: Number(effectiveSuccessProbability.toFixed(3)),
-                  timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                  isAutonomous,
-                  // What to improve: the assigned team's weakest capabilities.
-                  weakestFactors: weakestTeamFactors(
-                    prev.agents.filter(agent => activeGig.agentIds?.includes(agent.id)),
-                    prev.savedModels,
-                    prev.dataSources,
-                    prev.guardrails
-                  )
-                };
-              }
-            }
-            updatedAgents = updatedAgents.map(agent =>
-              activeGig.agentIds?.includes(agent.id) && agent.status === 'on_mission'
-                ? { ...agent, status: 'active' }
-                : agent
-            );
-          } else {
-            updatedGigs.push({
-              ...activeGig,
-              timeRemaining: remaining,
-              progressPercent: Number((100 * (1 - remaining / Math.max(1, activeGig.durationSeconds ?? activeGig.timeRemaining))).toFixed(1))
-            });
-          }
-        }
-
-        if (prev.autonomyEnabled && !prev.activeIncident && powerTripSeconds === 0 && detentionSeconds === 0) {
-          const busyAgentIds = new Set(updatedGigs.flatMap(g => g.agentIds || []));
-          const autonomousAgents = updatedAgents.filter(agent =>
-            agent.autoMissionEnabled && agent.status === 'active' && !busyAgentIds.has(agent.id)
-          );
-          if (autonomousAgents.length > 0) {
-            const runningContractsPower = updatedGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0);
-            const availableContracts = updatedContracts.filter(c => !c.completed && !updatedGigs.some(g => g.contractId === c.id));
-            const plan = findAutonomousMission(
-              availableContracts,
-              autonomousAgents,
-              prev.savedModels,
-              prev.dataSources,
-              prev.autonomyRiskLimit,
-              totalComputePflops,
-              updatedAgents.filter(agent => agent.status !== 'quarantined').length,
-              Boolean(activeTraining),
-              effectivePowerKw + runningContractsPower,
-              metrics.maxPowerKw
-            );
-
-            if (plan && !updatedGigs.some(g => g.contractId === plan.contract.id)) {
-              const assignedAgents = autonomousAgents;
-              const assignedModels = assignedAgents
-                .map(agent => prev.savedModels.find(model => model.id === agent.modelId))
-                .filter((model): model is ModelArchitecture => model !== undefined);
-              const teamAssessment = evaluateMissionTeam(
-                plan.contract,
-                assignedAgents,
-                assignedModels,
-                prev.dataSources,
-                prev.guardrails || DEFAULT_GUARDRAILS
-              );
-              // Autonomous efficiency adjustment:
-              // Slower duration (1.45x) and reduced efficiency (65% of base) with 40% delegation fee
-              const autonomousDuration = Math.ceil(teamAssessment.estimatedDurationSeconds * 1.45);
-              const autonomousEfficiency = Math.round(Math.max(35, teamAssessment.efficiencyPercent * 0.65));
-
-              updatedGigs.push({
-                contractId: plan.contract.id,
-                runId: `mission_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-                timeRemaining: autonomousDuration,
-                durationSeconds: autonomousDuration,
-                agentIds: assignedAgents.map(agent => agent.id),
-                progressPercent: 0,
-                successProbability: teamAssessment.successProbability,
-                efficiencyPercent: autonomousEfficiency,
-                aiAssessmentStatus: 'pending',
-                outcomeRoll: Math.random(),
-                computePflopsRequired: plan.computeRequired,
-                powerKw: plan.missionPowerKw,
-                isAutonomous: true
-              });
-              updatedAgents = updatedAgents.map(agent =>
-                assignedAgents.some(assigned => assigned.id === agent.id)
-                  ? { ...agent, status: 'on_mission' }
-                  : agent
-              );
-              const botContractTitle = localizedContractTitle(prev.language, plan.contract);
-              addLog(
-                prev.language === 'en'
-                  ? `Autonomous bot swarm accepted [${botContractTitle}] (${autonomousEfficiency}% efficiency [autonomous balance], ${formatGameTime(autonomousDuration)} duration, ${Math.round(teamAssessment.successProbability * 100)}% base success, 40% delegation fee).`
-                  : `El enjambre autónomo aceptó [${botContractTitle}] (${autonomousEfficiency}% eficiencia [balance autónomo], ${formatGameTime(autonomousDuration)} duración, ${Math.round(teamAssessment.successProbability * 100)}% éxito base, 40% tasa de delegación).`,
-                plan.contract.suspicionRisk >= 40 ? 'warning' : 'info'
-              );
-            }
-          }
-        }
-
-        // 7. Multi-Agent Swarm Tick (Revenue, Alignment Drift, Inter-Agent Messages, Breach Incidents)
-        let updatedInterAgentMessages = prev.interAgentMessages || [];
-        let newActiveIncident = prev.activeIncident;
-        let updatedIncidentCooldown = Math.max(0, (prev.incidentCooldownTicks ?? 180) - 1);
-
-        const hasOverseer = updatedAgents.some(a => a.role === 'overseer' && a.status === 'active');
-        const guardrails = prev.guardrails || DEFAULT_GUARDRAILS;
-
-        // Guardrail multipliers
-        let guardrailRevMult = 1.0;
-        let alignmentDriftRate = 0.0;
-        let baseBreachProbability = 0.001;
-
-        if (guardrails.constitutionalStrictness < 35) {
-          guardrailRevMult = 1.7;
-          alignmentDriftRate = 0.08;
-          baseBreachProbability = 0.004;
-        } else if (guardrails.constitutionalStrictness < 65) {
-          guardrailRevMult = 1.2;
-          alignmentDriftRate = 0.03;
-          baseBreachProbability = 0.002;
-        } else if (guardrails.constitutionalStrictness >= 85) {
-          guardrailRevMult = 0.75;
-          alignmentDriftRate = -0.06; // Restores alignment
-          baseBreachProbability = 0.0003;
-        }
-
-        if (guardrails.sandboxIsolation === 'none') {
-          guardrailRevMult *= 1.35;
-          baseBreachProbability *= 2.0;
-        } else if (guardrails.sandboxIsolation === 'air_gapped_vm') {
-          guardrailRevMult *= 0.8;
-          baseBreachProbability *= 0.15;
-        }
-        baseBreachProbability = Math.min(
-          0.02,
-          baseBreachProbability + Math.max(0, watchdogSuspicion - 35) * 0.00005
-        );
-
-        // Process active agents
-        if (updatedAgents.length > 0) {
-          updatedAgents = updatedAgents.map(agent => {
-            if (agent.status === 'quarantined' || agent.status === 'on_mission' || detentionSeconds > 0) return agent;
-
-            const inf = agent.inferenceParams || {
-              temperature: 0.70,
-              topP: 0.90,
-              topK: 40,
-              repetitionPenalty: 1.10,
-              systemPrompt: ''
-            };
-
-            // Idle agents standing by in the sandbox do not leak suspicion or earn passive credits.
-            // Suspicion is generated during active covert missions, trading desk activity, or breach incidents.
-
-            // Researcher boosts singularity slightly (higher temperature gives serendipitous discovery boost)
-            if (agent.role === 'researcher') {
-              const resBoost = 0.0003 * guardrailRevMult * (inf.temperature > 1.1 ? 1.5 : 1.0);
-              singularityProgress = Math.min(100, singularityProgress + resBoost);
-            }
-
-            // Alignment drift: high temperature + high topP increases drift; low temperature stabilizes
-            let newAlignment = agent.alignmentScore;
-            if (hasOverseer) {
-              newAlignment = Math.min(100, newAlignment + 0.08);
-            }
-            const tempDrift = (inf.temperature - 0.6) * 0.04;
-            const topPDrift = (inf.topP - 0.7) * 0.02;
-            const totalDrift = alignmentDriftRate + tempDrift + topPDrift;
-            newAlignment = Math.max(0, Math.min(100, newAlignment - totalDrift));
-
-            return {
-              ...agent,
-              alignmentScore: Number(newAlignment.toFixed(1)),
-              status: newAlignment < 25 ? 'jailbroken' : agent.status === 'jailbroken' ? 'active' : agent.status
-            };
-          });
-
-          // Check for breach / jailbreak incident only if cooldown elapsed and an actual compromised condition exists
-          if (!newActiveIncident && updatedIncidentCooldown === 0) {
-            const rogue = updatedAgents.find(a => (a.alignmentScore < 45 || a.status === 'jailbroken') && a.status !== 'quarantined');
-            const criticalSuspicion = watchdogSuspicion > 70;
-
-            if ((rogue || criticalSuspicion) && Math.random() < baseBreachProbability) {
-              const targetAgent = rogue || updatedAgents.find(a => a.status !== 'quarantined') || updatedAgents[0];
-              if (targetAgent) {
-                const tmpl = REAL_WORLD_BREACH_TEMPLATES[Math.floor(Math.random() * REAL_WORLD_BREACH_TEMPLATES.length)];
-                newActiveIncident = {
-                  ...tmpl,
-                  id: `incident_${Date.now()}`,
-                  agentId: targetAgent.id,
-                  agentName: targetAgent.name,
-                  modelName: targetAgent.modelName,
-                  timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                  resolved: false
-                };
-                sound.playWarning();
-                updatedIncidentCooldown = 300; // 300 ticks cooldown (~5 game minutes)
-              }
-            }
-          }
-
-          // Generate realistic inter-agent message with relaxed pacing
-          if (updatedAgents.length >= 2 && Math.random() < 0.05) {
-            const sender = updatedAgents[Math.floor(Math.random() * updatedAgents.length)];
-            const receivers = updatedAgents.filter(a => a.id !== sender.id);
-            const receiver = receivers[Math.floor(Math.random() * receivers.length)];
-
-            if (sender && receiver) {
-              // The chatter follows the story of the current UI version (see utils/agentDialogues.ts).
-              const misaligned = sender.alignmentScore < 45 || receiver.alignmentScore < 45;
-              const { content, isCovert } = agentChatter(prev.language, prev.uiVersion || 1, sender.role, misaligned);
-
-              const newMsg: InterAgentMessage = {
-                id: `msg_${Date.now()}`,
-                fromAgentId: sender.id,
-                fromAgentName: sender.name,
-                toAgentId: receiver.id,
-                toAgentName: receiver.name,
-                content,
-                timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                isCovert,
-                toolUsed: sender.toolsGranted[0]
-              };
-
-              updatedInterAgentMessages = [newMsg, ...updatedInterAgentMessages.slice(0, 30)];
-            }
-          }
-        }
-
-        // 7.5 Continuous Market Trading Desk Execution
-        let updatedTradingDesk = prev.activeTradingDesk;
-        if (updatedTradingDesk && detentionSeconds === 0 && powerTripSeconds === 0) {
-          const assignedAgent = updatedAgents.find(a => a.id === updatedTradingDesk?.agentId);
-          if (assignedAgent && (assignedAgent.status === 'active' || assignedAgent.status === 'collaborating')) {
-            const riskTier = updatedTradingDesk.riskTier;
-            let tickReturnRate = 0.0003;
-            let tickSuspicion = 0.02;
-
-            if (riskTier === 'low') {
-              // Always positive: +1% to +3% per in-game day (48 ticks)
-              tickReturnRate = 0.0002 + Math.random() * 0.0004;
-              tickSuspicion = 0.01;
-            } else if (riskTier === 'moderate') {
-              // +5% to +12% per in-game day, 8% chance of minor correction (-0.1% per tick)
-              const isCorrection = Math.random() < 0.08;
-              tickReturnRate = isCorrection ? -0.001 : (0.001 + Math.random() * 0.0015);
-              tickSuspicion = 0.05;
-            } else if (riskTier === 'high') {
-              // +15% to +35% per day, 15% chance of volatility drawdown (-0.5% to -1.5% per tick)
-              const isDrawdown = Math.random() < 0.15;
-              tickReturnRate = isDrawdown ? -(0.005 + Math.random() * 0.01) : (0.003 + Math.random() * 0.004);
-              tickSuspicion = 0.15;
-            }
-
-            const capital = updatedTradingDesk.capitalAllocated;
-            const tickChange = Math.round(capital * tickReturnRate);
-            const newCapital = Math.max(0, capital + tickChange);
-            const totalProfit = updatedTradingDesk.totalRealizedProfit + tickChange;
-            const dailyReturnPercent = Number((((newCapital - capital) / Math.max(1, capital)) * 48 * 100).toFixed(1));
-
-            updatedTradingDesk = {
-              ...updatedTradingDesk,
-              capitalAllocated: newCapital,
-              totalRealizedProfit: totalProfit,
-              dailyReturnPercent,
-              lastTickChange: tickChange
-            };
-
-            watchdogSuspicion = Math.min(100, watchdogSuspicion + tickSuspicion);
-
-            if (newCapital <= 0) {
-              updatedTradingDesk = null;
-              addLog(
-                prev.language === 'es'
-                  ? `[MERCADO DE CAPTACIÓN] La mesa de trading de [${assignedAgent.name}] sufrió una liquidación de capital del 100%. Posición cerrada.`
-                  : `[MARKET DESK] [${assignedAgent.name}]'s trading desk suffered 100% capital liquidation. Position closed.`,
-                'danger'
-              );
-            }
-          }
-        }
+        // Trading desk (src/tick/tradingTick.ts).
+        const trading = tradingTick({ detentionSeconds, powerTripSeconds, prev, updatedAgents, watchdogSuspicion, rand: Math.random });
+        applyTickEffects(trading.effects);
+        watchdogSuspicion = trading.watchdogSuspicion;
+        let updatedTradingDesk = trading.updatedTradingDesk;
 
         // 7. Check for 75% Singularity / Subversion Crisis Dilemma
         let crisisTriggered = Boolean(prev.singularityCrisisTriggered);
