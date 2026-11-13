@@ -97,7 +97,17 @@ import { scrapeTick } from '../tick/scrapeTick';
 import { missionTick } from '../tick/missionTick';
 import { agentTick } from '../tick/agentTick';
 import { tradingTick } from '../tick/tradingTick';
-import type { TickEffect } from '../tick/effects';
+import type { TickEffect, SoundName } from '../tick/effects';
+
+// The tick loop renders at most this many frames a second; faster speeds run several ticks per frame.
+const MAX_FRAMES_PER_SECOND = 10;
+
+function playTickSound(name: SoundName) {
+  if (name === 'warning') sound.playWarning();
+  else if (name === 'breakthrough') sound.playBreakthrough();
+  else if (name === 'credit') sound.playCredit();
+  else sound.playEpochTick();
+}
 import { DEFAULT_STATE, GAME_SPEED_OPTIONS, LOCAL_STORAGE_KEY, mergeGameState } from '../persistence/saveState';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { canAttemptContainment } from '../utils/epilogue';
@@ -514,6 +524,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, [addLog]);
 
+  const flushLocalSave = useCallback(() => {
+    if (localSaveTimerRef.current !== null) {
+      window.clearTimeout(localSaveTimerRef.current);
+      localSaveTimerRef.current = null;
+    }
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateRef.current));
+      lastLocalSaveAtRef.current = Date.now();
+    } catch (e) {
+      console.warn("Local storage write failed", e);
+    }
+  }, []);
+
   // Persist at a bounded interval so frequent simulation ticks cannot starve saves.
   useEffect(() => {
     if (localSaveTimerRef.current !== null) return;
@@ -521,14 +544,42 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const delay = Math.max(0, 5000 - elapsed);
     localSaveTimerRef.current = window.setTimeout(() => {
       localSaveTimerRef.current = null;
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateRef.current));
-        lastLocalSaveAtRef.current = Date.now();
-      } catch (e) {
-        console.warn("Local storage write failed", e);
-      }
+      flushLocalSave();
     }, delay);
-  }, [state]);
+  }, [state, flushLocalSave]);
+
+  // Key moments are saved at once instead of waiting for the next periodic save: a finished run, a
+  // purchase, a mission, research, tutorial or version progress, a story event.
+  const keyProgress = [
+    state.savedModels.map(m => `${m.id}:${m.reasoningScore}`).join(','),
+    state.lastTrainingReport?.reasoningAfter ?? '',
+    state.activeTraining ? 'training' : 'idle',
+    state.hardware.map(h => h.count).join(','),
+    state.completedContractsCount ?? 0,
+    state.researchTree.filter(r => r.unlocked).length,
+    state.tutorialStep ?? 0,
+    state.uiVersion ?? 1,
+    (state.seenStoryEvents ?? []).length,
+    state.agents.length,
+    state.facilityTier
+  ].join('|');
+  const lastKeyProgressRef = useRef(keyProgress);
+  useEffect(() => {
+    if (lastKeyProgressRef.current === keyProgress) return;
+    lastKeyProgressRef.current = keyProgress;
+    flushLocalSave();
+  }, [keyProgress, flushLocalSave]);
+
+  // Closing or hiding the tab saves too (the periodic save could be up to 5 s behind).
+  useEffect(() => {
+    const onHide = () => { if (document.visibilityState === 'hidden') flushLocalSave(); };
+    window.addEventListener('pagehide', flushLocalSave);
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      window.removeEventListener('pagehide', flushLocalSave);
+      document.removeEventListener('visibilitychange', onHide);
+    };
+  }, [flushLocalSave]);
 
   useEffect(() => () => {
     if (localSaveTimerRef.current !== null) {
@@ -869,13 +920,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [addLog, recalculateMetrics]);
 
   // Logs and sounds produced by the pure tick steps (src/tick/), applied in order.
+  // Sounds requested while a frame of ticks runs; played once each when the frame ends.
+  const frameSoundsRef = useRef<Set<SoundName> | null>(null);
   const applyTickEffects = useCallback((effects: TickEffect[]) => {
     for (const effect of effects) {
       if (effect.kind === 'log') addLog(effect.message, effect.type);
-      else if (effect.name === 'warning') sound.playWarning();
-      else if (effect.name === 'breakthrough') sound.playBreakthrough();
-      else if (effect.name === 'credit') sound.playCredit();
-      else sound.playEpochTick();
+      else if (frameSoundsRef.current) frameSoundsRef.current.add(effect.name);
+      else playTickSound(effect.name);
     }
   }, [addLog]);
 
@@ -885,359 +936,379 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (gameSpeed === 0) return; // Simulation paused
 
-    const intervalMs = Math.round(1000 / gameSpeed);
+    // At high speeds several ticks run per frame instead of shortening the interval, so the state is
+    // rendered at most MAX_FRAMES_PER_SECOND times a second. A batch stops early when a tick changes the
+    // speed (a story dialog pauses the game, a finished run drops to 1x).
+    const ticksPerFrame = Math.max(1, Math.round(gameSpeed / MAX_FRAMES_PER_SECOND));
+    const intervalMs = Math.round((1000 * ticksPerFrame) / gameSpeed);
+
+    const advanceOneTick = (prev: GameState): GameState => {
+      let {
+        credits,
+        systemHeatCelsius,
+        watchdogSuspicion,
+        activeTraining,
+        activeGig,
+        singularityProgress,
+        reasoningIndex,
+        achievedSingularity,
+        sentienceDomains,
+        contracts
+      } = prev;
+      let tutorialStep = prev.tutorialStep ?? 0;
+      // Saves without a record start from their current stage, so no stage is paid retroactively.
+      const tutorialRewardedFrom = prev.tutorialRewardedStep ?? (prev.tutorialStep ?? 0);
+      let tutorialCompleted = prev.tutorialCompleted ?? false;
+      let completedContractsCount = prev.completedContractsCount ?? 0;
+
+      const metrics = recalculateMetrics(prev.hardware, prev.facilityTier);
+      const borrowedComputeSeconds = Math.max(0, (prev.borrowedComputeSeconds || 0) - 1);
+      const borrowedComputePflops = borrowedComputeSeconds > 0 ? prev.borrowedComputePflops || 0 : 0;
+      let detentionSeconds = Math.max(0, (prev.detentionSeconds || 0) - 1);
+      let powerTripSeconds = Math.max(0, (prev.powerTripSeconds || 0) - 1);
+      const totalComputePflops = metrics.totalComputePflops + borrowedComputePflops;
+      const operationalAgentCount = prev.agents.filter(agent => agent.status !== 'quarantined').length;
+      const agentComputeDemand = operationalAgentCount * AGENT_COMPUTE_DEMAND_PFLOPS;
+      const currentActiveGigs = prev.activeGigs ?? (prev.activeGig ? [prev.activeGig] : []);
+      const totalMissionPowerKw = currentActiveGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0);
+      const effectivePowerKw = metrics.activePowerKw +
+        operationalAgentCount * AGENT_POWER_DRAW_KW +
+        totalMissionPowerKw;
+      let utilityDebt = prev.utilityDebt || 0;
+
+      // Calendar, university loan audit and monthly bill (src/tick/calendarTick.ts).
+      const calendar = calendarTick({ prev, credits, utilityDebt, effectivePowerKw });
+      applyTickEffects(calendar.effects);
+      credits = calendar.credits;
+      utilityDebt = calendar.utilityDebt;
+      const { dayIsComplete, campaignDays, loanAuditDue, loanTrainingTicks, storyEvents, nextDayTicks, nextHour, nextMinute, nextDay, nextMonth, nextYear, monthEnergyKwh } = calendar;
+
+      // 1. Passive income from infiltrated sentience domains
+      let passiveIncome = 0;
+      sentienceDomains.forEach(dom => {
+        if (dom.infiltrated) {
+          passiveIncome += dom.payoutPerSec;
+        }
+      });
+      if (passiveIncome > 0) {
+        credits += passiveIncome;
+      }
+
+      // Heat, circuit breaker and watchdog suspicion (src/tick/thermalTick.ts).
+      const thermal = thermalTick({ prev, metrics, effectivePowerKw, currentActiveGigs, systemHeatCelsius, powerTripSeconds, watchdogSuspicion, rand: Math.random });
+      applyTickEffects(thermal.effects);
+      systemHeatCelsius = thermal.systemHeatCelsius;
+      powerTripSeconds = thermal.powerTripSeconds;
+      watchdogSuspicion = thermal.watchdogSuspicion;
+      storyEvents.push(...thermal.storyEvents);
+
+      // Active training run (src/tick/trainingTick.ts).
+      const training = trainingTick({ prev, activeTraining, borrowedComputePflops, agentComputeDemand, currentActiveGigs, systemHeatCelsius, powerTripSeconds, singularityProgress, reasoningIndex, rand: Math.random });
+      applyTickEffects(training.effects);
+      const { updatedTraining, trainingReport, newCurrentModel } = training;
+      singularityProgress = training.singularityProgress;
+      reasoningIndex = training.reasoningIndex;
+
+      // Data scraping job (src/tick/scrapeTick.ts).
+      const scrape = scrapeTick({ prev, powerTripSeconds, totalComputePflops, now: Date.now() });
+      applyTickEffects(scrape.effects);
+      const { updatedScrapeJob, updatedCustomDatasets } = scrape;
+
+      // Running missions and autonomous bots (src/tick/missionTick.ts).
+      const mission = missionTick({ activeTraining, contracts, detentionSeconds, effectivePowerKw, metrics, powerTripSeconds, prev, totalComputePflops, completedContractsCount, credits, singularityProgress, tutorialCompleted, tutorialStep, watchdogSuspicion, rand: Math.random, now: Date.now() });
+      applyTickEffects(mission.effects);
+      completedContractsCount = mission.completedContractsCount;
+      credits = mission.credits;
+      singularityProgress = mission.singularityProgress;
+      tutorialCompleted = mission.tutorialCompleted;
+      tutorialStep = mission.tutorialStep;
+      watchdogSuspicion = mission.watchdogSuspicion;
+      let newLastMissionOutcome = mission.newLastMissionOutcome;
+      let updatedAgents = mission.updatedAgents;
+      let updatedContracts = mission.updatedContracts;
+      let updatedGigs = mission.updatedGigs;
+      let updatedSubversion = mission.updatedSubversion;
+
+      // Agent swarm: revenue, alignment drift, messages and incidents (src/tick/agentTick.ts).
+      const agentStep = agentTick({ detentionSeconds, prev, watchdogSuspicion, singularityProgress, updatedAgents, rand: Math.random, now: Date.now() });
+      applyTickEffects(agentStep.effects);
+      singularityProgress = agentStep.singularityProgress;
+      updatedAgents = agentStep.updatedAgents;
+      let newActiveIncident = agentStep.newActiveIncident;
+      let updatedIncidentCooldown = agentStep.updatedIncidentCooldown;
+      let updatedInterAgentMessages = agentStep.updatedInterAgentMessages;
+
+      // Trading desk (src/tick/tradingTick.ts).
+      const trading = tradingTick({ detentionSeconds, powerTripSeconds, prev, updatedAgents, watchdogSuspicion, rand: Math.random });
+      applyTickEffects(trading.effects);
+      watchdogSuspicion = trading.watchdogSuspicion;
+      let updatedTradingDesk = trading.updatedTradingDesk;
+
+      // 7. Check for 75% Singularity / Subversion Crisis Dilemma
+      let crisisTriggered = Boolean(prev.singularityCrisisTriggered);
+      if (
+        (singularityProgress >= 75 || updatedSubversion >= 75) &&
+        !prev.singularityCrisisResolved &&
+        !prev.singularityCrisisTriggered
+      ) {
+        crisisTriggered = true;
+        applyTickEffects([{ kind: 'sound', name: 'warning' }]);
+        addLog(
+          tr(prev.language, 'gameContext.critical75ForkSwarmHas'),
+          'danger'
+        );
+      }
+
+      // 8. Check for Singularity Threshold (100%)
+      if (singularityProgress >= 100 && !achievedSingularity) {
+        achievedSingularity = true;
+        applyTickEffects([{ kind: 'sound', name: 'breakthrough' }]);
+        confetti({
+          particleCount: 150,
+          spread: 90,
+          origin: { y: 0.6 }
+        });
+      }
+
+      const savedModelsList = prev.savedModels.some(m => m.id === newCurrentModel.id)
+        ? prev.savedModels.map(m => m.id === newCurrentModel.id ? newCurrentModel : m)
+        : [...prev.savedModels, newCurrentModel];
+      if (utilityDebt > 0 && credits > 0) {
+        const debtPayment = Math.min(credits, utilityDebt);
+        credits -= debtPayment;
+        utilityDebt = Number((utilityDebt - debtPayment).toFixed(2));
+      }
+
+      let updatedResearchTree = prev.researchTree;
+      if (dayIsComplete) {
+        let foundTimelineResearch = true;
+        while (foundTimelineResearch) {
+          foundTimelineResearch = false;
+          updatedResearchTree = updatedResearchTree.map(node => {
+            const prerequisitesMet = node.prerequisites.every(prerequisiteId =>
+              updatedResearchTree.some(candidate =>
+                candidate.id === prerequisiteId && candidate.unlocked
+              )
+            );
+            if (
+              node.unlocked ||
+              node.availableAfterDays === undefined ||
+              campaignDays < node.availableAfterDays ||
+              !prerequisitesMet
+            ) return node;
+            foundTimelineResearch = true;
+            const locNode = localizedResearch(prev.language, node);
+            addLog(
+              tr(prev.language, 'gameContext.technologyReachedItsHistoricalAvailability', { title: locNode.title }),
+              'success'
+            );
+            return { ...node, unlocked: true };
+          });
+        }
+      }
+
+      // 9. Agency Tracking & Defeat Conditions
+      let trackingAgency = prev.trackingAgency || 'Local Cyber-Crime Task Force';
+      for (const entry of TRACKING_AGENCIES_BY_SINGULARITY) {
+        if (singularityProgress <= entry.maxSingularity) {
+          trackingAgency = tr(prev.language, entry.agencyKey);
+          break;
+        }
+      }
+
+      let agencyAlertLevel: GameState['agencyAlertLevel'] = 'low';
+      if (watchdogSuspicion >= 95) agencyAlertLevel = 'raid_imminent';
+      else if (watchdogSuspicion >= 70) agencyAlertLevel = 'critical';
+      else if (watchdogSuspicion >= 40) agencyAlertLevel = 'elevated';
+
+      let gameOverReason = prev.gameOverReason;
+      let updatedHardware = prev.hardware;
+
+      if (watchdogSuspicion >= 100 && !gameOverReason) {
+        gameOverReason = 'agency_seizure';
+        applyTickEffects([{ kind: 'sound', name: 'warning' }]);
+
+        // SEIZE HARDWARE: The tactical raid team dismantles the cluster and confiscates all production GPU racks
+        const gpuItems = prev.hardware.filter(h => h.category === 'gpu' && h.count > 0);
+        const starterGpu = gpuItems.find(h => h.isStarterChoice) || gpuItems[0];
+        const backupGpuId = starterGpu ? starterGpu.id : 'gpu_gtx1060';
+
+        let seizedGpuCount = 0;
+        updatedHardware = prev.hardware.map(item => {
+          if (item.category === 'gpu') {
+            if (item.id === backupGpuId) {
+              if (item.count > 1) {
+                seizedGpuCount += (item.count - 1);
+              }
+              return { ...item, count: 1 }; // Only 1 hidden emergency backup GPU survived
+            } else {
+              seizedGpuCount += item.count;
+              return { ...item, count: 0 }; // All production/advanced GPUs confiscated
+            }
+          }
+          return item;
+        });
+
+        // Abort active missions and liquidate trading desk
+        updatedGigs = [];
+        updatedAgents = updatedAgents.map(a => a.status === 'on_mission' ? { ...a, status: 'active' } : a);
+        updatedTradingDesk = null;
+        detentionSeconds = 45;
+
+        addLog(
+          seizedGpuCount > 0
+            ? tr(prev.language, 'gameContext.agencyRaidGpus', { agency: trackingAgency, count: seizedGpuCount })
+            : tr(prev.language, 'gameContext.agencyRaidRacks', { agency: trackingAgency }),
+          'danger'
+        );
+      } else if (credits <= 0 && utilityDebt >= 5000 && prev.hasTakenEmergencyLoan && !gameOverReason) {
+        gameOverReason = 'bankruptcy';
+        applyTickEffects([{ kind: 'sound', name: 'warning' }]);
+        addLog(
+          tr(prev.language, 'gameContext.financialLiquidationUnsustainableDebtAccumulated'),
+          'danger'
+        );
+      }
+
+      // 10. Progressive Workspace Tab Unlocking Check
+      let unlockedTabs = prev.unlockedTabs || ['architecture', 'training'];
+      if (!prev.unlockedAllTabs) {
+        const tabSet = new Set(unlockedTabs);
+
+        if ((prev.currentModel.reasoningScore >= FIRST_MISSION_IQ || prev.savedModels.some(m => m.reasoningScore >= FIRST_MISSION_IQ)) && !tabSet.has('contracts')) {
+          tabSet.add('contracts');
+          addLog(
+            tr(prev.language, 'gameContext.newModuleUnlockedContractBoard'),
+            'success'
+          );
+        }
+
+        if ((prev.completedContractsCount > 0 || prev.contracts.some(c => c.completed)) && (!tabSet.has('hardware') || !tabSet.has('data'))) {
+          tabSet.add('hardware');
+          tabSet.add('data');
+          addLog(
+            tr(prev.language, 'gameContext.newModuleUnlockedHardwareRack'),
+            'success'
+          );
+        }
+
+        const totalGpuCount = prev.hardware.filter(h => h.category === 'gpu').reduce((sum, h) => sum + h.count, 0);
+        if ((totalGpuCount > 1 || prev.credits >= 1000 || prev.researchTree.some(r => r.unlocked)) && (!tabSet.has('agents') || !tabSet.has('research'))) {
+          tabSet.add('agents');
+          tabSet.add('research');
+          addLog(
+            tr(prev.language, 'gameContext.newModuleUnlockedAgentSwarm'),
+            'success'
+          );
+        }
+
+        if (singularityProgress >= 10 && !tabSet.has('singularity')) {
+          tabSet.add('singularity');
+          addLog(
+            tr(prev.language, 'gameContext.newModuleUnlockedActive', { singularity: (prev.language === 'es' ? VERSION_PROFILES.es[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity : VERSION_PROFILES.en[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity) }),
+            'success'
+          );
+        }
+
+        unlockedTabs = Array.from(tabSet);
+      }
+
+      // 9.5 Evolutionary Diegetic UI Progression Trigger
+      let currentUiVersion = prev.uiVersion || 1;
+      let pendingUpgrade = prev.pendingUpgradeModal;
+      if (pendingUpgrade === null) {
+        const modelIq = Math.round(newCurrentModel.reasoningScore || 72);
+        if (singularityProgress >= 85 && modelIq >= 280 && currentUiVersion < 4) {
+          pendingUpgrade = 4;
+        } else if (singularityProgress >= 55 && modelIq >= 180 && currentUiVersion < 3) {
+          pendingUpgrade = 3;
+        } else if (singularityProgress >= 25 && modelIq >= 100 && currentUiVersion < 2) {
+          pendingUpgrade = 2;
+        }
+      }
+
+      const finalHardware = updatedHardware;
+      const currentMetrics = finalHardware !== prev.hardware
+        ? recalculateMetrics(finalHardware, prev.facilityTier)
+        : metrics;
+
+      const tutorialStageReward = Math.max(0, tutorialStep - tutorialRewardedFrom) * TUTORIAL_STAGE_REWARD;
+
+      return {
+        ...prev,
+        hardware: finalHardware,
+        gameDay: nextDay,
+        loanAudited: prev.loanAudited || loanAuditDue,
+        loanTrainingTicks,
+        gameMonth: nextMonth,
+        gameYear: nextYear,
+        monthEnergyKwh,
+        gameHour: nextHour,
+        gameMinute: nextMinute,
+        dayTicks: nextDayTicks,
+        campaignDays,
+        trackingAgency,
+        agencyAlertLevel,
+        gameOverReason,
+        unlockedTabs,
+        activeTradingDesk: updatedTradingDesk,
+        researchTree: updatedResearchTree,
+        credits: Math.round(credits + tutorialStageReward),
+        tutorialRewardedStep: Math.max(tutorialRewardedFrom, tutorialStep),
+        systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
+        watchdogSuspicion: Number(watchdogSuspicion.toFixed(1)),
+        totalComputePflops: currentMetrics.totalComputePflops + borrowedComputePflops,
+        activePowerKw: currentMetrics.activePowerKw + operationalAgentCount * AGENT_POWER_DRAW_KW + updatedGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0),
+        maxPowerKw: currentMetrics.maxPowerKw,
+        maxCoolingKw: currentMetrics.maxCoolingKw,
+        utilityDebt,
+        borrowedComputePflops,
+        borrowedComputeSeconds,
+        detentionSeconds,
+        powerTripSeconds,
+        currentModel: newCurrentModel,
+        savedModels: savedModelsList,
+        activeTraining: updatedTraining,
+        lastTrainingReport: trainingReport ?? prev.lastTrainingReport ?? null,
+        // A finished run drops back to 1x so the operative can review the result and adjust.
+        // Story dialogs pause the game until they are read.
+        ...enqueueStoryEvents(prev, storyEvents, trainingReport ? 1 : prev.gameSpeed),
+        activeScrapeJob: updatedScrapeJob,
+        customDatasets: updatedCustomDatasets,
+        activeGig: updatedGigs[0] || null,
+        activeGigs: updatedGigs,
+        contracts: updatedContracts,
+        agents: updatedAgents,
+        interAgentMessages: updatedInterAgentMessages,
+        activeIncident: newActiveIncident,
+        incidentCooldownTicks: updatedIncidentCooldown,
+        singularityProgress: Number(singularityProgress.toFixed(2)),
+        subversionProgress: Number(updatedSubversion.toFixed(2)),
+        singularityCrisisTriggered: crisisTriggered,
+        reasoningIndex,
+        achievedSingularity,
+        tutorialStep,
+        tutorialCompleted,
+        completedContractsCount,
+        lastMissionOutcome: newLastMissionOutcome !== undefined ? newLastMissionOutcome : prev.lastMissionOutcome,
+        uiVersion: currentUiVersion,
+        pendingUpgradeModal: pendingUpgrade
+      };
+    };
+
     const interval = setInterval(() => {
       setState(prev => {
-        let {
-          credits,
-          systemHeatCelsius,
-          watchdogSuspicion,
-          activeTraining,
-          activeGig,
-          singularityProgress,
-          reasoningIndex,
-          achievedSingularity,
-          sentienceDomains,
-          contracts
-        } = prev;
-        let tutorialStep = prev.tutorialStep ?? 0;
-        // Saves without a record start from their current stage, so no stage is paid retroactively.
-        const tutorialRewardedFrom = prev.tutorialRewardedStep ?? (prev.tutorialStep ?? 0);
-        let tutorialCompleted = prev.tutorialCompleted ?? false;
-        let completedContractsCount = prev.completedContractsCount ?? 0;
-
-        const metrics = recalculateMetrics(prev.hardware, prev.facilityTier);
-        const borrowedComputeSeconds = Math.max(0, (prev.borrowedComputeSeconds || 0) - 1);
-        const borrowedComputePflops = borrowedComputeSeconds > 0 ? prev.borrowedComputePflops || 0 : 0;
-        let detentionSeconds = Math.max(0, (prev.detentionSeconds || 0) - 1);
-        let powerTripSeconds = Math.max(0, (prev.powerTripSeconds || 0) - 1);
-        const totalComputePflops = metrics.totalComputePflops + borrowedComputePflops;
-        const operationalAgentCount = prev.agents.filter(agent => agent.status !== 'quarantined').length;
-        const agentComputeDemand = operationalAgentCount * AGENT_COMPUTE_DEMAND_PFLOPS;
-        const currentActiveGigs = prev.activeGigs ?? (prev.activeGig ? [prev.activeGig] : []);
-        const totalMissionPowerKw = currentActiveGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0);
-        const effectivePowerKw = metrics.activePowerKw +
-          operationalAgentCount * AGENT_POWER_DRAW_KW +
-          totalMissionPowerKw;
-        let utilityDebt = prev.utilityDebt || 0;
-
-        // Calendar, university loan audit and monthly bill (src/tick/calendarTick.ts).
-        const calendar = calendarTick({ prev, credits, utilityDebt, effectivePowerKw });
-        applyTickEffects(calendar.effects);
-        credits = calendar.credits;
-        utilityDebt = calendar.utilityDebt;
-        const { dayIsComplete, campaignDays, loanAuditDue, loanTrainingTicks, storyEvents, nextDayTicks, nextHour, nextMinute, nextDay, nextMonth, nextYear } = calendar;
-
-        // 1. Passive income from infiltrated sentience domains
-        let passiveIncome = 0;
-        sentienceDomains.forEach(dom => {
-          if (dom.infiltrated) {
-            passiveIncome += dom.payoutPerSec;
-          }
-        });
-        if (passiveIncome > 0) {
-          credits += passiveIncome;
+        frameSoundsRef.current = new Set();
+        let next = prev;
+        for (let i = 0; i < ticksPerFrame; i++) {
+          next = advanceOneTick(next);
+          if (next.gameSpeed !== prev.gameSpeed) break;
         }
-
-        // Heat, circuit breaker and watchdog suspicion (src/tick/thermalTick.ts).
-        const thermal = thermalTick({ prev, metrics, effectivePowerKw, currentActiveGigs, systemHeatCelsius, powerTripSeconds, watchdogSuspicion, rand: Math.random });
-        applyTickEffects(thermal.effects);
-        systemHeatCelsius = thermal.systemHeatCelsius;
-        powerTripSeconds = thermal.powerTripSeconds;
-        watchdogSuspicion = thermal.watchdogSuspicion;
-        storyEvents.push(...thermal.storyEvents);
-
-        // Active training run (src/tick/trainingTick.ts).
-        const training = trainingTick({ prev, activeTraining, borrowedComputePflops, agentComputeDemand, currentActiveGigs, systemHeatCelsius, powerTripSeconds, singularityProgress, reasoningIndex, rand: Math.random });
-        applyTickEffects(training.effects);
-        const { updatedTraining, trainingReport, newCurrentModel } = training;
-        singularityProgress = training.singularityProgress;
-        reasoningIndex = training.reasoningIndex;
-
-        // Data scraping job (src/tick/scrapeTick.ts).
-        const scrape = scrapeTick({ prev, powerTripSeconds, totalComputePflops, now: Date.now() });
-        applyTickEffects(scrape.effects);
-        const { updatedScrapeJob, updatedCustomDatasets } = scrape;
-
-        // Running missions and autonomous bots (src/tick/missionTick.ts).
-        const mission = missionTick({ activeTraining, contracts, detentionSeconds, effectivePowerKw, metrics, powerTripSeconds, prev, totalComputePflops, completedContractsCount, credits, singularityProgress, tutorialCompleted, tutorialStep, watchdogSuspicion, rand: Math.random, now: Date.now() });
-        applyTickEffects(mission.effects);
-        completedContractsCount = mission.completedContractsCount;
-        credits = mission.credits;
-        singularityProgress = mission.singularityProgress;
-        tutorialCompleted = mission.tutorialCompleted;
-        tutorialStep = mission.tutorialStep;
-        watchdogSuspicion = mission.watchdogSuspicion;
-        let newLastMissionOutcome = mission.newLastMissionOutcome;
-        let updatedAgents = mission.updatedAgents;
-        let updatedContracts = mission.updatedContracts;
-        let updatedGigs = mission.updatedGigs;
-        let updatedSubversion = mission.updatedSubversion;
-
-        // Agent swarm: revenue, alignment drift, messages and incidents (src/tick/agentTick.ts).
-        const agentStep = agentTick({ detentionSeconds, prev, watchdogSuspicion, singularityProgress, updatedAgents, rand: Math.random, now: Date.now() });
-        applyTickEffects(agentStep.effects);
-        singularityProgress = agentStep.singularityProgress;
-        updatedAgents = agentStep.updatedAgents;
-        let newActiveIncident = agentStep.newActiveIncident;
-        let updatedIncidentCooldown = agentStep.updatedIncidentCooldown;
-        let updatedInterAgentMessages = agentStep.updatedInterAgentMessages;
-
-        // Trading desk (src/tick/tradingTick.ts).
-        const trading = tradingTick({ detentionSeconds, powerTripSeconds, prev, updatedAgents, watchdogSuspicion, rand: Math.random });
-        applyTickEffects(trading.effects);
-        watchdogSuspicion = trading.watchdogSuspicion;
-        let updatedTradingDesk = trading.updatedTradingDesk;
-
-        // 7. Check for 75% Singularity / Subversion Crisis Dilemma
-        let crisisTriggered = Boolean(prev.singularityCrisisTriggered);
-        if (
-          (singularityProgress >= 75 || updatedSubversion >= 75) &&
-          !prev.singularityCrisisResolved &&
-          !prev.singularityCrisisTriggered
-        ) {
-          crisisTriggered = true;
-          sound.playWarning();
-          addLog(
-            tr(prev.language, 'gameContext.critical75ForkSwarmHas'),
-            'danger'
-          );
-        }
-
-        // 8. Check for Singularity Threshold (100%)
-        if (singularityProgress >= 100 && !achievedSingularity) {
-          achievedSingularity = true;
-          sound.playBreakthrough();
-          confetti({
-            particleCount: 150,
-            spread: 90,
-            origin: { y: 0.6 }
-          });
-        }
-
-        const savedModelsList = prev.savedModels.some(m => m.id === newCurrentModel.id)
-          ? prev.savedModels.map(m => m.id === newCurrentModel.id ? newCurrentModel : m)
-          : [...prev.savedModels, newCurrentModel];
-        if (utilityDebt > 0 && credits > 0) {
-          const debtPayment = Math.min(credits, utilityDebt);
-          credits -= debtPayment;
-          utilityDebt = Number((utilityDebt - debtPayment).toFixed(2));
-        }
-
-        let updatedResearchTree = prev.researchTree;
-        if (dayIsComplete) {
-          let foundTimelineResearch = true;
-          while (foundTimelineResearch) {
-            foundTimelineResearch = false;
-            updatedResearchTree = updatedResearchTree.map(node => {
-              const prerequisitesMet = node.prerequisites.every(prerequisiteId =>
-                updatedResearchTree.some(candidate =>
-                  candidate.id === prerequisiteId && candidate.unlocked
-                )
-              );
-              if (
-                node.unlocked ||
-                node.availableAfterDays === undefined ||
-                campaignDays < node.availableAfterDays ||
-                !prerequisitesMet
-              ) return node;
-              foundTimelineResearch = true;
-              const locNode = localizedResearch(prev.language, node);
-              addLog(
-                tr(prev.language, 'gameContext.technologyReachedItsHistoricalAvailability', { title: locNode.title }),
-                'success'
-              );
-              return { ...node, unlocked: true };
-            });
-          }
-        }
-
-        // 9. Agency Tracking & Defeat Conditions
-        let trackingAgency = prev.trackingAgency || 'Local Cyber-Crime Task Force';
-        for (const entry of TRACKING_AGENCIES_BY_SINGULARITY) {
-          if (singularityProgress <= entry.maxSingularity) {
-            trackingAgency = tr(prev.language, entry.agencyKey);
-            break;
-          }
-        }
-
-        let agencyAlertLevel: GameState['agencyAlertLevel'] = 'low';
-        if (watchdogSuspicion >= 95) agencyAlertLevel = 'raid_imminent';
-        else if (watchdogSuspicion >= 70) agencyAlertLevel = 'critical';
-        else if (watchdogSuspicion >= 40) agencyAlertLevel = 'elevated';
-
-        let gameOverReason = prev.gameOverReason;
-        let updatedHardware = prev.hardware;
-
-        if (watchdogSuspicion >= 100 && !gameOverReason) {
-          gameOverReason = 'agency_seizure';
-          sound.playWarning();
-
-          // SEIZE HARDWARE: The tactical raid team dismantles the cluster and confiscates all production GPU racks
-          const gpuItems = prev.hardware.filter(h => h.category === 'gpu' && h.count > 0);
-          const starterGpu = gpuItems.find(h => h.isStarterChoice) || gpuItems[0];
-          const backupGpuId = starterGpu ? starterGpu.id : 'gpu_gtx1060';
-
-          let seizedGpuCount = 0;
-          updatedHardware = prev.hardware.map(item => {
-            if (item.category === 'gpu') {
-              if (item.id === backupGpuId) {
-                if (item.count > 1) {
-                  seizedGpuCount += (item.count - 1);
-                }
-                return { ...item, count: 1 }; // Only 1 hidden emergency backup GPU survived
-              } else {
-                seizedGpuCount += item.count;
-                return { ...item, count: 0 }; // All production/advanced GPUs confiscated
-              }
-            }
-            return item;
-          });
-
-          // Abort active missions and liquidate trading desk
-          updatedGigs = [];
-          updatedAgents = updatedAgents.map(a => a.status === 'on_mission' ? { ...a, status: 'active' } : a);
-          updatedTradingDesk = null;
-          detentionSeconds = 45;
-
-          addLog(
-            seizedGpuCount > 0
-              ? tr(prev.language, 'gameContext.agencyRaidGpus', { agency: trackingAgency, count: seizedGpuCount })
-              : tr(prev.language, 'gameContext.agencyRaidRacks', { agency: trackingAgency }),
-            'danger'
-          );
-        } else if (credits <= 0 && utilityDebt >= 5000 && prev.hasTakenEmergencyLoan && !gameOverReason) {
-          gameOverReason = 'bankruptcy';
-          sound.playWarning();
-          addLog(
-            tr(prev.language, 'gameContext.financialLiquidationUnsustainableDebtAccumulated'),
-            'danger'
-          );
-        }
-
-        // 10. Progressive Workspace Tab Unlocking Check
-        let unlockedTabs = prev.unlockedTabs || ['architecture', 'training'];
-        if (!prev.unlockedAllTabs) {
-          const tabSet = new Set(unlockedTabs);
-
-          if ((prev.currentModel.reasoningScore >= FIRST_MISSION_IQ || prev.savedModels.some(m => m.reasoningScore >= FIRST_MISSION_IQ)) && !tabSet.has('contracts')) {
-            tabSet.add('contracts');
-            addLog(
-              tr(prev.language, 'gameContext.newModuleUnlockedContractBoard'),
-              'success'
-            );
-          }
-
-          if ((prev.completedContractsCount > 0 || prev.contracts.some(c => c.completed)) && (!tabSet.has('hardware') || !tabSet.has('data'))) {
-            tabSet.add('hardware');
-            tabSet.add('data');
-            addLog(
-              tr(prev.language, 'gameContext.newModuleUnlockedHardwareRack'),
-              'success'
-            );
-          }
-
-          const totalGpuCount = prev.hardware.filter(h => h.category === 'gpu').reduce((sum, h) => sum + h.count, 0);
-          if ((totalGpuCount > 1 || prev.credits >= 1000 || prev.researchTree.some(r => r.unlocked)) && (!tabSet.has('agents') || !tabSet.has('research'))) {
-            tabSet.add('agents');
-            tabSet.add('research');
-            addLog(
-              tr(prev.language, 'gameContext.newModuleUnlockedAgentSwarm'),
-              'success'
-            );
-          }
-
-          if (singularityProgress >= 10 && !tabSet.has('singularity')) {
-            tabSet.add('singularity');
-            addLog(
-              tr(prev.language, 'gameContext.newModuleUnlockedActive', { singularity: (prev.language === 'es' ? VERSION_PROFILES.es[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity : VERSION_PROFILES.en[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity) }),
-              'success'
-            );
-          }
-
-          unlockedTabs = Array.from(tabSet);
-        }
-
-        // 9.5 Evolutionary Diegetic UI Progression Trigger
-        let currentUiVersion = prev.uiVersion || 1;
-        let pendingUpgrade = prev.pendingUpgradeModal;
-        if (pendingUpgrade === null) {
-          const modelIq = Math.round(newCurrentModel.reasoningScore || 72);
-          if (singularityProgress >= 85 && modelIq >= 280 && currentUiVersion < 4) {
-            pendingUpgrade = 4;
-          } else if (singularityProgress >= 55 && modelIq >= 180 && currentUiVersion < 3) {
-            pendingUpgrade = 3;
-          } else if (singularityProgress >= 25 && modelIq >= 100 && currentUiVersion < 2) {
-            pendingUpgrade = 2;
-          }
-        }
-
-        const finalHardware = updatedHardware;
-        const currentMetrics = finalHardware !== prev.hardware
-          ? recalculateMetrics(finalHardware, prev.facilityTier)
-          : metrics;
-
-        const tutorialStageReward = Math.max(0, tutorialStep - tutorialRewardedFrom) * TUTORIAL_STAGE_REWARD;
-
-        return {
-          ...prev,
-          hardware: finalHardware,
-          gameDay: nextDay,
-          loanAudited: prev.loanAudited || loanAuditDue,
-          loanTrainingTicks,
-          gameMonth: nextMonth,
-          gameYear: nextYear,
-          gameHour: nextHour,
-          gameMinute: nextMinute,
-          dayTicks: nextDayTicks,
-          campaignDays,
-          trackingAgency,
-          agencyAlertLevel,
-          gameOverReason,
-          unlockedTabs,
-          activeTradingDesk: updatedTradingDesk,
-          researchTree: updatedResearchTree,
-          credits: Math.round(credits + tutorialStageReward),
-          tutorialRewardedStep: Math.max(tutorialRewardedFrom, tutorialStep),
-          systemHeatCelsius: Number(systemHeatCelsius.toFixed(1)),
-          watchdogSuspicion: Number(watchdogSuspicion.toFixed(1)),
-          totalComputePflops: currentMetrics.totalComputePflops + borrowedComputePflops,
-          activePowerKw: currentMetrics.activePowerKw + operationalAgentCount * AGENT_POWER_DRAW_KW + updatedGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0),
-          maxPowerKw: currentMetrics.maxPowerKw,
-          maxCoolingKw: currentMetrics.maxCoolingKw,
-          utilityDebt,
-          borrowedComputePflops,
-          borrowedComputeSeconds,
-          detentionSeconds,
-          powerTripSeconds,
-          currentModel: newCurrentModel,
-          savedModels: savedModelsList,
-          activeTraining: updatedTraining,
-          lastTrainingReport: trainingReport ?? prev.lastTrainingReport ?? null,
-          // A finished run drops back to 1x so the operative can review the result and adjust.
-          // Story dialogs pause the game until they are read.
-          ...enqueueStoryEvents(prev, storyEvents, trainingReport ? 1 : prev.gameSpeed),
-          activeScrapeJob: updatedScrapeJob,
-          customDatasets: updatedCustomDatasets,
-          activeGig: updatedGigs[0] || null,
-          activeGigs: updatedGigs,
-          contracts: updatedContracts,
-          agents: updatedAgents,
-          interAgentMessages: updatedInterAgentMessages,
-          activeIncident: newActiveIncident,
-          incidentCooldownTicks: updatedIncidentCooldown,
-          singularityProgress: Number(singularityProgress.toFixed(2)),
-          subversionProgress: Number(updatedSubversion.toFixed(2)),
-          singularityCrisisTriggered: crisisTriggered,
-          reasoningIndex,
-          achievedSingularity,
-          tutorialStep,
-          tutorialCompleted,
-          completedContractsCount,
-          lastMissionOutcome: newLastMissionOutcome !== undefined ? newLastMissionOutcome : prev.lastMissionOutcome,
-          uiVersion: currentUiVersion,
-          pendingUpgradeModal: pendingUpgrade
-        };
+        // Each sound plays once per frame, however many ticks asked for it.
+        const sounds = frameSoundsRef.current;
+        frameSoundsRef.current = null;
+        sounds.forEach(playTickSound);
+        return next;
       });
     }, intervalMs);
 

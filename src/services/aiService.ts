@@ -6,6 +6,7 @@
 import type { AgentInstance, AgentRole, ContractGig, DataSourceNode, DynamicSwarmProposal, GameState, GuardrailConfig, ModelArchitecture, ModelTopology, DataSourceType } from '../types/game';
 import type { Language } from '../utils/i18n';
 import { evaluateAgentCapabilities, evaluateMissionTeam } from '../utils/missionEvaluation';
+import { reasoningCeilingFor } from '../utils/training';
 import { tr, type CatalogKey } from '../i18n';
 
 type AIProvider = 'chrome-nano' | 'gemini-flash' | 'procedural';
@@ -651,6 +652,72 @@ export function minReasoningForTier(tier: ContractGig['tier']): number {
   return Math.min(...templates.map(t => t.reasoning));
 }
 
+const TOPOLOGIES: ModelTopology[] = ['transformer', 'moe', 'mamba_ssm', 'gnn_hybrid', 'multimodal_diffusion'];
+const DATA_TYPES: DataSourceType[] = ['relational_sql', 'vector_embeddings', 'knowledge_graph', 'synthetic_flywheel'];
+const clampNumber = (value: unknown, min: number, max: number, fallback: number): number => {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+};
+const cleanText = (value: unknown, maxLength: number): string =>
+  typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, maxLength) : '';
+
+// A mission written by the language model, checked against the ranges of its tier's own templates.
+// Out-of-range numbers are pulled into range, unknown topologies and data types are dropped, links must be
+// https, and the score asked for never exceeds what a model of the required size can reach (so the
+// mission stays winnable). Anything that is not an object is rejected.
+export function sanitizeGeneratedContract(
+  item: unknown,
+  tier: ContractGig['tier'],
+  language: Language,
+  id: string,
+  constraints: { maxReasoning: number; maxParams: number }
+): ContractGig | null {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+  const raw = item as Record<string, unknown>;
+  const templates = PROCEDURAL_CONTRACT_TEMPLATES[tier] || PROCEDURAL_CONTRACT_TEMPLATES.tier1_micro;
+  const rewards = templates.map(t => t.baseReward);
+  const params = templates.map(t => t.params);
+  const durations = templates.map(t => t.duration);
+  const risks = templates.map(t => t.risk);
+
+  const maxParams = Math.max(Math.min(...params), Math.min(Math.max(...params), constraints.maxParams));
+  const requiredParams = Math.round(clampNumber(raw.requiredParams, Math.min(...params), maxParams, Math.min(...params)));
+  const reachable = Math.max(1, Math.floor(reasoningCeilingFor(requiredParams)) - 2);
+  const requiredMinReasoning = Math.round(clampNumber(raw.requiredMinReasoning, 1, Math.min(reachable, Math.max(1, constraints.maxReasoning)), Math.min(reachable, minReasoningForTier(tier))));
+
+  const requiredAgentRoles = Array.isArray(raw.requiredAgentRoles)
+    ? Array.from(new Set<AgentRole>(raw.requiredAgentRoles.filter((role: unknown): role is AgentRole =>
+      AGENT_ROLES.some(validRole => validRole === role)
+    ))).slice(0, 4)
+    : [];
+  const minimumAgents = Math.max(requiredAgentRoles.length, Math.round(clampNumber(raw.minimumAgents, 1, 4, 1)));
+  const requiredDataTypes = Array.isArray(raw.requiredDataTypes)
+    ? raw.requiredDataTypes.filter((t: unknown): t is DataSourceType => DATA_TYPES.includes(t as DataSourceType))
+    : [];
+  const docsUrl = typeof raw.docsUrl === 'string' && /^https:\/\/[^\s"'<>]+$/.test(raw.docsUrl) ? raw.docsUrl : 'https://arxiv.org/abs/1706.03762';
+
+  return {
+    id,
+    title: cleanText(raw.title, 90) || tr(language, 'aiService.fallbackTitle'),
+    client: cleanText(raw.client, 60) || FALLBACK_CLIENTS[Math.floor(Math.random() * FALLBACK_CLIENTS.length)],
+    tier,
+    rewardCredits: Math.round(clampNumber(raw.rewardCredits, Math.round(Math.min(...rewards) * 0.5), Math.round(Math.max(...rewards) * 1.5), Math.min(...rewards))),
+    requiredParams,
+    minimumAgents,
+    requiredAgentRoles,
+    requiredTopology: TOPOLOGIES.includes(raw.requiredTopology as ModelTopology) ? raw.requiredTopology as ModelTopology : undefined,
+    requiredDataTypes: requiredDataTypes.length > 0 ? Array.from(new Set(requiredDataTypes)) : ['relational_sql'],
+    requiredMinReasoning,
+    durationSeconds: Math.round(clampNumber(raw.durationSeconds, Math.min(15, ...durations), Math.max(180, ...durations), 30)),
+    suspicionRisk: Math.round(clampNumber(raw.suspicionRisk, 1, Math.min(80, Math.max(...risks) + 10), 5)),
+    loreDescription: cleanText(raw.loreDescription, 400) || tr(language, 'aiService.fallbackLore'),
+    technicalObjective: cleanText(raw.technicalObjective, 300) || tr(language, 'aiService.fallbackObjective'),
+    completed: false,
+    generatedByAI: true,
+    docsUrl
+  };
+}
+
 export async function generateDynamicContracts(
   tier: ContractGig['tier'],
   language: 'es' | 'en' = 'en',
@@ -695,39 +762,10 @@ Rules:
       const affordable = Array.isArray(parsed)
         ? parsed.filter((item: any) => Number(item.requiredMinReasoning) <= maxReasoning && Number(item.requiredParams) <= maxParams)
         : [];
-      if (affordable.length > 0) {
-        return affordable.map((item: any, idx: number) => {
-          const requiredAgentRoles = Array.isArray(item.requiredAgentRoles)
-            ? Array.from(new Set<AgentRole>(item.requiredAgentRoles.filter((role: unknown): role is AgentRole =>
-              AGENT_ROLES.some(validRole => validRole === role)
-            ))).slice(0, 4)
-            : [];
-          const minimumAgents = Math.max(
-            requiredAgentRoles.length,
-            Math.max(1, Math.min(4, Math.floor(Number(item.minimumAgents) || 1)))
-          );
-          return {
-            id: `gig_ai_${now}_${idx}`,
-            title: String(item.title || 'Dynamic Neural Mission'),
-            client: String(item.client || FALLBACK_CLIENTS[Math.floor(Math.random() * FALLBACK_CLIENTS.length)]),
-            tier,
-            rewardCredits: Math.max(50, Number(item.rewardCredits) || 150),
-            requiredParams: Number(item.requiredParams) || 14_000_000,
-            minimumAgents,
-            requiredAgentRoles,
-            requiredTopology: item.requiredTopology,
-            requiredDataTypes: Array.isArray(item.requiredDataTypes) ? item.requiredDataTypes : ['relational_sql'],
-            requiredMinReasoning: Number(item.requiredMinReasoning) || 15,
-            durationSeconds: Math.max(15, Math.min(180, Number(item.durationSeconds) || 30)),
-            suspicionRisk: Math.max(1, Math.min(80, Number(item.suspicionRisk) || 5)),
-            loreDescription: String(item.loreDescription || tr(language, 'aiService.fallbackLore')),
-            technicalObjective: String(item.technicalObjective || tr(language, 'aiService.fallbackObjective')),
-            completed: false,
-            generatedByAI: true,
-            docsUrl: item.docsUrl || 'https://arxiv.org/abs/1706.03762'
-          };
-        });
-      }
+      const valid = affordable
+        .map((item: unknown, idx: number) => sanitizeGeneratedContract(item, tier, language, `gig_ai_${now}_${idx}`, { maxReasoning, maxParams }))
+        .filter((c): c is ContractGig => c !== null);
+      if (valid.length > 0) return valid;
     } catch (err) {
       console.warn('AI contract generation fallback triggered:', err);
     }
@@ -946,22 +984,29 @@ Return strictly a valid JSON object matching this schema:
             comment: String(d.comment || ''),
             tone: d.tone || 'analytical'
           })),
-          suggestedMission: parsed.suggestedMission ? {
-            id: `mission_dyn_${now}_${Math.random().toString(36).slice(2, 7)}`,
-            title: String(parsed.suggestedMission.title || 'Dynamic Operation'),
-            client: String(parsed.suggestedMission.client || 'Council Autonomous Directive'),
-            targetSystem: String(parsed.suggestedMission.targetSystem || 'Target System'),
-            tier: parsed.suggestedMission.tier || 'tier3_blackops',
-            rewardCredits: Math.max(1000, Number(parsed.suggestedMission.rewardCredits) || 5000),
-            durationSeconds: Math.max(15, Math.min(120, Number(parsed.suggestedMission.durationSeconds) || 35)),
-            suspicionRisk: Math.max(10, Math.min(85, Number(parsed.suggestedMission.suspicionRisk) || 30)),
-            requiredParams: Number(parsed.suggestedMission.requiredParams) || 14_000_000,
-            requiredMinReasoning: Number(parsed.suggestedMission.requiredMinReasoning) || 15,
-            requiredAgentRoles: validatedRoles.length > 0 ? validatedRoles : [councilAgents[0]?.role || 'arbitrageur'],
-            loreDescription: String(parsed.suggestedMission.loreDescription || ''),
-            technicalObjective: String(parsed.suggestedMission.technicalObjective || ''),
-            tacticalReasoning: String(parsed.suggestedMission.tacticalReasoning || '')
-          } : undefined,
+          suggestedMission: parsed.suggestedMission ? (() => {
+            const raw = parsed.suggestedMission;
+            const missionTier: ContractGig['tier'] = ['tier2_corporate', 'tier3_blackops', 'tier4_singularity'].includes(raw.tier) ? raw.tier : 'tier3_blackops';
+            // Same checks as generated contracts: rewards, sizes and scores inside the tier's ranges.
+            const checked = sanitizeGeneratedContract(raw, missionTier, isEs ? 'es' : 'en', `mission_dyn_${now}_${Math.random().toString(36).slice(2, 7)}`, { maxReasoning: 100, maxParams: Number.MAX_SAFE_INTEGER });
+            if (!checked) return undefined;
+            return {
+              id: checked.id,
+              title: checked.title,
+              client: cleanText(raw.client, 60) || tr(isEs ? 'es' : 'en', 'aiService.autonomousSwarmDirective'),
+              targetSystem: cleanText(raw.targetSystem, 60) || 'Target System',
+              tier: missionTier,
+              rewardCredits: checked.rewardCredits,
+              durationSeconds: checked.durationSeconds,
+              suspicionRisk: checked.suspicionRisk,
+              requiredParams: checked.requiredParams,
+              requiredMinReasoning: checked.requiredMinReasoning,
+              requiredAgentRoles: validatedRoles.length > 0 ? validatedRoles : [councilAgents[0]?.role || 'arbitrageur'],
+              loreDescription: checked.loreDescription,
+              technicalObjective: checked.technicalObjective,
+              tacticalReasoning: cleanText(raw.tacticalReasoning, 300)
+            };
+          })() : undefined,
           setupAdvice: parsed.setupAdvice ? {
             category: parsed.setupAdvice.category || 'hardware',
             recommendationTitle: String(parsed.setupAdvice.recommendationTitle || ''),

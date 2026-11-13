@@ -59,7 +59,13 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 5 | D-1 (parte 2) misiones, agentes y mesa de trading pasan del tick a `src/tick/`; `GameContext` queda en 3.915 líneas (era 4.689) | Aplicado |
 | 5 | D-6 botón para activar la IA integrada de Chrome con progreso de descarga · D-7 clave de Gemini en Cuenta → Asistente de IA, guardada solo en el navegador y fuera de la partida | Aplicado |
 | 5 | T-4 (parte 1) catálogo `src/i18n/{en,es}.ts` con `tr()`/`trv()`; 1.185 textos de `localize` y ternarios migrados con un codemod y el diccionario de `t()` adentro (1.240 claves); tests de claves, parámetros y claves sin uso | Aplicado |
-| 5 | T-4 (parte 2) textos con formato JSX y `localize` con argumentos calculados · (parte 3) módulos de contenido (eventos, diálogos, epílogo, perfiles por versión, traducciones de hardware/contratos/investigación) | Pendiente |
+| 5 | T-4 (parte 2) textos con formato con `RichText` (etiquetas `<b>`, `<em>`, `<code>` en el catálogo) y `localize` con argumentos calculados | Aplicado |
+| 5 | T-4 (parte 3) contenido del juego por id (`content.<tipo>.<id>.<campo>`), eventos, epílogo, perfiles por versión y diálogos con `localizeTree()`, pares `es`/`en` en línea; se borran `spanishTranslations.ts` y `localize()`; 2.414 claves y un test que impide español escrito en el código | Aplicado |
+| 5 | Barra superior: el manual y la clasificación no se podían abrir (`onOpenManual`/`onOpenLeaderboard` sin usar); PDF con la ruta base de GitHub Pages | Aplicado |
+| 6 | L-4 la factura cobra los kWh usados en el mes (`monthEnergyKwh`, versión de guardado 11) y el panel proyecta el cierre del mes | Aplicado |
+| 6 | L-10 a 20x y 50x corren varios ticks por cuadro (máximo 10 cuadros por segundo); un sonido por cuadro | Aplicado |
+| 6 | L-9 guardado inmediato en momentos clave y al cerrar u ocultar la pestaña | Aplicado |
+| 6 | L-6 misiones generadas por IA validadas contra los rangos de su tier, con puntaje alcanzable y enlaces https | Aplicado |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).
 
@@ -440,6 +446,12 @@ Textos de 9 y 10 px en todo el juego, estados que dependen solo del color y anim
 ### Fase 5 — Base técnica
 
 15. D-1 dividir `GameContext` · D-3 CI · D-4 bundle · D-5 limpieza · L-7 versión de guardado · T-4 catálogo de textos.
+
+### Fase 6 — Lógica y economía
+
+16. L-4 factura por energía real · L-10 ticks por cuadro · L-9 guardado inmediato · L-6 validar misiones generadas.
+17. L-3 sospecha visible por tráfico y tipo de misión · L-5 papers atados a versión y puntaje en lugar del calendario.
+18. L-8 ranking: decidir si queda informal o se valida · R-6 contenido fuera del marco educativo · P0-8 medir la duración de cada versión jugando.
 
 ---
 

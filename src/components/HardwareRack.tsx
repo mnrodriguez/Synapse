@@ -34,7 +34,7 @@ import { HARDWARE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { isProgressionUnlocked } from '../utils/progression';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
-import { formatCompute, externalComputePflops, COVERT_NODE_PFLOPS, UNIVERSITY_LOAN_PFLOPS, formatGameTime } from '../utils/training';
+import { formatCompute, externalComputePflops, COVERT_NODE_PFLOPS, UNIVERSITY_LOAN_PFLOPS, formatGameTime, GAME_HOURS_PER_TICK } from '../utils/training';
 import { PHASE_SCALES, toDisplayProgress, type UiVersion } from '../utils/singularityGoals';
 import { HARDWARE_SPEC_NOTES, specSourceLabel } from '../utils/hardwareSpecs';
 import { tr } from '../i18n';
@@ -61,7 +61,10 @@ export const HardwareRack: React.FC = () => {
   const nextFacility = FACILITY_TIERS[state.facilityTier + 1];
   const nextFacilityUnlocked = nextFacility ? isProgressionUnlocked(nextFacility, state) : false;
   const nextFacilityResearch = state.researchTree.find(node => node.id === nextFacility?.requiredResearchId);
-  const estimatedMonthlyCost = state.activePowerKw * ELECTRICITY_RATE_PER_KWH * 720 + facility.monthlyLeaseCost;
+  // Bill at month end: energy already used this month plus the current draw for the hours left.
+  const hoursLeftInMonth = Math.max(0, (DAYS_PER_GAME_MONTH - (state.gameDay || 1)) * 24 + (48 - (state.dayTicks || 0)) * GAME_HOURS_PER_TICK);
+  const projectedMonthKwh = (state.monthEnergyKwh ?? 0) + state.activePowerKw * hoursLeftInMonth;
+  const estimatedMonthlyCost = projectedMonthKwh * ELECTRICITY_RATE_PER_KWH + facility.monthlyLeaseCost;
   const shadowDetectionChance = Math.min(85, 15 + state.watchdogSuspicion * 0.6);
   
   const totalVramGb = state.hardware.reduce((sum, h) => 
@@ -626,7 +629,7 @@ export const HardwareRack: React.FC = () => {
               <div className="p-3 rounded theme-sub-bg border theme-accent-border">
                 <span className="mutating-text-muted text-[11px] block">{t(state.language, 'monthly_estimate')}</span>
                 <span className="theme-warn-text font-bold font-mono text-sm">${estimatedMonthlyCost.toFixed(2)} CR</span>
-                <span className="text-[11px] mutating-text-muted block mt-0.5">${ELECTRICITY_RATE_PER_KWH.toFixed(2)}/kWh · {state.activePowerKw} kW</span>
+                <span className="text-[11px] mutating-text-muted block mt-0.5">{tr(state.language, 'hardwareRack.energyUsedSoFar', { kwh: Math.round(state.monthEnergyKwh ?? 0), rate: ELECTRICITY_RATE_PER_KWH.toFixed(2), kw: state.activePowerKw })}</span>
               </div>
 
               <div className="p-3 rounded theme-sub-bg border theme-accent-border">

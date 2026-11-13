@@ -6,13 +6,15 @@
 import type { GameState } from '../types/game';
 import type { StoryEventId } from '../types/game';
 import { DAYS_PER_GAME_MONTH, ELECTRICITY_RATE_PER_KWH, FACILITY_TIERS } from '../utils/constants';
-import { universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
+import { universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS, GAME_HOURS_PER_TICK } from '../utils/training';
 import { LOAN_WARNING_DAY } from '../utils/storyEvents';
 import { effectCollector } from './effects';
 import { tr } from '../i18n';
 
 // One tick of the calendar: half an hour passes, days and months roll over, the university loan is
 // audited at the end of its trial week, and the monthly bill is paid when a month ends.
+// The bill charges the energy actually used during the month (kW drawn each half hour), not the
+// draw at the moment the month closes.
 export interface CalendarInput {
   prev: GameState;
   credits: number;
@@ -68,10 +70,13 @@ export function calendarTick(input: CalendarInput) {
     }
   }
 
+  let monthEnergyKwh = (prev.monthEnergyKwh ?? 0) + Math.max(0, effectivePowerKw) * GAME_HOURS_PER_TICK;
+
   // Monthly billing triggers only when the calendar rolls into a new month.
   if (monthIsComplete) {
     const facility = FACILITY_TIERS[prev.facilityTier] || FACILITY_TIERS[0];
-    const currentMonthBill = effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720 + facility.monthlyLeaseCost;
+    const energyCost = monthEnergyKwh * ELECTRICITY_RATE_PER_KWH;
+    const currentMonthBill = energyCost + facility.monthlyLeaseCost;
     const totalDue = utilityDebt + currentMonthBill;
     const paid = Math.min(credits, totalDue);
     credits -= paid;
@@ -79,15 +84,17 @@ export function calendarTick(input: CalendarInput) {
     addLog(
       utilityDebt > 0
         ? (tr(prev.language, 'calendarTick.unpaidBillMonthDayCr', { gameMonth: prev.gameMonth || 1, gameDay: prev.gameDay || 1, utilityDebt: utilityDebt.toLocaleString() }))
-        : (tr(prev.language, 'calendarTick.monthDayBillPaidCr', { gameMonth: prev.gameMonth || 1, gameDay: prev.gameDay || 1, currentMonthBill: currentMonthBill.toFixed(2), monthlyLeaseCost: facility.monthlyLeaseCost, ratePerKwh: (effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2) })),
+        : (tr(prev.language, 'calendarTick.monthDayBillPaidCr', { gameMonth: prev.gameMonth || 1, gameDay: prev.gameDay || 1, currentMonthBill: currentMonthBill.toFixed(2), monthlyLeaseCost: facility.monthlyLeaseCost, energyCost: energyCost.toFixed(2), energyKwh: Math.round(monthEnergyKwh) })),
       utilityDebt > 0 ? 'danger' : 'info'
     );
+    monthEnergyKwh = 0;
   }
 
 
   return {
     credits,
     utilityDebt,
+    monthEnergyKwh,
     dayIsComplete,
     campaignDays,
     loanAuditDue,

@@ -37,6 +37,18 @@ describe('calendar tick', () => {
     expect(logs(broke.effects)).toBe(1);
   });
 
+  test('the bill charges the energy used during the month, not the draw at its last half hour', () => {
+    const end = { dayTicks: 47, gameDay: DAYS_PER_GAME_MONTH, gameMonth: 3, campaignDays: 40, loanAudited: true };
+    // 300 kWh used this month; the GPUs are idle when the month closes.
+    const idle = calendarTick({ prev: state({ ...end, monthEnergyKwh: 300 }), credits: 10_000, utilityDebt: 0, effectivePowerKw: 0 });
+    const busyNow = calendarTick({ prev: state({ ...end, monthEnergyKwh: 0 }), credits: 10_000, utilityDebt: 0, effectivePowerKw: 5 });
+    expect(10_000 - idle.credits).toBeGreaterThan(10_000 - busyNow.credits);
+    expect(idle.monthEnergyKwh).toBe(0); // a new month starts from zero
+    // Mid-month, each half hour adds power x 0.5 h.
+    const mid = calendarTick({ prev: state({ dayTicks: 10, monthEnergyKwh: 12 }), credits: 0, utilityDebt: 0, effectivePowerKw: 2 });
+    expect(mid.monthEnergyKwh).toBeCloseTo(13);
+  });
+
   test('the university loan is audited at the end of its trial week', () => {
     const audit = calendarTick({ prev: state({ dayTicks: 47, campaignDays: 6, uiVersion: 1, loanAudited: false }), credits: 0, utilityDebt: 0, effectivePowerKw: 0 });
     expect(audit.loanAuditDue).toBe(true);

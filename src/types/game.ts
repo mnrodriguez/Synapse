@@ -293,6 +293,7 @@ export interface GameState {
   watchdogSuspicion: number; // 0% to 100%
   facilityTier: number;
   utilityDebt: number;
+  monthEnergyKwh: number; // energy used since the last monthly bill (kWh), billed at month end
   billingCycleTicks: number;
   borrowedComputePflops: number;
   borrowedComputeSeconds: number;

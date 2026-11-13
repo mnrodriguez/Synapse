@@ -13,16 +13,18 @@
 //  8  language preference reset to the new default
 //  9  tutorial restarts at the score gate
 //  10 evaluation score 0-100 (old IQ / 4, capped by the model's ceiling)
+//  11 the monthly bill uses the energy actually used (monthEnergyKwh); older saves start the month
+//     with an estimate at their current power draw
 // Add a step by bumping SAVE_SCHEMA_VERSION and handling `(data.saveSchemaVersion ?? 0) < N` below.
 
 import { GameState, ModelArchitecture, ContractGig, InferenceParams } from '../types/game';
 import { INITIAL_HARDWARE, INITIAL_DATA_SOURCES, INITIAL_MODEL, INITIAL_RESEARCH_NODES, INITIAL_CONTRACTS, SENTIENCE_DOMAINS, INITIAL_LOGS, DEFAULT_GUARDRAILS, FACILITY_TIERS, TRACKING_AGENCIES_BY_SINGULARITY, DAYS_PER_GAME_MONTH, DEFAULT_GENERAL_DATASET } from '../utils/constants';
 import { sanitizeTrainingConfig } from '../utils/trainingRun';
 import { sanitizeStoryEvents } from '../utils/storyEvents';
-import { reasoningCeilingFor, migrateLegacyScore } from '../utils/training';
+import { reasoningCeilingFor, migrateLegacyScore, GAME_HOURS_PER_TICK } from '../utils/training';
 import { tr } from '../i18n';
 
-export const SAVE_SCHEMA_VERSION = 10;
+export const SAVE_SCHEMA_VERSION = 11;
 
 export const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 export const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
@@ -51,6 +53,7 @@ export const DEFAULT_STATE: GameState = {
   watchdogSuspicion: 0,
   facilityTier: 0,
   utilityDebt: 0,
+  monthEnergyKwh: 0,
   billingCycleTicks: 0,
   borrowedComputePflops: 0,
   borrowedComputeSeconds: 0,
@@ -317,6 +320,10 @@ export function mergeGameState(data: Partial<GameState>, fallback: GameState): G
     utilityDebt: typeof data.utilityDebt === 'number' && Number.isFinite(data.utilityDebt)
       ? Math.max(0, data.utilityDebt)
       : fallback.utilityDebt,
+    monthEnergyKwh: typeof data.monthEnergyKwh === 'number' && Number.isFinite(data.monthEnergyKwh) && data.monthEnergyKwh >= 0
+      ? data.monthEnergyKwh
+      // Saves before schema 11: assume the current draw for the part of the month already played.
+      : Math.max(0, (data.activePowerKw ?? 0) * ((Math.max(1, data.gameDay ?? 1) - 1) * 24 + (data.dayTicks ?? 0) * GAME_HOURS_PER_TICK)),
     billingCycleTicks: typeof data.billingCycleTicks === 'number' && Number.isFinite(data.billingCycleTicks)
       ? Math.max(0, Math.min(59, data.billingCycleTicks))
       : fallback.billingCycleTicks,
