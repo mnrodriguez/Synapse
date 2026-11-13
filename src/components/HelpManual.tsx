@@ -23,6 +23,7 @@ import {
 import { sound } from '../audio/soundManager';
 import { useGame } from '../context/GameContext';
 import { tr } from '../i18n';
+import { RichText } from '../i18n/RichText';
 
 interface HelpManualProps {
   isOpen: boolean;
@@ -167,9 +168,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
             <div className="space-y-3">
               <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.synapsePath')}</h4>
               <p>
-                {state.language === 'en'
-                  ? <>Inspired by cybersecurity simulators such as <em>Uplink</em> and <em>Hacknet</em>, your mission in SYNAPSE is not easy money from breaking firewalls, but to <strong>train an artificial intelligence from scratch</strong> until it becomes the dominant intellectual force on the planet.</>
-                  : <>Inspirado en los simuladores de ciberseguridad como <em>Uplink</em> y <em>Hacknet</em>, tu misión en SYNAPSE no es penetrar firewalls por dinero fácil, sino <strong>entrenar una Inteligencia Artificial desde cero</strong> hasta convertirla en la entidad intelectual dominante del planeta.</>}
+                <RichText lang={state.language} k="helpManual.introMission" />
               </p>
               <div className="p-3 theme-accent-soft border theme-accent-border rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="space-y-0.5">
@@ -203,21 +202,9 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
               <div className="p-3 theme-panel-bg border theme-accent-border rounded space-y-1.5">
                 <span className="theme-warn-text font-bold block">{tr(state.language, 'helpManual.coreProgressionLoop')}</span>
                 <ol className="list-decimal list-inside space-y-1 mutating-text-muted text-[11px]">
-                  {state.language === 'en' ? <>
-                    <li><strong>Train your first model</strong> (Proto-14M) in Architecture or with the <code className="mutating-accent-text">train</code> command.</li>
-                    <li><strong>Earn credits on the Contract Board</strong> by completing work and missions.</li>
-                    <li><strong>Scale your hardware</strong> and improve cooling and power before expanding the cluster.</li>
-                    <li><strong>Deploy data engines</strong>: relational SQL, semantic vectors (RAG), and knowledge graphs.</li>
-                    <li><strong>Fund research</strong> to unlock LoRA, FlashAttention, MoE, and recursive optimization.</li>
-                    <li><strong>Advance the campaign</strong> by completing the goals of each phase.</li>
-                  </> : <>
-                    <li><strong>Entrena tu modelo inicial</strong> (Proto-14M) en el panel de Arquitectura o mediante el comando <code className="mutating-accent-text">train</code>.</li>
-                    <li><strong>Monetiza en el Tablero de Contratos</strong>: Completa trabajos para acumular créditos ($).</li>
-                    <li><strong>Escala tu Hardware</strong>: Adquiere GPUs y amplía la refrigeración y potencia para evitar sobrecalentamiento.</li>
-                    <li><strong>Despliega Motores de Datos</strong>: Desbloquea SQL, vectores semánticos (RAG) y grafos de conocimiento.</li>
-                    <li><strong>Financia Papers de Investigación</strong>: Desbloquea LoRA, FlashAttention, MoE y optimización recursiva.</li>
-                    <li><strong>Avanza en la campaña</strong> cumpliendo los objetivos de cada fase.</li>
-                  </>}
+                  {(['helpManual.loopTrain', 'helpManual.loopEarn', 'helpManual.loopHardware', 'helpManual.loopData', 'helpManual.loopResearch', 'helpManual.loopCampaign'] as const).map(k => (
+                    <li key={k}><RichText lang={state.language} k={k} /></li>
+                  ))}
                 </ol>
               </div>
             </div>

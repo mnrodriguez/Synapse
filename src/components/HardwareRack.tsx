@@ -21,7 +21,7 @@ import {
   Unplug
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { localize, t } from '../utils/i18n';
+import { t } from '../utils/i18n';
 import { localizedHardware, localizedResearch } from '../utils/gameContentI18n';
 import {
   AGENT_COMPUTE_DEMAND_PFLOPS,
@@ -372,7 +372,7 @@ export const HardwareRack: React.FC = () => {
                         <span>
                           {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                             ? `${t(state.language, 'blocked')} (${progressRequirement(item.minSingularityRequired)})`
-                            : localize(state.language, `Investiga ${researchTitle ?? 'la tecnología'} o espera al día ${item.availableAfterDays ?? '—'}`, `Research ${researchTitle ?? 'the technology'} or wait until day ${item.availableAfterDays ?? '—'}`)}
+                            : tr(state.language, 'hardwareRack.researchOrWait', { research: researchTitle ?? tr(state.language, 'hardwareRack.theTechnology'), day: item.availableAfterDays ?? '—' })}
                         </span>
                       </span>
                     ) : (
@@ -545,7 +545,7 @@ export const HardwareRack: React.FC = () => {
                         <span>
                           {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                             ? `${t(state.language, 'blocked')} (${progressRequirement(item.minSingularityRequired)})`
-                            : localize(state.language, `Investiga ${researchTitle ?? 'la tecnología'} o espera al día ${item.availableAfterDays ?? '—'}`, `Research ${researchTitle ?? 'the technology'} or wait until day ${item.availableAfterDays ?? '—'}`)}
+                            : tr(state.language, 'hardwareRack.researchOrWait', { research: researchTitle ?? tr(state.language, 'hardwareRack.theTechnology'), day: item.availableAfterDays ?? '—' })}
                         </span>
                       </span>
                     ) : (
@@ -648,7 +648,7 @@ export const HardwareRack: React.FC = () => {
                 <span>{t(state.language, 'billing_cycle')}:</span>
                 <span className="mutating-accent-text font-mono">
                   {Math.floor((((state.gameDay || 1) - 1 + (state.dayTicks || 0) / 48) / DAYS_PER_GAME_MONTH) * 100)}% 
-                  ({tr(state.language, 'hardwareRack.dayMonth', { gameDay: state.gameDay || 1, dAYS_PER_GAME_MONTH: DAYS_PER_GAME_MONTH, gameMonth: state.gameMonth || 1 })})
+                  ({tr(state.language, 'hardwareRack.dayMonth', { gameDay: state.gameDay || 1, daysPerMonth: DAYS_PER_GAME_MONTH, gameMonth: state.gameMonth || 1 })})
                 </span>
               </div>
               <div className="h-1.5 w-full theme-raised-bg rounded-full overflow-hidden">

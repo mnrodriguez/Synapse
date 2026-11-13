@@ -30,6 +30,7 @@ import {
 import { sound } from '../audio/soundManager';
 import { AuthModal } from './AuthModal';
 import { tr } from '../i18n';
+import { RichText } from '../i18n/RichText';
 
 export const GenesisOnboarding: React.FC = () => {
   const { completeTutorial, state, setLanguage } = useGame();
@@ -397,10 +398,10 @@ export const GenesisOnboarding: React.FC = () => {
                   {tr(state.language, 'genesisOnboarding.welcomeMessage')}
                 </span>
                 <p className="theme-text leading-relaxed">
-                  {tr(state.language, 'genesisOnboarding.welcome')}<strong>SYNAPSE</strong>{tr(state.language, 'genesisOnboarding.smallStudioLearnHow')}<strong>{tr(state.language, 'genesisOnboarding.buildTrainOwnArtificialIntelligence')}</strong>{tr(state.language, 'genesisOnboarding.youStartModestPcTiny')}
+                  <RichText lang={state.language} k="genesisOnboarding.welcomeIntro" />
                 </p>
                 <p className="mutating-text-muted text-[11px] leading-relaxed">
-                  {tr(state.language, 'genesisOnboarding.youReceived')}<strong>$350 CR</strong>{tr(state.language, 'genesisOnboarding.seedFundingFromOpenScience')}
+                  <RichText lang={state.language} k="genesisOnboarding.seedFunding" params={{ grant: INITIAL_GRANT }} />
                 </p>
               </div>
 
@@ -906,7 +907,16 @@ export const GenesisOnboarding: React.FC = () => {
                   {tr(state.language, 'genesisOnboarding.genesisInitializationRun')}
                 </span>
                 <p className="theme-text text-xs">
-                  {tr(state.language, 'genesisOnboarding.everythingConnectedGpu')}<strong className="mutating-accent-text">{currentGpuObj.name}</strong>{tr(state.language, 'genesisOnboarding.dataEngine')}<strong className="theme-success-text">{en ? dataEnglishCopy[selectedData]?.name.split(' (')[0] ?? starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0] : starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0]}</strong>{tr(state.language, 'genesisOnboarding.model')}<strong className="theme-warn-text">{modelName}</strong>{tr(state.language, 'genesisOnboarding.startRunVerifyInitialWeight')}
+                  <RichText
+                    lang={state.language}
+                    k="genesisOnboarding.allConnected"
+                    params={{ gpu: currentGpuObj.name, data: en ? dataEnglishCopy[selectedData]?.name.split(' (')[0] ?? starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0] : starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0], model: modelName }}
+                    tags={{
+                      gpu: (c, k) => <strong key={k} className="mutating-accent-text">{c}</strong>,
+                      data: (c, k) => <strong key={k} className="theme-success-text">{c}</strong>,
+                      model: (c, k) => <strong key={k} className="theme-warn-text">{c}</strong>
+                    }}
+                  />
                 </p>
               </div>
 

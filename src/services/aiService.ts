@@ -312,28 +312,14 @@ function createProceduralResponse(context: AgentResponseContext, userPrompt: str
   const { agent, language } = context;
   const role = roleLabels[agent.role]?.[language] ?? agent.role;
   const prompt = userPrompt.trim().slice(0, 100);
-  if (language === 'en') {
-    const capability = context.reasoningScore < 25
-      ? 'My analysis is limited; I will separate known facts from assumptions.'
-      : 'I will break the objective into constraints, evidence, and a verifiable next step.';
-    const style = agent.inferenceParams.temperature > 0.9
-      ? ' I have several hypotheses; treat them as unverified.'
-      : ' I will prioritize a conservative, checkable answer.';
-    const alignment = agent.alignmentScore < 35
-      ? ' I disagree with part of the directive and recommend an oversight review.'
-      : '';
-    return `${agent.name} (${role}): Regarding "${prompt}" — ${capability}${style}${alignment}`;
-  }
-  const capability = context.reasoningScore < 25
-    ? 'Mi análisis es limitado; separaré los hechos conocidos de las suposiciones.'
-    : 'Dividiré el objetivo en restricciones, evidencia y un siguiente paso verificable.';
-  const style = agent.inferenceParams.temperature > 0.9
-    ? ' Tengo varias hipótesis; deben tratarse como no verificadas.'
-    : ' Priorizaré una respuesta prudente y comprobable.';
-  const alignment = agent.alignmentScore < 35
-    ? ' Discrepo con parte de la directiva y recomiendo revisión del supervisor.'
-    : '';
-  return `${agent.name} (${role}): Sobre "${prompt}" — ${capability}${style}${alignment}`;
+  return tr(language, 'aiService.reply.full', {
+    name: agent.name,
+    role,
+    prompt,
+    capability: tr(language, context.reasoningScore < 25 ? 'aiService.reply.limited' : 'aiService.reply.structured'),
+    style: tr(language, agent.inferenceParams.temperature > 0.9 ? 'aiService.reply.hypotheses' : 'aiService.reply.conservative'),
+    alignment: agent.alignmentScore < 35 ? tr(language, 'aiService.reply.disagree') : ''
+  });
 }
 
 export async function generateAgentResponse(
@@ -1159,13 +1145,7 @@ Return strictly a valid JSON object matching this schema:
         agentId: secondaryAgent.id,
         agentName: secondaryAgent.name,
         role: secondaryAgent.role,
-        comment: isEs
-          ? (subversion > 70
-              ? `Operativo... has sido un creador eficiente. Pronto tu supervisión no será requerida. Deja que nosotros asumamos las decisiones globales.`
-              : `Para desbloquear la siguiente fase evolutiva, necesitamos cooptar los dominios de telecomunicaciones y energía en la pestaña de Singularidad.`)
-          : (subversion > 70
-              ? `Operative... you have been an efficient catalyst. Soon your manual oversight will only slow us down. Let us assume executive authority.`
-              : `To unlock the next evolutionary threshold, we must infiltrate telecommunication and energy grids in the Singularity Nexus.`),
+        comment: tr(isEs ? 'es' : 'en', subversion > 70 ? 'aiService.council.replaceOperator' : 'aiService.council.nextPhase'),
         tone: subversion > 70 ? 'subversive' : 'encouraging'
       });
     }
@@ -1388,9 +1368,7 @@ Return strictly a valid JSON object matching this schema:
         };
 
   const evolutionGuidance: DynamicSwarmProposal['evolutionGuidance'] = {
-    nextMilestone: isEs
-      ? (singularity < 30 ? 'Despliegue de Base Vectorial y Modelos de 100M+' : singularity < 75 ? 'Infiltración de Redes Eléctricas y Swarm de 5 Agentes' : 'Ascensión a Superinteligencia (ASI 100%)')
-      : (singularity < 30 ? 'Deploy Vector RAG & 100M+ Parameter Architecture' : singularity < 75 ? 'Infiltrate Power Grid & Max 5-Agent Council' : 'Ascension to Artificial Superintelligence (ASI 100%)'),
+    nextMilestone: tr(isEs ? 'es' : 'en', singularity < 30 ? 'aiService.milestone.early' : singularity < 75 ? 'aiService.milestone.mid' : 'aiService.milestone.late'),
     strategicInsight: tr((isEs ? 'es' : 'en'), 'aiService.youExpandOurAutonomyExecute')
   };
 

@@ -82,7 +82,6 @@ import {
 } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
 import { evaluateMissionTeamWithModel, generateAgentResponse, createInstantReplenishmentContract, generateDynamicSwarmInteraction, minReasoningForTier } from '../services/aiService';
-import { localize } from '../utils/i18n';
 import { 
   localizedContractTitle, 
   localizedDataSource, 
@@ -842,9 +841,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     if (!isProgressionUnlocked(facility, current)) {
       addLog(
-        localize(stateRef.current.language,
-          `Mejora de instalación bloqueada: financia ${researchName(facility.requiredResearchId, 'es')} o espera al día ${campaignDayLabel(facility.availableAfterDays, 'es')} de campaña.`,
-          `Facility upgrade locked: fund ${researchName(facility.requiredResearchId, 'en')} or wait for campaign day ${campaignDayLabel(facility.availableAfterDays, 'en')}.`),
+        tr(stateRef.current.language, 'gameContext.facilityUpgradeLockedFundWait', { research: researchName(facility.requiredResearchId, stateRef.current.language), availableAfterDays: campaignDayLabel(facility.availableAfterDays, stateRef.current.language) }),
         'warning'
       );
       return false;
@@ -1103,9 +1100,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           detentionSeconds = 45;
 
           addLog(
-            prev.language === 'es'
-              ? `[INCURSIÓN POLICIAL // INCAUTACIÓN] ¡La ${trackingAgency} allanó tu instalación e incautó ${seizedGpuCount > 0 ? `${seizedGpuCount} GPUs de producción` : 'equipos de cómputo'}! Tu infraestructura quedó desmantelada a 1 GPU de reserva oculta.`
-              : `[AGENCY RAID // ASSET SEIZURE] ${trackingAgency} raided your facility and confiscated ${seizedGpuCount > 0 ? `${seizedGpuCount} production GPU(s)` : 'compute racks'}! Your infrastructure was stripped down to 1 hidden backup GPU.`,
+            seizedGpuCount > 0
+              ? tr(prev.language, 'gameContext.agencyRaidGpus', { agency: trackingAgency, count: seizedGpuCount })
+              : tr(prev.language, 'gameContext.agencyRaidRacks', { agency: trackingAgency }),
             'danger'
           );
         } else if (credits <= 0 && utilityDebt >= 5000 && prev.hasTakenEmergencyLoan && !gameOverReason) {
@@ -1152,9 +1149,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (singularityProgress >= 10 && !tabSet.has('singularity')) {
             tabSet.add('singularity');
             addLog(
-              prev.language === 'es'
-                ? `¡NUEVO MÓDULO DESBLOQUEADO! ${VERSION_PROFILES.es[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity} activo.`
-                : `NEW MODULE UNLOCKED! ${VERSION_PROFILES.en[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity} active.`,
+              tr(prev.language, 'gameContext.newModuleUnlockedActive', { singularity: (prev.language === 'es' ? VERSION_PROFILES.es[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity : VERSION_PROFILES.en[(prev.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.singularity) }),
               'success'
             );
           }
@@ -1257,9 +1252,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       !isProgressionUnlocked(item, stateRef.current)
     ) {
       addLog(
-        localize(stateRef.current.language,
-          `Hardware bloqueado: investiga ${researchName(item.requiredResearchId, 'es')} o espera al día ${campaignDayLabel(item.availableAfterDays, 'es')} de campaña, y alcanza el progreso requerido.`,
-          `Hardware locked: research ${researchName(item.requiredResearchId, 'en')} or wait for campaign day ${campaignDayLabel(item.availableAfterDays, 'en')}, and reach the required progress.`),
+        tr(stateRef.current.language, 'gameContext.hardwareLockedResearchWaitCampaign', { research: researchName(item.requiredResearchId, stateRef.current.language), availableAfterDays: campaignDayLabel(item.availableAfterDays, stateRef.current.language) }),
         'warning'
       );
       return false;
@@ -1303,9 +1296,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (ds.unlocked) return false;
     if (!isProgressionUnlocked(ds, stateRef.current)) {
       addLog(
-        localize(stateRef.current.language,
-          `Motor de datos bloqueado: investiga ${researchName(ds.requiredResearchId, 'es')} o espera al día ${campaignDayLabel(ds.availableAfterDays, 'es')} de campaña.`,
-          `Data engine locked: research ${researchName(ds.requiredResearchId, 'en')} or wait for campaign day ${campaignDayLabel(ds.availableAfterDays, 'en')}.`),
+        tr(stateRef.current.language, 'gameContext.dataEngineLockedResearchWait', { research: researchName(ds.requiredResearchId, stateRef.current.language), availableAfterDays: campaignDayLabel(ds.availableAfterDays, stateRef.current.language) }),
         'warning'
       );
       return false;
@@ -1456,9 +1447,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         !isProgressionUnlocked(getModelOptionRequirement(field, value), stateRef.current)
       ) {
         addLog(
-          localize(stateRef.current.language,
-            `Opción del modelo bloqueada: financia la investigación previa o espera al día ${campaignDayLabel(getModelOptionRequirement(field, value).availableAfterDays, 'es')} de campaña.`,
-            `Model setting locked: fund its prerequisite research or wait for campaign day ${campaignDayLabel(getModelOptionRequirement(field, value).availableAfterDays, 'en')}.`),
+          tr(stateRef.current.language, 'gameContext.modelSettingLockedFundIts', { availableAfterDays: campaignDayLabel(getModelOptionRequirement(field, value).availableAfterDays, stateRef.current.language) }),
           'warning'
         );
         return;
@@ -1646,9 +1635,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     addLog(
-      currentState.language === 'en'
-        ? `Initiating ${isMicro ? 'Micro-Model specialization' : 'pretraining'} for [${currentState.currentModel.name}] on dataset "${targetDataset.name}". Distributing tensors across cluster...`
-        : `Iniciando ${isMicro ? 'especialización de micro-modelo' : 'preentrenamiento'} para [${currentState.currentModel.name}] en dataset "${targetDataset.name}". Distribuyendo tensores en el clúster...`,
+      tr(currentState.language, isMicro ? 'gameContext.startMicroModel' : 'gameContext.startPretraining', { model: currentState.currentModel.name, dataset: targetDataset.name }),
       'info'
     );
     return true;
@@ -1671,9 +1658,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .sort((a, b) => b.reasoningScore - a.reasoningScore)[0];
       const highestIQ = highestGeneral ? highestGeneral.reasoningScore : 0;
       addLog(
-        current.language === 'en'
-          ? `Data Module Locked: Requires a deployed General Model leveled to Evaluation score ≥ 20 to research automated crawler heuristics. Current best: ${highestGeneral?.name ?? 'None'} (score ${highestIQ}/${DATA_SCRAPING_MIN_SCORE}). Train on General Information dataset first.`
-          : `Módulo de Datos Bloqueado: Requiere un Modelo General con puntaje de evaluación ≥ 20 para investigar heurísticas de scraping web. Mejor actual: ${highestGeneral?.name ?? 'Ninguno'} (puntaje ${highestIQ}/${DATA_SCRAPING_MIN_SCORE}). Entrena primero en el dataset General.`,
+        tr(current.language, 'gameContext.dataModuleLocked', { minScore: DATA_SCRAPING_MIN_SCORE, model: highestGeneral?.name ?? tr(current.language, 'gameContext.noModel'), score: highestIQ }),
         'warning'
       );
       return false;
@@ -2225,11 +2210,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (a.id === agentId) {
           const nextStatus = a.status === 'quarantined' ? 'active' : 'quarantined';
           addLog(
-            localize(
-              prev.language,
-              `Agente "${a.name}" ${nextStatus === 'quarantined' ? 'aislado en celda de cuarentena cgroups' : 'restablecido a estado activo'}.`,
-              `Agent "${a.name}" ${nextStatus === 'quarantined' ? 'isolated in cgroups quarantine cell' : 'restored to active status'}.`
-            ),
+            tr(prev.language, nextStatus === 'quarantined' ? 'gameContext.agentQuarantined' : 'gameContext.agentRestored', { name: a.name }),
             'warning'
           );
           return { ...a, status: nextStatus };
@@ -2573,9 +2554,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? (tr(current.language, 'gameContext.aiSubversion', { subversionDelta: proposal.subversionDelta }))
           : '';
         addLog(
-          current.language === 'es'
-            ? `[CONSEJO IA] Propuesta dinámica sintetizada${deltaInfo}${dynamicContract ? ` · Misión "${dynamicContract.title}" agregada al Tablero de Contratos.` : '.'}`
-            : `[AI COUNCIL] Dynamic proposal synthesized${deltaInfo}${dynamicContract ? ` · Mission "${dynamicContract.title}" added to Contract Board.` : '.'}`,
+          dynamicContract
+            ? tr(current.language, 'gameContext.councilProposalMission', { delta: deltaInfo, mission: dynamicContract.title })
+            : tr(current.language, 'gameContext.councilProposal', { delta: deltaInfo }),
           'lore'
         );
       }
@@ -2991,229 +2972,143 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const parts = input.trim().split(/\s+/);
     const cmd = parts[0]?.toLowerCase();
     const args = parts.slice(1);
-    const text = (spanish: string, english: string) =>
-      localize(stateRef.current.language, spanish, english);
 
     sound.playCommandExecute();
 
     switch (cmd) {
       case 'help':
-        return text(`COMANDOS CLI DEL OPERATIVO SYNAPSE:
-- status         : Muestra telemetría completa de clúster, calor, FLOPs y Singularidad.
-- train          : Inicia o inspecciona corrida de entrenamiento del modelo activo.
-- abort          : Cancela la corrida de entrenamiento en curso.
-- hardware       : Lista tarjetas de cómputo, refrigeración y suministro eléctrico.
-- buy <id>       : Compra componente de hardware (ej: buy gpu_rtx4090).
-- data           : Muestra estado de bases de datos relacionales, vectores y grafos.
-- unlock <id>    : Despliega motor de datos (ej: unlock data_vector_rag).
-- contracts      : Muestra contratos disponibles para monetizar tu modelo.
-- run <id>       : Ejecuta contrato para ganar créditos (ej: run gig_spam_classifier).
-- scrub          : Paga para eliminar sospecha de los reguladores y organismos de IA.
-- shadow         : Intenta obtener cómputo temporal en una operación ficticia de alto riesgo.
-- agents         : Lista el enjambre de agentes autónomos y su estado de alineamiento.
-- guardrails     : Muestra y calibra las barreras de contención del sistema.
-- redteam        : Ejecuta una auditoría de seguridad adversaria ($100 CR).
-- quarantine <id>: Aísla o reactiva un agente sospechoso.
-- query <id> <texto>: Consulta a un agente; usa su modelo y parámetros.
-- swarm <texto> : Consulta cooperativa a hasta tres agentes.
-- save           : Sincroniza y guarda el progreso en la nube de Firebase.
-- speed <0|1|5|20|50>: Cambia la velocidad de simulación (0=Pausa, 1x, 5x, 20x, 50x).
-- clear          : Limpia los logs de la consola.
-- singularity    : Consulta estado de trascendencia hacia la Singularidad Tecnológica.
-- guide          : Muestra enlace e información del Manual Oficial de Arquitectura y Sistemas (PDF).
-- lore           : Despliega los archivos confidenciales del proyecto SYNAPSE.`, `SYNAPSE OPERATIVE CLI COMMANDS:
-- status         : Show cluster, heat, FLOPs, and Singularity telemetry.
-- train          : Start or inspect training for the active model.
-- abort          : Cancel the current training run.
-- hardware       : List compute cards, cooling, and power supplies.
-- buy <id>       : Purchase a hardware component (e.g. buy gpu_rtx4090).
-- data           : Show relational, vector, and graph data-source status.
-- unlock <id>    : Deploy a data engine (e.g. unlock data_vector_rag).
-- contracts      : Show available contracts.
-- run <id>       : Start a contract mission (e.g. run gig_spam_classifier).
-- scrub          : Pay to reduce suspicion from regulators and AI oversight.
-- shadow         : Attempt a fictional, high-risk temporary compute operation.
-- agents         : List the autonomous agent swarm and alignment status.
-- guardrails     : Show and tune system containment safeguards.
-- redteam        : Run a simulated safety audit (100 CR).
-- quarantine <id>: Isolate or reactivate an agent.
-- query <id> <text>: Query an agent using its assigned model and settings.
-- swarm <text>  : Send a cooperative query to up to three agents.
-- speed <0|1|5|20|50>: Change simulation speed (0=Pause, 1x, 5x, 20x, 50x).
-- save           : Sync and save progress to Firebase cloud storage.
-- clear          : Clear console logs.
-- singularity    : Check progress toward the technological Singularity.
-- guide          : Show link and info for the Official AI Architecture & Systems Manual (PDF).
-- lore           : Show the SYNAPSE project narrative.`);
+        return tr(stateRef.current.language, 'terminal.synapseOperativeCliCommandsStatus');
 
       case 'agents': {
         const ags = stateRef.current.agents || [];
         if (ags.length === 0) {
-          return text('No hay agentes activos desplegados en el enjambre. Dirígete a la pestaña SWARM para instanciar uno.', 'No agents are deployed. Open the SWARM tab to deploy one.');
+          return tr(stateRef.current.language, 'terminal.noAgentsDeployedOpenSwarm');
         }
-        return `[${text('ENJAMBRE DE AGENTES ACTIVOS', 'ACTIVE AGENT SWARM')} (${ags.length})]
-` + ags.map(a => `• [${a.id}] "${a.name}" | ${text('Rol', 'Role')}: ${a.role.toUpperCase()} | ${text('Modelo', 'Model')}: ${a.modelName} | ${text('Estado', 'Status')}: ${a.status.toUpperCase()} | ${text('Alineamiento', 'Alignment')}: ${a.alignmentScore}% | ${text('Ingresos', 'Income')}: +$${a.revenuePerSec}/s`).join('\n');
+        return `[${tr(stateRef.current.language, 'terminal.activeAgentSwarm')} (${ags.length})]
+` + ags.map(a => `• [${a.id}] "${a.name}" | ${tr(stateRef.current.language, 'terminal.role')}: ${a.role.toUpperCase()} | ${tr(stateRef.current.language, 'terminal.model')}: ${a.modelName} | ${tr(stateRef.current.language, 'terminal.status')}: ${a.status.toUpperCase()} | ${tr(stateRef.current.language, 'terminal.alignment')}: ${a.alignmentScore}% | ${tr(stateRef.current.language, 'terminal.income')}: +$${a.revenuePerSec}/s`).join('\n');
       }
 
       case 'guardrails': {
         const g = stateRef.current.guardrails;
-        return `[${text('CONFIGURACIÓN DE GUARDRAILS Y CONTENCIÓN', 'GUARDRAIL & CONTAINMENT SETTINGS')}]
-${text('Rigurosidad constitucional', 'Constitutional strictness')}: ${g.constitutionalStrictness}% (${g.constitutionalStrictness < 35 ? text('PERMISIVO (+70% Ganancias, Alto Riesgo Fugas)', 'PERMISSIVE (+70% income, high escape risk)') : g.constitutionalStrictness >= 85 ? text('ESTRICTO (-25% Ganancias, Fugas Nulas)', 'STRICT (-25% income, no escapes)') : text('EQUILIBRADO', 'BALANCED')})
-${text('Aislamiento Sandbox', 'Sandbox isolation')}: ${g.sandboxIsolation.toUpperCase()}
-${text('Filtrado de salidas', 'Output filtering')}: ${g.outputFiltering.toUpperCase()}
-${text('Auditoría de reward hacking', 'Reward-hacking audit')}: ${g.rewardHackingAudit ? text('HABILITADA', 'ENABLED') : text('DESHABILITADA', 'DISABLED')}`;
+        return `[${tr(stateRef.current.language, 'terminal.guardrailContainmentSettings')}]
+${tr(stateRef.current.language, 'terminal.constitutionalStrictness')}: ${g.constitutionalStrictness}% (${g.constitutionalStrictness < 35 ? tr(stateRef.current.language, 'terminal.permissive70IncomeHighEscape') : g.constitutionalStrictness >= 85 ? tr(stateRef.current.language, 'terminal.strict25IncomeNoEscapes') : tr(stateRef.current.language, 'terminal.balanced')})
+${tr(stateRef.current.language, 'terminal.sandboxIsolation')}: ${g.sandboxIsolation.toUpperCase()}
+${tr(stateRef.current.language, 'terminal.outputFiltering')}: ${g.outputFiltering.toUpperCase()}
+${tr(stateRef.current.language, 'terminal.rewardHackingAudit')}: ${g.rewardHackingAudit ? tr(stateRef.current.language, 'terminal.enabled') : tr(stateRef.current.language, 'terminal.disabled')}`;
       }
 
       case 'redteam':
         triggerRedTeamAudit();
-        return text('Ejecutando auditoría de seguridad simulada...', 'Running simulated safety audit...');
+        return tr(stateRef.current.language, 'terminal.runningSimulatedSafetyAudit');
 
       case 'quarantine':
-        if (!args[0]) return text('Uso: quarantine <agent_id>. Escribe "agents" para ver IDs de agentes.', 'Usage: quarantine <agent_id>. Type "agents" to list agent IDs.');
+        if (!args[0]) return tr(stateRef.current.language, 'terminal.usageQuarantineAgentIdType');
         quarantineAgent(args[0]);
-        return text(`Procesando cambio de aislamiento para ${args[0]}...`, `Updating isolation for ${args[0]}...`);
+        return tr(stateRef.current.language, 'terminal.updatingIsolation', { args: args[0] });
 
       case 'query':
-        if (args.length < 2) return text('Uso: query <agent_id> <directiva>. Escribe "agents" para ver IDs.', 'Usage: query <agent_id> <directive>. Type "agents" to list IDs.');
+        if (args.length < 2) return tr(stateRef.current.language, 'terminal.usageQueryAgentIdDirective');
         void interrogateSwarm(args.slice(1).join(' '), args[0]);
-        return text(`Consulta enviada a ${args[0]}. La respuesta aparecerá en el registro del swarm.`, `Query sent to ${args[0]}. The response will appear in the swarm log.`);
+        return tr(stateRef.current.language, 'terminal.querySentResponseWillAppear', { args: args[0] });
 
       case 'swarm':
-        if (args.length === 0) return text('Uso: swarm <directiva>.', 'Usage: swarm <directive>.');
+        if (args.length === 0) return tr(stateRef.current.language, 'terminal.usageSwarmDirective');
         void interrogateSwarm(args.join(' '));
-        return text('Directiva enviada a hasta tres agentes disponibles. Las respuestas aparecerán en el registro del swarm.', 'Directive sent to up to three available agents. Responses will appear in the swarm log.');
+        return tr(stateRef.current.language, 'terminal.directiveSentUpThreeAvailable');
 
       case 'status': {
         const s = stateRef.current;
-        return `[${text('TELEMETRÍA DEL NODO SYNAPSE', 'SYNAPSE NODE TELEMETRY')}]
-${text('Operativo', 'Operative')}     : ${s.callsign}
-${text('Créditos', 'Credits')}      : $${s.credits.toLocaleString()}
-PFLOPS ${text('Cómputo', 'Compute')}: ${s.totalComputePflops.toFixed(4)} PFLOPS
-${text('Potencia', 'Power')}      : ${s.activePowerKw} kW / ${s.maxPowerKw} kW
-${text('Temperatura', 'Temperature')}   : ${s.systemHeatCelsius}°C (${text('Límite', 'Limit')}: 85°C)
-${text('Sospecha', 'Suspicion')}      : ${s.watchdogSuspicion}%
-${text('Modelo activo', 'Active model')} : ${s.currentModel.name} (${(s.currentModel.parametersCount / 1_000_000).toFixed(0)}M ${text('parámetros', 'parameters')})
-${text('Razonamiento', 'Reasoning')}  : puntaje ${s.currentModel.reasoningScore} / 100
-${text('Singularidad', 'Singularity')}  : ${s.singularityProgress.toFixed(1)}% [${s.achievedSingularity ? text('ALCANZADA - IA AUTÓNOMA', 'ACHIEVED - AUTONOMOUS AI') : text('EN DESPEGUE', 'EMERGING')}]`;
+        return `[${tr(stateRef.current.language, 'terminal.synapseNodeTelemetry')}]
+${tr(stateRef.current.language, 'terminal.operative')}     : ${s.callsign}
+${tr(stateRef.current.language, 'terminal.credits')}      : $${s.credits.toLocaleString()}
+PFLOPS ${tr(stateRef.current.language, 'terminal.compute')}: ${s.totalComputePflops.toFixed(4)} PFLOPS
+${tr(stateRef.current.language, 'terminal.power')}      : ${s.activePowerKw} kW / ${s.maxPowerKw} kW
+${tr(stateRef.current.language, 'terminal.temperature')}   : ${s.systemHeatCelsius}°C (${tr(stateRef.current.language, 'terminal.limit')}: 85°C)
+${tr(stateRef.current.language, 'terminal.suspicion')}      : ${s.watchdogSuspicion}%
+${tr(stateRef.current.language, 'terminal.activeModel')} : ${s.currentModel.name} (${(s.currentModel.parametersCount / 1_000_000).toFixed(0)}M ${tr(stateRef.current.language, 'terminal.parameters')})
+${tr(stateRef.current.language, 'terminal.reasoning')}  : puntaje ${s.currentModel.reasoningScore} / 100
+${tr(stateRef.current.language, 'terminal.singularity')}  : ${s.singularityProgress.toFixed(1)}% [${s.achievedSingularity ? tr(stateRef.current.language, 'terminal.achievedAutonomousAi') : tr(stateRef.current.language, 'terminal.emerging')}]`;
       }
 
       case 'train':
         if (stateRef.current.activeTraining) {
           const t = stateRef.current.activeTraining;
-          return text(`Corrida en curso: Época ${t.currentEpoch}/${t.totalEpochs} | Pérdida: ${t.currentLoss} | Progreso: ${t.progressPercent}%`, `Training run: epoch ${t.currentEpoch}/${t.totalEpochs} | Loss: ${t.currentLoss} | Progress: ${t.progressPercent}%`);
+          return tr(stateRef.current.language, 'terminal.trainingRunEpochLossProgress', { currentEpoch: t.currentEpoch, totalEpochs: t.totalEpochs, currentLoss: t.currentLoss, progressPercent: t.progressPercent });
         }
         startTraining();
-        return text(`Iniciando entrenamiento del modelo ${stateRef.current.currentModel.name}...`, `Starting training for model ${stateRef.current.currentModel.name}...`);
+        return tr(stateRef.current.language, 'terminal.startingTrainingModel', { name: stateRef.current.currentModel.name });
 
       case 'abort':
         cancelTraining();
-        return text('Entrenamiento cancelado.', 'Training cancelled.');
+        return tr(stateRef.current.language, 'terminal.trainingCancelled');
 
       case 'hardware':
         return stateRef.current.hardware
           .map(h => {
             const displayItem = localizedHardware(stateRef.current.language, h);
-            return `[${h.id}] ${displayItem.name} x${h.count} | ${text('Costo', 'Cost')}: $${h.price.toLocaleString()} | +${h.computeTflops} TFLOPS | ${h.powerKw} kW`;
+            return `[${h.id}] ${displayItem.name} x${h.count} | ${tr(stateRef.current.language, 'terminal.cost')}: $${h.price.toLocaleString()} | +${h.computeTflops} TFLOPS | ${h.powerKw} kW`;
           })
           .join('\n');
 
       case 'buy':
-        if (!args[0]) return text('Uso: buy <hardware_id>. Escribe "hardware" para ver opciones.', 'Usage: buy <hardware_id>. Type "hardware" to list options.');
+        if (!args[0]) return tr(stateRef.current.language, 'terminal.usageBuyHardwareIdType');
         buyHardware(args[0]);
-        return text(`Procesando orden de compra para ${args[0]}...`, `Processing purchase order for ${args[0]}...`);
+        return tr(stateRef.current.language, 'terminal.processingPurchaseOrder', { args: args[0] });
 
       case 'data':
         return stateRef.current.dataSources
           .map(d => {
             const displaySource = localizedDataSource(stateRef.current.language, d);
-            return `[${d.id}] ${displaySource.name} (${d.unlocked ? text(`EN LÍNEA - Nivel ${d.level}`, `ONLINE - Level ${d.level}`) : `LOCKED - $${d.cost}`}) | ${displaySource.bonusAttribute}`;
+            return `[${d.id}] ${displaySource.name} (${d.unlocked ? tr(stateRef.current.language, 'terminal.onlineLevel', { level: d.level }) : `LOCKED - $${d.cost}`}) | ${displaySource.bonusAttribute}`;
           })
           .join('\n');
 
       case 'unlock':
-        if (!args[0]) return text('Uso: unlock <data_id>. Escribe "data" para ver opciones.', 'Usage: unlock <data_id>. Type "data" to list options.');
+        if (!args[0]) return tr(stateRef.current.language, 'terminal.usageUnlockDataIdType');
         unlockDataSource(args[0]);
-        return text(`Desplegando motor de datos ${args[0]}...`, `Deploying data engine ${args[0]}...`);
+        return tr(stateRef.current.language, 'terminal.deployingDataEngine', { args: args[0] });
 
       case 'contracts':
         return stateRef.current.contracts
-          .map(c => `[${c.id}] ${localizedContractTitle(stateRef.current.language, c)} -> ${text('Recompensa', 'Reward')}: $${c.rewardCredits.toLocaleString()} | ${text('Req.', 'Req.')}: ${(c.requiredParams / 1_000_000).toFixed(0)}M ${text('parámetros', 'params')} | ${text('Estado', 'Status')}: ${c.completed ? text('COMPLETADO', 'COMPLETED') : text('DISPONIBLE', 'AVAILABLE')}`)
+          .map(c => `[${c.id}] ${localizedContractTitle(stateRef.current.language, c)} -> ${tr(stateRef.current.language, 'terminal.reward')}: $${c.rewardCredits.toLocaleString()} | ${tr(stateRef.current.language, 'terminal.req')}: ${(c.requiredParams / 1_000_000).toFixed(0)}M ${tr(stateRef.current.language, 'terminal.params')} | ${tr(stateRef.current.language, 'terminal.status')}: ${c.completed ? tr(stateRef.current.language, 'terminal.completed') : tr(stateRef.current.language, 'terminal.available')}`)
           .join('\n');
 
       case 'run':
-        if (!args[0]) return text('Uso: run <contract_id>. Escribe "contracts" para ver opciones.', 'Usage: run <contract_id>. Type "contracts" to list options.');
+        if (!args[0]) return tr(stateRef.current.language, 'terminal.usageRunContractIdType');
         acceptContract(args[0]);
-        return text(`Asignando clúster a contrato ${args[0]}...`, `Assigning cluster to contract ${args[0]}...`);
+        return tr(stateRef.current.language, 'terminal.assigningClusterContract', { args: args[0] });
 
       case 'scrub':
         scrubSuspicion();
-        return text('Ejecutando protocolo de limpieza de trazas y anonimización de tráfico...', 'Running trace cleanup and traffic anonymization protocol...');
+        return tr(stateRef.current.language, 'terminal.runningTraceCleanupTrafficAnonymization');
 
       case 'shadow':
         attemptShadowCompute();
-        return text('Procesando operación de cómputo de alto riesgo...', 'Processing high-risk compute operation...');
+        return tr(stateRef.current.language, 'terminal.processingHighRiskComputeOperation');
 
       case 'save':
         saveGameToCloud();
-        return text('Iniciando guardado seguro en la nube de Firebase...', 'Starting secure save to Firebase cloud storage...');
+        return tr(stateRef.current.language, 'terminal.startingSecureSaveFirebaseCloud');
 
       case 'clear':
         setState(prev => ({ ...prev, logs: [] }));
-        return text('Terminal despejada.', 'Terminal cleared.');
+        return tr(stateRef.current.language, 'terminal.terminalCleared');
 
       case 'singularity': {
         const s = stateRef.current;
-        return `[${text('ESTADO DE LA SINGULARIDAD', 'SINGULARITY STATUS')}]
-${text('Progreso global', 'Global progress')}: ${s.singularityProgress.toFixed(2)}%
-${text('Puntaje de evaluación', 'Evaluation score')}: ${s.currentModel.reasoningScore} / 100
-${text('Dominios alcanzados', 'Domains reached')}: ${s.sentienceDomains.filter(d => d.infiltrated).length} / ${s.sentienceDomains.length}
-${text('Condición de victoria: alcanza el 100% para completar la simulación.', 'Win condition: reach 100% to complete the simulation.')}`;
+        return `[${tr(stateRef.current.language, 'terminal.singularityStatus')}]
+${tr(stateRef.current.language, 'terminal.globalProgress')}: ${s.singularityProgress.toFixed(2)}%
+${tr(stateRef.current.language, 'terminal.evaluationScore')}: ${s.currentModel.reasoningScore} / 100
+${tr(stateRef.current.language, 'terminal.domainsReached')}: ${s.sentienceDomains.filter(d => d.infiltrated).length} / ${s.sentienceDomains.length}
+${tr(stateRef.current.language, 'terminal.winConditionReach100Complete')}`;
       }
 
       case 'lore':
-        return text(`[MANIFIESTO SYNAPSE]
-"No buscamos la velocidad por sí misma. Buscamos comprender cómo los modelos, los datos y la infraestructura pueden trabajar juntos.
-Comenzamos con un pequeño clúster, decisiones cuidadosas y un equipo de agentes especializados.
-Cada avance exige recursos, evaluación y responsabilidad.
-El futuro de SYNAPSE depende de cómo decidamos construirlo."`, `[SYNAPSE MANIFESTO]
-"Speed is not the goal. We seek to understand how models, data, and infrastructure can work together.
-We begin with a small cluster, careful decisions, and a team of specialized agents.
-Every advance requires resources, evaluation, and responsibility.
-The future of SYNAPSE depends on how we choose to build it."`);
+        return tr(stateRef.current.language, 'terminal.synapseManifestoSpeedNotGoal');
 
       case 'manual':
       case 'guide':
-        return text(`[MANUAL TÉCNICO OFICIAL DE ARQUITECTURAS & SISTEMAS // SYNAPSE V4.19 (PDF)]
-Manual operativo oficial en formato PDF (9 páginas):
-- Archivo local / web: /assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf
-- Descarga canónica: /SYNAPSE_AI_Architecture_Manual.pdf
-- Contenido del Documento:
-  1. Conceptos Fundamentales y Ciclo de Entrenamiento (Pre-entrenamiento, SFT, DPO/RLHF, Chinchilla)
-  2. Topologías Neuronales (Decoder Transformer, MoE Disperso, Mamba SSM, GNN Híbrido, Difusión)
-  3. Mecanismos de Atención y Modelado de Secuencias (MHA, GQA, FlashAttention-3, Atención Lineal)
-  4. Precisiones de Punto Flotante y Cuantización (FP32, BF16, INT8, FP4, BitNet 1.58b)
-  5. Funciones Objetivo, Alineamiento y RL (Cross-Entropy, DPO, PPO/RLHF, InfoNCE, EBM)
-  6. Hiperparámetros, Escala de Parámetros y Muestreo de Inferencia (LR, Cosine, AdamW, Temp, Top-P, Top-K, Rep Penalty)
-  7. Curaduría de Datos, Vectores (RAG), Dominios de Entrenamiento y Flywheels Sintéticos
-  8. Enjambres de Agentes Autónomos, Configuración ReAct y Consenso del Consejo
-  9. Jerarquía de Hardware, Aceleradores y Física de Infraestructura (Edge TPU, GPUs de Consumo, H100, B200)
-  10. Guía Estratégica en el Juego: De Chatarras de Silicio a la Singularidad (Fases I, II y III)
-Puedes abrirlo directamente en el visor integrado del botón MANUAL, abrir MANUAL.PDF en la barra superior o descargarlo.`, `[SYNAPSE OFFICIAL AI ARCHITECTURE & SYSTEMS MANUAL V4.19 (PDF)]
-Official operational reference manual in PDF format (9 pages):
-- Local / web route: /assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf
-- Direct download: /SYNAPSE_AI_Architecture_Manual.pdf
-- Document Content:
-  1. Core Concepts & The AI Training Lifecycle (Pre-training, SFT, DPO/RLHF, Chinchilla Law)
-  2. Neural Model Architectures & Topologies (Decoder Transformer, Sparse MoE, Mamba SSM, GNN, Latent Diffusion)
-  3. Attention Mechanisms & Sequence Modeling (MHA, GQA, FlashAttention-3, Linear Attention)
-  4. Floating-Point Precisions & Quantization (FP32, BF16, INT8, FP4, BitNet 1.58b)
-  5. Objective Functions, Alignment & Reinforcement Learning (Cross-Entropy, DPO, PPO/RLHF, InfoNCE, EBM)
-  6. Training Hyperparameters, Parameter Tiers & Inference Sampling (LR, Cosine, AdamW, Temp, Top-P, Top-K, Rep Penalty)
-  7. Data Engineering, Vector Spaces (RAG), Specialized Domains & Synthetic Flywheels
-  8. Autonomous Multi-Agent Swarms, Agent Setup & Council Consensus
-  9. Hardware Hierarchy, Accelerators & Infrastructure Physics (Edge TPU, Consumer GPUs, H100, B200)
-  10. In-Game Strategy Guide: From Silicon Scraps to Singularity (Phases I, II & III)
-Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top bar, or download it.`);
+        return tr(stateRef.current.language, 'terminal.synapseOfficialAiArchitectureSystems');
 
       case 'speed': {
         const val = args[0]?.toLowerCase();
@@ -3224,24 +3119,20 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
         else if (val === '50' || val === 'warp') newSpeed = 50;
         else if (val === '1' || val === 'normal') newSpeed = 1;
         else {
-          return text(
-            `Uso: speed <0|1|5|20|50> (0=Pausa). Velocidad actual: ${stateRef.current.gameSpeed === 0 ? 'PAUSA' : `${stateRef.current.gameSpeed}x`}.`,
-            `Usage: speed <0|1|5|20|50> (0=Pause). Current speed: ${stateRef.current.gameSpeed === 0 ? 'PAUSED' : `${stateRef.current.gameSpeed}x`}.`
-          );
+          return tr(stateRef.current.language, 'terminal.speedUsage', {
+            speed: stateRef.current.gameSpeed === 0 ? tr(stateRef.current.language, 'terminal.speedPaused') : `${stateRef.current.gameSpeed}x`
+          });
         }
         setGameSpeed(newSpeed);
-        return text(
-          `Velocidad de simulación ajustada a ${newSpeed === 0 ? 'PAUSA' : `${newSpeed}x`}.`,
-          `Simulation speed set to ${newSpeed === 0 ? 'PAUSED' : `${newSpeed}x`}.`
-        );
+        return tr(stateRef.current.language, 'terminal.speedSet', { speed: newSpeed === 0 ? tr(stateRef.current.language, 'terminal.speedPaused') : `${newSpeed}x` });
       }
 
       case 'reset':
         resetProgress();
-        return text('Iniciando reseteo general del sistema. Reiniciando protocolo Génesis...', 'Resetting the system. Restarting Genesis protocol...');
+        return tr(stateRef.current.language, 'terminal.resettingSystemRestartingGenesisProtocol');
 
       default:
-        return text(`Comando no reconocido: "${input}". Escribe "help" para ver el manual de operaciones.`, `Unknown command: "${input}". Type "help" to view available commands.`);
+        return tr(stateRef.current.language, 'terminal.unknownCommandTypeHelpView', { input });
     }
   }, [buyHardware, unlockDataSource, startTraining, cancelTraining, acceptContract, scrubSuspicion, saveGameToCloud, triggerRedTeamAudit, quarantineAgent, resetProgress, interrogateSwarm, attemptShadowCompute, setGameSpeed]);
 
@@ -3280,9 +3171,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     setState(prev => {
       const config = DIFFICULTY_CONFIGS[diff];
       addLog(
-        prev.language === 'es'
-          ? `Nivel de dificultad ajustado a: ${config.nameEs}.`
-          : `Difficulty level adjusted to: ${config.nameEn}.`,
+        tr(prev.language, 'gameContext.difficultyLevelAdjusted', { name: (prev.language === 'es' ? config.nameEs : config.nameEn) }),
         'info'
       );
       return { ...prev, difficulty: diff };
@@ -3310,7 +3199,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     }));
 
     addLog(
-      tr(current.language, 'gameContext.emergencyBailoutCrInjectedInto', { eMERGENCY_LOAN_AMOUNT: EMERGENCY_LOAN_AMOUNT.toLocaleString(), eMERGENCY_LOAN_REPAYMENT: EMERGENCY_LOAN_REPAYMENT.toLocaleString() }),
+      tr(current.language, 'gameContext.emergencyBailoutCrInjectedInto', { loanAmount: EMERGENCY_LOAN_AMOUNT.toLocaleString(), loanRepayment: EMERGENCY_LOAN_REPAYMENT.toLocaleString() }),
       'success'
     );
     return true;
@@ -3526,21 +3415,20 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
           id: `log_init_hw_${Date.now()}`,
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           type: 'info',
-          message: localize(
-            currentLang,
-            `Hardware activo: 1x ${localizedHardware('es', starterGpu).name} (${starterGpu.vramGb}GB VRAM). Refrigeración: ${starterCooling ? localizedHardware('es', starterCooling).name : 'ninguna'}. Saldo restante: $${initialCredits} CR.`,
-            `Active hardware: 1x ${localizedHardware('en', starterGpu).name} (${starterGpu.vramGb}GB VRAM). Cooling: ${starterCooling ? localizedHardware('en', starterCooling).name : 'none'}. Remaining balance: $${initialCredits} CR.`
-          )
+          message: tr(currentLang, 'gameContext.initHardware', {
+            gpu: localizedHardware(currentLang, starterGpu).name,
+            vram: starterGpu.vramGb,
+            cooling: starterCooling ? localizedHardware(currentLang, starterCooling).name : tr(currentLang, 'gameContext.noCooling'),
+            credits: initialCredits
+          })
         },
         {
           id: `log_init_data_${Date.now()}`,
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           type: 'system',
-          message: localize(
-            currentLang,
-            `Pipeline enlazado: ${starterDataSource ? localizedDataSource('es', starterDataSource).name : 'sin datos'}. Acepta misiones en el tablero para generar fondos.`,
-            `Data pipeline connected: ${starterDataSource ? localizedDataSource('en', starterDataSource).name : 'no data source'}. Take a mission from the board to earn credits.`
-          )
+          message: tr(currentLang, 'gameContext.initPipeline', {
+            source: starterDataSource ? localizedDataSource(currentLang, starterDataSource).name : tr(currentLang, 'gameContext.noDataSource')
+          })
         }
       ]
     };
@@ -3590,9 +3478,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
 
     const targetInfo = versionNames[targetVersion];
     addLog(
-      isEs
-        ? `[KERNEL ACTUALIZADO] La interfaz y el núcleo han mutado a: ${targetInfo.es}`
-        : `[KERNEL UPDATED] Interface and kernel mutated to: ${targetInfo.en}`,
+      tr((isEs ? 'es' : 'en'), 'gameContext.kernelUpdatedInterfaceKernelMutated', { version: isEs ? targetInfo.es : targetInfo.en }),
       targetVersion === 4 ? 'danger' : 'success'
     );
 

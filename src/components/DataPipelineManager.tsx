@@ -30,7 +30,6 @@ import {
   Sliders
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { localize } from '../utils/i18n';
 import { localizedDataSource } from '../utils/gameContentI18n';
 import { DATA_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
@@ -40,6 +39,7 @@ import { formatGameTime } from '../utils/training';
 import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { tr } from '../i18n';
+import { RichText } from '../i18n/RichText';
 
 export const DataPipelineManager: React.FC = () => {
   const { 
@@ -216,7 +216,7 @@ export const DataPipelineManager: React.FC = () => {
                               ? tr(state.language, 'dataPipelineManager.statusOnlineLevel', { level: ds.level })
                               : technologyAvailable
                                 ? tr(state.language, 'dataPipelineManager.statusAvailable')
-                                : localize(state.language, `BLOQUEADO · ${requiredResearch?.title ?? 'I+D'} / DÍA ${ds.availableAfterDays ?? '—'}`, `LOCKED · ${requiredResearch?.title ?? 'R&D'} / DAY ${ds.availableAfterDays ?? '—'}`)}
+                                : tr(state.language, 'dataPipelineManager.lockedResearchDay', { research: requiredResearch?.title ?? tr(state.language, 'dataPipelineManager.researchFallback'), day: ds.availableAfterDays ?? '—' })}
                           </span>
                         </div>
                       </div>
@@ -361,9 +361,7 @@ export const DataPipelineManager: React.FC = () => {
 
               <div className="bg-black/50 border theme-warn-border p-3 rounded text-xs space-y-2 theme-text leading-relaxed">
                 <p>
-                  {state.language === 'en'
-                    ? <>To construct specialized domain datasets, your infrastructure needs an automated scraping and synthesis engine. <strong>You cannot access this initially</strong>: you must deploy an existing, sufficiently leveled general AI model to research and unlock this feature.</>
-                    : <>Para construir datasets de dominios especializados, tu infraestructura necesita un motor autónomo de scraping y síntesis. <strong>No puedes acceder a este módulo inicialmente</strong>: debes desplegar un modelo general con suficiente nivel cognitivo para investigar y desbloquear esta tecnología.</>}
+                  <RichText lang={state.language} k="dataPipelineManager.scrapingLockedIntro" />
                 </p>
                 <div className="p-2.5 rounded theme-warn-soft border theme-warn-border text-[11px] space-y-1">
                   <div className="font-bold theme-warn-text">
@@ -724,11 +722,7 @@ export const DataPipelineManager: React.FC = () => {
                                 : 'theme-accent-soft border theme-accent-border mutating-accent-text'
                             } disabled:opacity-40 disabled:cursor-not-allowed`}
                           >
-                            {localize(
-                              state.language,
-                              isGeneral ? 'ENTRENAR GENERAL' : 'ENTRENAR MICRO-MODELO',
-                              isGeneral ? 'TRAIN GENERAL' : 'TRAIN MICRO-MODEL'
-                            )}
+                            {tr(state.language, isGeneral ? 'dataPipelineManager.trainGeneral' : 'dataPipelineManager.trainMicroModel')}
                           </button>
                         </div>
                       </div>
