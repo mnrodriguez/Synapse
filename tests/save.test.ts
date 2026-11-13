@@ -23,6 +23,12 @@ describe('save migrations', () => {
     expect(load({ saveSchemaVersion: 9, currentModel: capped, savedModels: [capped] }).currentModel.reasoningScore).toBeLessThanOrEqual(26);
   });
 
+  test('a schema-10 save starts the month with an energy estimate at its current draw', () => {
+    const loaded = load({ saveSchemaVersion: 10, activePowerKw: 2, gameDay: 11, dayTicks: 0 });
+    expect(loaded.monthEnergyKwh).toBe(2 * 10 * 24);
+    expect(load({ saveSchemaVersion: 11, monthEnergyKwh: 42 }).monthEnergyKwh).toBe(42);
+  });
+
   test('a current save is not migrated again', () => {
     const model = { ...DEFAULT_STATE.currentModel, id: 'm_new', reasoningScore: 18 };
     const state = load({ saveSchemaVersion: SAVE_SCHEMA_VERSION, currentModel: model, savedModels: [model] });
