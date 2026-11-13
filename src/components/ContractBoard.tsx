@@ -1028,9 +1028,7 @@ export const ContractBoard: React.FC = () => {
                         <div className="mt-2 p-2 rounded mutating-sub border text-[11px] theme-warn-text font-bold flex items-center gap-1.5 font-mono">
                           <Lock className="w-3.5 h-3.5 shrink-0" />
                           <span>
-                            {state.language === 'es'
-                              ? `DESBLOQUEO PENDIENTE DE ETAPA DE HISTORIA: ${readiness.requiredUiVer.nameEs}`
-                              : `STORY MILESTONE LOCKED: ${readiness.requiredUiVer.nameEn}`}
+                            {tr(state.language, 'contractBoard.storyMilestoneLocked', { name: (state.language === 'es' ? readiness.requiredUiVer.nameEs : readiness.requiredUiVer.nameEn) })}
                           </span>
                         </div>
                       )}
@@ -1049,7 +1047,7 @@ export const ContractBoard: React.FC = () => {
                         <button
                           onClick={() => handleLaunchContract(contract.id)}
                           disabled={!readiness.isEligible}
-                          title={!readiness.isTierUnlocked ? (state.language === 'es' ? `Monta un modelo anfitrión que alcance ${readiness.requiredUiVer.nameEs} para desbloquear esta misión.` : `Mount a Host Model that reaches ${readiness.requiredUiVer.nameEn} to unlock this mission.`) : undefined}
+                          title={!readiness.isTierUnlocked ? (tr(state.language, 'contractBoard.mountHostModelReachesUnlock', { name: (state.language === 'es' ? readiness.requiredUiVer.nameEs : readiness.requiredUiVer.nameEn) })) : undefined}
                           className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
                             readiness.isEligible
                               ? (contract.isMandatory || state.uiVersion === 4)

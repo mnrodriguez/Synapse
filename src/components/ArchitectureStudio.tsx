@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { t } from '../utils/i18n';
-import { localize } from '../utils/i18n';
 import { localizedDataSource } from '../utils/gameContentI18n';
 import { 
   TOPOLOGY_DOCS, 
@@ -48,6 +47,7 @@ import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progr
 import { DocLinkBadge } from './DocLinkBadge';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { tr } from '../i18n';
+import { RichText } from '../i18n/RichText';
 
 const DEFAULT_TRAINING_TOKENS_ESTIMATE = 50_000_000; // general corpus, used for the architecture estimate
 
@@ -500,9 +500,11 @@ export const ArchitectureStudio: React.FC = () => {
         </div>
 
         <p className="text-[11px] mutating-text-muted leading-snug">
-          {state.language === 'en'
-            ? <>Initial AI training defaults to the <strong className="mutating-accent-text">General Information baseline</strong> for balanced, broad-spectrum progression. Unlock the <strong className="mutating-accent-text">Data Scraping Module</strong> in Data Engines to generate specialized domain datasets (Cybersecurity, Astrophysics, Finance, Bioinformatics, Robotics) and train high-velocity <strong className="mutating-accent-text">Micro-Models</strong>.</>
-            : <>El entrenamiento inicial predetermina el <strong className="mutating-accent-text">baseline de Información General</strong> para un avance equilibrado. Desbloquea el <strong className="mutating-accent-text">Módulo de Scraping</strong> en Motores de Datos para sintetizar datasets especializados y entrenar <strong className="mutating-accent-text">Micro-Modelos</strong> ultrarrápidos.</>}
+          <RichText
+            lang={state.language}
+            k="architectureStudio.datasetIntro"
+            tags={{ b: (c, k) => <strong key={k} className="mutating-accent-text">{c}</strong> }}
+          />
         </p>
 
         {/* Dataset Cards Grid */}
@@ -575,11 +577,7 @@ export const ArchitectureStudio: React.FC = () => {
         {!state.isDataScrapingUnlocked && (
           <div className="rounded border theme-warn-border theme-warn-soft p-2 text-xs flex items-center justify-between gap-2">
             <span className="text-[11px] theme-warn-text">
-              {localize(
-                state.language,
-                `Módulo de Scraping Bloqueado: Entrena tu modelo general a puntaje ≥ ${DATA_SCRAPING_MIN_SCORE} para desbloquear la generación de datasets especializados en la pestaña "${VERSION_PROFILES.es[(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.data}".`,
-                `Data Scraping Locked: Level your general model to Evaluation score ≥ ${DATA_SCRAPING_MIN_SCORE} to unlock custom specialized datasets in the "${VERSION_PROFILES.en[(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.data}" tab.`
-              )}
+              {tr(state.language, 'architectureStudio.dataScrapingLockedLevelGeneral', { minScore: DATA_SCRAPING_MIN_SCORE, data: (state.language === 'es' ? VERSION_PROFILES.es[(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.data : VERSION_PROFILES.en[(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs.data) })}
             </span>
           </div>
         )}
@@ -681,7 +679,7 @@ export const ArchitectureStudio: React.FC = () => {
                   key={preset.label}
                   disabled={!unlocked}
                   title={!unlocked
-                    ? tr(state.language, 'architectureStudio.researchAdvanceDay', { requiredResearchId: requirement.requiredResearchId, availableAfterDays: requirement.availableAfterDays })
+                    ? tr(state.language, 'architectureStudio.researchAdvanceDay', { research: requirement.requiredResearchId, availableAfterDays: requirement.availableAfterDays })
                     : undefined}
                   onClick={() => handleParamsPreset(preset.value, preset.label)}
                   className={`px-3 py-1.5 rounded text-xs font-mono font-bold border transition-all disabled:cursor-not-allowed disabled:opacity-35 ${

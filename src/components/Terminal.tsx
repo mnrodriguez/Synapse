@@ -9,6 +9,7 @@ import { Terminal as TerminalIcon, CornerDownLeft, Trash2, Cpu, Database, Briefc
 import { sound } from '../audio/soundManager';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { tr } from '../i18n';
+import { RichText } from '../i18n/RichText';
 
 export const Terminal: React.FC = () => {
   const { state, executeTerminalCommand, addLog } = useGame();
@@ -169,7 +170,7 @@ export const Terminal: React.FC = () => {
       >
         <div className="text-[11px] mutating-accent-text mb-2 border-b theme-accent-border pb-2">
           === SYNAPSE NEURAL COMPUTING KERNEL v4.19 (x86_64-quantum-arch) ===<br />
-          {tr(state.language, 'terminal.type')} <span className="mutating-accent-text font-bold">help</span> {tr(state.language, 'terminal.seeAllAvailableCommandsUse')}
+          <RichText lang={state.language} k="terminal.helpHint" tags={{ cmd: (c, k) => <span key={k} className="mutating-accent-text font-bold">{c}</span> }} />
         </div>
 
         {state.logs.slice().reverse().map(log => (

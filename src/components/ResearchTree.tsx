@@ -19,11 +19,17 @@ import {
   Clock
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { localize } from '../utils/i18n';
 import { localizedResearch } from '../utils/gameContentI18n';
 import { RESEARCH_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
-import { tr } from '../i18n';
+import { tr, type CatalogKey } from '../i18n';
+
+const CATEGORY_KEYS: Record<string, CatalogKey> = {
+  architecture: 'researchTree.category.architecture',
+  optimization: 'researchTree.category.optimization',
+  data: 'researchTree.category.data',
+  autonomy: 'researchTree.category.autonomy'
+};
 
 export const ResearchTree: React.FC = () => {
   const { state, unlockResearch } = useGame();
@@ -117,17 +123,7 @@ export const ResearchTree: React.FC = () => {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className={`px-2 py-0.5 rounded text-[11px] border font-bold uppercase ${getCategoryColor(node.category)}`}>
-                      {localize(state.language, ({
-                        architecture: 'Arquitectura',
-                        optimization: 'Optimización',
-                        data: 'Datos',
-                        autonomy: 'Autonomía'
-                      } as Record<string, string>)[node.category] || node.category, ({
-                        architecture: 'Architecture',
-                        optimization: 'Optimization',
-                        data: 'Data',
-                        autonomy: 'Autonomy'
-                      } as Record<string, string>)[node.category] || node.category)}
+                      {(CATEGORY_KEYS[node.category] ? tr(state.language, CATEGORY_KEYS[node.category]) : node.category)}
                     </span>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-bold text-xs theme-text">{content.title}</h3>

@@ -33,6 +33,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
 
   const step = state.tutorialStep ?? 0;
   const isEs = state.language === 'es';
+  const lang = isEs ? 'es' : 'en';
   const tabLabels = VERSION_PROFILES[isEs ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].tabs;
 
   const hasStarterGpu = state.hardware.some(h => h.category === 'gpu' && h.isStarterChoice && h.count > 0);
@@ -48,20 +49,20 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
     if (step === 0 && hasStarterHardware) {
       sound.playCredit();
       advanceTutorialStep(1);
-      addLog(tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.genesisProtocol15Starter'), 'success');
+      addLog(tr(lang, 'tutorialMissionBanner.genesisProtocol15Starter'), 'success');
     } else if (step === 2 && state.savedModels.some(m => m.reasoningScore >= FIRST_MISSION_IQ)) {
       sound.playBreakthrough();
       advanceTutorialStep(3);
-      addLog(tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.genesisProtocol35Training'), 'success');
+      addLog(tr(lang, 'tutorialMissionBanner.genesisProtocol35Training'), 'success');
     } else if (step === 3 && hasAgent) {
       sound.playBreakthrough();
       advanceTutorialStep(4);
-      addLog(tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.genesisProtocol45First'), 'success');
+      addLog(tr(lang, 'tutorialMissionBanner.genesisProtocol45First'), 'success');
     } else if (step === 4 && hasFinishedContract) {
       sound.playBreakthrough();
       confetti({ particleCount: 120, spread: 80 });
       advanceTutorialStep(5);
-      addLog(tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.genesisProtocolCompleteFirstCommercial'), 'success');
+      addLog(tr(lang, 'tutorialMissionBanner.genesisProtocolCompleteFirstCommercial'), 'success');
     }
   }, [hasStarterHardware, hasAgent, hasFinishedContract, step, state.savedModels, advanceTutorialStep, addLog, isEs]);
 
@@ -74,56 +75,46 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
     {
       id: 0,
       tab: 'hardware',
-      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage1AcquireStarterHardware'),
-      desc: isEs 
-        ? 'Tienes $500 CR de fondo semilla. Ve a {hardware} y equipa una GPU inicial, refrigeración básica, una fuente de alimentación y una conexión de red. Esta fase no avanzará hasta que los cuatro componentes estén instalados.'
-        : 'You have a $500 CR initial grant. Open {hardware} and install a starter GPU, basic cooling, a power supply, and a network connection. This stage will not advance until all four are installed.',
+      title: tr(lang, 'tutorialMissionBanner.stage1AcquireStarterHardware'),
+      desc: tr(lang, 'tutorialMissionBanner.stage1Desc', { hardware: tabLabels.hardware }),
       icon: Server,
-      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go', { hardware: tabLabels.hardware.toUpperCase() }),
+      buttonText: tr(lang, 'tutorialMissionBanner.go', { hardware: tabLabels.hardware.toUpperCase() }),
       isCompleted: hasStarterHardware
     },
     {
       id: 1,
       tab: 'architecture',
-      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage2ModelArchitecture'),
-      desc: isEs 
-        ? 'Ve a {architecture} para inspeccionar la topología Transformer, cuantización INT8 y parámetros del modelo inicial SYNAPSE-Proto.'
-        : 'Open {architecture} to inspect the Transformer topology, INT8 quantization, and parameters of your first model.',
+      title: tr(lang, 'tutorialMissionBanner.stage2ModelArchitecture'),
+      desc: tr(lang, 'tutorialMissionBanner.stage2Desc', { architecture: tabLabels.architecture }),
       icon: Layers,
-      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go2', { architecture: tabLabels.architecture.toUpperCase() }),
+      buttonText: tr(lang, 'tutorialMissionBanner.go2', { architecture: tabLabels.architecture.toUpperCase() }),
       isCompleted: step > 1
     },
     {
       id: 2,
       tab: 'training',
-      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage3TrainNeuralWeights'),
-      desc: isEs 
-        ? 'Ve a {training} y entrena hasta que el puntaje del modelo llegue a 10. Cada corrida lo sube un poco más; el préstamo universitario ya aporta el cómputo.'
-        : 'Open {training} and train until the model score reaches 10. Each run raises it further; the university loan already provides the compute.',
+      title: tr(lang, 'tutorialMissionBanner.stage3TrainNeuralWeights'),
+      desc: tr(lang, 'tutorialMissionBanner.stage3Desc', { training: tabLabels.training }),
       icon: Activity,
-      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go3', { training: tabLabels.training.toUpperCase() }),
+      buttonText: tr(lang, 'tutorialMissionBanner.go3', { training: tabLabels.training.toUpperCase() }),
       isCompleted: step > 2
     },
     {
       id: 3,
       tab: 'agents',
-      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage4DeployFirstAgent'),
-      desc: isEs 
-        ? 'Ve a {agents} y despliega un agente autónomo (ej. Trader o Researcher) conectado a tu modelo entrenado.'
-        : 'Open {agents} and deploy your first autonomous agent (e.g. Trader or Researcher) bound to your trained model.',
+      title: tr(lang, 'tutorialMissionBanner.stage4DeployFirstAgent'),
+      desc: tr(lang, 'tutorialMissionBanner.stage4Desc', { agents: tabLabels.agents }),
       icon: Bot,
-      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go4', { agents: tabLabels.agents.toUpperCase() }),
+      buttonText: tr(lang, 'tutorialMissionBanner.go4', { agents: tabLabels.agents.toUpperCase() }),
       isCompleted: hasAgent || step > 3
     },
     {
       id: 4,
       tab: 'contracts',
-      title: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.stage5SolveFirstMission'),
-      desc: isEs 
-        ? 'Ve a {contracts}, selecciona a tu agente activo y ejecuta tu primer contrato comercial para cobrar tu primera recompensa.'
-        : 'Open {contracts}, assign your active agent, and execute your first paid commercial mission.',
+      title: tr(lang, 'tutorialMissionBanner.stage5SolveFirstMission'),
+      desc: tr(lang, 'tutorialMissionBanner.stage5Desc', { contracts: tabLabels.contracts }),
       icon: Briefcase,
-      buttonText: tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.go5', { contracts: tabLabels.contracts.toUpperCase() }),
+      buttonText: tr(lang, 'tutorialMissionBanner.go5', { contracts: tabLabels.contracts.toUpperCase() }),
       isCompleted: hasFinishedContract
     }
   ];
@@ -136,9 +127,9 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
   // On the training stage, the goal is the IQ the first mission needs; show progress toward it.
   const trainingGoalOpen = currentStepInfo.tab === 'training' && bestIq < FIRST_MISSION_IQ;
   const guidanceText = trainingGoalOpen
-    ? (tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.trainUntilScoreReachesYou', { training: tabLabels.training, fIRST_MISSION_IQ: FIRST_MISSION_IQ, bestIq }))
+    ? (tr(lang, 'tutorialMissionBanner.trainUntilScoreReachesYou', { training: tabLabels.training, firstMissionIq: FIRST_MISSION_IQ, bestIq }))
     : blockedByIq
-    ? (tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.bestModelHasScoreEasiest', { bestIq, lowestOpenIq, training: tabLabels.training }))
+    ? (tr(lang, 'tutorialMissionBanner.bestModelHasScoreEasiest', { bestIq, lowestOpenIq, training: tabLabels.training }))
     : null;
 
   return (
@@ -154,18 +145,18 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] uppercase tracking-widest font-black mutating-accent-text mutating-sub px-2 py-0.5 rounded border">
-                {tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.firstMissionGenesisProtocol')}
+                {tr(lang, 'tutorialMissionBanner.firstMissionGenesisProtocol')}
               </span>
               <span className="text-xs font-bold font-sans flex items-center gap-1">
                 {currentStepInfo.title}
               </span>
               <span className="text-[11px] theme-warn-text font-bold mutating-sub px-1.5 py-0.2 rounded border theme-warn-border">
-                {tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.step5', { step: step + 1 })}
+                {tr(lang, 'tutorialMissionBanner.step5', { step: step + 1 })}
               </span>
             </div>
 
             <p className={`text-[11px] mutating-text-muted mt-0.5 leading-snug ${detailsOpen ? '' : 'hidden md:block'}`}>
-              {guidanceText ?? currentStepInfo.desc.replace(/\{(\w+)\}/g, (_, key: string) => tabLabels[key as keyof typeof tabLabels] ?? key)}
+              {guidanceText ?? currentStepInfo.desc}
             </p>
           </div>
         </div>
@@ -178,7 +169,7 @@ export const TutorialMissionBanner: React.FC<TutorialMissionBannerProps> = ({ on
             aria-expanded={detailsOpen}
             className="md:hidden px-2 py-1 text-[11px] font-bold rounded border mutating-sub cursor-pointer"
           >
-            {detailsOpen ? (tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.hide')) : (tr((isEs ? 'es' : 'en'), 'tutorialMissionBanner.details'))}
+            {detailsOpen ? (tr(lang, 'tutorialMissionBanner.hide')) : (tr(lang, 'tutorialMissionBanner.details'))}
           </button>
 
           {/* Progress dots */}

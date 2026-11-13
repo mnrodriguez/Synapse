@@ -85,7 +85,7 @@ export function calendarTick(input: CalendarInput) {
     addLog(
       utilityDebt > 0
         ? (tr(prev.language, 'calendarTick.unpaidBillMonthDayCr', { gameMonth: prev.gameMonth || 1, gameDay: prev.gameDay || 1, utilityDebt: utilityDebt.toLocaleString() }))
-        : (tr(prev.language, 'calendarTick.monthDayBillPaidCr', { gameMonth: prev.gameMonth || 1, gameDay: prev.gameDay || 1, currentMonthBill: currentMonthBill.toFixed(2), monthlyLeaseCost: facility.monthlyLeaseCost, eLECTRICITY_RATE_PER_KWH: (effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2) })),
+        : (tr(prev.language, 'calendarTick.monthDayBillPaidCr', { gameMonth: prev.gameMonth || 1, gameDay: prev.gameDay || 1, currentMonthBill: currentMonthBill.toFixed(2), monthlyLeaseCost: facility.monthlyLeaseCost, ratePerKwh: (effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2) })),
       utilityDebt > 0 ? 'danger' : 'info'
     );
   }
