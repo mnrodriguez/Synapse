@@ -205,6 +205,8 @@ interface GameContextType {
 }
 
 
+const GEMINI_KEY_STORAGE = 'synapse_gemini_key_v1';
+
 const GameContext = createContext<GameContextType | null>(null);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -225,7 +227,25 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'local_only' | 'syncing' | 'error'>('local_only');
   const [soundMuted, setSoundMuted] = useState<boolean>(sound.getMuted());
-  const [missionAiApiKey, setMissionAiApiKey] = useState('');
+  // The player's own Gemini key stays in this browser only: it is kept apart from the game save, so the
+  // cloud sync never uploads it.
+  const [missionAiApiKey, setMissionAiApiKeyState] = useState<string>(() => {
+    try {
+      return localStorage.getItem(GEMINI_KEY_STORAGE) ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const setMissionAiApiKey = useCallback((apiKey: string) => {
+    const trimmed = apiKey.trim();
+    setMissionAiApiKeyState(trimmed);
+    try {
+      if (trimmed) localStorage.setItem(GEMINI_KEY_STORAGE, trimmed);
+      else localStorage.removeItem(GEMINI_KEY_STORAGE);
+    } catch {
+      // Storage can be unavailable (private mode); the key then lasts for this session only.
+    }
+  }, []);
   const stateRef = useRef(state);
   stateRef.current = state;
   const assessedMissionsRef = useRef<Set<string>>(new Set());

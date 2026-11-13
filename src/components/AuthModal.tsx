@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { localize } from '../utils/i18n';
+import { AiSettingsPanel } from './AiSettingsPanel';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -87,7 +88,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono select-none">
-      <div className="theme-panel-bg border theme-accent-border rounded-lg max-w-md w-full overflow-hidden">
+      <div className="theme-panel-bg border theme-accent-border rounded-lg max-w-md w-full max-h-[92vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-3.5 theme-panel-bg border-b theme-accent-border">
           <div className="flex items-center gap-2">
@@ -261,6 +262,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </button>
             )}
           </div>
+
+          <AiSettingsPanel />
         </div>
 
         {/* Footer */}

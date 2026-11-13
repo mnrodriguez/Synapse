@@ -57,7 +57,8 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 5 | T-2 mensajes en un solo idioma traducidos, con el nombre de la investigación en lugar de su id | Aplicado |
 | 5 | D-1 (parte 1) calendario y factura, calor/disyuntor/sospecha, entrenamiento y scraping pasan del tick a `src/tick/` como funciones puras con tests; los logs y sonidos salen como efectos | Aplicado |
 | 5 | D-1 (parte 2) misiones, agentes y mesa de trading pasan del tick a `src/tick/`; `GameContext` queda en 3.915 líneas (era 4.689) | Aplicado |
-| 5 | T-4 catálogo de textos · D-6 IA del navegador · D-7 clave de Gemini en Ajustes | Pendiente |
+| 5 | D-6 botón para activar la IA integrada de Chrome con progreso de descarga · D-7 clave de Gemini en Cuenta → Asistente de IA, guardada solo en el navegador y fuera de la partida | Aplicado |
+| 5 | T-4 catálogo de textos | Pendiente |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).
 

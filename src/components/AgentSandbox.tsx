@@ -99,7 +99,6 @@ export const AgentSandbox: React.FC = () => {
     setAgentAutoMission,
     setAllAgentsAutoMission,
     updateAutonomySettings,
-    setMissionAiApiKey,
     assignTradingDesk,
     withdrawTradingDeskCapital,
     closeTradingDesk
@@ -780,29 +779,10 @@ const roleTypeCopy: Record<AgentRole, { typeEn: string; typeEs: string }> = {
             </button>
           </form>
 
-          {/* API Key Config Accordion */}
-          <details className="mt-1">
-            <summary className="cursor-pointer text-[11px] mutating-text-muted hover:mutating-text-muted">
-              {localize(state.language, 'Proveedor de IA avanzado opcional (Gemini Flash)', 'Optional advanced AI provider (Gemini Flash)')}
-            </summary>
-            <div className="mt-1 grid gap-1 sm:grid-cols-[1fr_auto]">
-              <input
-                type="password"
-                autoComplete="off"
-                value={missionAiApiKey}
-                onChange={event => setMissionAiApiKey(event.target.value)}
-                placeholder={localize(state.language, 'API key de Google AI Studio (opcional)', 'Optional Google AI Studio API key')}
-                className="rounded border theme-border mutating-sub px-2 py-1 text-[11px] "
-              />
-              <button
-                type="button"
-                onClick={() => setMissionAiApiKey('')}
-                className="rounded border theme-border px-2 py-1 text-[11px] mutating-text-muted hover: cursor-pointer"
-              >
-                {localize(state.language, 'BORRAR KEY', 'CLEAR KEY')}
-              </button>
-            </div>
-          </details>
+          {/* The AI provider is set in the account dialog (Account → AI assistant). */}
+          <p className="mt-1 text-[11px] mutating-text-muted">
+            {localize(state.language, 'La IA del consejo se configura en Cuenta → Asistente de IA.', 'The council AI is set up in Account → AI assistant.')}
+          </p>
         </div>
 
         {/* 4. Dynamic Proposal Display (No Static Content) */}
