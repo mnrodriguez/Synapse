@@ -7,7 +7,10 @@ import { trainingTick } from '../src/tick/trainingTick';
 import { scrapeTick } from '../src/tick/scrapeTick';
 import { planTrainingRun, DEFAULT_TRAINING_CONFIG } from '../src/utils/trainingRun';
 import { DAYS_PER_GAME_MONTH } from '../src/utils/constants';
-import type { GameState, TrainingJob } from '../src/types/game';
+import type { GameState, TrainingJob, ActiveGig, AgentInstance } from '../src/types/game';
+import { missionTick } from '../src/tick/missionTick';
+import { agentTick } from '../src/tick/agentTick';
+import { tradingTick } from '../src/tick/tradingTick';
 
 const state = (over: Partial<GameState> = {}): GameState => ({ ...DEFAULT_STATE, ...over });
 const logs = (effects: { kind: string }[]) => effects.filter(e => e.kind === 'log').length;
@@ -111,5 +114,54 @@ describe('scrape tick', () => {
   test('a tripped breaker pauses the job', () => {
     const prev = state({ activeScrapeJob: { ...scrapeJob, progressPercent: 50 } as GameState['activeScrapeJob'] });
     expect(scrapeTick({ prev, powerTripSeconds: 3, totalComputePflops: 1, now: 1 }).updatedScrapeJob?.progressPercent).toBe(50);
+  });
+});
+
+describe('mission tick', () => {
+  const contract = DEFAULT_STATE.contracts.find(c => c.id === 'gig_v1_wiki_clean')!;
+  const agent = { ...({} as AgentInstance), id: 'a1', name: 'A1', role: 'researcher', modelId: DEFAULT_STATE.currentModel.id, modelName: 'm', status: 'on_mission', alignmentScore: 90, autonomyLevel: 1, revenuePerSec: 0, suspicionPerSec: 0, toolsGranted: [], lastThought: '', escapesAttempted: 0, inferenceParams: { temperature: 0.6, topP: 0.9, topK: 40, repetitionPenalty: 1.1, systemPrompt: '' }, autoMissionEnabled: false } as AgentInstance;
+  const gig = (over: Partial<ActiveGig>): ActiveGig => ({ contractId: contract.id, runId: 'r', timeRemaining: 1, agentIds: ['a1'], successProbability: 0.6, aiAssessmentStatus: 'complete', outcomeRoll: 0.1, ...over });
+  const run = (g: ActiveGig) => missionTick({
+    prev: state({ activeGigs: [g], activeGig: g, agents: [agent] }), activeTraining: null, contracts: DEFAULT_STATE.contracts,
+    detentionSeconds: 0, effectivePowerKw: 0.5, metrics: { totalComputePflops: 1, activePowerKw: 0.5, maxPowerKw: 10, maxCoolingKw: 10 },
+    powerTripSeconds: 0, totalComputePflops: 1, completedContractsCount: 0, credits: 100, singularityProgress: 1,
+    tutorialCompleted: true, tutorialStep: 5, watchdogSuspicion: 0, rand: () => 0.99, now: 1
+  });
+
+  test('a successful mission pays, counts and frees the team', () => {
+    const r = run(gig({ outcomeRoll: 0.1 }));
+    expect(r.credits).toBe(100 + contract.rewardCredits);
+    expect(r.completedContractsCount).toBe(1);
+    expect(r.newLastMissionOutcome?.success).toBe(true);
+    expect(r.updatedAgents[0].status).toBe('active');
+    expect(r.effects.some(e => e.kind === 'sound' && e.name === 'credit')).toBe(true);
+  });
+
+  test('a failed mission keeps the contract and explains why', () => {
+    const r = run(gig({ outcomeRoll: 0.95 }));
+    expect(r.credits).toBe(100);
+    expect(r.newLastMissionOutcome?.success).toBe(false);
+    expect(r.newLastMissionOutcome?.weakestFactors?.length).toBe(2);
+    expect(r.updatedContracts.find(c => c.id === contract.id)?.lastAttemptFailed).toBe(true);
+  });
+
+  test('a mission waiting for its assessment does not count down', () => {
+    const r = run(gig({ timeRemaining: 5, aiAssessmentStatus: 'pending' }));
+    expect(r.updatedGigs[0].timeRemaining).toBe(5);
+  });
+});
+
+describe('agent and trading ticks', () => {
+  test('with no agents nothing happens but the incident cooldown runs down', () => {
+    const r = agentTick({ prev: state({ agents: [], incidentCooldownTicks: 10 }), detentionSeconds: 0, watchdogSuspicion: 0, singularityProgress: 1, updatedAgents: [], rand: () => 0.99, now: 1 });
+    expect(r.updatedAgents).toEqual([]);
+    expect(r.updatedIncidentCooldown).toBe(9);
+    expect(r.newActiveIncident).toBeFalsy();
+  });
+
+  test('without a trading desk there is nothing to trade', () => {
+    const r = tradingTick({ prev: state({ activeTradingDesk: null }), detentionSeconds: 0, powerTripSeconds: 0, updatedAgents: [], watchdogSuspicion: 3, rand: () => 0.5 });
+    expect(r.updatedTradingDesk).toBeNull();
+    expect(r.watchdogSuspicion).toBe(3);
   });
 });
