@@ -68,6 +68,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
         <div className="flex-1 p-3.5 overflow-y-auto space-y-2 text-xs">
           <p className="mutating-text-muted text-[11px] mb-3">
             {tr(state.language, 'leaderboardModal.operativesRankedSingularityProgressCompute')}
+            {' '}{tr(state.language, 'leaderboardModal.informalNote')}
           </p>
 
           {loading ? (
