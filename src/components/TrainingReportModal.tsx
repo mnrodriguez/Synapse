@@ -6,10 +6,9 @@
 import React from 'react';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { localize } from '../utils/i18n';
 import { learningRateLabel } from '../utils/trainingRun';
 import { sound } from '../audio/soundManager';
-import { tr } from '../i18n';
+import { tr, type CatalogKey } from '../i18n';
 
 // Shown once when a training run converges. The operative confirms it before continuing.
 export const TrainingReportModal: React.FC = () => {
@@ -20,12 +19,12 @@ export const TrainingReportModal: React.FC = () => {
   const delta = Math.round((report.reasoningAfter - report.reasoningBefore) * 10) / 10;
   const outcome = report.outcome ?? (delta > 0 ? 'improved' : 'ceiling');
   // What the run teaches, by outcome.
-  const lesson: Record<string, { tone: string; es: string; en: string }> = {
-    improved: { tone: 'theme-success-text', es: 'La pérdida de validación bajó junto con la de entrenamiento: el modelo generaliza.', en: 'Validation loss went down with training loss: the model generalises.' },
-    early_stopped: { tone: 'mutating-accent-text', es: `La validación empezó a subir en la época ${report.bestEpoch ?? '?'}. El early stopping cortó la corrida y conservó el mejor checkpoint, así que no perdiste puntaje.`, en: `Validation started rising at epoch ${report.bestEpoch ?? '?'}. Early stopping ended the run and kept the best checkpoint, so you lost no score.` },
-    overfit: { tone: 'theme-danger-text', es: `Sobreajuste: desde la época ${report.bestEpoch ?? '?'} el modelo memorizó el dataset en lugar de aprender. Usa menos épocas, activa early stopping o consigue datos nuevos.`, en: `Overfitting: from epoch ${report.bestEpoch ?? '?'} the model memorised the dataset instead of learning. Use fewer epochs, turn on early stopping or get new data.` },
-    diverged: { tone: 'theme-danger-text', es: 'Divergencia: con un learning rate tan alto cada paso se pasa del mínimo y la pérdida explota. Vuelve a un learning rate equilibrado.', en: 'Divergence: with such a high learning rate each step overshoots the minimum and the loss explodes. Go back to a balanced learning rate.' },
-    ceiling: { tone: 'theme-warn-text', es: 'Sin mejora: el modelo está cerca del techo de su tamaño. Para subir más necesitas más parámetros (Arquitectura) o más datos.', en: 'No gain: the model is near its size ceiling. To go further you need more parameters (Architecture) or more data.' }
+  const lesson: Record<string, { tone: string; text: CatalogKey }> = {
+    improved: { tone: 'theme-success-text', text: 'trainingReportModal.lesson.improved' },
+    early_stopped: { tone: 'mutating-accent-text', text: 'trainingReportModal.lesson.earlyStopped' },
+    overfit: { tone: 'theme-danger-text', text: 'trainingReportModal.lesson.overfit' },
+    diverged: { tone: 'theme-danger-text', text: 'trainingReportModal.lesson.diverged' },
+    ceiling: { tone: 'theme-warn-text', text: 'trainingReportModal.lesson.ceiling' }
   };
   const title = outcome === 'diverged'
     ? tr(state.language, 'trainingReportModal.runDiverged')
@@ -70,7 +69,7 @@ export const TrainingReportModal: React.FC = () => {
             <span className="font-bold">{report.reasoningCeiling}</span>
           </div>
           <p className={`text-[11px] leading-snug ${lesson[outcome].tone}`}>
-            {localize(state.language, lesson[outcome].es, lesson[outcome].en)}
+            {tr(state.language, lesson[outcome].text, { epoch: report.bestEpoch ?? '?' })}
           </p>
           {report.epochsPlanned !== undefined && (
             <div className="flex justify-between gap-3">

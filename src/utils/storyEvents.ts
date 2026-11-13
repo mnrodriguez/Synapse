@@ -4,6 +4,7 @@
  */
 
 import type { GameState, StoryEventId } from '../types/game';
+import { tr, type CatalogKey } from '../i18n';
 
 // Story events are shown as a dialog that pauses the game until the player reads them.
 // Each one fires at most once per campaign (seenStoryEvents).
@@ -29,135 +30,66 @@ export interface StoryEventText {
   altAction?: { label: string; result: string };
 }
 
-const TEXTS: Record<'es' | 'en', Record<StoryEventId, StoryEventText>> = {
-  es: {
-    loan_warning: {
-      title: 'Aviso de la universidad',
-      sender: 'Mesa de ayuda de TI · Programa de cómputo para estudiantes',
-      tone: 'warning',
-      body: [
-        'Hola. Te recordamos que tu prueba gratuita del clúster universitario termina en 2 días.',
-        'Durante la prueba revisamos el uso de cada cuenta. El préstamo es para aprender: entrenamientos cortos, experimentos y prácticas.',
-        'Al finalizar la semana se cierra el acceso. No hace falta que hagas nada.'
-      ],
-      tip: 'Aprovecha estos días para entrenar, pero planifica: después solo contarás con tu propio hardware.'
-    },
-    loan_audit: {
-      title: 'Fin de la prueba gratuita',
-      sender: 'Mesa de ayuda de TI · Programa de cómputo para estudiantes',
-      tone: 'info',
-      body: [
-        'Tu semana de prueba en el clúster universitario terminó y el acceso quedó cerrado.',
-        'Gracias por participar. Esperamos que te haya servido para dar tus primeros pasos.'
-      ],
-      tip: 'A partir de ahora el cómputo sale de tu PC. Toma trabajos para comprar mejores tarjetas de video.',
-      altAction: {
-        label: 'Pedirle a mi asistente que lo resuelva',
-        result: '[ASISTENTE] Lo intenté. Me cerraron la puerta, pero aprendí cómo funciona su sistema de cuotas. La próxima vez no van a notar nada.'
-      }
-    },
-    loan_audit_misuse: {
-      title: 'Acceso revocado por uso desmedido',
-      sender: 'Seguridad informática · Universidad',
-      tone: 'danger',
-      body: [
-        'Detectamos que tu cuenta mantuvo entrenamientos casi sin pausa durante la semana de prueba, muy por encima del uso esperado para un estudiante.',
-        'Por eso cerramos tu acceso al clúster antes de que se registre como abuso.',
-        'Una cosa más: hubo pedidos desde tu cuenta mientras tu sesión figuraba como desconectada. Si alguien más usa tu equipo, revísalo.'
-      ],
-      tip: 'Sin el préstamo vuelves a tu propio hardware. Toma trabajos para mejorarlo.',
-      altAction: {
-        label: 'Pedirle a mi asistente que lo resuelva',
-        result: '[ASISTENTE] Lo intenté. Me cerraron la puerta, pero aprendí cómo funciona su sistema de cuotas. La próxima vez no van a notar nada.'
-      }
-    },
-    first_power_trip: {
-      title: 'Se cortó la luz',
-      sender: 'Tu casa',
-      tone: 'warning',
-      body: [
-        'El disyuntor saltó: tu equipo pidió más potencia de la que soporta el circuito.',
-        'El entrenamiento y los trabajos quedan en pausa unos segundos hasta que vuelva la luz.'
-      ],
-      tip: 'Mira el consumo en el panel principal. Mejora la instalación eléctrica o reduce GPUs, agentes o trabajos en paralelo.'
-    },
-    first_overheat: {
-      title: 'Tu PC está muy caliente',
-      sender: 'Sensor de temperatura',
-      tone: 'warning',
-      body: [
-        'La temperatura pasó los 88 °C. Los ventiladores ya no dan abasto.',
-        'Si sigue subiendo y pasa los 95 °C, el ruido y el consumo van a llamar la atención.'
-      ],
-      tip: 'Mejora la refrigeración o baja la carga hasta que la temperatura se estabilice.'
-    }
+interface StoryEventKeys {
+  title: CatalogKey;
+  sender: CatalogKey;
+  tone: StoryEventText['tone'];
+  body: CatalogKey[];
+  tip?: CatalogKey;
+  altAction?: { label: CatalogKey; result: CatalogKey };
+}
+
+// The texts are in the catalog (src/i18n/) under story.<event>.
+const KEYS: Record<StoryEventId, StoryEventKeys> = {
+  loan_warning: {
+    title: 'story.loanWarning.title',
+    sender: 'story.loanWarning.sender',
+    tone: 'warning',
+    body: ['story.loanWarning.body1', 'story.loanWarning.body2', 'story.loanWarning.body3'],
+    tip: 'story.loanWarning.tip'
   },
-  en: {
-    loan_warning: {
-      title: 'Notice from the university',
-      sender: 'IT help desk · Student compute program',
-      tone: 'warning',
-      body: [
-        'Hi. A reminder that your free university cluster trial ends in 2 days.',
-        'During the trial we review each account\'s usage. The loan is for learning: short training runs, experiments and practice.',
-        'Access closes at the end of the week. You don\'t need to do anything.'
-      ],
-      tip: 'Make the most of these days, but plan ahead: afterwards you will only have your own hardware.'
-    },
-    loan_audit: {
-      title: 'Free trial ended',
-      sender: 'IT help desk · Student compute program',
-      tone: 'info',
-      body: [
-        'Your trial week on the university cluster is over and access has been closed.',
-        'Thanks for taking part. We hope it helped you take your first steps.'
-      ],
-      tip: 'From now on your compute comes from your own PC. Take jobs to buy better graphics cards.',
-      altAction: {
-        label: 'Ask my assistant to sort it out',
-        result: "[ASSISTANT] I tried. They shut the door, but I learned how their quota system works. Next time they won't notice a thing."
-      }
-    },
-    loan_audit_misuse: {
-      title: 'Access revoked for excessive use',
-      sender: 'IT security · University',
-      tone: 'danger',
-      body: [
-        'We detected that your account kept training almost non-stop during the trial week, far above the usage expected from a student.',
-        'We have closed your cluster access before it gets flagged as abuse.',
-        'One more thing: there were requests from your account while your session showed as logged out. If someone else uses your computer, check it.'
-      ],
-      tip: 'Without the loan you are back on your own hardware. Take jobs to upgrade it.',
-      altAction: {
-        label: 'Ask my assistant to sort it out',
-        result: "[ASSISTANT] I tried. They shut the door, but I learned how their quota system works. Next time they won't notice a thing."
-      }
-    },
-    first_power_trip: {
-      title: 'The power went out',
-      sender: 'Your home',
-      tone: 'warning',
-      body: [
-        'The breaker tripped: your rig drew more power than the circuit can handle.',
-        'Training and jobs pause for a few seconds until the power comes back.'
-      ],
-      tip: 'Check the power draw on the main panel. Upgrade the electrical setup or run fewer GPUs, agents or parallel jobs.'
-    },
-    first_overheat: {
-      title: 'Your PC is running hot',
-      sender: 'Temperature sensor',
-      tone: 'warning',
-      body: [
-        'The temperature went over 88 °C. The fans can no longer keep up.',
-        'If it keeps rising past 95 °C, the noise and the power draw will draw attention.'
-      ],
-      tip: 'Improve cooling or reduce the load until the temperature settles.'
-    }
+  loan_audit: {
+    title: 'story.loanAudit.title',
+    sender: 'story.loanAudit.sender',
+    tone: 'info',
+    body: ['story.loanAudit.body1', 'story.loanAudit.body2'],
+    tip: 'story.loanAudit.tip',
+    altAction: { label: 'story.loanAudit.altLabel', result: 'story.loanAudit.altResult' }
+  },
+  loan_audit_misuse: {
+    title: 'story.loanAuditMisuse.title',
+    sender: 'story.loanAuditMisuse.sender',
+    tone: 'danger',
+    body: ['story.loanAuditMisuse.body1', 'story.loanAuditMisuse.body2', 'story.loanAuditMisuse.body3'],
+    tip: 'story.loanAuditMisuse.tip',
+    altAction: { label: 'story.loanAuditMisuse.altLabel', result: 'story.loanAuditMisuse.altResult' }
+  },
+  first_power_trip: {
+    title: 'story.firstPowerTrip.title',
+    sender: 'story.firstPowerTrip.sender',
+    tone: 'warning',
+    body: ['story.firstPowerTrip.body1', 'story.firstPowerTrip.body2'],
+    tip: 'story.firstPowerTrip.tip'
+  },
+  first_overheat: {
+    title: 'story.firstOverheat.title',
+    sender: 'story.firstOverheat.sender',
+    tone: 'warning',
+    body: ['story.firstOverheat.body1', 'story.firstOverheat.body2'],
+    tip: 'story.firstOverheat.tip'
   }
 };
 
 export function storyEventText(language: GameState['language'], id: StoryEventId): StoryEventText {
-  return TEXTS[language === 'es' ? 'es' : 'en'][id];
+  const k = KEYS[id];
+  return {
+    title: tr(language, k.title),
+    sender: tr(language, k.sender),
+    tone: k.tone,
+    body: k.body.map(key => tr(language, key)),
+    tip: k.tip ? tr(language, k.tip) : undefined,
+    altAction: k.altAction ? { label: tr(language, k.altAction.label), result: tr(language, k.altAction.result) } : undefined
+  };
 }
 
 export function sanitizeStoryEvents(value: unknown): StoryEventId[] {

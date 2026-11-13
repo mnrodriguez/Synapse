@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { tr, type CatalogKey, type Language } from '../i18n';
+
 // Where each hardware figure comes from. Home cards are rated in FP32, data-centre accelerators in the
 // tensor precision their vendor quotes (dense, without sparsity). Comparing them directly overstates the
 // gap, so the card says which precision it is and whether the number is a spec, an estimate or fiction.
@@ -30,12 +32,13 @@ export const HARDWARE_SPEC_NOTES: Record<string, HardwareSpecNote> = {
   net_quantum_bus: { source: 'fiction' }
 };
 
-export function specSourceLabel(language: 'es' | 'en', source: SpecSource): string {
-  const labels: Record<SpecSource, [string, string]> = {
-    spec: ['dato del fabricante', 'vendor spec'],
-    estimate: ['estimado', 'estimate'],
-    projection: ['proyección', 'projection'],
-    fiction: ['ficción', 'fiction']
-  };
-  return labels[source][language === 'es' ? 0 : 1];
+const SPEC_SOURCE_LABELS: Record<SpecSource, CatalogKey> = {
+  spec: 'hardwareSpecs.source.spec',
+  estimate: 'hardwareSpecs.source.estimate',
+  projection: 'hardwareSpecs.source.projection',
+  fiction: 'hardwareSpecs.source.fiction'
+};
+
+export function specSourceLabel(language: Language, source: SpecSource): string {
+  return tr(language, SPEC_SOURCE_LABELS[source]);
 }

@@ -36,14 +36,14 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { tierForUiVersion } from '../utils/missionTiers';
-import { localize, t } from '../utils/i18n';
+import { t } from '../utils/i18n';
 import { localizedContract } from '../utils/gameContentI18n';
 import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from '../utils/constants';
 import { generateDynamicContracts } from '../services/aiService';
 import { evaluateMissionTeam, isContractEligibleForTeam, modelRequirementCheck } from '../utils/missionEvaluation';
 import { formatCompute, formatGameTime } from '../utils/training';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
-import { tr } from '../i18n';
+import { tr, type CatalogKey } from '../i18n';
 
 // Squad colours identify the player's squads, so they stay distinct in every version.
 const SQUAD_COLORS = [
@@ -71,12 +71,12 @@ const getRequiredUiVersionForTier = (tier: string) => {
 };
 
 // Names and advice for each capability factor, shown when a mission fails.
-const FACTOR_HELP: Record<CapabilityFactor, { es: string; en: string; tipEs: string; tipEn: string }> = {
-  reasoning: { es: 'Razonamiento', en: 'Reasoning', tipEs: 'entrena el modelo para subir su puntaje o usa uno más grande', tipEn: 'train the model to raise its score or use a bigger one' },
-  specialization: { es: 'Especialización', en: 'Specialization', tipEs: 'usa un micro-modelo del dominio o una topología acorde al rol', tipEn: 'use a domain micro-model or a topology that suits the role' },
-  dataReadiness: { es: 'Datos', en: 'Data', tipEs: 'conecta al modelo las fuentes de datos que pide el contrato', tipEn: 'connect the data sources the contract asks for to the model' },
-  reliability: { es: 'Confiabilidad', en: 'Reliability', tipEs: 'baja la temperatura de inferencia del agente o usa menos cuantización', tipEn: 'lower the agent inference temperature or use less quantization' },
-  safety: { es: 'Seguridad', en: 'Safety', tipEs: 'sube la rigurosidad de los guardrails o suma un supervisor', tipEn: 'raise guardrail strictness or add an overseer' }
+const FACTOR_HELP: Record<CapabilityFactor, { label: CatalogKey; tip: CatalogKey }> = {
+  reasoning: { label: 'contractBoard.factor.reasoning', tip: 'contractBoard.factor.reasoningTip' },
+  specialization: { label: 'contractBoard.factor.specialization', tip: 'contractBoard.factor.specializationTip' },
+  dataReadiness: { label: 'contractBoard.factor.dataReadiness', tip: 'contractBoard.factor.dataReadinessTip' },
+  reliability: { label: 'contractBoard.factor.reliability', tip: 'contractBoard.factor.reliabilityTip' },
+  safety: { label: 'contractBoard.factor.safety', tip: 'contractBoard.factor.safetyTip' }
 };
 
 export const ContractBoard: React.FC = () => {
@@ -548,9 +548,9 @@ export const ContractBoard: React.FC = () => {
                         <ul className="list-disc list-inside space-y-0.5">
                           {state.lastMissionOutcome.weakestFactors!.map(f => (
                             <li key={f.factor}>
-                              <strong>{localize(state.language, FACTOR_HELP[f.factor].es, FACTOR_HELP[f.factor].en)} {f.score}/100</strong>
+                              <strong>{tr(state.language, FACTOR_HELP[f.factor].label)} {f.score}/100</strong>
                               {': '}
-                              {localize(state.language, FACTOR_HELP[f.factor].tipEs, FACTOR_HELP[f.factor].tipEn)}.
+                              {tr(state.language, FACTOR_HELP[f.factor].tip)}.
                             </li>
                           ))}
                         </ul>
@@ -714,7 +714,7 @@ export const ContractBoard: React.FC = () => {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             {getTierBadge(contract.tier, contract)}
-                            <span className="text-[11px] mutating-text-muted font-mono">{t(state.language, 'client')}: {contract.client}</span>
+                            <span className="text-[11px] mutating-text-muted font-mono">{t(state.language, 'client')}: {displayContract.client}</span>
                             {contract.lastAttemptFailed && (
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold theme-warn-text theme-warn-soft border theme-warn-border animate-pulse">
                                 <AlertTriangle className="w-2.5 h-2.5 theme-warn-text" />

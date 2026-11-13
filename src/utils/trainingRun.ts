@@ -4,6 +4,7 @@
  */
 
 import { iqGainForRun, reasoningCeilingFor } from './training';
+import { tr, type CatalogKey, type Language } from '../i18n';
 
 // What happens in one training run, decided when it starts. The run then plays the curves back and
 // stops at the planned epoch. The rules follow what a real run teaches:
@@ -166,8 +167,11 @@ export function sanitizeTrainingConfig(value: unknown): TrainingConfig {
   };
 }
 
-export const learningRateLabel = (language: 'es' | 'en', lr: LearningRatePreset): string =>
-  ({
-    es: { low: 'bajo', balanced: 'equilibrado', high: 'alto', very_high: 'muy alto' },
-    en: { low: 'low', balanced: 'balanced', high: 'high', very_high: 'very high' }
-  })[language === 'es' ? 'es' : 'en'][lr];
+const LEARNING_RATE_LABELS: Record<LearningRatePreset, CatalogKey> = {
+  low: 'trainingRun.lr.low',
+  balanced: 'trainingRun.lr.balanced',
+  high: 'trainingRun.lr.high',
+  very_high: 'trainingRun.lr.veryHigh'
+};
+
+export const learningRateLabel = (language: Language, lr: LearningRatePreset): string => tr(language, LEARNING_RATE_LABELS[lr]);

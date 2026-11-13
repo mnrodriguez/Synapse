@@ -51,9 +51,8 @@ describe('text catalog', () => {
     expect(unused).toEqual([]);
   });
 
-  test('no new inline translations: literal localize() calls are gone', () => {
-    const inline = code.match(/localize\([^,()]+,\s*['`][^'`]*['`],\s*['`][^'`]*['`]\)/g) ?? [];
-    expect(inline).toEqual([]);
+  test('no inline translations: the localize(es, en) helper is gone', () => {
+    expect(code.match(/\blocalize\(/g) ?? []).toEqual([]);
   });
 
   test('parameters are filled in and versions fall back to the plain key', () => {

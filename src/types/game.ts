@@ -525,6 +525,7 @@ export interface BreachOption {
 
 export interface BreachIncident {
   id: string;
+  templateId?: string; // which REAL_WORLD_BREACH_TEMPLATES entry it came from; its texts live in the catalog
   title: string;
   agentId: string;
   agentName: string;

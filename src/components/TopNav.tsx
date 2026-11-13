@@ -158,9 +158,9 @@ export const TopNav: React.FC<TopNavProps> = ({
             title="Language Switcher / Selector de Idioma"
           >
             <Languages className="w-3.5 h-3.5 mutating-accent-text" />
-            <span className={`px-1.5 py-0.2 rounded font-bold ${state.language === 'en' ? 'mutating-btn-primary' : 'mutating-text-muted'}`}>EN</span>
+            <span className={`px-1.5 py-0.2 rounded font-bold ${tr(state.language, 'topNav.mutatingBtnPrimary')}`}>EN</span>
             <span className="opacity-40">|</span>
-            <span className={`px-1.5 py-0.2 rounded font-bold ${state.language === 'es' ? 'mutating-btn-primary' : 'mutating-text-muted'}`}>ES</span>
+            <span className={`px-1.5 py-0.2 rounded font-bold ${tr(state.language, 'topNav.mutatingTextMuted')}`}>ES</span>
           </button>
 
           {/* Manual (in-game viewer and PDF) */}
