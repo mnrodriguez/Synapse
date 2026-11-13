@@ -481,5 +481,109 @@ Small phases, each can ship alone. Re-run `bun docs/review2/simulate.ts 1 normal
 14. S-3 one real decision per version; S-2 v4 lines from recorded choices; S-4 epilogue from play history; S-5 upgrade promises.
 15. G-6 the five hands-on missions.
 
+**Phase 3b — Compute as one budget (requested after the review; plan in section 8).**
+- M-1 ledger → M-4 display in TFLOPS/PFLOPS → M-2 several contracts and M-3 cancel → M-5 autonomy budget (save schema 12) → M-7 manual. Needs PR #45 merged and G-2 fixed first.
+
 **Phase 6 — Polish (P2).**
 16. U-4, U-5, E-2, E-3, S-6, T-2 round-trip save test, R-6 remaining real institution names, UI-3 and UI-5 leftovers of section 3.
+
+---
+
+## 8. Plan: compute as one shared budget (contracts, agents, training, autonomy)
+
+Added on request after the first version of this report. It is a plan only: no code was changed. Everything under "What happens today" was read in `main` at `53ad084`; nothing here was run in the browser.
+
+### 8.1 What happens today [V by reading]
+
+| Question | Answer in the code | Where |
+|---|---|---|
+| Do agents use compute? | **Yes.** Every agent that is not quarantined takes 0.2 TFLOPS all the time, working or idle, whatever the size of its model. | `constants.ts:1417`, `GameContext.tsx:984-985` |
+| Do running contracts use compute? | **Yes, but a fixed amount per contract**: 2 TFLOPS per billion parameters the contract asks for, at least 1 TFLOPS. It does not depend on the team or on the model actually used. | `GameContext.tsx:1954`, `ContractBoard.tsx:246` |
+| Does training feel it? | **Partly.** Each tick, training speed = GPUs + external − agents − running contracts (`trainingTick.ts:48,58-66`), so a contract does slow a run. In v1 one contract takes 1 of 4.4 TFLOPS (training 23 % slower). From v3 the 80 PFLOPS link makes it invisible (finding G-2). **Nothing on screen says it**: the run panel shows no "slowed by" line. |  |
+| Is the rule the same in both directions? | **No.** Launching a contract while training requires half of the whole cluster to be left for training (`GameContext.tsx:1957-1958`). Starting a run while contracts are running has no check at all. Dataset scraping reserves nothing. |  |
+| Can two contracts run at once? | **The engine allows it** (`activeGigs` is a list; the board has a "simultaneous operations" block, `ContractBoard.tsx:401-423`). **The board gets in the way**: a contract with no manual assignment defaults to *all* free agents, or to the first squad (`ContractBoard.tsx:getAssignedAgentsForContract`). After the first launch every other card shows "team busy", even with enough compute. To run two today the player has to pick agents by hand on each card or build squads first; nothing explains that. | |
+| Can a contract be cancelled? | **No.** There is no cancel action anywhere in `src/` (training has one, `cancelTraining`). | |
+| Autonomous contracts: more than one at a time? | **No.** Each tick the bot picks one contract and sends **every** free autonomous agent to it (`missionTick.ts:175-232`, `assignedAgents = autonomousAgents`). Also a bug: the compute check ignores contracts already running (`missionEvaluation.ts:findAutonomousMission` subtracts agents and the training half, not `runningCompute`), so autonomy can overbook the cluster. | |
+| What the card shows | "Cluster Demand: 1.0 TFLOPS · +0.05 kW" (`ContractBoard.tsx:902`). Watts are shown next to compute on every card. | |
+
+So the assumption is right: agents and contracts consume compute. The missing parts are one consistent rule, a screen that shows it, and the controls (several contracts, cancel, autonomy budget).
+
+### 8.2 Target rule
+
+One sentence the manual can print: **"Your cluster has one compute budget. Agents and contracts take their share first; training gets what is left."**
+
+- Compute in use = agents + running contracts (manual and autonomous) + scraping job. Training speed = what remains. No "half the cluster" rule.
+- A contract can launch when free compute (after agents and running contracts, **not** counting training) covers its need. Training never blocks a contract; it slows down, and the player sees by how much before confirming.
+- A training run can always start; if nothing is left it runs at 0 and the panel says why.
+- Power (kW) stays a rule (breaker, heat) but leaves the contract cards. It is shown on the Hardware tab, and on a card only when it is the thing that blocks the launch.
+
+### 8.3 Work items
+
+**M-1 · One ledger for compute** (do first; everything else reads it)
+- New pure function, for example `src/utils/computeLedger.ts`: `computeLedger(state) → { total, agents, missions: [{ runId, pflops, autonomous }], autonomousTotal, scraping, usedTotal, trainingShare, free }`.
+- Replace the four places that each do their own subtraction: the tick (`GameContext.tsx:980-990`), `startContract` (`:1954-1970`), `ContractBoard.tsx:126-130`, `HardwareRack.tsx:77`, and `findAutonomousMission`.
+- Agent cost: keep 0.2 TFLOPS as the standby cost. Decision for the author (8.5, D-1): whether an agent on a contract should cost more, in proportion to its model's parameters. My recommendation: yes, and fold the contract's fixed cost into it, so a team with a 70M model costs less than the same team with a 7B model. That makes "use the smallest model that qualifies" a real decision.
+- Depends on G-2: while the v3 link gives 80 PFLOPS, no contract will ever be felt. Fix G-2 in the same phase or the work only shows in v1 and v2.
+- Verify: unit tests for the ledger (sum of parts = used; never negative); `tick.test.ts`: a run with one contract active progresses slower by exactly the contract's share.
+
+**M-2 · Several contracts at once**
+- Change the default team: instead of "all free agents", propose the **smallest free team that qualifies** (the required roles, plus the best free agent whose model meets parameters, score and topology). A pure helper next to `isContractEligibleForTeam` in `missionEvaluation.ts`; the same helper serves autonomy (M-5).
+- Card shows "Team: 2 of 5 free agents" with the proposal pre-selected and editable. When it cannot launch, one reason in words: "all agents are on other contracts", "needs 1.0 TFLOPS, 0.4 free", "needs an economist".
+- An agent still does one contract at a time; that stays.
+- Verify: with 4 free agents and compute to spare, launch two contracts in a row without touching the agent picker (Playwright); unit test for the team helper.
+
+**M-3 · Cancel a contract**
+- New action `cancelMission(runId)`: removes the run, sets its agents back to `active`, frees its compute, pays nothing, leaves the contract on the board. Works for manual and autonomous runs. A confirm step on the button, as with destructive actions elsewhere.
+- Cost (8.5, D-2). Recommendation: suspicion = contract risk × 25 % × share of the run already done (the same 25 % a success adds, scaled by progress), no credits lost. It is cheap enough to use and still not free at high risk.
+- Must not count as a failure (`failureCount`, `lastAttemptFailed`) and must not write a mission outcome report.
+- Verify: `tick.test.ts`: after cancel the agents are active, the ledger no longer lists the run, credits unchanged, suspicion as specified; the contract can be launched again.
+
+**M-4 · Show compute in use, not watts**
+- HUD compute card: "In use 3.2 / 4.4 TFLOPS" with one segmented bar (agents · contracts · training · free), using `formatCompute` so units adapt. The breaker load line stays as the second line; it is the heat and power lesson.
+- Contract card: "Needs 1.0 TFLOPS · free now 2.1 TFLOPS". Remove "+0.05 kW".
+- Running-contracts block: per run "using 1.0 TFLOPS", plus the total.
+- Agents tab: PR #45 already replaces the false income gauge with "agent load" in TFLOPS and kW; drop the kW there too for consistency.
+- Training panel: "Speed now: 62 % of the cluster (contracts −23 %, agents −15 %)" and the time estimate from the remaining share.
+- Before confirming a launch while a run is active: "Training will slow from 23 h to 31 h of game time."
+- The Hardware tab already has the pattern ("Compute power / Reserved compute / Available compute"); reuse its labels.
+- Verify: screenshots in v1 and v4 at 1280 and 390 px; the numbers on the HUD, the card and the Hardware tab are the same ledger values.
+
+**M-5 · Autonomy: a compute budget and several contracts**
+- New setting next to the existing risk limit: **"Compute for autonomous contracts"**, a slider from 0 to 100 % of the cluster (shown also in TFLOPS). Stored as `autonomyComputeShare`. This is a new saved field: `SAVE_SCHEMA_VERSION` 12, default 30 % for old saves, clamped on load, one migration test.
+- Tick logic (`missionTick.ts`): while free autonomous agents remain and autonomous use is under the budget, take the best contract that fits (risk limit, team from the M-2 helper, compute within the budget and within the free total), launch it with **only that team**, repeat. Cap at one new launch per tick so the log stays readable; several run in parallel after a few ticks.
+- Fix the overbooking bug as part of this (running contracts are subtracted by the ledger).
+- The 60 % payout, −8 points and ×1.45 duration of autonomous runs stay as they are.
+- Verify: `tick.test.ts`: with 4 autonomous agents, budget 50 % and two fitting contracts, two runs are active after two ticks and their compute sum is ≤ the budget; with budget 0 nothing launches.
+
+**M-6 · Who picks the contracts: code or Chrome's model?**
+Recommendation: **code for the choice, Chrome's model only for the wording.**
+- The choice runs inside the tick, up to 500 times a second at 50x, and must give the same result in tests. The built-in model is asynchronous, takes seconds, is missing on phones and on most browsers, and can return something unusable; every one of those cases would need the coded picker anyway as fallback.
+- A coded picker is short: sort by reward per tick per TFLOPS, discounted by risk (the present formula in `findAutonomousMission` plus the compute term), then filter by budget.
+- Where the model does help, optionally: one sentence in the log explaining the pick in the voice of the current version ("Took the CSV job: low risk, and it leaves room for your training run"), with the fixed text as fallback. The game already does this for mission assessments (`GameContext.tsx:600-725`), so the plumbing exists. In v3 and v4 that sentence is also a good place for the story (the agent justifying a riskier pick).
+- If more flexibility is wanted later, add a "priority" selector (credits · progress · low risk) that changes the sort key. Still code.
+
+**M-7 · Manual and tests**
+- The in-game manual of PR #45 states the "half of the cluster while it is training" rule and the kW per contract (chapters 3 and 5). Update those sentences and move the new constants (standby cost, budget default, cancel share) to `rules.ts` so the manual keeps quoting the code.
+- Re-run `docs/review2/simulate.ts` and check that v1 still completes its first contract in the first minutes with one GPU: under the new rule a 1 TFLOPS contract plus one agent leaves 3.2 of 4.4 TFLOPS for training, which is the intended "felt but not blocking" level.
+
+### 8.4 Order
+
+After PR #45 is merged (it creates `rules.ts` and the agent-load gauges that M-4 builds on).
+
+1. M-1 ledger, with tests. No visible change yet except the removed "half" rule.
+2. M-4 display (HUD, cards, training panel). The player can now see the budget.
+3. M-2 several contracts, M-3 cancel.
+4. M-5 autonomy budget (save schema 12), M-6 optional log sentence.
+5. M-7 manual text and simulation check.
+
+G-2 (the 80 PFLOPS link) should be fixed before or together with step 1.
+
+### 8.5 Decisions for the author
+
+| # | Decision | My recommendation |
+|---|---|---|
+| D-1 | Does a working agent cost compute in proportion to its model's size? | Yes; replace the per-contract fixed cost with it. |
+| D-2 | What does cancelling cost? | Suspicion only: 25 % of the risk × share of the run done. No credits. |
+| D-3 | Can a contract take compute from a running training? | Yes: training slows and the launch dialog says by how much. |
+| D-4 | Autonomy budget as a share of the cluster or as a fixed amount? | Share (it keeps working when hardware changes); show the TFLOPS next to it. |
+| D-5 | Keep watts anywhere on the contract screen? | Only as the stated reason when power is what blocks a launch. |

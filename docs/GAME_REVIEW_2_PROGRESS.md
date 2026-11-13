@@ -29,4 +29,7 @@ Report: `docs/GAME_REVIEW_2.md` · Branch: `claude/trusting-bardeen-kpx3qj` · P
 
 Supporting files: `docs/review2/simulate.ts` (full-run simulation), `docs/review2/sim_results.txt`, `docs/review2/screenshots.cjs`, `docs/review2/shots/`, `docs/review2/shots_pr45/`.
 
-STOPPED AT: all steps finished and pushed. NEXT: nothing pending; the author decides on the PR #45 fixes (report section 1.7).
+- [x] Addendum (requested after delivery): plan for shared compute, several contracts, cancel, compute display, autonomy budget
+  - Result: report section 8 (M-1 to M-7, decisions D-1 to D-5). Plan only, no code changed.
+
+STOPPED AT: all steps finished and pushed, including the section 8 addendum. NEXT: nothing pending; the author decides D-1 to D-5 and the PR #45 fixes.
