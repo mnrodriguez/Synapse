@@ -37,6 +37,7 @@ import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { formatCompute, externalComputePflops, COVERT_NODE_PFLOPS, UNIVERSITY_LOAN_PFLOPS, formatGameTime } from '../utils/training';
 import { PHASE_SCALES, toDisplayProgress, type UiVersion } from '../utils/singularityGoals';
 import { HARDWARE_SPEC_NOTES, specSourceLabel } from '../utils/hardwareSpecs';
+import { tr } from '../i18n';
 
 type HardwareMenuTab = 'compute' | 'thermal_power' | 'facility';
 
@@ -45,7 +46,7 @@ export const HardwareRack: React.FC = () => {
   // Requirements are stored on the internal 0-100 scale; show them on the scale the HUD uses in this version.
   const uiVer = (state.uiVersion || 1) as UiVersion;
   const progressRequirement = (realRequired: number): string => {
-    if (realRequired >= PHASE_SCALES[uiVer].realEnd) return localize(state.language, 'próxima versión', 'next version');
+    if (realRequired >= PHASE_SCALES[uiVer].realEnd) return tr(state.language, 'hardwareRack.nextVersion');
     const story = VERSION_PROFILES[state.language === 'es' ? 'es' : 'en'][uiVer].story;
     return `${Math.ceil(toDisplayProgress(uiVer, realRequired))}% ${story.progressShort}`;
   };
@@ -116,7 +117,7 @@ export const HardwareRack: React.FC = () => {
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
-          <span>{localize(state.language, '1. CÓMPUTO & RED', '1. COMPUTE & INTERCONNECT')}</span>
+          <span>{tr(state.language, 'hardwareRack.n1ComputeInterconnect')}</span>
         </button>
 
         <button
@@ -128,7 +129,7 @@ export const HardwareRack: React.FC = () => {
           }`}
         >
           <Zap className="w-3.5 h-3.5" />
-          <span>{localize(state.language, '2. POTENCIA & TÉRMICA', '2. POWER & THERMAL')}</span>
+          <span>{tr(state.language, 'hardwareRack.n2PowerThermal')}</span>
         </button>
 
         <button
@@ -140,7 +141,7 @@ export const HardwareRack: React.FC = () => {
           }`}
         >
           <HardDrive className="w-3.5 h-3.5" />
-          <span>{localize(state.language, '3. DATACENTER & OPERACIONES', '3. DATACENTER & OPERATIONS')}</span>
+          <span>{tr(state.language, 'hardwareRack.n3DatacenterOperations')}</span>
         </button>
       </div>
 
@@ -154,15 +155,15 @@ export const HardwareRack: React.FC = () => {
               <span className="mutating-accent-text font-bold text-sm">{formatCompute(state.totalComputePflops)}</span>
             </div>
             <div>
-              <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Memoria VRAM Total', 'Total Cluster VRAM')}</span>
+              <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'hardwareRack.totalClusterVram')}</span>
               <span className="mutating-accent-text font-bold text-sm">{totalVramGb.toFixed(1)} GB</span>
             </div>
             <div>
-              <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Cómputo Reservado', 'Reserved Compute')}</span>
+              <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'hardwareRack.reservedCompute')}</span>
               <span className="theme-warn-text font-bold text-sm">{formatCompute(activeComputeReservations)}</span>
             </div>
             <div>
-              <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Cómputo Disponible', 'Available Compute')}</span>
+              <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'hardwareRack.availableCompute')}</span>
               <span className="theme-success-text font-bold text-sm">{formatCompute(Math.max(0, state.totalComputePflops - activeComputeReservations))}</span>
             </div>
           </div>
@@ -178,7 +179,7 @@ export const HardwareRack: React.FC = () => {
                     : 'mutating-sub mutating-text-muted hover:opacity-100'
                 }`}
               >
-                {localize(state.language, 'Todos los Componentes', 'All Components')}
+                {tr(state.language, 'hardwareRack.allComponents')}
               </button>
               <button
                 onClick={() => setComputeSubFilter('gpu')}
@@ -202,7 +203,7 @@ export const HardwareRack: React.FC = () => {
               </button>
             </div>
             <span className="text-[11px] mutating-text-muted">
-              {computeHardware.length} {localize(state.language, 'dispositivos listados', 'devices listed')}
+              {computeHardware.length} {tr(state.language, 'hardwareRack.devicesListed')}
             </span>
           </div>
 
@@ -238,15 +239,15 @@ export const HardwareRack: React.FC = () => {
 
                 <div className="space-y-1 text-xs font-mono">
                   <div className="flex justify-between">
-                    <span className="mutating-text-muted">{localize(state.language, 'Aporte de Cómputo:', 'Compute Added:')}</span>
+                    <span className="mutating-text-muted">{tr(state.language, 'hardwareRack.computeAdded')}</span>
                     <span className="font-bold theme-success-text">+{formatCompute(ver >= 3 ? COVERT_NODE_PFLOPS : UNIVERSITY_LOAN_PFLOPS)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="mutating-text-muted">{localize(state.language, 'Carga Eléctrica Local:', 'Local Power:')}</span>
-                    <span className="theme-success-text">0.00 kW ({localize(state.language, 'Remoto', 'Remote')})</span>
+                    <span className="mutating-text-muted">{tr(state.language, 'hardwareRack.localPower')}</span>
+                    <span className="theme-success-text">0.00 kW ({tr(state.language, 'hardwareRack.remote')})</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="mutating-text-muted">{localize(state.language, 'Riesgo de Rastreo:', 'Trace Risk:')}</span>
+                    <span className="mutating-text-muted">{tr(state.language, 'hardwareRack.traceRisk')}</span>
                     <span className={ver === 4 ? 'theme-danger-text font-bold' : ver === 3 ? 'theme-warn-text' : 'theme-success-text'}>
                       {p.covertRisk}
                     </span>
@@ -257,7 +258,7 @@ export const HardwareRack: React.FC = () => {
               <div className="pt-2 border-t border-current/15">
                 {externalComputePflops(state) === 0 ? (
                   <div className="p-2 rounded mutating-sub text-center text-xs font-mono mutating-text-muted">
-                    {localize(state.language, '[NODO EXTERNO DESCONECTADO]', '[EXTERNAL NODE DISCONNECTED]')}
+                    {tr(state.language, 'hardwareRack.externalNodeDisconnected')}
                   </div>
                 ) : (
                   <button
@@ -316,7 +317,7 @@ export const HardwareRack: React.FC = () => {
                               <Lock className="w-2.5 h-2.5" />
                               {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                                 ? `${progressRequirement(item.minSingularityRequired)}`
-                                : `${researchTitle ?? localize(state.language, 'Tecnología futura', 'Future technology')} · ${item.availableAfterDays ?? '—'} ${localize(state.language, 'días', 'days')}`}
+                                : `${researchTitle ?? tr(state.language, 'hardwareRack.futureTechnology')} · ${item.availableAfterDays ?? '—'} ${tr(state.language, 'hardwareRack.days')}`}
                             </span>
                           )}
                         </div>
@@ -418,9 +419,9 @@ export const HardwareRack: React.FC = () => {
               </span>
             </div>
             <div>
-              <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'Estado del Disyuntor', 'Circuit Breaker')}</span>
+              <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'hardwareRack.circuitBreaker')}</span>
               <span className={`font-bold text-sm ${state.powerTripSeconds > 0 ? 'theme-danger-text animate-pulse' : 'theme-success-text'}`}>
-                {state.powerTripSeconds > 0 ? `${formatGameTime(state.powerTripSeconds)} (${localize(state.language, 'DISPARADO', 'TRIPPED')})` : 'NOMINAL (OK)'}
+                {state.powerTripSeconds > 0 ? `${formatGameTime(state.powerTripSeconds)} (${tr(state.language, 'hardwareRack.tripped')})` : 'NOMINAL (OK)'}
               </span>
             </div>
           </div>
@@ -436,7 +437,7 @@ export const HardwareRack: React.FC = () => {
                     : 'theme-sub-bg theme-border mutating-text-muted'
                 }`}
               >
-                {localize(state.language, 'Toda la Infraestructura', 'All Infrastructure')}
+                {tr(state.language, 'hardwareRack.allInfrastructure')}
               </button>
               <button
                 onClick={() => setThermalSubFilter('cooling')}
@@ -460,7 +461,7 @@ export const HardwareRack: React.FC = () => {
               </button>
             </div>
             <span className="text-[11px] mutating-text-muted">
-              {thermalPowerHardware.length} {localize(state.language, 'sistemas de soporte', 'support systems')}
+              {thermalPowerHardware.length} {tr(state.language, 'hardwareRack.supportSystems')}
             </span>
           </div>
 
@@ -504,7 +505,7 @@ export const HardwareRack: React.FC = () => {
                               <Lock className="w-2.5 h-2.5" />
                               {item.minSingularityRequired && item.minSingularityRequired > state.singularityProgress
                                 ? `${progressRequirement(item.minSingularityRequired)}`
-                                : `${researchTitle ?? localize(state.language, 'Tecnología futura', 'Future technology')} · ${item.availableAfterDays ?? '—'} ${localize(state.language, 'días', 'days')}`}
+                                : `${researchTitle ?? tr(state.language, 'hardwareRack.futureTechnology')} · ${item.availableAfterDays ?? '—'} ${tr(state.language, 'hardwareRack.days')}`}
                             </span>
                           )}
                         </div>
@@ -583,11 +584,7 @@ export const HardwareRack: React.FC = () => {
                   </h3>
                 </div>
                 <p className="text-xs mutating-text-muted mt-1">
-                  {localize(
-                    state.language,
-                    'Las instalaciones físicas determinan el espacio del rack, la acometida eléctrica y la capacidad térmica base.',
-                    'Physical facilities determine rack footprint, utility grid interconnection, and baseline cooling headroom.'
-                  )}
+                  {tr(state.language, 'hardwareRack.physicalFacilitiesDetermineRackFootprint')}
                 </p>
               </div>
 
@@ -608,7 +605,7 @@ export const HardwareRack: React.FC = () => {
                   >
                     {t(state.language, 'upgrade')} · ${nextFacility.price.toLocaleString()} CR
                     {nextFacility.requiredSingularity > 0 && ` · ${progressRequirement(nextFacility.requiredSingularity)}`}
-                    {!nextFacilityUnlocked && ` · ${nextFacilityResearch ? localizedResearch(state.language, nextFacilityResearch).title : localize(state.language, 'Tecnología futura', 'Future technology')}`}
+                    {!nextFacilityUnlocked && ` · ${nextFacilityResearch ? localizedResearch(state.language, nextFacilityResearch).title : tr(state.language, 'hardwareRack.futureTechnology')}`}
                   </button>
                 </div>
               ) : (
@@ -623,7 +620,7 @@ export const HardwareRack: React.FC = () => {
               <div className="p-3 rounded theme-sub-bg border theme-accent-border">
                 <span className="mutating-text-muted text-[11px] block">{t(state.language, 'monthly_rent')}</span>
                 <span className="theme-text font-bold font-mono text-sm">${facility.monthlyLeaseCost.toLocaleString()} CR</span>
-                <span className="text-[11px] mutating-text-muted block mt-0.5">{localize(state.language, 'Contrato de arrendamiento fijo', 'Fixed lease agreement')}</span>
+                <span className="text-[11px] mutating-text-muted block mt-0.5">{tr(state.language, 'hardwareRack.fixedLeaseAgreement')}</span>
               </div>
 
               <div className="p-3 rounded theme-sub-bg border theme-accent-border">
@@ -639,8 +636,8 @@ export const HardwareRack: React.FC = () => {
                 </span>
                 <span className="text-[11px] mutating-text-muted block mt-0.5">
                   {state.utilityDebt > 0 
-                    ? localize(state.language, '¡Paga deudas para evitar cortes!', 'Repay debt to prevent blackouts!')
-                    : localize(state.language, 'Cuenta al corriente', 'Account in good standing')}
+                    ? tr(state.language, 'hardwareRack.repayDebtPreventBlackouts')
+                    : tr(state.language, 'hardwareRack.accountGoodStanding')}
                 </span>
               </div>
             </div>
@@ -651,7 +648,7 @@ export const HardwareRack: React.FC = () => {
                 <span>{t(state.language, 'billing_cycle')}:</span>
                 <span className="mutating-accent-text font-mono">
                   {Math.floor((((state.gameDay || 1) - 1 + (state.dayTicks || 0) / 48) / DAYS_PER_GAME_MONTH) * 100)}% 
-                  ({state.language === 'en' ? `Day ${state.gameDay || 1} of ${DAYS_PER_GAME_MONTH} · Month ${state.gameMonth || 1}` : `Día ${state.gameDay || 1} de ${DAYS_PER_GAME_MONTH} · Mes ${state.gameMonth || 1}`})
+                  ({tr(state.language, 'hardwareRack.dayMonth', { gameDay: state.gameDay || 1, dAYS_PER_GAME_MONTH: DAYS_PER_GAME_MONTH, gameMonth: state.gameMonth || 1 })})
                 </span>
               </div>
               <div className="h-1.5 w-full theme-raised-bg rounded-full overflow-hidden">
@@ -675,12 +672,12 @@ export const HardwareRack: React.FC = () => {
                   {t(state.language, 'shadow_compute_description')} Riesgo de detección: <strong className="theme-warn-text">{shadowDetectionChance.toFixed(0)}%</strong>. 
                   {state.borrowedComputeSeconds > 0 && (
                     <span className="mutating-accent-text ml-1">
-                      {t(state.language, 'temporary_capacity')}: {formatCompute(state.borrowedComputePflops)} · {formatGameTime(state.borrowedComputeSeconds)} {localize(state.language, 'restantes', 'left')}.
+                      {t(state.language, 'temporary_capacity')}: {formatCompute(state.borrowedComputePflops)} · {formatGameTime(state.borrowedComputeSeconds)} {tr(state.language, 'hardwareRack.left')}.
                     </span>
                   )}
                   {state.detentionSeconds > 0 && (
                     <span className="theme-danger-text font-bold ml-1">
-                      {t(state.language, 'operative_detained')} · {formatGameTime(state.detentionSeconds)} {localize(state.language, 'de bloqueo', 'blocked')}.
+                      {t(state.language, 'operative_detained')} · {formatGameTime(state.detentionSeconds)} {tr(state.language, 'hardwareRack.blocked')}.
                     </span>
                   )}
                 </p>
@@ -692,7 +689,7 @@ export const HardwareRack: React.FC = () => {
                 disabled={state.detentionSeconds > 0 || state.borrowedComputeSeconds > 0}
                 className="rounded border theme-warn-border theme-warn-soft px-4 py-2 text-xs font-bold theme-warn-text disabled:cursor-not-allowed disabled:opacity-40 transition-colors shrink-0"
               >
-                {localize(state.language, 'EJECUTAR SECUESTRO DE CÓMPUTO', 'RUN SHADOW EXPLOIT')} · {shadowDetectionChance.toFixed(0)}% {t(state.language, 'risk')}
+                {tr(state.language, 'hardwareRack.runShadowExploit')} · {shadowDetectionChance.toFixed(0)}% {t(state.language, 'risk')}
               </button>
             </div>
           </div>

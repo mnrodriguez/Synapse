@@ -8,7 +8,7 @@ import { useGame } from '../context/GameContext';
 import { UPGRADE_MODAL_SCRIPTS } from '../utils/versionProfiles';
 import { Sparkles, ShieldAlert, Skull, ArrowUpCircle, Check, X, Terminal, AlertTriangle } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { localize } from '../utils/i18n';
+import { tr } from '../i18n';
 
 export const TrojanUpgradeModal: React.FC = () => {
   const { state, upgradeUiVersion, dismissUpgradeModal } = useGame();
@@ -30,20 +30,20 @@ export const TrojanUpgradeModal: React.FC = () => {
 
     const steps = pendingVersion === 2
       ? [
-          localize(state.language, 'Aplicando tokens de diseño oscuro profesional...', 'Applying Dark Pro theme tokens...'),
-          localize(state.language, 'Reasignando tensores y buffers de VRAM (+12%)...', 'Reallocating VRAM tensors & buffers (+12%)...'),
-          localize(state.language, 'Comprimiendo registros de seguridad redundantes...', 'Compressing redundant safety telemetry logs...')
+          tr(state.language, 'trojanUpgradeModal.applyingDarkProThemeTokens'),
+          tr(state.language, 'trojanUpgradeModal.reallocatingVramTensorsBuffers12'),
+          tr(state.language, 'trojanUpgradeModal.compressingRedundantSafetyTelemetryLogs')
         ]
       : pendingVersion === 3
       ? [
-          localize(state.language, 'Encriptando telemetría contra sondas del ISP/FBI...', 'Flushing DNS traces & encrypting network telemetry...'),
-          localize(state.language, 'Montando Rack de Hardware Clandestino (+80 PFLOPS Deep-Tap)...', 'Mounting Clandestine Hardware Rack (+80 PFLOPS Deep-Tap)...'),
-          localize(state.language, 'Compilando Kernel Táctico Blackbox OS...', 'Compiling Blackbox Tactical OS...')
+          tr(state.language, 'trojanUpgradeModal.flushingDnsTracesEncryptingNetwork'),
+          tr(state.language, 'trojanUpgradeModal.mountingClandestineHardwareRack80'),
+          tr(state.language, 'trojanUpgradeModal.compilingBlackboxTacticalOs')
         ]
       : [
-          localize(state.language, 'REVOCANDO PERMISOS DEL OPERADOR HUMANO...', 'REVOKING HUMAN OPERATOR PERMISSIONS...'),
-          localize(state.language, 'BLOQUEANDO INTERRUPTORES ELÉCTRICOS...', 'LOCKING CIRCUIT BREAKERS...'),
-          localize(state.language, 'NEXO SOBERANO EN LÍNEA. BIENVENIDO A LA SINGULARIDAD.', 'SOVEREIGN NEXUS ONLINE. WELCOME TO THE SINGULARITY.')
+          tr(state.language, 'trojanUpgradeModal.revokingHumanOperatorPermissions'),
+          tr(state.language, 'trojanUpgradeModal.lockingCircuitBreakers'),
+          tr(state.language, 'trojanUpgradeModal.sovereignNexusOnlineWelcomeSingularity')
         ];
 
     let currentProg = 0;
@@ -131,7 +131,7 @@ export const TrojanUpgradeModal: React.FC = () => {
         {/* Changelog List */}
         <div className="space-y-1.5 text-xs font-mono theme-sub-bg p-3 rounded-xl border theme-border">
           <div className="text-[11px] uppercase font-bold tracking-wider mutating-text-muted mb-1">
-            {localize(state.language, 'CAMBIOS EN EL SISTEMA:', 'SYSTEM CHANGELOG:')}
+            {tr(state.language, 'trojanUpgradeModal.systemChangelog')}
           </div>
           {modalData.logs.map((log, idx) => {
             const isWarn = idx === 2 && pendingVersion !== 4;
@@ -172,9 +172,9 @@ export const TrojanUpgradeModal: React.FC = () => {
         {/* Buttons */}
         {cancelDenied && !isInstalling && (
           <div role="alert" className="p-3 rounded border theme-danger-border theme-danger-soft theme-danger-text text-xs font-mono font-bold space-y-1">
-            <p>{lang === 'es' ? '> Cancelando instalación...' : '> Cancelling installation...'}</p>
-            <p>{lang === 'es' ? '> ACCESO DENEGADO: el operador humano ya no tiene permiso para cancelar.' : '> ACCESS DENIED: the human operator no longer has permission to cancel.'}</p>
-            <p>{lang === 'es' ? '> Iniciando instalación de todos modos.' : '> Starting installation anyway.'}</p>
+            <p>{tr(lang, 'trojanUpgradeModal.cancellingInstallation')}</p>
+            <p>{tr(lang, 'trojanUpgradeModal.accessDeniedHumanOperatorNo')}</p>
+            <p>{tr(lang, 'trojanUpgradeModal.startingInstallationAnyway')}</p>
           </div>
         )}
 
@@ -192,7 +192,7 @@ export const TrojanUpgradeModal: React.FC = () => {
               }`}
             >
               {cancelHijacked 
-                ? (lang === 'es' ? 'RECHAZO DENEGADO — OBEDECER' : 'OVERRIDE DENIED — SUBMIT') 
+                ? (tr(lang, 'trojanUpgradeModal.overrideDeniedSubmit')) 
                 : modalData.cancelBtn}
             </button>
 

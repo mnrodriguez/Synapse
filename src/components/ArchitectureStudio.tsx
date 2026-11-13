@@ -47,6 +47,7 @@ import { evaluateModelCapabilities } from '../utils/missionEvaluation';
 import { getModelOptionRequirement, isProgressionUnlocked } from '../utils/progression';
 import { DocLinkBadge } from './DocLinkBadge';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
+import { tr } from '../i18n';
 
 const DEFAULT_TRAINING_TOKENS_ESTIMATE = 50_000_000; // general corpus, used for the architecture estimate
 
@@ -157,7 +158,7 @@ export const ArchitectureStudio: React.FC = () => {
     const idx = active.indexOf(dsId);
     if (idx >= 0) {
       if (active.length === 1) {
-        addLog(localize(state.language, 'El modelo requiere al menos una fuente de datos conectada para entrenar.', 'The model needs at least one connected data source to train.'), 'warning');
+        addLog(tr(state.language, 'architectureStudio.modelNeedsLeastOneConnected'), 'warning');
         return;
       }
       active.splice(idx, 1);
@@ -230,7 +231,7 @@ export const ArchitectureStudio: React.FC = () => {
             className="flex items-center gap-1.5 px-3 py-1 theme-danger-soft border theme-danger-border theme-danger-text rounded text-xs transition-colors"
           >
             <AlertCircle className="w-3.5 h-3.5" />
-            <span>{localize(state.language, 'ABORTAR ENTRENAMIENTO', 'ABORT TRAINING')}</span>
+            <span>{tr(state.language, 'architectureStudio.abortTraining')}</span>
           </button>
         ) : (
           <button
@@ -244,7 +245,7 @@ export const ArchitectureStudio: React.FC = () => {
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span>
-              {localize(state.language, 'INICIAR ENTRENAMIENTO', 'START TRAINING')} ({current.name})
+              {tr(state.language, 'architectureStudio.startTraining')} ({current.name})
               {current.modelType === 'micro_model' ? ' · MICRO' : ''}
             </span>
           </button>
@@ -309,7 +310,7 @@ export const ArchitectureStudio: React.FC = () => {
                     className="max-w-48 truncate text-left disabled:cursor-not-allowed"
                     title={`${model.name} · score ${model.reasoningScore}`}
                   >
-                    {model.name} <span className="opacity-75">· {state.language === 'es' ? 'Puntaje' : 'Score'} {model.reasoningScore}</span>
+                    {model.name} <span className="opacity-75">· {tr(state.language, 'architectureStudio.score')} {model.reasoningScore}</span>
                   </button>
                   <button
                     type="button"
@@ -325,16 +326,16 @@ export const ArchitectureStudio: React.FC = () => {
 
                   {current.id === model.id ? (
                     <span className="ml-1 text-[11px] px-1.5 py-0.2 rounded theme-accent-soft mutating-accent-text font-bold border theme-accent-border shrink-0">
-                      {localize(state.language, 'ANFITRIÓN ✓', 'HOST ✓')}
+                      {tr(state.language, 'architectureStudio.host')}
                     </span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => mountHostModel(model.id)}
                       className="ml-1 text-[11px] px-1.5 py-0.2 rounded theme-accent-soft mutating-accent-text font-bold border theme-accent-border transition cursor-pointer shrink-0"
-                      title={localize(state.language, 'Montar como Agente Anfitrión de Synapse', 'Mount as Synapse Host Agent')}
+                      title={tr(state.language, 'architectureStudio.mountSynapseHostAgent')}
                     >
-                      🚀 {localize(state.language, 'Montar', 'Mount')}
+                      🚀 {tr(state.language, 'architectureStudio.mount')}
                     </button>
                   )}
                 </>
@@ -350,22 +351,18 @@ export const ArchitectureStudio: React.FC = () => {
           <div className="flex items-center gap-2 font-bold text-xs mutating-accent-text">
             <Sparkles className="w-4 h-4 mutating-accent-text" />
             <span>
-              {localize(state.language, 'GUÍA EDUCATIVA // ¿CÓMO SE ENTRENA Y CONFIGURA UN MODELO DE IA?', 'EDUCATIONAL GUIDE // HOW TO DESIGN & TRAIN AN AI MODEL')}
+              {tr(state.language, 'architectureStudio.educationalGuideHowDesignTrain')}
             </span>
           </div>
           <p className="text-[11px] leading-relaxed mutating-text-muted">
-            {localize(
-              state.language,
-              'Entrenar una IA consiste en procesar millones de palabras (tokens) de un dataset para ajustar sus conexiones neuronales (parámetros). Cuantos más parámetros tiene el modelo, mayor es su puntaje de evaluación, pero exigirá más memoria VRAM en tus GPUs y más refrigeración.',
-              'Training an AI means processing millions of dataset tokens to refine its neural weights (parameters). Models with more parameters achieve higher evaluation scores, but require more GPU VRAM and active cooling capacity.'
-            )}
+            {tr(state.language, 'architectureStudio.trainingAiMeansProcessingMillions')}
           </p>
           <div className="flex flex-wrap gap-2 text-[11px] pt-1 mutating-accent-text font-bold">
             <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border">
-              💡 {localize(state.language, `Dificultad ${state.difficulty.toUpperCase()}: Micro-parámetros optimizados automáticamente`, `Difficulty ${state.difficulty.toUpperCase()}: Micro-parameters automatically optimized`)}
+              💡 {tr(state.language, 'architectureStudio.difficultyMicroParametersAutomaticallyOptimized', { difficulty: state.difficulty.toUpperCase() })}
             </span>
             <span className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border mutating-accent-text">
-              ⚡ {localize(state.language, 'Recompensas de misiones ajustadas', 'Mission rewards adjusted')}
+              ⚡ {tr(state.language, 'architectureStudio.missionRewardsAdjusted')}
             </span>
           </div>
         </section>
@@ -392,8 +389,8 @@ export const ArchitectureStudio: React.FC = () => {
           </span>
         </div>
         <div>
-          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
-          <span className="mutating-accent-text font-bold">{state.language === 'es' ? 'Puntaje' : 'Score'} {current.reasoningScore} / 100</span>
+          <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'architectureStudio.reasoningBenchmark')}</span>
+          <span className="mutating-accent-text font-bold">{tr(state.language, 'architectureStudio.score')} {current.reasoningScore} / 100</span>
           {current.modelType === 'micro_model' && (
             <span className="text-[11px] mutating-accent-text block font-bold">
               +{Math.round(((current.domainProficiency || 1.5) - 1) * 100)}% {current.specializedDomain?.toUpperCase()}
@@ -401,19 +398,19 @@ export const ArchitectureStudio: React.FC = () => {
           )}
         </div>
         <div>
-          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'PREDICCIÓN CON HARDWARE ACTUAL', 'PREDICTION WITH CURRENT HW')}</span>
+          <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'architectureStudio.predictionCurrentHw')}</span>
           <span className="theme-success-text font-bold block">
             {estimatedTrainingSeconds === null
-              ? localize(state.language, 'Sin cómputo disponible', 'No compute available')
+              ? tr(state.language, 'architectureStudio.noComputeAvailable')
               : formatTrainingTime(estimatedTrainingSeconds, state.language)}
           </span>
           <span className="text-[11px] mutating-text-muted font-mono block">
             {estimatedTrainingSeconds === null
               ? ''
-              : `(~${formatTrainingDuration(estimatedTrainingSeconds / estimateSpeed)} ${localize(state.language, 'reales', 'real')} @ ${estimateSpeed}x)`}
+              : `(~${formatTrainingDuration(estimatedTrainingSeconds / estimateSpeed)} ${tr(state.language, 'architectureStudio.real')} @ ${estimateSpeed}x)`}
           </span>
           {state.gameSpeed === 0 && (
-            <span className="text-[11px] theme-warn-text block">{localize(state.language, 'Simulación pausada', 'Simulation paused')}</span>
+            <span className="text-[11px] theme-warn-text block">{tr(state.language, 'architectureStudio.simulationPaused')}</span>
           )}
         </div>
 
@@ -421,7 +418,7 @@ export const ArchitectureStudio: React.FC = () => {
         <div className="flex items-center justify-between col-span-2 sm:col-span-5 pt-2 border-t border-current/10">
           <div className="flex items-center gap-2">
             <span className="text-[11px] mutating-text-muted">
-              {localize(state.language, 'Agente Anfitrión Activo:', 'Active Host Agent:')} <strong className="mutating-accent-text">{current.name}</strong> ({state.language === 'es' ? 'Puntaje' : 'Score'} {current.reasoningScore} / 100)
+              {tr(state.language, 'architectureStudio.activeHostAgent')} <strong className="mutating-accent-text">{current.name}</strong> ({tr(state.language, 'architectureStudio.score')} {current.reasoningScore} / 100)
             </span>
           </div>
           <button
@@ -446,7 +443,7 @@ export const ArchitectureStudio: React.FC = () => {
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
-          <span>{localize(state.language, '1. TOPOLOGÍA & ESCALA', '1. TOPOLOGY & SCALE')}</span>
+          <span>{tr(state.language, 'architectureStudio.n1TopologyScale')}</span>
         </button>
         <button
           onClick={() => { sound.playKeyClick(); setActiveArchTab('precision'); }}
@@ -457,7 +454,7 @@ export const ArchitectureStudio: React.FC = () => {
           }`}
         >
           <Zap className="w-3.5 h-3.5" />
-          <span>{localize(state.language, '2. PRECISIÓN & VRAM', '2. PRECISION & VRAM')}</span>
+          <span>{tr(state.language, 'architectureStudio.n2PrecisionVram')}</span>
         </button>
         <button
           onClick={() => { sound.playKeyClick(); setActiveArchTab('training'); }}
@@ -468,7 +465,7 @@ export const ArchitectureStudio: React.FC = () => {
           }`}
         >
           <Settings2 className="w-3.5 h-3.5" />
-          <span>{localize(state.language, '3. HIPERPARÁMETROS & PIPELINES', '3. HYPERPARAMS & PIPELINES')}</span>
+          <span>{tr(state.language, 'architectureStudio.n3HyperparamsPipelines')}</span>
         </button>
         <button
           onClick={() => { sound.playKeyClick(); setActiveArchTab('sampling'); }}
@@ -479,7 +476,7 @@ export const ArchitectureStudio: React.FC = () => {
           }`}
         >
           <Sliders className="w-3.5 h-3.5" />
-          <span>{localize(state.language, '4. MUESTREO DE INFERENCIA', '4. INFERENCE SAMPLING')}</span>
+          <span>{tr(state.language, 'architectureStudio.n4InferenceSampling')}</span>
         </button>
       </div>
 
@@ -492,13 +489,13 @@ export const ArchitectureStudio: React.FC = () => {
           <div className="flex items-center gap-1.5">
             <Database className="w-4 h-4 mutating-accent-text" />
             <h3 className="text-xs font-bold tracking-wider mutating-accent-text">
-              {localize(state.language, 'ESPECIALIZACIÓN Y CORPUS DE ENTRENAMIENTO // BASELINE GENERAL VS MICRO-MODELOS', 'TRAINING DATASET & SPECIALIZATION // GENERAL BASELINE VS MICRO-MODELS')}
+              {tr(state.language, 'architectureStudio.trainingDatasetSpecializationGeneralBaseline')}
             </h3>
           </div>
           <span className="text-[11px] mutating-text-muted">
             {current.modelType === 'micro_model'
-              ? localize(state.language, `MODO: MICRO-MODELO (${current.specializedDomain?.toUpperCase()})`, `MODE: MICRO-MODEL (${current.specializedDomain?.toUpperCase()})`)
-              : localize(state.language, 'MODO: MODELO GENERAL (INFORMACIÓN AMPLIA)', 'MODE: GENERAL MODEL (BROAD SPECTRUM)')}
+              ? tr(state.language, 'architectureStudio.modeMicroModel', { specializedDomain: current.specializedDomain?.toUpperCase() })
+              : tr(state.language, 'architectureStudio.modeGeneralModelBroadSpectrum')}
           </span>
         </div>
 
@@ -549,7 +546,7 @@ export const ArchitectureStudio: React.FC = () => {
                   <span className="truncate">{dataset.name}</span>
                   {isSelected && (
                     <span className="text-[11px] mutating-accent-text font-mono">
-                      ✓ {localize(state.language, 'ACTIVO', 'ACTIVE')}
+                      ✓ {tr(state.language, 'architectureStudio.active')}
                     </span>
                   )}
                 </div>
@@ -560,14 +557,14 @@ export const ArchitectureStudio: React.FC = () => {
                     {isGeneral ? 'GENERAL T1' : `SPECIALIST T${dataset.tier}`}
                   </span>
                   <span>{dataset.tokensCount}M tok</span>
-                  <span>{dataset.qualityScore}% {localize(state.language, 'pureza', 'purity')}</span>
+                  <span>{dataset.qualityScore}% {tr(state.language, 'architectureStudio.purity')}</span>
                 </div>
                 <p className="text-[11px] mutating-text-muted mt-1 line-clamp-2 leading-tight">
                   {dataset.description}
                 </p>
                 {!isGeneral && (
                   <div className="mt-1 text-[11px] theme-success-text font-bold">
-                    +{Math.round(((1.4 + dataset.tier * 0.3) - 1) * 100)}% {localize(state.language, 'Pericia en contratos de', 'Proficiency in')} {dataset.domainLabel}
+                    +{Math.round(((1.4 + dataset.tier * 0.3) - 1) * 100)}% {tr(state.language, 'architectureStudio.proficiency')} {dataset.domainLabel}
                   </div>
                 )}
               </button>
@@ -592,34 +589,34 @@ export const ArchitectureStudio: React.FC = () => {
       <div className="space-y-1.5">
         <label className="text-xs mutating-text-muted font-bold flex items-center gap-1.5">
           <Cpu className="w-3.5 h-3.5 mutating-accent-text" />
-          {localize(state.language, 'TOPOLOGÍA DE RED Y PARADIGMA COMPUTACIONAL', 'NETWORK TOPOLOGY & COMPUTATIONAL PARADIGM')}
+          {tr(state.language, 'architectureStudio.networkTopologyComputationalParadigm')}
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
           {[
             {
               id: 'transformer',
-              name: localize(state.language, 'Transformer Autoregresivo (Decoder-Only)', 'Autoregressive Transformer (Decoder-Only)'),
-              desc: localize(state.language, 'Atención densa O(n²). Excelente coherencia global y modelado del lenguaje.', 'Dense O(n²) attention. Strong global coherence and language modeling.')
+              name: tr(state.language, 'architectureStudio.autoregressiveTransformerDecoderOnly'),
+              desc: tr(state.language, 'architectureStudio.denseONAttentionStrong')
             },
             {
               id: 'moe',
               name: 'Sparse Mixture-of-Experts (MoE)',
-              desc: localize(state.language, 'Enrutador Top-K. Multiplica parámetros activos sin elevar costo por token.', 'Top-K router increases model capacity without raising compute per token.')
+              desc: tr(state.language, 'architectureStudio.topKRouterIncreasesModel')
             },
             {
               id: 'mamba_ssm',
               name: 'State Space Model (Mamba SSM)',
-              desc: localize(state.language, 'Complejidad O(n) lineal. Memoria recurrente continua para secuencias ultra-largas.', 'Linear O(n) complexity with recurrent memory for very long sequences.')
+              desc: tr(state.language, 'architectureStudio.linearONComplexityRecurrent')
             },
             {
               id: 'gnn_hybrid',
               name: 'Graph Neural Network (GNN Hybrid)',
-              desc: localize(state.language, 'Paso de mensajes en grafos no euclidianos. Razonamiento relacional estricto.', 'Message passing on non-Euclidean graphs for structured relational reasoning.')
+              desc: tr(state.language, 'architectureStudio.messagePassingNonEuclideanGraphs')
             },
             {
               id: 'multimodal_diffusion',
               name: 'Multimodal Diffusion / Flow-Matching',
-              desc: localize(state.language, 'Generación conjunta texto-visión-código con trayectorias óptimas de difusión.', 'Joint text, vision, and code generation using optimized diffusion paths.')
+              desc: tr(state.language, 'architectureStudio.jointTextVisionCodeGeneration')
             }
           ].map(top => (
             (() => {
@@ -669,14 +666,10 @@ export const ArchitectureStudio: React.FC = () => {
           <div className="space-y-1.5 p-3 rounded-lg mutating-panel border">
             <label className="text-xs theme-text font-bold flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 theme-warn-text" />
-              <span>{localize(state.language, 'ESCALA DE PARÁMETROS // CAPACIDAD COGNITIVA', 'PARAMETER SCALE // COGNITIVE CAPACITY')}</span>
+              <span>{tr(state.language, 'architectureStudio.parameterScaleCognitiveCapacity')}</span>
             </label>
             <p className="text-[11px] mutating-text-muted">
-              {localize(
-                state.language,
-                'El número de parámetros define el volumen de conexiones neuronales del modelo. Regla de Chinchilla: Entrenar requiere ~20 tokens por parámetro.',
-                'Parameter count defines the total weight capacity. Chinchilla Scaling Law: Optimal training requires ~20 tokens per parameter.'
-              )}
+              {tr(state.language, 'architectureStudio.parameterCountDefinesTotalWeight')}
             </p>
             <div className="flex flex-wrap gap-1.5 pt-1">
               {paramPresets.map(preset => (
@@ -688,7 +681,7 @@ export const ArchitectureStudio: React.FC = () => {
                   key={preset.label}
                   disabled={!unlocked}
                   title={!unlocked
-                    ? localize(state.language, `Investiga ${requirement.requiredResearchId} o avanza al día ${requirement.availableAfterDays}`, `Research ${requirement.requiredResearchId} or advance to day ${requirement.availableAfterDays}`)
+                    ? tr(state.language, 'architectureStudio.researchAdvanceDay', { requiredResearchId: requirement.requiredResearchId, availableAfterDays: requirement.availableAfterDays })
                     : undefined}
                   onClick={() => handleParamsPreset(preset.value, preset.label)}
                   className={`px-3 py-1.5 rounded text-xs font-mono font-bold border transition-all disabled:cursor-not-allowed disabled:opacity-35 ${
@@ -704,8 +697,8 @@ export const ArchitectureStudio: React.FC = () => {
               ))}
             </div>
             <div className="mt-2 p-2 rounded theme-sub-bg border theme-border text-[11px] mutating-text-muted flex flex-wrap items-center justify-between gap-2">
-              <span>{localize(state.language, 'Tokens Óptimos Chinchilla:', 'Chinchilla Optimal Tokens:')} <strong className="mutating-accent-text font-mono">{(current.parametersCount * 20 / 1_000_000).toFixed(0)}M tokens</strong></span>
-              <span>{localize(state.language, 'Cómputo Teórico:', 'Theoretical Compute:')} <strong className="mutating-accent-text font-mono">{(6 * current.parametersCount * (current.parametersCount * 20)).toExponential(2)} FLOPs</strong></span>
+              <span>{tr(state.language, 'architectureStudio.chinchillaOptimalTokens')} <strong className="mutating-accent-text font-mono">{(current.parametersCount * 20 / 1_000_000).toFixed(0)}M tokens</strong></span>
+              <span>{tr(state.language, 'architectureStudio.theoreticalCompute')} <strong className="mutating-accent-text font-mono">{(6 * current.parametersCount * (current.parametersCount * 20)).toExponential(2)} FLOPs</strong></span>
             </div>
           </div>
         </div>
@@ -718,14 +711,10 @@ export const ArchitectureStudio: React.FC = () => {
               <div>
                 <h3 className="text-sm font-semibold theme-text flex items-center gap-2">
                   <Cpu className="w-4 h-4 mutating-accent-text" />
-                  {localize(state.language, 'Precisión Numérica & Mecanismo de Atención', 'Numerical Precision & Attention Mechanism')}
+                  {tr(state.language, 'architectureStudio.numericalPrecisionAttentionMechanism')}
                 </h3>
                 <p className="text-xs mutating-text-muted mt-0.5">
-                  {localize(
-                    state.language,
-                    'Ajusta la precisión de coma flotante por parámetro y la arquitectura de atención para balancear fidelidad y memoria VRAM.',
-                    'Configure per-parameter floating-point precision and attention architecture to balance fidelity and VRAM footprint.'
-                  )}
+                  {tr(state.language, 'architectureStudio.configurePerParameterFloatingPoint')}
                 </p>
               </div>
             </div>
@@ -734,14 +723,10 @@ export const ArchitectureStudio: React.FC = () => {
               <div className="p-4 rounded-lg theme-sub-bg border theme-accent-border text-xs space-y-2">
                 <div className="font-semibold mutating-accent-text flex items-center gap-2">
                   <Sparkles className="w-4 h-4 mutating-accent-text" />
-                  <span>{localize(state.language, 'Precisión Automatizada (Modo Principiante)', 'Automated Precision (Beginner Mode)')}</span>
+                  <span>{tr(state.language, 'architectureStudio.automatedPrecisionBeginnerMode')}</span>
                 </div>
                 <p className="text-xs mutating-text-muted">
-                  {localize(
-                    state.language,
-                    'En modo Principiante, la precisión matemática se calibra en INT8 y la atención en MHA para garantizar entrenamiento estable y predecible.',
-                    'In Beginner mode, precision is calibrated to INT8 and attention to MHA to guarantee stable, predictable convergence.'
-                  )}
+                  {tr(state.language, 'architectureStudio.beginnerModePrecisionCalibratedInt8')}
                 </p>
               </div>
             ) : (
@@ -754,11 +739,11 @@ export const ArchitectureStudio: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {[
-                      { id: 'fp32', label: 'FP32 Full (4 bytes/param)', hint: localize(state.language, 'Precisión pura de 32 bits, máxima demanda de VRAM', 'Full 32-bit precision; maximum VRAM demand') },
-                      { id: 'bf16', label: 'BF16 Standard (2 bytes/param)', hint: localize(state.language, 'Rango dinámico de bfloat16, estándar industrial moderno', 'bfloat16 dynamic range; modern industry standard') },
-                      { id: 'int8', label: 'INT8 Quantized (1 byte/param)', hint: localize(state.language, 'Cuantización lineal a enteros; reduce VRAM a la mitad', 'Linear integer quantization; halves VRAM usage') },
-                      { id: 'fp4', label: 'FP4 Microscaling (0.5 byte/param)', hint: localize(state.language, 'Microescalado de 4 bits para clusters ultra densos', '4-bit microscaling for high-density clusters') },
-                      { id: 'ternary_1bit', label: 'BitNet 1.58-bit Ternary', hint: localize(state.language, 'Pesos discretos {-1, 0, +1}; suma sin multiplicaciones', 'Discrete weights {-1, 0, +1}; multiplication-free additions') }
+                      { id: 'fp32', label: 'FP32 Full (4 bytes/param)', hint: tr(state.language, 'architectureStudio.full32BitPrecisionMaximum') },
+                      { id: 'bf16', label: 'BF16 Standard (2 bytes/param)', hint: tr(state.language, 'architectureStudio.bfloat16DynamicRangeModernIndustry') },
+                      { id: 'int8', label: 'INT8 Quantized (1 byte/param)', hint: tr(state.language, 'architectureStudio.linearIntegerQuantizationHalvesVram') },
+                      { id: 'fp4', label: 'FP4 Microscaling (0.5 byte/param)', hint: tr(state.language, 'architectureStudio.n4BitMicroscalingHighDensity') },
+                      { id: 'ternary_1bit', label: 'BitNet 1.58-bit Ternary', hint: tr(state.language, 'architectureStudio.discreteWeights101') }
                     ].map(q => {
                       const unlocked = isOptionUnlocked('quantization', q.id);
                       return (
@@ -803,15 +788,15 @@ export const ArchitectureStudio: React.FC = () => {
                 {/* Attention Mechanism */}
                 <div className="space-y-2 p-3.5 rounded-lg theme-sub-bg border theme-border">
                   <label className="text-xs font-semibold theme-text flex items-center justify-between">
-                    <span>{localize(state.language, 'Mecanismo de Atención', 'Attention Mechanism')}</span>
+                    <span>{tr(state.language, 'architectureStudio.attentionMechanism')}</span>
                     <span className="text-[11px] mutating-text-muted font-mono">KV CACHE SPEED</span>
                   </label>
                   <div className="space-y-2">
                     {[
-                      { id: 'standard_mha', label: 'Multi-Head Attention (MHA)', hint: localize(state.language, 'Atención canónica completa; complejidad cuadrática O(N²)', 'Canonical full attention; quadratic O(N²) memory') },
-                      { id: 'grouped_query_gqa', label: 'Grouped-Query Attention (GQA)', hint: localize(state.language, 'Comparte claves/valores entre cabezas; reduce KV cache a 1/8', 'Shares keys/values across heads; 8x smaller KV cache') },
-                      { id: 'flash_attention_3', label: 'FlashAttention-3', hint: localize(state.language, 'Tiling en SRAM de GPU; computación asíncrona FP8', 'GPU SRAM tiling with asynchronous FP8 tensor computation') },
-                      { id: 'linear_attention', label: 'Linear Attention', hint: localize(state.language, 'Kernelización lineal O(N); escalabilidad extrema de contexto', 'Linear O(N) kernelization; extreme context scaling') }
+                      { id: 'standard_mha', label: 'Multi-Head Attention (MHA)', hint: tr(state.language, 'architectureStudio.canonicalFullAttentionQuadraticO') },
+                      { id: 'grouped_query_gqa', label: 'Grouped-Query Attention (GQA)', hint: tr(state.language, 'architectureStudio.sharesKeysValuesAcrossHeads') },
+                      { id: 'flash_attention_3', label: 'FlashAttention-3', hint: tr(state.language, 'architectureStudio.gpuSramTilingAsynchronousFp8') },
+                      { id: 'linear_attention', label: 'Linear Attention', hint: tr(state.language, 'architectureStudio.linearONKernelizationExtreme') }
                     ].map(att => {
                       const unlocked = isOptionUnlocked('attention', att.id);
                       return (
@@ -860,7 +845,7 @@ export const ArchitectureStudio: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold theme-text flex items-center gap-2">
                   <Database className="w-4 h-4 mutating-accent-text" />
-                  {localize(state.language, 'Presupuesto de Memoria VRAM del Cluster', 'Cluster VRAM Memory Budget')}
+                  {tr(state.language, 'architectureStudio.clusterVramMemoryBudget')}
                 </span>
                 <span className="text-xs font-mono font-medium mutating-text-muted">
                   {current.vramRequiredGb.toFixed(1)} GB / <strong className="theme-text">{totalClusterVram.toFixed(1)} GB</strong>
@@ -881,19 +866,19 @@ export const ArchitectureStudio: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1 mutating-text-muted">
                 <div className="p-2 rounded theme-sub-bg border theme-border">
-                  <div className="text-[11px] mutating-text-muted font-medium">{localize(state.language, 'Memoria de Pesos', 'Weights Footprint')}</div>
+                  <div className="text-[11px] mutating-text-muted font-medium">{tr(state.language, 'architectureStudio.weightsFootprint')}</div>
                   <div className="theme-text font-mono mt-0.5">
                     {((current.parametersCount * (current.quantization === 'fp32' ? 4 : current.quantization === 'bf16' ? 2 : current.quantization === 'int8' ? 1 : current.quantization === 'fp4' ? 0.5 : 0.2)) / 1_000_000_000).toFixed(1)} GB
                   </div>
                 </div>
                 <div className="p-2 rounded theme-sub-bg border theme-border">
-                  <div className="text-[11px] mutating-text-muted font-medium">{localize(state.language, 'Caché KV Contexto', 'Context KV-Cache')}</div>
+                  <div className="text-[11px] mutating-text-muted font-medium">{tr(state.language, 'architectureStudio.contextKvCache')}</div>
                   <div className="theme-text font-mono mt-0.5">
                     {(current.contextWindow > 32000 ? (current.attention === 'grouped_query_gqa' ? 2.4 : 12.0) : 0.8).toFixed(1)} GB
                   </div>
                 </div>
                 <div className="p-2 rounded theme-sub-bg border theme-border">
-                  <div className="text-[11px] mutating-text-muted font-medium">{localize(state.language, 'Margen de Activaciones', 'Activation Headroom')}</div>
+                  <div className="text-[11px] mutating-text-muted font-medium">{tr(state.language, 'architectureStudio.activationHeadroom')}</div>
                   <div className="theme-text font-mono mt-0.5">
                     {(current.vramRequiredGb * 0.15).toFixed(1)} GB (~15%)
                   </div>
@@ -904,11 +889,7 @@ export const ArchitectureStudio: React.FC = () => {
                 <div className="p-2.5 rounded theme-danger-soft border theme-danger-border text-xs theme-danger-text flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 theme-danger-text shrink-0" />
                   <span>
-                    {localize(
-                      state.language,
-                      'Insuficiente VRAM. Reduce la escala de parámetros, baja la precisión a INT8/FP4 o instala GPUs adicionales en el Rack de Hardware.',
-                      'Insufficient VRAM. Downscale parameters, quantize to INT8/FP4, or install additional GPUs in the Hardware Rack.'
-                    )}
+                    {tr(state.language, 'architectureStudio.insufficientVramDownscaleParametersQuantize')}
                   </span>
                 </div>
               )}
@@ -923,14 +904,10 @@ export const ArchitectureStudio: React.FC = () => {
               <div>
                 <h3 className="text-sm font-semibold theme-text flex items-center gap-2">
                   <Sliders className="w-4 h-4 mutating-accent-text" />
-                  {localize(state.language, 'Ventana de Contexto, Objetivos & Datos', 'Context Window, Objectives & Data Pipelines')}
+                  {tr(state.language, 'architectureStudio.contextWindowObjectivesDataPipelines')}
                 </h3>
                 <p className="text-xs mutating-text-muted mt-0.5">
-                  {localize(
-                    state.language,
-                    'Configura la longitud del contexto de entrada, la función de optimización y conecta pipelines de datos cognitivos.',
-                    'Configure input context length, mathematical loss objective, and connect cognitive data pipelines.'
-                  )}
+                  {tr(state.language, 'architectureStudio.configureInputContextLengthMathematical')}
                 </p>
               </div>
             </div>
@@ -940,7 +917,7 @@ export const ArchitectureStudio: React.FC = () => {
               <label className="text-xs font-semibold theme-text flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 mutating-accent-text" />
-                  {localize(state.language, 'Ventana de Contexto (Tokens)', 'Context Window (Tokens)')}
+                  {tr(state.language, 'architectureStudio.contextWindowTokens')}
                 </span>
                 <span className="text-[11px] mutating-text-muted font-mono">TOKEN RETENTION</span>
               </label>
@@ -965,27 +942,23 @@ export const ArchitectureStudio: React.FC = () => {
                 })}
               </div>
               <p className="text-[11px] mutating-text-muted">
-                {localize(
-                  state.language,
-                  'Ventanas de contexto expandidas permiten análisis multi-documento y memoria de agentes de largo plazo.',
-                  'Expanded context windows enable multi-document synthesis and long-term agent task recall.'
-                )}
+                {tr(state.language, 'architectureStudio.expandedContextWindowsEnableMulti')}
               </p>
             </div>
 
             {/* Loss Function & Alignment Objective */}
             <div className="space-y-2 p-3.5 rounded-lg theme-sub-bg border theme-border">
               <label className="text-xs font-semibold theme-text flex items-center justify-between">
-                <span>{localize(state.language, 'Función de Pérdida & Alineación', 'Loss Function & Alignment Objective')}</span>
+                <span>{tr(state.language, 'architectureStudio.lossFunctionAlignmentObjective')}</span>
                 <span className="text-[11px] mutating-text-muted font-mono">OBJECTIVE GRADIENT</span>
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {[
-                  { id: 'cross_entropy', label: 'Cross-Entropy Pretraining', hint: localize(state.language, 'Predicción canónica del siguiente token autoregresivo', 'Canonical autoregressive next-token prediction') },
-                  { id: 'dpo', label: 'Direct Preference Optimization (DPO)', hint: localize(state.language, 'Alineación analítica sin modelo de recompensa separado', 'Direct analytical policy optimization without reward models') },
-                  { id: 'ppo_rlhf', label: 'PPO / Reinforcement Learning', hint: localize(state.language, 'Optimización estocástica con retroalimentación humana', 'Stochastic policy optimization via human/AI feedback') },
-                  { id: 'contrastive_infonce', label: 'Contrastive InfoNCE', hint: localize(state.language, 'Espacios latentes conjuntos para razonamiento multi-modal', 'Joint multimodal latent representations') },
-                  { id: 'energy_based', label: 'Energy-Based Objective', hint: localize(state.language, 'Minimización de energía libre para dinámica AGI', 'Free-energy minimization for adaptive self-correcting agents') }
+                  { id: 'cross_entropy', label: 'Cross-Entropy Pretraining', hint: tr(state.language, 'architectureStudio.canonicalAutoregressiveNextTokenPrediction') },
+                  { id: 'dpo', label: 'Direct Preference Optimization (DPO)', hint: tr(state.language, 'architectureStudio.directAnalyticalPolicyOptimizationWithout') },
+                  { id: 'ppo_rlhf', label: 'PPO / Reinforcement Learning', hint: tr(state.language, 'architectureStudio.stochasticPolicyOptimizationViaHuman') },
+                  { id: 'contrastive_infonce', label: 'Contrastive InfoNCE', hint: tr(state.language, 'architectureStudio.jointMultimodalLatentRepresentations') },
+                  { id: 'energy_based', label: 'Energy-Based Objective', hint: tr(state.language, 'architectureStudio.freeEnergyMinimizationAdaptiveSelf') }
                 ].map(loss => {
                   const unlocked = isOptionUnlocked('lossFunction', loss.id);
                   return (
@@ -1032,16 +1005,12 @@ export const ArchitectureStudio: React.FC = () => {
               <label className="text-xs font-semibold theme-text flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Database className="w-3.5 h-3.5 mutating-accent-text" />
-                  {localize(state.language, 'Pipelines de Datos Conectados al Modelo', 'Connected Cognitive Data Pipelines')}
+                  {tr(state.language, 'architectureStudio.connectedCognitiveDataPipelines')}
                 </span>
                 <span className="text-[11px] mutating-text-muted font-mono">RETRIEVAL & SYNTHESIS</span>
               </label>
               <p className="text-xs mutating-text-muted">
-                {localize(
-                  state.language,
-                  'Conecta motores de datos para enriquecer el entrenamiento. Grafos otorgan causalidad, vectores otorgan RAG y SQL otorga precisión transaccional.',
-                  'Connect data engines to enrich training representations: knowledge graphs unlock causal reasoning, vectors provide RAG, and SQL provides structured factuality.'
-                )}
+                {tr(state.language, 'architectureStudio.connectDataEnginesEnrichTraining')}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
                 {state.dataSources.map(ds => {
@@ -1068,7 +1037,7 @@ export const ArchitectureStudio: React.FC = () => {
                       <div className="text-[11px] mutating-text-muted mt-1.5 font-mono">
                         {ds.unlocked
                           ? `${ds.tokensIndexed}M tokens · Lv.${ds.level}`
-                          : localize(state.language, 'BLOQUEADO', 'LOCKED')}
+                          : tr(state.language, 'architectureStudio.locked')}
                       </div>
                     </button>
                   );
@@ -1085,14 +1054,10 @@ export const ArchitectureStudio: React.FC = () => {
               <div>
                 <h3 className="text-sm font-semibold theme-text flex items-center gap-2">
                   <Sliders className="w-4 h-4 mutating-accent-text" />
-                  {localize(state.language, 'Muestreo de Inferencia & Evaluación Cognitiva', 'Inference Sampling & Cognitive Evaluation')}
+                  {tr(state.language, 'architectureStudio.inferenceSamplingCognitiveEvaluation')}
                 </h3>
                 <p className="text-xs mutating-text-muted mt-0.5">
-                  {localize(
-                    state.language,
-                    'Calibra la estocasticidad de decodificación y revisa los benchmarks evaluados del modelo resultante.',
-                    'Calibrate stochastic decoding parameters and inspect evaluated benchmark performance metrics.'
-                  )}
+                  {tr(state.language, 'architectureStudio.calibrateStochasticDecodingParametersInspect')}
                 </p>
               </div>
             </div>
@@ -1102,32 +1067,32 @@ export const ArchitectureStudio: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold theme-text flex items-center gap-2">
                   <Sparkles className="w-4 h-4 theme-warn-text" />
-                  {localize(state.language, 'Benchmarks Sintéticos del Modelo', 'Synthetic Model Benchmarks')}
+                  {tr(state.language, 'architectureStudio.syntheticModelBenchmarks')}
                 </span>
                 <span className="text-[11px] mutating-text-muted font-mono">EVALUATION METRICS</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-2.5 rounded theme-sub-bg border theme-border">
-                  <div className="text-[11px] mutating-text-muted">{localize(state.language, 'Capacidad de Razonamiento', 'Reasoning Score')}</div>
+                  <div className="text-[11px] mutating-text-muted">{tr(state.language, 'architectureStudio.reasoningScore')}</div>
                   <div className="text-lg font-bold font-mono mutating-accent-text mt-1">{Math.round(modelEvaluation.reasoning)}</div>
                   <div className="text-[11px] mutating-text-muted mt-0.5">MMLU / GSM8K</div>
                 </div>
 
                 <div className="p-2.5 rounded theme-sub-bg border theme-border">
-                  <div className="text-[11px] mutating-text-muted">{localize(state.language, 'Fiabilidad & Seguridad', 'Reliability & Safety')}</div>
+                  <div className="text-[11px] mutating-text-muted">{tr(state.language, 'architectureStudio.reliabilitySafety')}</div>
                   <div className="text-lg font-bold font-mono theme-success-text mt-1">{Math.round(modelEvaluation.reliability)}%</div>
                   <div className="text-[11px] mutating-text-muted mt-0.5">Hallucination Control</div>
                 </div>
 
                 <div className="p-2.5 rounded theme-sub-bg border theme-border">
-                  <div className="text-[11px] mutating-text-muted">{localize(state.language, 'Especialización de Dominio', 'Specialization Index')}</div>
+                  <div className="text-[11px] mutating-text-muted">{tr(state.language, 'architectureStudio.specializationIndex')}</div>
                   <div className="text-lg font-bold font-mono mutating-accent-text mt-1">{Math.round(modelEvaluation.specialization)}</div>
                   <div className="text-[11px] mutating-text-muted mt-0.5">Task Proficiency</div>
                 </div>
 
                 <div className="p-2.5 rounded theme-sub-bg border theme-border">
-                  <div className="text-[11px] mutating-text-muted">{localize(state.language, 'Madurez de Datos', 'Data Readiness')}</div>
+                  <div className="text-[11px] mutating-text-muted">{tr(state.language, 'architectureStudio.dataReadiness')}</div>
                   <div className="text-lg font-bold font-mono theme-warn-text mt-1">{Math.round(modelEvaluation.dataReadiness)}%</div>
                   <div className="text-[11px] mutating-text-muted mt-0.5">Pipeline Integration</div>
                 </div>
@@ -1161,10 +1126,10 @@ export const ArchitectureStudio: React.FC = () => {
                   />
                   <div className="text-[11px] mutating-text-muted mt-1.5">
                     {currentParams.temperature < 0.3
-                      ? localize(state.language, 'Determinista (Argmax / Greedy)', 'Deterministic (Greedy decoding)')
+                      ? tr(state.language, 'architectureStudio.deterministicGreedyDecoding')
                       : currentParams.temperature > 1.1
-                      ? localize(state.language, 'Creativo / Exploratorio', 'High stochastic exploration')
-                      : localize(state.language, 'Equilibrado para producción', 'Balanced production sampling')}
+                      ? tr(state.language, 'architectureStudio.highStochasticExploration')
+                      : tr(state.language, 'architectureStudio.balancedProductionSampling')}
                   </div>
                 </div>
 
@@ -1184,7 +1149,7 @@ export const ArchitectureStudio: React.FC = () => {
                     onChange={(e) => handleInferenceParamChange('topP', parseFloat(e.target.value))}
                     className="w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                   />
-                  <div className="text-[11px] mutating-text-muted mt-1.5">{localize(state.language, 'Filtro de masa probabilística acumulada', 'Cumulative probability mass nucleus')}</div>
+                  <div className="text-[11px] mutating-text-muted mt-1.5">{tr(state.language, 'architectureStudio.cumulativeProbabilityMassNucleus')}</div>
                 </div>
 
                 {/* Top-K */}
@@ -1203,7 +1168,7 @@ export const ArchitectureStudio: React.FC = () => {
                     onChange={(e) => handleInferenceParamChange('topK', parseInt(e.target.value))}
                     className="w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                   />
-                  <div className="text-[11px] mutating-text-muted mt-1.5">{localize(state.language, 'Tamaño del vocabulario permitido', 'Permitted vocabulary token cutoff')}</div>
+                  <div className="text-[11px] mutating-text-muted mt-1.5">{tr(state.language, 'architectureStudio.permittedVocabularyTokenCutoff')}</div>
                 </div>
 
                 {/* Repetition Penalty */}
@@ -1222,14 +1187,14 @@ export const ArchitectureStudio: React.FC = () => {
                     onChange={(e) => handleInferenceParamChange('repetitionPenalty', parseFloat(e.target.value))}
                     className="w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                   />
-                  <div className="text-[11px] mutating-text-muted mt-1.5">{localize(state.language, 'Penalización por repetición de n-gramas', 'N-gram frequency penalty factor')}</div>
+                  <div className="text-[11px] mutating-text-muted mt-1.5">{tr(state.language, 'architectureStudio.nGramFrequencyPenaltyFactor')}</div>
                 </div>
               </div>
 
               {!advancedSamplingUnlocked && (
                 <div className="flex items-center gap-1.5 text-xs theme-warn-text pt-1">
                   <Lock className="h-3.5 w-3.5" />
-                  <span>{localize(state.language, 'Top-P, Top-K y penalización se desbloquean tras investigar LoRA PEFT o en el día 30.', 'Top-P, Top-K, and repetition penalty unlock after researching LoRA PEFT or on day 30.')}</span>
+                  <span>{tr(state.language, 'architectureStudio.topPTopKRepetition')}</span>
                 </div>
               )}
             </div>

@@ -6,8 +6,8 @@
 import React from 'react';
 import { ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { localize } from '../utils/i18n';
 import { containmentAvailable, containmentChecklist } from '../utils/epilogue';
+import { tr } from '../i18n';
 
 // After the 75% fork the player can try to contain the swarm. Every condition is a real control.
 export const ContainmentPanel: React.FC = () => {
@@ -18,7 +18,7 @@ export const ContainmentPanel: React.FC = () => {
       <div className="p-2.5 rounded-lg border theme-success-border theme-success-soft">
         <span className="flex items-center gap-2 text-[11px] font-bold theme-success-text">
           <ShieldCheck className="w-4 h-4 theme-success-text" />
-          {localize(state.language, 'Enjambre contenido. La operación sigue bajo control humano.', 'Swarm contained. The operation remains under human control.')}
+          {tr(state.language, 'containmentPanel.swarmContainedOperationRemainsUnder')}
         </span>
       </div>
     );
@@ -34,22 +34,18 @@ export const ContainmentPanel: React.FC = () => {
       <div className="flex items-center gap-2">
         <ShieldCheck className="w-4 h-4 theme-success-text" />
         <h4 className="text-[11px] font-bold theme-success-text">
-          {localize(state.language, 'PROTOCOLO DE CONTENCIÓN', 'CONTAINMENT PROTOCOL')}
+          {tr(state.language, 'containmentPanel.containmentProtocol')}
         </h4>
       </div>
       <p className="text-[11px] mutating-text-muted leading-snug">
-        {localize(
-          state.language,
-          'Todavía puedes detener al enjambre, pero solo si los controles están en su lugar. Desconectarlo sin ellos no alcanza.',
-          'You can still stop the swarm, but only if the controls are in place. Unplugging it without them is not enough.'
-        )}
+        {tr(state.language, 'containmentPanel.youCanStillStopSwarm')}
       </p>
       <ul className="space-y-1">
         {checks.map(c => (
           <li key={c.id} className="flex items-center gap-1.5 text-[11px]">
             {c.met
-              ? <CheckCircle2 className="w-3.5 h-3.5 theme-success-text shrink-0" aria-label={localize(state.language, 'cumplido', 'met')} />
-              : <XCircle className="w-3.5 h-3.5 theme-danger-text shrink-0" aria-label={localize(state.language, 'pendiente', 'missing')} />}
+              ? <CheckCircle2 className="w-3.5 h-3.5 theme-success-text shrink-0" aria-label={tr(state.language, 'containmentPanel.met')} />
+              : <XCircle className="w-3.5 h-3.5 theme-danger-text shrink-0" aria-label={tr(state.language, 'containmentPanel.missing')} />}
             <span className={c.met ? 'theme-text' : 'mutating-text-muted'}>{c.label}</span>
           </li>
         ))}
@@ -61,8 +57,8 @@ export const ContainmentPanel: React.FC = () => {
         className="w-full py-1.5 rounded theme-btn-success disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold cursor-pointer"
       >
         {ready
-          ? localize(state.language, 'EJECUTAR CONTENCIÓN', 'RUN CONTAINMENT')
-          : localize(state.language, 'FALTAN CONTROLES', 'CONTROLS MISSING')}
+          ? tr(state.language, 'containmentPanel.runContainment')
+          : tr(state.language, 'containmentPanel.controlsMissing')}
       </button>
     </div>
   );

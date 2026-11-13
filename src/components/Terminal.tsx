@@ -7,8 +7,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { Terminal as TerminalIcon, CornerDownLeft, Trash2, Cpu, Database, Briefcase, Zap } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { localize } from '../utils/i18n';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
+import { tr } from '../i18n';
 
 export const Terminal: React.FC = () => {
   const { state, executeTerminalCommand, addLog } = useGame();
@@ -21,22 +21,14 @@ export const Terminal: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const getLogMessage = (log: (typeof state.logs)[number]) => {
     if (log.id === 'log_0') {
-      return localize(
-        state.language,
-        'Terminal SYNAPSE v4.19.0-alpha inicializada. Interfaz segura montada.',
-        'SYNAPSE Terminal v4.19.0-alpha initialized. Secure interface mounted.'
-      );
+      return tr(state.language, 'terminal.synapseTerminalV4190');
     }
     if (log.id === 'log_1') {
       // The objective line is rewritten by each UI version: the real goal only appears in v4.
       return story.objectiveLog;
     }
     if (log.id === 'log_2') {
-      return localize(
-        state.language,
-        'Hardware y clúster listos. Laboratorio de Agentes y Red de Guardrails inicializados.',
-        'Hardware and cluster ready. Agent Lab and Guardrail Network initialized.'
-      );
+      return tr(state.language, 'terminal.hardwareClusterReadyAgentLab');
     }
     return log.message;
   };
@@ -162,7 +154,7 @@ export const Terminal: React.FC = () => {
           <button 
             onClick={() => runShortcut('clear')}
             className="p-1 mutating-text-muted transition-colors"
-            title={localize(state.language, 'Limpiar terminal', 'Clear terminal')}
+            title={tr(state.language, 'terminal.clearTerminal')}
           >
             <Trash2 className="w-3 h-3" />
           </button>
@@ -177,7 +169,7 @@ export const Terminal: React.FC = () => {
       >
         <div className="text-[11px] mutating-accent-text mb-2 border-b theme-accent-border pb-2">
           === SYNAPSE NEURAL COMPUTING KERNEL v4.19 (x86_64-quantum-arch) ===<br />
-          {localize(state.language, 'Escribe', 'Type')} <span className="mutating-accent-text font-bold">help</span> {localize(state.language, 'para ver todos los comandos disponibles o utiliza los paneles modulares superiores.', 'to see all available commands, or use the modules above.')}
+          {tr(state.language, 'terminal.type')} <span className="mutating-accent-text font-bold">help</span> {tr(state.language, 'terminal.seeAllAvailableCommandsUse')}
         </div>
 
         {state.logs.slice().reverse().map(log => (
@@ -201,7 +193,7 @@ export const Terminal: React.FC = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={localize(state.language, "Escribe 'help', 'train', 'hardware', 'buy <id>'...", "Type 'help', 'train', 'hardware', or 'buy <id>'...")}
+          placeholder={tr(state.language, 'terminal.typeHelpTrainHardwareBuy')}
           className="flex-1 bg-transparent border-none outline-none text-xs font-mono placeholder:opacity-50 focus:ring-0"
           autoFocus
         />
@@ -210,7 +202,7 @@ export const Terminal: React.FC = () => {
           className="px-2 py-1 mutating-btn-primary rounded text-xs flex items-center gap-1 transition-all cursor-pointer font-bold"
         >
           <CornerDownLeft className="w-3 h-3" />
-          <span className="hidden sm:inline text-[11px]">{localize(state.language, 'EJEC', 'EXEC')}</span>
+          <span className="hidden sm:inline text-[11px]">{tr(state.language, 'terminal.exec')}</span>
         </button>
       </form>
     </div>

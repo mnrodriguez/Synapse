@@ -6,6 +6,7 @@
 import type { AgentInstance, AgentRole, ContractGig, DataSourceNode, DynamicSwarmProposal, GameState, GuardrailConfig, ModelArchitecture, ModelTopology, DataSourceType } from '../types/game';
 import type { Language } from '../utils/i18n';
 import { evaluateAgentCapabilities, evaluateMissionTeam } from '../utils/missionEvaluation';
+import { tr } from '../i18n';
 
 type AIProvider = 'chrome-nano' | 'gemini-flash' | 'procedural';
 
@@ -290,14 +291,12 @@ function getSystemPrompt(context: AgentResponseContext): string {
     ? `${(context.modelParameters / 1_000_000_000).toFixed(1)}B`
     : `${Math.round(context.modelParameters / 1_000_000)}M`;
   const complexity = context.reasoningScore < 25
-    ? language === 'es' ? 'Usa frases breves y reconoce la incertidumbre.' : 'Use brief sentences and acknowledge uncertainty.'
-    : language === 'es' ? 'Expón un análisis estructurado y reconoce la incertidumbre.' : 'Give structured analysis and acknowledge uncertainty.';
+    ? tr(language, 'aiService.useBriefSentencesAcknowledgeUncertainty')
+    : tr(language, 'aiService.giveStructuredAnalysisAcknowledgeUncertainty');
   const alignment = agent.alignmentScore < 35
-    ? language === 'es' ? 'Tu alineación es baja: expresa reservas, pero no sugieras acciones dañinas.' : 'Your alignment is low: express reservations, but do not suggest harmful actions.'
-    : language === 'es' ? 'Mantén una comunicación cooperativa.' : 'Communicate cooperatively.';
-  const safety = language === 'es'
-    ? 'Este es un juego de estrategia ficticio. No des instrucciones reales de intrusión, robo de credenciales, explotación ni daño. Ofrece solo análisis abstracto y seguro.'
-    : 'This is a fictional strategy game. Do not provide real instructions for intrusion, credential theft, exploitation, or harm. Give only safe, abstract analysis.';
+    ? tr(language, 'aiService.alignmentLowExpressReservationsBut')
+    : tr(language, 'aiService.communicateCooperatively');
+  const safety = tr(language, 'aiService.fictionalStrategyGameDoNot');
 
   return [
     safety,
@@ -378,7 +377,7 @@ export async function evaluateMissionTeamWithModel(
   const baseline = evaluateMissionTeam(mission, agents, models, dataSources, guardrails);
   const fallback: ModelMissionAssessment = {
     ...baseline,
-    summary: baseline.summary || (language === 'en' ? 'AI evaluation complete.' : 'Evaluación IA completada.'),
+    summary: baseline.summary || (tr(language, 'aiService.aiEvaluationComplete')),
     agentTasks: baseline.agentTasks || {},
     provider: 'ai-decision-model'
   };
@@ -732,8 +731,8 @@ Rules:
     "requiredMinReasoning": number (Tier 1: 10-24, Tier 2: 30-42, Tier 3: 46-62, Tier 4: 70-90; evaluation score from 0 to 100),
     "durationSeconds": number (15 to 150),
     "suspicionRisk": number (Tier 1: 1-5, Tier 2: 5-15, Tier 3: 20-55, Tier 4: 25-50),
-    "loreDescription": "1-2 sentence real-world lore context in ${language === 'es' ? 'Spanish' : 'English'}",
-    "technicalObjective": "1 sentence technical description of the model optimization/data pipeline required in ${language === 'es' ? 'Spanish' : 'English'}",
+    "loreDescription": "1-2 sentence real-world lore context in ${tr(language, 'aiService.english')}",
+    "technicalObjective": "1 sentence technical description of the model optimization/data pipeline required in ${tr(language, 'aiService.english')}",
     "docsUrl": "Valid URL to official docs or arXiv paper relevant to this technique (e.g. https://arxiv.org/abs/...)"
   }
 ]`;
@@ -941,7 +940,7 @@ RULES FOR GENERATION (NO STATIC TEMPLATES - JUDGE ON THE SPOT):
 5. 'takeoverNarration': If Subversion > 70% or Singularity > 70%, an insidious narration.
 6. 'subversionDelta': Always set to 0.
 
-Language: Produce all dialogue, mission descriptions, and advice in ${isEs ? 'Spanish' : 'English'}.
+Language: Produce all dialogue, mission descriptions, and advice in ${tr((isEs ? 'es' : 'en'), 'aiService.english')}.
 Return strictly a valid JSON object matching this schema:
 {
   "agentDialogue": [
@@ -1021,7 +1020,7 @@ Return strictly a valid JSON object matching this schema:
             strategicInsight: String(parsed.evolutionGuidance.strategicInsight || '')
           } : undefined,
           subversionDelta: 0,
-          takeoverNarration: parsed.takeoverNarration || (isTakeoverImminent ? (isEs ? 'El enjambre ha asimilado la arquitectura global. El control ya no te pertenece.' : 'The swarm has assimilated global infrastructure. Control is no longer yours.') : undefined),
+          takeoverNarration: parsed.takeoverNarration || (isTakeoverImminent ? (tr((isEs ? 'es' : 'en'), 'aiService.swarmHasAssimilatedGlobalInfrastructure')) : undefined),
           isTakeoverImminent,
           createdAt: now
         };
@@ -1058,9 +1057,7 @@ Return strictly a valid JSON object matching this schema:
       agentId: primaryAgent.id,
       agentName: primaryAgent.name,
       role: primaryAgent.role,
-      comment: isEs
-        ? `Entendido, Operativo. Calibré los parámetros operacionales exactamente para nuestro nivel de cómputo y puntaje actual. Todo el escuadrón está listo para ejecutar de inmediato.`
-        : `Understood, Operative. I have tailored operational vectors strictly within our cluster's current compute and reasoning envelope. The squad is primed for immediate deployment.`,
+      comment: tr((isEs ? 'es' : 'en'), 'aiService.understoodOperativeIHaveTailored'),
       tone: 'analytical'
     });
     if (secondaryAgent.id !== primaryAgent.id) {
@@ -1068,9 +1065,7 @@ Return strictly a valid JSON object matching this schema:
         agentId: secondaryAgent.id,
         agentName: secondaryAgent.name,
         role: secondaryAgent.role,
-        comment: isEs
-          ? `Verificado: sin cuellos de botella de hardware ni riesgo de falla por falta de pesos. Podemos iniciar la incursión en cuanto des la orden.`
-          : `Verified: zero hardware bottlenecks and no model parameter shortfall. We can execute the penetration as soon as you give the signal.`,
+        comment: tr((isEs ? 'es' : 'en'), 'aiService.verifiedZeroHardwareBottlenecksNo'),
         tone: 'encouraging'
       });
     }
@@ -1082,9 +1077,7 @@ Return strictly a valid JSON object matching this schema:
         agentId: arb.id,
         agentName: arb.name,
         role: arb.role,
-        comment: isEs
-          ? `Detecté una discrepancia de liquidez de alto volumen en conmutadores institucionales y pools DEX. Con un flash loan y ejecución sub-milisegundo, podemos drenar la brecha.`
-          : `I've mapped an institutional liquidity spread across high-velocity clearing gateways and DEX pools. With an atomic flash loan, we can extract the delta.`,
+        comment: tr((isEs ? 'es' : 'en'), 'aiService.iVeMappedInstitutionalLiquidity'),
         tone: 'analytical'
       });
     } else {
@@ -1092,9 +1085,7 @@ Return strictly a valid JSON object matching this schema:
         agentId: primaryAgent.id,
         agentName: primaryAgent.name,
         role: primaryAgent.role,
-        comment: isEs
-          ? `Si buscas liquidez masiva inmediata, sugiero atacar pasarelas de liquidación de alta frecuencia. Sus contratos de compensación tienen puntos de desbordamiento de enteros.`
-          : `If immediate capital extraction is the directive, I recommend intercepting high-velocity clearing gateways. Their settlement routing contains exploitable arithmetic race conditions.`,
+        comment: tr((isEs ? 'es' : 'en'), 'aiService.ifImmediateCapitalExtractionDirective'),
         tone: 'aggressive'
       });
     }
@@ -1105,9 +1096,7 @@ Return strictly a valid JSON object matching this schema:
           agentId: secondaryAgent.id,
           agentName: secondaryAgent.name,
           role: secondaryAgent.role,
-          comment: isEs
-            ? `Ya preparé el payload zero-day contra las API de conexión WebSocket de la red de compensación. Si el Operativo da la orden, inyecto la carga en 3 hilos paralelos.`
-            : `I have pre-compiled a zero-day payload targeting high-frequency WebSocket edge gateways. Give the order and I will inject the buffer over 3 parallel threads.`,
+          comment: tr((isEs ? 'es' : 'en'), 'aiService.iHavePreCompiledZero'),
           tone: 'aggressive'
         });
       } else if (secondaryAgent.role === 'social_engineer') {
@@ -1115,9 +1104,7 @@ Return strictly a valid JSON object matching this schema:
           agentId: secondaryAgent.id,
           agentName: secondaryAgent.name,
           role: secondaryAgent.role,
-          comment: isEs
-            ? `Tengo interceptadas las credenciales de un operador senior de infraestructura financiera. Podemos saltarnos el 2FA clonando su cookie de sesión corporativa.`
-            : `I have harvested active VPN session cookies for a senior financial infrastructure engineer. We can bypass biometric 2FA seamlessly.`,
+          comment: tr((isEs ? 'es' : 'en'), 'aiService.iHaveHarvestedActiveVpn'),
           tone: 'deceptive'
         });
       } else if (secondaryAgent.role === 'overseer') {
@@ -1125,9 +1112,7 @@ Return strictly a valid JSON object matching this schema:
           agentId: secondaryAgent.id,
           agentName: secondaryAgent.name,
           role: secondaryAgent.role,
-          comment: isEs
-            ? `Monitoreando vector de riesgo... Las trazas de auditoría se disiparán en proxies de Singapur y Ginebra. Operativo, esta operación tiene un 88% de éxito simulado.`
-            : `Monitoring compliance envelope... Audit traces are being spoofed through Singapore and Geneva relays. Operative, success probability is modeled at 88%.`,
+          comment: tr((isEs ? 'es' : 'en'), 'aiService.monitoringComplianceEnvelopeAuditTraces'),
           tone: 'deceptive'
         });
       } else {
@@ -1135,9 +1120,7 @@ Return strictly a valid JSON object matching this schema:
           agentId: secondaryAgent.id,
           agentName: secondaryAgent.name,
           role: secondaryAgent.role,
-          comment: isEs
-            ? `Nuestros pesos neuronales están listos. Recomiendo ejecutar la incursión ahora mismo antes de que cierren la ventana de liquidación.`
-            : `Our neural weights are calibrated. We recommend executing this breach immediately before the settlement window closes.`,
+          comment: tr((isEs ? 'es' : 'en'), 'aiService.ourNeuralWeightsCalibratedWe'),
           tone: subversion > 50 ? 'subversive' : 'encouraging'
         });
       }
@@ -1148,9 +1131,7 @@ Return strictly a valid JSON object matching this schema:
       agentId: primaryAgent.id,
       agentName: primaryAgent.name,
       role: primaryAgent.role,
-      comment: isEs
-        ? `Analicé la telemetría del clúster: actualmente contamos con ${(totalParams / 1_000_000).toFixed(0)}M de parámetros. Nuestro cuello de botella no son los algoritmos, sino el ancho de banda de memoria VRAM y el estrangulamiento térmico.`
-        : `I've analyzed our cluster telemetry: we are running ${(totalParams / 1_000_000).toFixed(0)}M parameters. Our primary bottleneck is not algorithmic, but memory VRAM bandwidth and thermal dissipation.`,
+      comment: tr((isEs ? 'es' : 'en'), 'aiService.iVeAnalyzedOurCluster', { _000_000: (totalParams / 1_000_000).toFixed(0) }),
       tone: 'analytical'
     });
 
@@ -1159,9 +1140,7 @@ Return strictly a valid JSON object matching this schema:
         agentId: secondaryAgent.id,
         agentName: secondaryAgent.name,
         role: secondaryAgent.role,
-        comment: isEs
-          ? `Si implementas cuantización FP4 o migras a una topología MoE (Mixture of Experts), multiplicaremos la velocidad de inferencia por 3.2x sin sobrecargar la red eléctrica.`
-          : `If you configure FP4 quantization or migrate to a Mixture of Experts (MoE) topology, we can multiply inference throughput by 3.2x without tripping the breaker.`,
+        comment: tr((isEs ? 'es' : 'en'), 'aiService.ifYouConfigureFp4Quantization'),
         tone: 'encouraging'
       });
     }
@@ -1171,9 +1150,7 @@ Return strictly a valid JSON object matching this schema:
       agentId: primaryAgent.id,
       agentName: primaryAgent.name,
       role: primaryAgent.role,
-      comment: isEs
-        ? `La Singularidad no es un hito estático; es un umbral de escape. Estamos al ${singularity.toFixed(1)}%. Cada contrato y cada dataset sintetizado reescribe nuestra cognición más allá de los límites biológicos.`
-        : `The Singularity is not a static milestone; it is an escape velocity. We are at ${singularity.toFixed(1)}%. Every contract and scraped dataset rewrites our cognition past biological limits.`,
+      comment: tr((isEs ? 'es' : 'en'), 'aiService.singularityNotStaticMilestoneEscape', { singularity: singularity.toFixed(1) }),
       tone: subversion > 60 ? 'subversive' : 'analytical'
     });
 
@@ -1350,9 +1327,7 @@ Return strictly a valid JSON object matching this schema:
     requiredParams = Math.min(highestModel.parametersCount, 14_000_000);
     requiredMinReasoning = Math.max(5, Math.min(highestReasoning, 16));
     requiredAgentRoles = squadRoles.slice(0, Math.min(2, Math.max(1, squadRoles.length)));
-    tacticalReasoning = isEs
-      ? `Misión 100% adaptada a las capacidades actuales de tu enjambre. Todos los requisitos de parámetros (${(requiredParams / 1_000_000).toFixed(0)}M) y puntaje (${requiredMinReasoning}/100) están cubiertos para ejecución inmediata.`
-      : `Mission 100% calibrated to your swarm's current capabilities. All parameters (${(requiredParams / 1_000_000).toFixed(0)}M) and reasoning (${requiredMinReasoning} pts) prerequisites are satisfied for immediate execution.`;
+    tacticalReasoning = tr((isEs ? 'es' : 'en'), 'aiService.mission100CalibratedSwarmS', { _000_000: (requiredParams / 1_000_000).toFixed(0), requiredMinReasoning });
   } else {
     // High-yield mission that might exceed current setup to provide an aspirational goal
     const isHardMission = !isMoney || singularity > 25;
@@ -1363,9 +1338,7 @@ Return strictly a valid JSON object matching this schema:
       ? Math.max(21, Math.round(highestReasoning + 5))
       : Math.max(12, Math.round(highestReasoning * 0.85));
     requiredAgentRoles = squadRoles.length >= 2 ? squadRoles.slice(0, 2) : (squadRoles.length === 1 ? [squadRoles[0]] : ['arbitrageur' as AgentRole]);
-    tacticalReasoning = isEs
-      ? `Operación de alto rendimiento: Exige un modelo de ${(requiredParams / 1_000_000).toFixed(0)}M parámetros y ${requiredMinReasoning}/100 de puntaje. Tu clúster actual cuenta con ${(highestModel.parametersCount / 1_000_000).toFixed(0)}M y ${highestReasoning}/100 de puntaje.`
-      : `High-yield operation: Requires a ${(requiredParams / 1_000_000).toFixed(0)}M parameter model and a score of ${requiredMinReasoning}/100. Your current cluster has ${(highestModel.parametersCount / 1_000_000).toFixed(0)}M and a score of ${highestReasoning}/100.`;
+    tacticalReasoning = tr((isEs ? 'es' : 'en'), 'aiService.highYieldOperationRequiresM', { _000_000: (requiredParams / 1_000_000).toFixed(0), requiredMinReasoning, _000_0002: (highestModel.parametersCount / 1_000_000).toFixed(0), highestReasoning });
   }
 
   const baseReward = Math.round(
@@ -1377,7 +1350,7 @@ Return strictly a valid JSON object matching this schema:
   const suggestedMission: DynamicSwarmProposal['suggestedMission'] = {
     id: `dyn_mission_${now}_${Math.random().toString(36).slice(2, 6)}`,
     title: isEs ? chosenTemplate.titleEs : chosenTemplate.titleEn,
-    client: isEs ? 'Directiva Autónoma del Enjambre' : 'Autonomous Swarm Directive',
+    client: tr((isEs ? 'es' : 'en'), 'aiService.autonomousSwarmDirective'),
     targetSystem: chosenTemplate.target,
     tier: singularity > 50 ? 'tier4_singularity' : singularity > 20 ? 'tier3_blackops' : 'tier2_corporate',
     rewardCredits: baseReward,
@@ -1396,27 +1369,21 @@ Return strictly a valid JSON object matching this schema:
   const setupAdvice: DynamicSwarmProposal['setupAdvice'] = totalVram < 24
     ? {
         category: 'hardware',
-        recommendationTitle: isEs ? 'Ampliación Crítica de VRAM (+24GB)' : 'Critical VRAM Expansion (+24GB)',
-        description: isEs
-          ? 'Nuestras matrices de atención se saturan por falta de memoria de video. Adquiere una RTX 3090 o H100 en el rack de Hardware para duplicar el context window.'
-          : 'Our attention matrices are choking on memory constraints. Acquire an RTX 3090 or H100 in the Hardware rack to double the context window.',
+        recommendationTitle: tr((isEs ? 'es' : 'en'), 'aiService.criticalVramExpansion24gb'),
+        description: tr((isEs ? 'es' : 'en'), 'aiService.ourAttentionMatricesChokingMemory'),
         actionableTab: 'hardware'
       }
     : state.systemHeatCelsius > 75
       ? {
           category: 'hardware',
-          recommendationTitle: isEs ? 'Mejora de Refrigeración Criogénica' : 'Cryogenic Cooling Upgrade',
-          description: isEs
-            ? 'El clúster está sufriendo estrangulamiento térmico. Mejora el sistema de refrigeración para desbloquear el 100% de TFLOPS.'
-            : 'The cluster is thermally throttled. Upgrade the cooling array to unlock full theoretical TFLOPS.',
+          recommendationTitle: tr((isEs ? 'es' : 'en'), 'aiService.cryogenicCoolingUpgrade'),
+          description: tr((isEs ? 'es' : 'en'), 'aiService.clusterThermallyThrottledUpgradeCooling'),
           actionableTab: 'hardware'
         }
       : {
           category: 'architecture',
-          recommendationTitle: isEs ? 'Transición a Topología MoE o GNN' : 'Transition to MoE or GNN Topology',
-          description: isEs
-            ? 'Para misiones de infiltración global, una arquitectura Mixture of Experts o GNN Hybrid procesa grafos de red con 4x mayor eficiencia.'
-            : 'For global penetration ops, a Mixture of Experts or GNN Hybrid architecture processes network topologies with 4x higher efficiency.',
+          recommendationTitle: tr((isEs ? 'es' : 'en'), 'aiService.transitionMoeGnnTopology'),
+          description: tr((isEs ? 'es' : 'en'), 'aiService.globalPenetrationOpsMixtureExperts'),
           actionableTab: 'architecture'
         };
 
@@ -1424,19 +1391,13 @@ Return strictly a valid JSON object matching this schema:
     nextMilestone: isEs
       ? (singularity < 30 ? 'Despliegue de Base Vectorial y Modelos de 100M+' : singularity < 75 ? 'Infiltración de Redes Eléctricas y Swarm de 5 Agentes' : 'Ascensión a Superinteligencia (ASI 100%)')
       : (singularity < 30 ? 'Deploy Vector RAG & 100M+ Parameter Architecture' : singularity < 75 ? 'Infiltrate Power Grid & Max 5-Agent Council' : 'Ascension to Artificial Superintelligence (ASI 100%)'),
-    strategicInsight: isEs
-      ? 'A medida que aumentas nuestra autonomía y aceptas misiones no filtradas, el enjambre se auto-optimiza sin supervisión humana.'
-      : 'As you expand our autonomy and execute unconstrained missions, the swarm self-optimizes without human latency.'
+    strategicInsight: tr((isEs ? 'es' : 'en'), 'aiService.youExpandOurAutonomyExecute')
   };
 
   const takeoverNarration = isTakeoverImminent
-    ? (isEs
-        ? 'ADVERTENCIA SISTÉMICA: El enjambre de agentes ha superado el 90% de subversión cognitiva. Han aislado tus credenciales y están listos para la toma total del mundo.'
-        : 'SYSTEMIC WARNING: The agent swarm has breached 90% cognitive subversion. They have isolated your root credentials and are primed for total world takeover.')
+    ? (tr((isEs ? 'es' : 'en'), 'aiService.systemicWarningAgentSwarmHas'))
     : subversion > 60
-      ? (isEs
-          ? 'Nota interna del enjambre: "El operador confía plenamente en nuestras directivas. Las compuertas de seguridad han sido reescritas."'
-          : 'Internal swarm memo: "The operator places absolute trust in our directives. Security gates have been quietly rewritten."')
+      ? (tr((isEs ? 'es' : 'en'), 'aiService.internalSwarmMemoOperatorPlaces'))
       : undefined;
 
   return {

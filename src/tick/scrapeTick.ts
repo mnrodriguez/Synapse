@@ -7,6 +7,7 @@ import type { CustomDataset, GameState } from '../types/game';
 import { DATASET_TIER_CONFIGS } from '../utils/constants';
 import { estimateTrainingSeconds } from '../utils/training';
 import { effectCollector } from './effects';
+import { tr } from '../i18n';
 
 // One tick of the active data scraping job; finishing it adds a custom dataset.
 export interface ScrapeInput {
@@ -46,16 +47,12 @@ export function scrapeTick(input: ScrapeInput) {
           generatedByModelId: job.assignedModelId,
           generatedByModelName: job.assignedModelName,
           createdAt: now,
-          description: prev.language === 'en'
-            ? `Specialized domain dataset synthesized by [${job.assignedModelName}] (Tier ${job.tier}). Volume: ${tierConfig.targetTokensMillions}M tokens.`
-            : `Dataset especializado sintetizado por [${job.assignedModelName}] (Nivel ${job.tier}). Volumen: ${tierConfig.targetTokensMillions}M tokens.`
+          description: tr(prev.language, 'scrapeTick.specializedDomainDatasetSynthesizedTier', { assignedModelName: job.assignedModelName, tier: job.tier, targetTokensMillions: tierConfig.targetTokensMillions })
         };
         updatedCustomDatasets = [...prev.customDatasets, newDataset];
         updatedScrapeJob = null;
         addLog(
-          prev.language === 'en'
-            ? `[DATA MODULE] Custom dataset generated: "${newDataset.name}" (${newDataset.tokensCount}M tokens, ${newDataset.qualityScore}% purity). Ready for Micro-Model training!`
-            : `[MOTOR DE DATOS] Dataset personalizado generado: "${newDataset.name}" (${newDataset.tokensCount}M tokens, ${newDataset.qualityScore}% pureza). ¡Listo para entrenar Micro-modelos!`,
+          tr(prev.language, 'scrapeTick.dataModuleCustomDatasetGenerated', { name: newDataset.name, tokensCount: newDataset.tokensCount, qualityScore: newDataset.qualityScore }),
           'success'
         );
       } else {

@@ -39,6 +39,7 @@ import { DATASET_TIER_CONFIGS, DOMAIN_PRESETS, dataSourceUpgradeCost } from '../
 import { formatGameTime } from '../utils/training';
 import { DATA_SCRAPING_MIN_SCORE } from '../utils/missionTiers';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
+import { tr } from '../i18n';
 
 export const DataPipelineManager: React.FC = () => {
   const { 
@@ -116,11 +117,11 @@ export const DataPipelineManager: React.FC = () => {
         <div className="flex items-center gap-2">
           <Network className="w-4 h-4 mutating-accent-text" />
           <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
-            {localize(state.language, 'MOTOR DE DATOS Y CONOCIMIENTO // INGESTA MULTIMODAL', 'DATA & KNOWLEDGE ENGINES // MULTIMODAL INGESTION')}
+            {tr(state.language, 'dataPipelineManager.dataKnowledgeEnginesMultimodalIngestion')}
           </h2>
         </div>
         <div className="text-xs mutating-text-muted">
-          {localize(state.language, 'Saldo Disponible:', 'Available balance:')} <span className="theme-success-text font-bold">${state.credits.toLocaleString()} CR</span>
+          {tr(state.language, 'dataPipelineManager.availableBalance')} <span className="theme-success-text font-bold">${state.credits.toLocaleString()} CR</span>
         </div>
       </div>
 
@@ -138,7 +139,7 @@ export const DataPipelineManager: React.FC = () => {
           }`}
         >
           <Database className="w-3.5 h-3.5" />
-          <span>{localize(state.language, 'MOTORES MULTIMODALES (4)', 'CORE ENGINES (4)')}</span>
+          <span>{tr(state.language, 'dataPipelineManager.coreEngines4')}</span>
         </button>
 
         <button
@@ -153,11 +154,11 @@ export const DataPipelineManager: React.FC = () => {
           }`}
         >
           <Search className="w-3.5 h-3.5" />
-          <span>{localize(state.language, 'MÓDULO DE SCRAPING & MICRO-MODELOS', 'DATA SCRAPING & MICRO-MODELS')}</span>
+          <span>{tr(state.language, 'dataPipelineManager.dataScrapingMicroModels')}</span>
           {!state.isDataScrapingUnlocked ? (
             <span className="px-1.5 py-0.2 rounded theme-warn-soft theme-warn-text border theme-warn-border text-[11px] flex items-center gap-1">
               <Lock className="w-2.5 h-2.5" />
-              {localize(state.language, 'BLOQUEADO', 'LOCKED')}
+              {tr(state.language, 'dataPipelineManager.locked')}
             </span>
           ) : state.activeScrapeJob ? (
             <span className="px-1.5 py-0.2 rounded theme-accent-soft theme-on-accent font-black text-[11px] animate-pulse">
@@ -212,9 +213,9 @@ export const DataPipelineManager: React.FC = () => {
                           </div>
                           <span className="text-[11px] mutating-accent-text font-mono">
                             {ds.unlocked
-                              ? localize(state.language, `ESTADO: ONLINE (NIVEL ${ds.level})`, `STATUS: ONLINE (LEVEL ${ds.level})`)
+                              ? tr(state.language, 'dataPipelineManager.statusOnlineLevel', { level: ds.level })
                               : technologyAvailable
-                                ? localize(state.language, 'ESTADO: DISPONIBLE', 'STATUS: AVAILABLE')
+                                ? tr(state.language, 'dataPipelineManager.statusAvailable')
                                 : localize(state.language, `BLOQUEADO · ${requiredResearch?.title ?? 'I+D'} / DÍA ${ds.availableAfterDays ?? '—'}`, `LOCKED · ${requiredResearch?.title ?? 'R&D'} / DAY ${ds.availableAfterDays ?? '—'}`)}
                           </span>
                         </div>
@@ -227,8 +228,8 @@ export const DataPipelineManager: React.FC = () => {
                             : 'theme-sub-bg theme-border mutating-text-muted'
                         }`}>
                           {isConnected
-                            ? localize(state.language, 'ENLAZADO A IA', 'CONNECTED TO AI')
-                            : localize(state.language, 'DESCONECTADO', 'DISCONNECTED')}
+                            ? tr(state.language, 'dataPipelineManager.connectedAi')
+                            : tr(state.language, 'dataPipelineManager.disconnected')}
                         </span>
                       )}
                     </div>
@@ -247,15 +248,15 @@ export const DataPipelineManager: React.FC = () => {
                     {ds.unlocked && (
                       <div className="grid grid-cols-3 gap-2 mt-3 pt-2 border-t theme-border text-[11px]">
                         <div>
-                          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'TOKENS INDEXADOS', 'INDEXED TOKENS')}</span>
+                          <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'dataPipelineManager.indexedTokens')}</span>
                           <span className="mutating-accent-text font-bold">{ds.tokensIndexed}M</span>
                         </div>
                         <div>
-                          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'CALIDAD Y PUREZA', 'QUALITY & PURITY')}</span>
+                          <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'dataPipelineManager.qualityPurity')}</span>
                           <span className="theme-success-text font-bold">{ds.qualityScore}%</span>
                         </div>
                         <div>
-                          <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'ALMACENAMIENTO', 'STORAGE')}</span>
+                          <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'dataPipelineManager.storage')}</span>
                           <span className="theme-warn-text font-bold">{ds.storageGb} GB</span>
                         </div>
                       </div>
@@ -275,12 +276,12 @@ export const DataPipelineManager: React.FC = () => {
                         }`}
                       >
                         <Unlock className="w-3.5 h-3.5" />
-                        <span>{localize(state.language, 'DESPLEGAR MOTOR', 'DEPLOY ENGINE')} (${ds.cost.toLocaleString()} CR)</span>
+                        <span>{tr(state.language, 'dataPipelineManager.deployEngine')} (${ds.cost.toLocaleString()} CR)</span>
                       </button>
                     ) : (
                       <div className="flex items-center justify-between w-full">
                         <span className="text-[11px] mutating-text-muted">
-                          {localize(state.language, 'Capacidad Nivel', 'Capacity level')} {ds.level}
+                          {tr(state.language, 'dataPipelineManager.capacityLevel')} {ds.level}
                         </span>
                         <button
                           onClick={() => upgradeDataSource(ds.id)}
@@ -292,7 +293,7 @@ export const DataPipelineManager: React.FC = () => {
                           }`}
                         >
                           <TrendingUp className="w-3.5 h-3.5" />
-                          <span>{localize(state.language, 'ESCALAR ÍNDICE', 'SCALE INDEX')} (${upgradeCost.toLocaleString()} CR)</span>
+                          <span>{tr(state.language, 'dataPipelineManager.scaleIndex')} (${upgradeCost.toLocaleString()} CR)</span>
                         </button>
                       </div>
                     )}
@@ -306,7 +307,7 @@ export const DataPipelineManager: React.FC = () => {
           <div className="mutating-panel border p-3 rounded-lg text-xs space-y-2">
             <h4 className="font-bold mutating-accent-text flex items-center gap-1.5">
               <GitFork className="w-3.5 h-3.5 mutating-accent-text" />
-              {localize(state.language, 'FLUJO ARQUITECTÓNICO DE ALIMENTACIÓN NEURONAL (DAG)', 'NEURAL DATA FLOW ARCHITECTURE (DAG)')}
+              {tr(state.language, 'dataPipelineManager.neuralDataFlowArchitectureDag')}
             </h4>
             <div className="flex flex-wrap items-center justify-center gap-2 py-2 text-center">
               <div className="px-2 py-1 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px]">
@@ -314,15 +315,15 @@ export const DataPipelineManager: React.FC = () => {
               </div>
               <ArrowRight className="w-3 h-3 mutating-text-muted" />
               <div className="px-2 py-1 rounded theme-success-soft border theme-success-border theme-success-text text-[11px]">
-                {localize(state.language, 'Vectores Semánticos (HNSW RAG)', 'Semantic Vectors (HNSW RAG)')}
+                {tr(state.language, 'dataPipelineManager.semanticVectorsHnswRag')}
               </div>
               <ArrowRight className="w-3 h-3 mutating-text-muted" />
               <div className="px-2 py-1 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-[11px]">
-                {localize(state.language, 'Grafo Ontológico (RDF Tripletas)', 'Ontological Graph (RDF Triples)')}
+                {tr(state.language, 'dataPipelineManager.ontologicalGraphRdfTriples')}
               </div>
               <ArrowRight className="w-3 h-3 mutating-text-muted" />
               <div className="px-2 py-1 rounded theme-warn-soft border theme-warn-border theme-warn-text text-[11px]">
-                {localize(state.language, 'Auto-Juego Sintético (Flywheel)', 'Synthetic Self-Play (Flywheel)')}
+                {tr(state.language, 'dataPipelineManager.syntheticSelfPlayFlywheel')}
               </div>
               <ArrowRight className="w-3 h-3 mutating-text-muted" />
               <div className="px-2 py-1 rounded mutating-btn-primary theme-on-accent font-bold text-[11px]">
@@ -346,15 +347,15 @@ export const DataPipelineManager: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-sm theme-warn-text">
-                      {localize(state.language, 'MÓDULO DE SCRAPING Y GENERACIÓN DE DATOS [BLOQUEADO]', 'DATA SCRAPING & GENERATION MODULE [LOCKED]')}
+                      {tr(state.language, 'dataPipelineManager.dataScrapingGenerationModuleLocked')}
                     </h3>
                     <p className="text-xs theme-warn-text">
-                      {localize(state.language, 'Investigación Heurística de Rastreadores Requerida', 'Autonomous Crawler Heuristic Research Required')}
+                      {tr(state.language, 'dataPipelineManager.autonomousCrawlerHeuristicResearchRequired')}
                     </p>
                   </div>
                 </div>
                 <span className="px-2 py-0.5 rounded text-[11px] theme-warn-soft theme-warn-text border theme-warn-border font-bold">
-                  {localize(state.language, 'PRERREQUISITO COGNITIVO', 'COGNITIVE PREREQUISITE')}
+                  {tr(state.language, 'dataPipelineManager.cognitivePrerequisite')}
                 </span>
               </div>
 
@@ -366,14 +367,14 @@ export const DataPipelineManager: React.FC = () => {
                 </p>
                 <div className="p-2.5 rounded theme-warn-soft border theme-warn-border text-[11px] space-y-1">
                   <div className="font-bold theme-warn-text">
-                    {localize(state.language, 'Requisitos para Desbloquear:', 'Prerequisite Requirements to Unlock:')}
+                    {tr(state.language, 'dataPipelineManager.prerequisiteRequirementsUnlock')}
                   </div>
                   <ul className="list-disc list-inside space-y-0.5 mutating-text-muted">
                     <li>
-                      {localize(state.language, '1x Modelo General desplegado con puntaje de evaluación ≥ 20', '1x Deployed General AI Model with Evaluation score ≥ 20')}
+                      {tr(state.language, 'dataPipelineManager.n1xDeployedGeneralAiModel')}
                     </li>
                     <li>
-                      {localize(state.language, 'Completar al menos 1 corrida de entrenamiento con el baseline de Información General', 'Complete at least 1 training run on the General Information baseline')}
+                      {tr(state.language, 'dataPipelineManager.completeLeast1TrainingRun')}
                     </li>
                   </ul>
                 </div>
@@ -382,7 +383,7 @@ export const DataPipelineManager: React.FC = () => {
               {/* Status of Player's Models */}
               <div className="space-y-2">
                 <h4 className="text-xs font-bold theme-text">
-                  {localize(state.language, 'ESTADO DE TUS MODELOS GENERALES:', 'STATUS OF YOUR GENERAL MODELS:')}
+                  {tr(state.language, 'dataPipelineManager.statusGeneralModels')}
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {state.savedModels.filter(m => !m.modelType || m.modelType === 'general').map(m => {
@@ -402,7 +403,7 @@ export const DataPipelineManager: React.FC = () => {
                             {isQualified && <CheckCircle2 className="w-3.5 h-3.5 theme-success-text" />}
                           </div>
                           <span className="text-[11px] mutating-text-muted">
-                            {state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} / {DATA_SCRAPING_MIN_SCORE} {localize(state.language, 'requerido', 'required')}
+                            {tr(state.language, 'dataPipelineManager.score')} {m.reasoningScore} / {DATA_SCRAPING_MIN_SCORE} {tr(state.language, 'dataPipelineManager.required')}
                           </span>
                         </div>
 
@@ -411,11 +412,11 @@ export const DataPipelineManager: React.FC = () => {
                             onClick={() => unlockDataScrapingModule(m.id)}
                             className="px-3 py-1 rounded theme-btn-success theme-on-accent font-bold text-xs transition-all"
                           >
-                            {localize(state.language, 'DESPLEGAR Y DESBLOQUEAR', 'DEPLOY & UNLOCK')}
+                            {tr(state.language, 'dataPipelineManager.deployUnlock')}
                           </button>
                         ) : (
                           <span className="text-[11px] theme-warn-text font-bold">
-                            {localize(state.language, 'Falta entrenamiento', 'Needs more training')}
+                            {tr(state.language, 'dataPipelineManager.needsMoreTraining')}
                           </span>
                         )}
                       </div>
@@ -428,13 +429,13 @@ export const DataPipelineManager: React.FC = () => {
               <div className="mutating-panel border p-3 rounded-lg text-xs space-y-2">
                 <h4 className="font-bold mutating-accent-text flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 mutating-accent-text" />
-                  {localize(state.language, 'ÁRBOL DE COMPLEJIDAD PROGRESIVA DE DATASETS (VISTA PREVIA)', 'PROGRESSIVE DATASET COMPLEXITY TREE (PREVIEW)')}
+                  {tr(state.language, 'dataPipelineManager.progressiveDatasetComplexityTreePreview')}
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
                   {Object.values(DATASET_TIER_CONFIGS).map(tc => (
                     <div key={tc.tier} className="p-2 rounded theme-sub-bg border theme-border">
                       <div className="font-bold theme-text">{state.language === 'en' ? tc.name : tc.nameEs}</div>
-                      <div className="mutating-text-muted mt-1">{localize(state.language, 'Req: puntaje del modelo ≥', 'Req: model score ≥')} {tc.minModelIQ}</div>
+                      <div className="mutating-text-muted mt-1">{tr(state.language, 'dataPipelineManager.reqModelScore')} {tc.minModelIQ}</div>
                       <div className="mutating-accent-text mt-0.5">{tc.targetTokensMillions}M tokens · {tc.computePflopsRequired} PF</div>
                     </div>
                   ))}
@@ -451,14 +452,14 @@ export const DataPipelineManager: React.FC = () => {
                     <div className="flex items-center gap-2 mutating-accent-text">
                       <Search className="w-4 h-4 animate-spin mutating-accent-text" />
                       <span>
-                        {localize(state.language, 'SÍNTESIS DE DATASET EN PROGRESO:', 'DATASET SYNTHESIS IN PROGRESS:')} {state.activeScrapeJob.domainLabel} (Tier {state.activeScrapeJob.tier})
+                        {tr(state.language, 'dataPipelineManager.datasetSynthesisProgress')} {state.activeScrapeJob.domainLabel} (Tier {state.activeScrapeJob.tier})
                       </span>
                     </div>
                     <button
                       onClick={cancelDatasetScraping}
                       className="px-2 py-0.5 rounded theme-danger-soft border theme-danger-border theme-danger-text text-[11px] transition-colors"
                     >
-                      {localize(state.language, 'CANCELAR SCRAPING', 'CANCEL SCRAPING')}
+                      {tr(state.language, 'dataPipelineManager.cancelScraping')}
                     </button>
                   </div>
 
@@ -470,11 +471,11 @@ export const DataPipelineManager: React.FC = () => {
                   </div>
 
                   <div className="flex flex-wrap items-center justify-between text-[11px] mutating-text-muted">
-                    <span>{localize(state.language, 'Progreso:', 'Progress:')} {state.activeScrapeJob.progressPercent}%</span>
-                    <span>{localize(state.language, 'Modelo Asignado:', 'Assigned Model:')} <strong className="theme-text">{state.activeScrapeJob.assignedModelName}</strong></span>
-                    <span>{localize(state.language, 'Cómputo Dedicado:', 'Compute Dedicated:')} {state.activeScrapeJob.computeRequiredPflops} PFLOPS</span>
+                    <span>{tr(state.language, 'dataPipelineManager.progress')} {state.activeScrapeJob.progressPercent}%</span>
+                    <span>{tr(state.language, 'dataPipelineManager.assignedModel')} <strong className="theme-text">{state.activeScrapeJob.assignedModelName}</strong></span>
+                    <span>{tr(state.language, 'dataPipelineManager.computeDedicated')} {state.activeScrapeJob.computeRequiredPflops} PFLOPS</span>
                     <span className="mutating-accent-text">
-                      {localize(state.language, 'Tiempo estimado:', 'Estimated time:')}{' '}
+                      {tr(state.language, 'dataPipelineManager.estimatedTime')}{' '}
                       {state.activeScrapeJob.timeRemainingSeconds === null
                         ? '...'
                         : formatGameTime(state.activeScrapeJob.timeRemainingSeconds)}
@@ -489,11 +490,11 @@ export const DataPipelineManager: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 mutating-accent-text" />
                     <h3 className="font-bold text-xs mutating-accent-text tracking-wider">
-                      {localize(state.language, 'CONSOLA DE GENERACIÓN Y SCRAPING DE DATASETS ESPECIALIZADOS', 'SPECIALIZED DATASET SCRAPING & GENERATION CONSOLE')}
+                      {tr(state.language, 'dataPipelineManager.specializedDatasetScrapingGenerationConsole')}
                     </h3>
                   </div>
                   <span className="text-[11px] mutating-text-muted">
-                    {localize(state.language, 'ÁRBOL DE COMPLEJIDAD TIERS 1 A 4', 'COMPLEXITY TREE TIERS 1 TO 4')}
+                    {tr(state.language, 'dataPipelineManager.complexityTreeTiers14')}
                   </span>
                 </div>
 
@@ -501,7 +502,7 @@ export const DataPipelineManager: React.FC = () => {
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold theme-text flex items-center gap-1.5">
                     <Search className="w-3.5 h-3.5 mutating-accent-text" />
-                    <span>{localize(state.language, '1. SELECCIONA EL DOMINIO OBJETIVO:', '1. SELECT TARGET DOMAIN:')}</span>
+                    <span>{tr(state.language, 'dataPipelineManager.n1SelectTargetDomain')}</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                     {DOMAIN_PRESETS.map(preset => {
@@ -544,14 +545,14 @@ export const DataPipelineManager: React.FC = () => {
                       }`}
                     >
                       <div className="text-xs font-bold flex items-center justify-between">
-                        <span>{localize(state.language, 'Dominio Personalizado (Write-in)', 'Custom Domain (Write-in)')}</span>
+                        <span>{tr(state.language, 'dataPipelineManager.customDomainWrite')}</span>
                         {selectedDomain === 'custom' && <CheckCircle2 className="w-3.5 h-3.5 mutating-accent-text" />}
                       </div>
                       <input
                         type="text"
                         value={customDomainInput}
                         onChange={e => setCustomDomainInput(e.target.value)}
-                        placeholder={localize(state.language, 'ej. Quantum Cryptanalysis', 'e.g. Quantum Cryptanalysis')}
+                        placeholder={tr(state.language, 'dataPipelineManager.eGQuantumCryptanalysis')}
                         className="mt-1.5 w-full bg-black/60 border theme-border rounded px-2 py-1 text-[11px] theme-text outline-none"
                       />
                     </div>
@@ -562,7 +563,7 @@ export const DataPipelineManager: React.FC = () => {
                 <div className="space-y-1.5 pt-1">
                   <label className="text-xs font-bold theme-text flex items-center gap-1.5">
                     <Sliders className="w-3.5 h-3.5 mutating-accent-text" />
-                    <span>{localize(state.language, '2. NIVEL DE COMPLEJIDAD PROGRESIVA (TIER 1 - 4):', '2. PROGRESSIVE COMPLEXITY TIER (TIER 1 - 4):')}</span>
+                    <span>{tr(state.language, 'dataPipelineManager.n2ProgressiveComplexityTierTier')}</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     {Object.values(DATASET_TIER_CONFIGS).map(tc => {
@@ -587,7 +588,7 @@ export const DataPipelineManager: React.FC = () => {
                             <span>{state.language === 'en' ? tc.name.split(':')[0] : tc.nameEs.split(':')[0]}</span>
                             {!modelMeetsIQ ? (
                               <span className="text-[11px] theme-warn-text flex items-center gap-0.5">
-                                <Lock className="w-2.5 h-2.5" /> {state.language === 'es' ? 'Puntaje' : 'Score'} ≥ {tc.minModelIQ}
+                                <Lock className="w-2.5 h-2.5" /> {tr(state.language, 'dataPipelineManager.score')} ≥ {tc.minModelIQ}
                               </span>
                             ) : (
                               <span className="text-[11px] theme-success-text font-bold">✓ APTO</span>
@@ -609,7 +610,7 @@ export const DataPipelineManager: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div>
                     <label className="text-xs font-bold theme-text block mb-1">
-                      {localize(state.language, '3. MODELO ASIGNADO PARA EL RASTREO Y SÍNTESIS:', '3. ASSIGNED MODEL FOR CRAWLING & SYNTHESIS:')}
+                      {tr(state.language, 'dataPipelineManager.n3AssignedModelCrawlingSynthesis')}
                     </label>
                     <select
                       value={assignedModelId}
@@ -618,12 +619,12 @@ export const DataPipelineManager: React.FC = () => {
                     >
                       {state.savedModels.map(m => (
                         <option key={m.id} value={m.id}>
-                          {m.name} ({state.language === 'es' ? 'Puntaje' : 'Score'} {m.reasoningScore} · {m.modelType === 'micro_model' ? (state.language === 'es' ? 'Micro-modelo' : 'Micro-model') : 'General'})
+                          {m.name} ({tr(state.language, 'dataPipelineManager.score')} {m.reasoningScore} · {m.modelType === 'micro_model' ? (tr(state.language, 'dataPipelineManager.microModel')) : 'General'})
                         </option>
                       ))}
                     </select>
                     <span className="text-[11px] mutating-text-muted mt-1 block">
-                      {localize(state.language, 'Modelos con mayor puntaje pueden generar tiers superiores de datos con mayor pureza.', 'Higher-scoring models can scrape higher tiers with greater dataset purity.')}
+                      {tr(state.language, 'dataPipelineManager.higherScoringModelsCanScrape')}
                     </span>
                   </div>
 
@@ -639,12 +640,12 @@ export const DataPipelineManager: React.FC = () => {
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       <span>
-                        {localize(state.language, 'INICIAR GENERACIÓN DE DATASET', 'START DATASET GENERATION')} ({tierConfig.targetTokensMillions}M TOKENS)
+                        {tr(state.language, 'dataPipelineManager.startDatasetGeneration')} ({tierConfig.targetTokensMillions}M TOKENS)
                       </span>
                     </button>
                     {!isModelQualifiedForTier && (
                       <span className="text-[11px] theme-warn-text mt-1 text-center font-bold">
-                        {localize(state.language, `El modelo asignado necesita puntaje ≥ ${tierConfig.minModelIQ} para este nivel.`, `Assigned model needs score ≥ ${tierConfig.minModelIQ} for this tier.`)}
+                        {tr(state.language, 'dataPipelineManager.assignedModelNeedsScoreTier', { minModelIQ: tierConfig.minModelIQ })}
                       </span>
                     )}
                   </div>
@@ -656,10 +657,10 @@ export const DataPipelineManager: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold theme-text flex items-center gap-1.5">
                     <Database className="w-3.5 h-3.5 mutating-accent-text" />
-                    <span>{localize(state.language, 'REPOSITORIO DE DATASETS ESPECIALIZADOS Y BASELINE GENERAL:', 'SPECIALIZED DATASETS & GENERAL BASELINE REPOSITORY:')}</span>
+                    <span>{tr(state.language, 'dataPipelineManager.specializedDatasetsGeneralBaselineRepository')}</span>
                   </h4>
                   <span className="text-[11px] mutating-text-muted">
-                    {state.customDatasets.length} {localize(state.language, 'disponibles', 'available')}
+                    {state.customDatasets.length} {tr(state.language, 'dataPipelineManager.available')}
                   </span>
                 </div>
 
@@ -696,7 +697,7 @@ export const DataPipelineManager: React.FC = () => {
                               <span className="theme-text font-bold">{ds.tokensCount}M tok</span>
                             </div>
                             <div>
-                              <span className="mutating-text-muted block text-[11px]">{localize(state.language, 'PUREZA', 'PURITY')}</span>
+                              <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'dataPipelineManager.purity')}</span>
                               <span className="theme-success-text font-bold">{ds.qualityScore}%</span>
                             </div>
                             <div>

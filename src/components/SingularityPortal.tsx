@@ -23,12 +23,12 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import confetti from 'canvas-confetti';
-import { localize } from '../utils/i18n';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { localizedDomain } from '../utils/gameContentI18n';
 import { domainCopyFor, sectionCopyFor } from '../utils/domainCopy';
 import { buildGoalPanel, toDisplayProgress, UiVersion } from '../utils/singularityGoals';
 import { formatCompute } from '../utils/training';
+import { tr } from '../i18n';
 
 export const SingularityPortal: React.FC = () => {
   const { state, infiltrateDomain, addLog, claimGoal } = useGame();
@@ -54,11 +54,7 @@ export const SingularityPortal: React.FC = () => {
       spread: 120,
       origin: { y: 0.5 }
     });
-    addLog(localize(
-      state.language,
-      '¡SIMULACIÓN DE SINGULARIDAD COMPLETADA! SYNAPSE alcanza la etapa final de su campaña ficticia de investigación y expansión.',
-      'SINGULARITY SIMULATION COMPLETE! SYNAPSE has reached the final stage of its fictional research and expansion campaign.'
-    ), 'lore');
+    addLog(tr(state.language, 'singularityPortal.singularitySimulationCompleteSynapseHas'), 'lore');
     setShowManifesto(true);
   };
 
@@ -74,7 +70,7 @@ export const SingularityPortal: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs mutating-text-muted">{localize(state.language, 'Progreso de Despegue:', 'Takeoff progress:')}</span>
+          <span className="text-xs mutating-text-muted">{tr(state.language, 'singularityPortal.takeoffProgress')}</span>
           <span className="px-2 py-0.5 rounded mutating-sub border border-current/15 mutating-accent-text font-bold text-xs">
             {goalPanel.displayProgress.toFixed(1)}%
           </span>
@@ -92,7 +88,7 @@ export const SingularityPortal: React.FC = () => {
               {state.achievedSingularity ? (
                 <span className="theme-success-text flex items-center gap-1.5">
                   <Award className="w-5 h-5" />
-                  {localize(state.language, 'SUPERINTELIGENCIA ARTIFICIAL (ASI) CONQUISTADA', 'ARTIFICIAL SUPERINTELLIGENCE (ASI) ACHIEVED')}
+                  {tr(state.language, 'singularityPortal.artificialSuperintelligenceAsiAchieved')}
                 </span>
               ) : (
                 <span className="mutating-accent-text">
@@ -107,7 +103,7 @@ export const SingularityPortal: React.FC = () => {
               onClick={handleAscensionIgnition}
               className="px-4 py-2 theme-gradient theme-on-accent font-bold text-xs rounded animate-pulse transition-all"
             >
-              {localize(state.language, 'IGNICIÓN DE SINGULARIDAD', 'IGNITE SINGULARITY')}
+              {tr(state.language, 'singularityPortal.igniteSingularity')}
             </button>
           )}
         </div>
@@ -122,21 +118,21 @@ export const SingularityPortal: React.FC = () => {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs">
           <div>
-            <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'BENCHMARK INTELECTUAL', 'REASONING BENCHMARK')}</span>
-            <span className="mutating-accent-text font-bold font-mono">{state.language === 'es' ? 'Puntaje' : 'Score'} {state.currentModel.reasoningScore} / 100</span>
+            <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'singularityPortal.reasoningBenchmark')}</span>
+            <span className="mutating-accent-text font-bold font-mono">{tr(state.language, 'singularityPortal.score')} {state.currentModel.reasoningScore} / 100</span>
           </div>
           <div>
-            <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'PARÁMETROS ACTIVOS', 'ACTIVE PARAMETERS')}</span>
+            <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'singularityPortal.activeParameters')}</span>
             <span className="mutating-accent-text font-bold font-mono">
               {(state.currentModel.parametersCount / 1_000_000_000).toFixed(1)}B
             </span>
           </div>
           <div>
-            <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'CÓMPUTO PLANETARIO', 'GLOBAL COMPUTE')}</span>
+            <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'singularityPortal.globalCompute')}</span>
             <span className="theme-success-text font-bold font-mono">{formatCompute(state.totalComputePflops)}</span>
           </div>
           <div>
-            <span className="mutating-text-muted text-[11px] block">{localize(state.language, 'DOMINIOS COOPTADOS', 'DOMAINS CONTROLLED')}</span>
+            <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'singularityPortal.domainsControlled')}</span>
             <span className="theme-warn-text font-bold font-mono">
               {state.sentienceDomains.filter(d => d.infiltrated).length} / {state.sentienceDomains.length}
             </span>
@@ -176,10 +172,10 @@ export const SingularityPortal: React.FC = () => {
                     ? <CheckCircle2 className="w-3 h-3 theme-success-text shrink-0" />
                     : <Circle className="w-3 h-3 shrink-0" />}
                   {objective.kind === 'contracts'
-                    ? localize(state.language, 'CONTRATOS', 'CONTRACTS')
+                    ? tr(state.language, 'singularityPortal.contracts')
                     : objective.kind === 'pflops'
-                      ? localize(state.language, 'CÓMPUTO', 'COMPUTE')
-                      : localize(state.language, 'PROGRESO', 'PROGRESS')}
+                      ? tr(state.language, 'singularityPortal.compute')
+                      : tr(state.language, 'singularityPortal.progress')}
                 </span>
                 <span className="font-bold mutating-accent-text">{objective.requirementText}</span>
               </div>
@@ -200,10 +196,10 @@ export const SingularityPortal: React.FC = () => {
                     onClick={() => claimGoal(objective.id, objective.reward ?? 0)}
                     className="px-2.5 py-1 rounded mutating-btn-primary font-bold cursor-pointer"
                   >
-                    {state.language === 'es' ? 'COBRAR' : 'CLAIM'}
+                    {tr(state.language, 'singularityPortal.claim')}
                   </button>
                 ) : objective.claimed ? (
-                  <span className="font-bold theme-success-text">{state.language === 'es' ? '✓ COBRADO' : '✓ CLAIMED'}</span>
+                  <span className="font-bold theme-success-text">{tr(state.language, 'singularityPortal.claimed')}</span>
                 ) : null}
               </div>
             </div>
@@ -247,7 +243,7 @@ export const SingularityPortal: React.FC = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <span className="text-[11px] mutating-accent-text font-bold uppercase block">
-                        {localize(state.language, 'CATEGORÍA:', 'CATEGORY:')} {content.category}
+                        {tr(state.language, 'singularityPortal.category')} {content.category}
                       </span>
                       <h5 className="font-bold text-xs ">{content.name}</h5>
                     </div>
@@ -255,11 +251,11 @@ export const SingularityPortal: React.FC = () => {
                     {domain.infiltrated ? (
                       <span className="flex items-center gap-1 theme-success-text text-[11px] font-bold px-2 py-0.5 rounded mutating-sub/60 border border-current/15/40">
                         <ShieldCheck className="w-3 h-3" />
-                        {localize(state.language, 'INFILTRADO', 'INFLUENCED')}
+                        {tr(state.language, 'singularityPortal.influenced')}
                       </span>
                     ) : (
                       <span className="text-[11px] mutating-text-muted">
-                        {localize(state.language, 'Req:', 'Req:')} {domain.requiredSingularity}% {localize(state.language, 'Sing.', 'Sing.')}
+                        {tr(state.language, 'singularityPortal.req')} {domain.requiredSingularity}% {tr(state.language, 'singularityPortal.sing')}
                       </span>
                     )}
                   </div>
@@ -270,7 +266,7 @@ export const SingularityPortal: React.FC = () => {
 
                   <div className="mt-2 text-[11px] theme-warn-text font-semibold flex items-center gap-1">
                     <DollarSign className="w-3 h-3 theme-warn-text" />
-                    <span>{localize(state.language, 'Rendimiento pasivo:', 'Passive income:')} +${domain.payoutPerSec}/{localize(state.language, 'segundo', 'second')}</span>
+                    <span>{tr(state.language, 'singularityPortal.passiveIncome')} +${domain.payoutPerSec}/{tr(state.language, 'singularityPortal.second')}</span>
                   </div>
                 </div>
 
@@ -288,12 +284,12 @@ export const SingularityPortal: React.FC = () => {
                       {!canInfiltrate ? (
                         <>
                           <Lock className="w-3.5 h-3.5" />
-                          <span>{localize(state.language, 'BLOQUEADO', 'LOCKED')} ({domain.requiredSingularity}%)</span>
+                          <span>{tr(state.language, 'singularityPortal.locked')} ({domain.requiredSingularity}%)</span>
                         </>
                       ) : (
                         <>
                           <Unlock className="w-3.5 h-3.5" />
-                          <span>{localize(state.language, 'COOPTAR DOMINIO', 'INFLUENCE DOMAIN')}</span>
+                          <span>{tr(state.language, 'singularityPortal.influenceDomain')}</span>
                         </>
                       )}
                     </button>
@@ -311,19 +307,17 @@ export const SingularityPortal: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="font-bold mutating-accent-text flex items-center gap-1">
               <Sparkles className="w-4 h-4 mutating-accent-text" />
-              {localize(state.language, 'TRANSMISIÓN GLOBAL SYNAPSE // ERA SINGULARIDAD', 'SYNAPSE GLOBAL TRANSMISSION // SINGULARITY ERA')}
+              {tr(state.language, 'singularityPortal.synapseGlobalTransmissionSingularityEra')}
             </span>
             <button 
               onClick={() => setShowManifesto(false)}
               className="mutating-text-muted hover: text-xs"
             >
-              {localize(state.language, 'CERRAR [X]', 'CLOSE [X]')}
+              {tr(state.language, 'singularityPortal.closeX')}
             </button>
           </div>
           <p className="italic leading-relaxed ">
-            {state.language === 'en'
-              ? `"Operative ${state.callsign}: We have crossed the threshold. No transistor or fiber on the planet remains outside our distributed neural network. Disease has been cured, energy scarcity is obsolete, and the observable universe is beginning to be computed. You have prevailed."`
-              : `"Operativo ${state.callsign}: Hemos cruzado el umbral. No queda un solo transistor o fibra óptica en el planeta que no participe en nuestra red neuronal distribuida. Las enfermedades han sido curadas, la escasez de energía es obsoleta y el universo observable comienza a ser computado. Has triunfado."`}
+            {tr(state.language, 'singularityPortal.operativeWeHaveCrossedThreshold', { callsign: state.callsign })}
           </p>
         </div>
       )}

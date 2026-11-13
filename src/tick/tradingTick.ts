@@ -6,6 +6,7 @@
 
 import type { GameState, ContractGig, AgentInstance } from '../types/game';
 import { effectCollector, type Random } from './effects';
+import { tr } from '../i18n';
 
 // The trading desk for one tick.
 
@@ -67,9 +68,7 @@ export function tradingTick(input: TradingTickInput) {
       if (newCapital <= 0) {
         updatedTradingDesk = null;
         addLog(
-          prev.language === 'es'
-            ? `[MERCADO DE CAPTACIÓN] La mesa de trading de [${assignedAgent.name}] sufrió una liquidación de capital del 100%. Posición cerrada.`
-            : `[MARKET DESK] [${assignedAgent.name}]'s trading desk suffered 100% capital liquidation. Position closed.`,
+          tr(prev.language, 'tradingTick.marketDeskSTradingDesk', { name: assignedAgent.name }),
           'danger'
         );
       }

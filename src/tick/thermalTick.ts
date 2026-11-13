@@ -6,6 +6,7 @@
 import type { ActiveGig, GameState, StoryEventId } from '../types/game';
 import { formatGameTime } from '../utils/training';
 import { effectCollector, type Random } from './effects';
+import { tr } from '../i18n';
 
 // Heat, the circuit breaker and the watchdog's suspicion for one tick.
 export interface ThermalInput {
@@ -45,9 +46,7 @@ export function thermalTick(input: ThermalInput) {
       play('warning');
       storyEvents.push('first_power_trip');
       addLog(
-        prev.language === 'en'
-          ? `Electrical overload: circuit breaker tripped. Training and missions paused for ${formatGameTime(15)}.`
-          : `Sobrecarga eléctrica: el interruptor de protección pausó entrenamiento y misiones durante ${formatGameTime(15)}.`,
+        tr(prev.language, 'thermalTick.electricalOverloadCircuitBreakerTripped', { formatGameTime: formatGameTime(15) }),
         'danger'
       );
     }

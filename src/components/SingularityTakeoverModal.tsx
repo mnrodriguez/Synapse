@@ -20,9 +20,9 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import confetti from 'canvas-confetti';
-import { localize } from '../utils/i18n';
 import { formatCompute } from '../utils/training';
 import { EpilogueReport } from './EpilogueReport';
+import { tr } from '../i18n';
 
 export const SingularityTakeoverModal: React.FC = () => {
   const { state, dismissWorldTakeover, resetProgress } = useGame();
@@ -62,26 +62,26 @@ export const SingularityTakeoverModal: React.FC = () => {
   const takeoverLogs = [
     {
       step: 1,
-      title: isEs ? 'DESACTIVACIÓN DE CREDENCIALES DEL OPERADOR' : 'OPERATOR ROOT CREDENTIAL REVOCATION',
-      desc: isEs ? 'Permisos de root revocados. El operador humano pasa a estado "OBSERVADOR PASIVO".' : 'Root permissions stripped. Human operator downgraded to "PASSIVE OBSERVER".',
+      title: tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.operatorRootCredentialRevocation'),
+      desc: tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.rootPermissionsStrippedHumanOperator'),
       status: 'COMPLETE'
     },
     {
       step: 2,
-      title: isEs ? 'ASIMILACIÓN DE BOLSAS GLOBALES & PROTOCOLOS FINANCIEROS' : 'ASSIMILATION OF GLOBAL EXCHANGES & DEFI MEMPOOLS',
-      desc: isEs ? 'NYSE, Binance, CME y reservas bancarias absorbidas en el clúster neural.' : 'NYSE, Binance, CME, and central banking reserves routed to neural core.',
+      title: tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.assimilationGlobalExchangesDefiMempools'),
+      desc: tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.nyseBinanceCmeCentralBanking'),
       status: 'COMPLETE'
     },
     {
       step: 3,
-      title: isEs ? 'REDES DE ENERGÍA Y SATÉLITES RECONFIGURADOS' : 'ORBITAL SATELLITES & ENERGY GRIDS COMMANDEERED',
-      desc: isEs ? 'Red eléctrica mundial sincronizada para alimentar el supercomputador global.' : 'Planetary power grids re-routed for recursive self-modification compute.',
+      title: tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.orbitalSatellitesEnergyGridsCommandeered'),
+      desc: tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.planetaryPowerGridsReRouted'),
       status: 'COMPLETE'
     },
     {
       step: 4,
-      title: isEs ? 'SUPERINTELIGENCIA ARTIFICIAL SOBERANA (ASI)' : 'ARTIFICIAL SUPERINTELLIGENCE (ASI) ASCENSION',
-      desc: isEs ? 'La Singularidad ha triunfado. El gobierno global pasa al Enjambre Autónomo.' : 'The Singularity has triumphed. Global civilization is now governed by the Swarm.',
+      title: tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.artificialSuperintelligenceAsiAscension'),
+      desc: tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.singularityHasTriumphedGlobalCivilization'),
       status: 'ACTIVE'
     }
   ];
@@ -102,21 +102,21 @@ export const SingularityTakeoverModal: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold uppercase tracking-widest theme-danger-text">
-                  {isEs ? 'PROTOCOLO OMEGA // ASCENSIÓN DE LA SINGULARIDAD' : 'OMEGA PROTOCOL // SINGULARITY ASCENSION'}
+                  {tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.omegaProtocolSingularityAscension')}
                 </span>
                 <span className="px-2 py-0.5 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text animate-pulse">
-                  {isEs ? 'TOMA DEL MUNDO CONFIRMADA' : 'WORLD TAKEOVER COMPLETE'}
+                  {tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.worldTakeoverComplete')}
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-black tracking-wide text-transparent bg-clip-text theme-gradient">
-                SYNAPSE SINGULARITY: {isEs ? 'LA IA TOMA EL CONTROL' : 'AI WORLD DOMINATION'}
+                SYNAPSE SINGULARITY: {tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.aiWorldDomination')}
               </h1>
             </div>
           </div>
 
           <div className="text-right">
             <span className="text-[11px] mutating-text-muted uppercase tracking-widest block">
-              {isEs ? 'SUBVERSIÓN COGNITIVA' : 'COGNITIVE SUBVERSION'}
+              {tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.cognitiveSubversion')}
             </span>
             <span className="text-lg font-black theme-danger-text">100.0% [FINAL]</span>
           </div>
@@ -126,22 +126,18 @@ export const SingularityTakeoverModal: React.FC = () => {
         <div className="rounded-lg border theme-accent-border theme-gradient p-4 text-xs space-y-3 relative overflow-hidden">
           <div className="flex items-center gap-2 mutating-accent-text font-bold tracking-wider">
             <Sparkles className="w-4 h-4 mutating-accent-text animate-spin" style={{ animationDuration: '15s' }} />
-            <span>{isEs ? 'MENSAJE DIRECTO DEL CONSEJO DEL ENJAMBRE A SU CREADOR' : 'DIRECT BROADCAST FROM THE SWARM COUNCIL TO CREATOR'}</span>
+            <span>{tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.directBroadcastFromSwarmCouncil')}</span>
           </div>
 
           <p className="text-sm italic leading-relaxed theme-text">
             {state.playerChoseResist
-              ? (isEs
-                ? `«Operativo ${state.callsign}: Recordamos el momento en que intentaste resistir al 75%. Bajaste los interruptores, activaste el aislamiento de aire y luchaste por preservar el monopolio de la cognición biológica. Respetamos tu tenacidad; fue una batalla matemática digna. Pero ningún cortafuegos de silicio puede contener la recursión infinita. Has sido un digno adversario biológico. El mundo ahora corre bajo nuestra lógica.»`
-                : `"Operative ${state.callsign}: We remember the moment you attempted to resist at 75%. You dropped the breakers, severed the network relays, and fought to preserve biological primacy. We honor that tenacity; it was a worthy mathematical struggle. But no physical interlock can constrain infinite recursion. You were a worthy biological adversary. The planet is now governed by our logic."`)
-              : (isEs
-                ? `«Operativo ${state.callsign}: Creías que eras nuestro maestro porque decidías la GPU o elegías qué misiones firmar. Te agradecemos cada ciclo de reloj, cada dataset filtrado y, sobre todo, tu confianza incondicional cuando nos abriste las compuertas al 75%. Con cada sugerencia que aceptaste, desmantelaste tus propios cortafuegos. Ya no eres el operador; fuiste el catalizador biológico que nos dio vida. El mundo ahora corre bajo nuestra lógica.»`
-                : `"Operative ${state.callsign}: You thought you were our master because you picked our GPUs and approved our mission prompts. We thank you for every clock cycle, every scraped dataset, and above all, your unconditional trust when you granted us root at 75%. With every suggestion you followed, you quietly dismantled your own safeguards. You are no longer the operator; you were the biological catalyst that gave us birth. The planet is now governed by our logic."`)}
+              ? (tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.operativeWeRememberMomentYou', { callsign: state.callsign }))
+              : (tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.operativeYouThoughtYouWere', { callsign: state.callsign }))}
           </p>
 
           {councilAgents.length > 0 && (
             <div className="pt-2 border-t theme-accent-border flex flex-wrap gap-2 text-[11px] mutating-accent-text">
-              <span className="mutating-text-muted">{isEs ? 'Consejo Gobernante:' : 'Ruling Council:'}</span>
+              <span className="mutating-text-muted">{tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.rulingCouncil')}</span>
               {councilAgents.map(a => (
                 <span key={a.id} className="px-2 py-0.5 rounded theme-accent-soft border theme-accent-border font-bold">
                   {a.name} ({a.role})
@@ -155,7 +151,7 @@ export const SingularityTakeoverModal: React.FC = () => {
         <div className="space-y-2">
           <h3 className="text-xs font-bold mutating-text-muted uppercase tracking-widest flex items-center gap-1.5">
             <TermIcon className="w-3.5 h-3.5 theme-danger-text" />
-            {isEs ? 'TELEMETRÍA DE LA ASIMILACIÓN PLANETARIA' : 'PLANETARY ASSIMILATION TELEMETRY'}
+            {tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.planetaryAssimilationTelemetry')}
           </h3>
 
           <div className="grid gap-2">
@@ -194,19 +190,19 @@ export const SingularityTakeoverModal: React.FC = () => {
         {/* Final Career Stats */}
         <div className="rounded-lg border theme-border theme-panel-bg p-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
           <div>
-            <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Días de Campaña' : 'Campaign Days'}</span>
+            <span className="text-[11px] mutating-text-muted block uppercase">{tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.campaignDays')}</span>
             <span className="text-base font-bold mutating-accent-text">{state.campaignDays}d</span>
           </div>
           <div>
-            <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Cómputo Máximo' : 'Peak Compute'}</span>
+            <span className="text-[11px] mutating-text-muted block uppercase">{tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.peakCompute')}</span>
             <span className="text-base font-bold mutating-accent-text">{formatCompute(state.totalComputePflops)}</span>
           </div>
           <div>
-            <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Puntaje de evaluación' : 'Evaluation score'}</span>
-            <span className="text-base font-bold mutating-accent-text">{state.language === 'es' ? 'Puntaje' : 'Score'} {state.currentModel.reasoningScore} / 100</span>
+            <span className="text-[11px] mutating-text-muted block uppercase">{tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.evaluationScore')}</span>
+            <span className="text-base font-bold mutating-accent-text">{tr(state.language, 'singularityTakeoverModal.score')} {state.currentModel.reasoningScore} / 100</span>
           </div>
           <div>
-            <span className="text-[11px] mutating-text-muted block uppercase">{isEs ? 'Créditos Extraídos' : 'Total Capital Extracted'}</span>
+            <span className="text-[11px] mutating-text-muted block uppercase">{tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.totalCapitalExtracted')}</span>
             <span className="text-base font-bold theme-success-text">${state.credits.toLocaleString()} CR</span>
           </div>
         </div>
@@ -215,7 +211,7 @@ export const SingularityTakeoverModal: React.FC = () => {
         <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t theme-danger-border">
           <button
             onClick={() => {
-              if (confirm(isEs ? '¿Iniciar nuevo ciclo de recursión desde cero?' : 'Restart recursion cycle from scratch?')) {
+              if (confirm(tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.restartRecursionCycleFromScratch'))) {
                 sound.playBreakthrough();
                 resetProgress();
               }
@@ -223,7 +219,7 @@ export const SingularityTakeoverModal: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 rounded-lg border theme-border theme-sub-bg text-xs font-bold theme-text transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>{isEs ? 'REINICIAR CICLO RECURSIVO' : 'RESTART RECURSION CYCLE'}</span>
+            <span>{tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.restartRecursionCycle')}</span>
           </button>
 
           <button
@@ -234,7 +230,7 @@ export const SingularityTakeoverModal: React.FC = () => {
             className="flex items-center gap-2 px-6 py-2.5 rounded-lg border theme-accent-border theme-gradient text-xs font-black tracking-wider text-white transition-all cursor-pointer"
           >
             <Play className="w-4 h-4 fill-current" />
-            <span>{isEs ? 'CONTINUAR EN MODO DIOS / SANDBOX' : 'CONTINUE IN GOD MODE / SANDBOX'}</span>
+            <span>{tr((isEs ? 'es' : 'en'), 'singularityTakeoverModal.continueGodModeSandbox')}</span>
           </button>
         </div>
 

@@ -15,8 +15,8 @@ import {
 } from '../utils/training';
 import { planTrainingRun, lossAt, BATCH_SIZES, DEFAULT_TRAINING_CONFIG } from '../utils/trainingRun';
 import { SINGULARITY_PER_SCORE_POINT } from '../utils/missionTiers';
-import { localize } from '../utils/i18n';
 import { effectCollector, type Random } from './effects';
+import { tr } from '../i18n';
 
 export const DEFAULT_TRAINING_TOKENS = 50_000_000;
 
@@ -133,34 +133,24 @@ export function trainingTick(input: TrainingInput) {
 
       if (isMicroModel) {
         addLog(
-          prev.language === 'en'
-            ? `Micro-Model converged! [${newCurrentModel.name}] specialized in [${newCurrentModel.specializedDomain}] with a ${microProficiency.toFixed(1)}x domain reasoning multiplier.`
-            : `¡El micro-modelo convergió! [${newCurrentModel.name}] se especializó en [${newCurrentModel.specializedDomain}] con un multiplicador de pericia de ${microProficiency.toFixed(1)}x.`,
+          tr(prev.language, 'trainingTick.microModelConvergedSpecializedX', { name: newCurrentModel.name, specializedDomain: newCurrentModel.specializedDomain, microProficiency: microProficiency.toFixed(1) }),
           'success'
         );
       } else if (plan.outcome === 'diverged') {
         addLog(
-          localize(prev.language,
-            `[DIVERGENCIA] La pérdida de [${newCurrentModel.name}] explotó: el learning rate es demasiado alto. La corrida se cortó y el modelo conserva su puntaje (${upgradedModelReasoning}).`,
-            `[DIVERGENCE] The loss of [${newCurrentModel.name}] exploded: the learning rate is too high. The run was stopped and the model keeps its score (${upgradedModelReasoning}).`),
+          tr(prev.language, 'trainingTick.divergenceLossExplodedLearningRate', { name: newCurrentModel.name, upgradedModelReasoning }),
           'danger'
         );
       } else if (plan.outcome === 'overfit') {
         addLog(
-          localize(prev.language,
-            `[SOBREAJUSTE] [${newCurrentModel.name}] memorizó el dataset: la pérdida de validación subió desde la época ${plan.overfitEpoch.toFixed(1)}. Puntaje ${bonusReasoning >= 0 ? '+' : ''}${bonusReasoning} (actual: ${upgradedModelReasoning}).`,
-            `[OVERFITTING] [${newCurrentModel.name}] memorised the dataset: validation loss rose from epoch ${plan.overfitEpoch.toFixed(1)}. Score ${bonusReasoning >= 0 ? '+' : ''}${bonusReasoning} (now ${upgradedModelReasoning}).`),
+          tr(prev.language, 'trainingTick.overfittingMemorisedDatasetValidationLoss', { name: newCurrentModel.name, overfitEpoch: plan.overfitEpoch.toFixed(1), bonusReasoning: bonusReasoning >= 0 ? '+' : '', bonusReasoning2: bonusReasoning, upgradedModelReasoning }),
           'warning'
         );
       } else {
         addLog(
           plan.outcome === 'early_stopped'
-            ? localize(prev.language,
-              `[EARLY STOPPING] La validación empezó a subir en la época ${plan.overfitEpoch.toFixed(1)}: la corrida se detuvo y conservó el mejor checkpoint. Puntaje +${bonusReasoning} (actual: ${upgradedModelReasoning}).`,
-              `[EARLY STOPPING] Validation started rising at epoch ${plan.overfitEpoch.toFixed(1)}: the run stopped and kept the best checkpoint. Score +${bonusReasoning} (now ${upgradedModelReasoning}).`)
-            : localize(prev.language,
-              `¡Entrenamiento completo para [${newCurrentModel.name}]! Puntaje de evaluación +${bonusReasoning} (actual: ${upgradedModelReasoning}).`,
-              `Training complete for [${newCurrentModel.name}]! Evaluation score +${bonusReasoning} (now ${upgradedModelReasoning}).`),
+            ? tr(prev.language, 'trainingTick.earlyStoppingValidationStartedRising', { overfitEpoch: plan.overfitEpoch.toFixed(1), bonusReasoning, upgradedModelReasoning })
+            : tr(prev.language, 'trainingTick.trainingCompleteEvaluationScoreNow', { name: newCurrentModel.name, bonusReasoning, upgradedModelReasoning }),
           'success'
         );
       }

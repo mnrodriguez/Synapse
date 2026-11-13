@@ -28,8 +28,8 @@ import {
   Sliders
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { localize } from '../utils/i18n';
 import { AuthModal } from './AuthModal';
+import { tr } from '../i18n';
 
 export const GenesisOnboarding: React.FC = () => {
   const { completeTutorial, state, setLanguage } = useGame();
@@ -320,15 +320,15 @@ export const GenesisOnboarding: React.FC = () => {
             </div>
             <div>
               <span className="text-[11px] mutating-text-muted uppercase tracking-widest block font-bold">
-                {localize(state.language, 'CONFIGURACIÓN INICIAL', 'INITIAL SETUP')}
+                {tr(state.language, 'genesisOnboarding.initialSetup')}
               </span>
               <h2 className="text-sm font-bold mutating-accent-text tracking-wider">
-                {localize(state.language, `FASE ${step} DE 5: `, `PHASE ${step} OF 5: `)}{
-                  step === 1 ? localize(state.language, 'IDENTIDAD Y CONCESIÓN DE FONDOS', 'IDENTITY & STARTING FUNDS') :
-                  step === 2 ? localize(state.language, 'ADQUISICIÓN DE HARDWARE INICIAL', 'INITIAL HARDWARE ACQUISITION') :
-                  step === 3 ? localize(state.language, 'MODALIDAD DE DATOS & CONOCIMIENTO', 'DATA & KNOWLEDGE SOURCES') :
-                  step === 4 ? localize(state.language, 'ARQUITECTURA DEL PRIMER MODELO', 'FIRST MODEL ARCHITECTURE') :
-                  localize(state.language, 'ENTRENAMIENTO GÉNESIS & DESPERTAR', 'GENESIS TRAINING & AWAKENING')
+                {tr(state.language, 'genesisOnboarding.phase5', { step })}{
+                  step === 1 ? tr(state.language, 'genesisOnboarding.identityStartingFunds') :
+                  step === 2 ? tr(state.language, 'genesisOnboarding.initialHardwareAcquisition') :
+                  step === 3 ? tr(state.language, 'genesisOnboarding.dataKnowledgeSources') :
+                  step === 4 ? tr(state.language, 'genesisOnboarding.firstModelArchitecture') :
+                  tr(state.language, 'genesisOnboarding.genesisTrainingAwakening')
                 }
               </h2>
             </div>
@@ -339,10 +339,10 @@ export const GenesisOnboarding: React.FC = () => {
               type="button"
               onClick={() => setLanguage(en ? 'es' : 'en')}
               className="flex items-center gap-1 rounded border theme-accent-border theme-sub-bg px-2 py-1 text-[11px] font-bold mutating-accent-text"
-              aria-label={localize(state.language, 'Cambiar idioma a inglés', 'Change language to Spanish')}
+              aria-label={tr(state.language, 'genesisOnboarding.changeLanguageSpanish')}
             >
               <Languages className="h-3.5 w-3.5" />
-              {en ? 'EN · English' : 'ES · Español'}
+              {tr((en ? 'en' : 'es'), 'genesisOnboarding.enEnglish')}
             </button>
             <button
               type="button"
@@ -350,14 +350,14 @@ export const GenesisOnboarding: React.FC = () => {
               className="flex items-center gap-1 rounded border theme-border theme-sub-bg px-2 py-1 text-[11px] font-bold theme-text"
             >
               <Cloud className="h-3.5 w-3.5 mutating-accent-text" />
-              {localize(state.language, 'INICIAR SESIÓN', 'SIGN IN')}
+              {tr(state.language, 'genesisOnboarding.sign')}
             </button>
           </div>
 
           {/* Budget tracker */}
           <div className="flex items-center gap-2 px-3 py-1 rounded theme-warn-soft border theme-warn-border theme-warn-text text-xs">
             <DollarSign className="w-3.5 h-3.5 theme-warn-text" />
-            <span className="mutating-text-muted">{localize(state.language, 'PRESUPUESTO REMANENTE:', 'REMAINING BUDGET:')}</span>
+            <span className="mutating-text-muted">{tr(state.language, 'genesisOnboarding.remainingBudget')}</span>
             <span className="font-bold text-sm theme-warn-text">${remainingBudget} CR</span>
           </div>
         </div>
@@ -365,10 +365,10 @@ export const GenesisOnboarding: React.FC = () => {
         {/* Visual Progress Steps Indicators */}
         <div className="grid grid-cols-5 theme-panel-bg border-b theme-accent-border text-[11px] text-center font-bold">
           {[
-            { num: 1, label: localize(state.language, 'Identidad', 'Identity') },
+            { num: 1, label: tr(state.language, 'genesisOnboarding.identity') },
             { num: 2, label: 'Hardware' },
-            { num: 3, label: localize(state.language, 'Datos', 'Data') },
-            { num: 4, label: localize(state.language, 'Arquitectura', 'Architecture') },
+            { num: 3, label: tr(state.language, 'genesisOnboarding.data') },
+            { num: 4, label: tr(state.language, 'genesisOnboarding.architecture') },
             { num: 5, label: 'Genesis' }
           ].map(s => (
             <div
@@ -394,19 +394,19 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="p-3 theme-panel-bg border theme-accent-border rounded-lg space-y-2">
                 <span className="mutating-accent-text font-bold text-xs flex items-center gap-1.5">
                   <TermIcon className="w-4 h-4" />
-                  {localize(state.language, 'MENSAJE DE BIENVENIDA', 'WELCOME MESSAGE')}
+                  {tr(state.language, 'genesisOnboarding.welcomeMessage')}
                 </span>
                 <p className="theme-text leading-relaxed">
-                  {localize(state.language, 'Bienvenido a ', 'Welcome to ')}<strong>SYNAPSE</strong>{localize(state.language, ', un pequeño estudio para aprender a ', ', a small studio to learn how to ')}<strong>{localize(state.language, 'construir y entrenar tu propia inteligencia artificial desde cero', 'build and train your own artificial intelligence from scratch')}</strong>{localize(state.language, '. Empiezas con una PC modesta y un modelo diminuto; con práctica, buenos datos y algunos trabajos pagos, va a crecer.', '. You start with a modest PC and a tiny model; with practice, good data and a few paid jobs, it will grow.')}
+                  {tr(state.language, 'genesisOnboarding.welcome')}<strong>SYNAPSE</strong>{tr(state.language, 'genesisOnboarding.smallStudioLearnHow')}<strong>{tr(state.language, 'genesisOnboarding.buildTrainOwnArtificialIntelligence')}</strong>{tr(state.language, 'genesisOnboarding.youStartModestPcTiny')}
                 </p>
                 <p className="mutating-text-muted text-[11px] leading-relaxed">
-                  {localize(state.language, 'Has recibido un fondo semilla de ', 'You received ')}<strong>$350 CR</strong>{localize(state.language, ' de un programa de ciencia abierta. Con este presupuesto ajustado, deberás adquirir tu primer rig de cómputo, elegir tu primer pipeline de datos y diseñar los pesos de tu primer modelo de lenguaje.', ' in seed funding from an open-science program. With this limited budget, acquire your first compute rig, choose a data pipeline, and design the weights of your first language model.')}
+                  {tr(state.language, 'genesisOnboarding.youReceived')}<strong>$350 CR</strong>{tr(state.language, 'genesisOnboarding.seedFundingFromOpenScience')}
                 </p>
               </div>
 
               <div className="space-y-2 pt-2">
                 <label className="text-xs theme-text font-bold block">
-                  {localize(state.language, 'ELIGE TU NOMBRE DE USUARIO:', 'CHOOSE YOUR USERNAME:')}
+                  {tr(state.language, 'genesisOnboarding.chooseUsername')}
                 </label>
                 <div className="flex items-center gap-2 max-w-md">
                   <input
@@ -421,14 +421,14 @@ export const GenesisOnboarding: React.FC = () => {
                     type="button"
                     onClick={randomizeCallsign}
                     className="px-3 py-2 theme-raised-bg theme-text border theme-border rounded flex items-center gap-1.5 transition-colors"
-                    title={localize(state.language, 'Generar nombre aleatorio', 'Generate a random name')}
+                    title={tr(state.language, 'genesisOnboarding.generateRandomName')}
                   >
                     <Shuffle className="w-3.5 h-3.5" />
-                    <span>{localize(state.language, 'ALEATORIO', 'RANDOM')}</span>
+                    <span>{tr(state.language, 'genesisOnboarding.random')}</span>
                   </button>
                 </div>
                 <span className="text-[11px] mutating-text-muted block">
-                  {localize(state.language, 'Este nombre aparece en tus trabajos y en el ranking global.', 'This name appears on your jobs and on the global leaderboard.')}
+                  {tr(state.language, 'genesisOnboarding.nameAppearsJobsGlobalLeaderboard')}
                 </span>
               </div>
 
@@ -436,27 +436,27 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="space-y-2 pt-3 border-t theme-accent-border">
                 <label className="text-xs theme-text font-bold block flex items-center gap-1.5">
                   <Sliders className="w-4 h-4 mutating-accent-text" />
-                  {localize(state.language, 'SELECCIONA EL NIVEL DE DIFICULTAD DE LA SIMULACIÓN:', 'SELECT SIMULATION DIFFICULTY LEVEL:')}
+                  {tr(state.language, 'genesisOnboarding.selectSimulationDifficultyLevel')}
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
                     {
                       id: 'beginner',
-                      title: isEs ? 'Principiante (Aprendiz)' : 'Beginner (Novice)',
-                      desc: isEs ? 'Aprende cómo se entrena una IA con controles simplificados, tarjetas educativas y bonificación de fondos.' : 'Learn AI training fundamentals with simplified controls, guided cards, and reward bonus.',
+                      title: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.beginnerNovice'),
+                      desc: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.learnAiTrainingFundamentalsSimplified'),
                       badge: '+25% RECOMPENSAS'
                     },
                     {
                       id: 'normal',
-                      title: isEs ? 'Normal (Práctico)' : 'Normal (Practitioner)',
-                      desc: isEs ? 'Nivel intermedio con hiperparámetros esenciales (Cuantización, Temperatura, Top-P, RAG, LoRA).' : 'Intermediate level with essential hyperparameters (Quantization, Temp, Top-P, RAG, LoRA).',
+                      title: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.normalPractitioner'),
+                      desc: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.intermediateLevelEssentialHyperparametersQuantization'),
                       badge: 'BALANCEADO'
                     },
                     {
                       id: 'engineer',
-                      title: isEs ? 'Ingeniero (Arquitecto)' : 'Engineer (Architect)',
-                      desc: isEs ? 'Simulación completa e irrestricta. Control total sobre pérdidas DPO/PPO, prompts y matriz de hardware.' : 'Full unconstrained simulation. Full control over loss functions, system prompts, and cluster hardware.',
+                      title: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.engineerArchitect'),
+                      desc: tr((isEs ? 'es' : 'en'), 'genesisOnboarding.fullUnconstrainedSimulationFullControl'),
                       badge: 'EXPERIENCIA COMPLETA'
                     }
                   ].map(diffOption => {
@@ -494,10 +494,10 @@ export const GenesisOnboarding: React.FC = () => {
               <div>
                 <h3 className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
                   <Cpu className="w-4 h-4 mutating-accent-text" />
-                  {localize(state.language, '1. SELECCIONA TU PRIMER ACELERADOR DE CÓMPUTO (GPU / ASIC):', '1. CHOOSE YOUR FIRST COMPUTE ACCELERATOR (GPU / ASIC):')}
+                  {tr(state.language, 'genesisOnboarding.n1ChooseFirstComputeAccelerator')}
                 </h3>
                 <p className="mutating-text-muted text-[11px] mt-0.5">
-                  {localize(state.language, 'Elige tu arquitectura de procesamiento inicial. Una GPU con mayor VRAM te permitirá entrenar modelos más densos, mientras que una más fría mantendrá a raya el recalentamiento.', 'Choose your initial compute hardware. More VRAM supports larger models, while a more efficient card helps control heat.')}
+                  {tr(state.language, 'genesisOnboarding.chooseInitialComputeHardwareMore')}
                 </p>
               </div>
 
@@ -540,7 +540,7 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="pt-2">
                 <h3 className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
                   <Flame className="w-4 h-4 theme-success-text" />
-                  {localize(state.language, '2. REFRIGERACIÓN BÁSICA (OBLIGATORIA PARA EVITAR INCENDIO TÉRMICO):', '2. BASIC COOLING (MANDATORY TO PREVENT THERMAL OVERHEAT):')}
+                  {tr(state.language, 'genesisOnboarding.n2BasicCoolingMandatoryPrevent')}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                   {starterCoolingOptions.map(cool => {
@@ -562,7 +562,7 @@ export const GenesisOnboarding: React.FC = () => {
                         </div>
                         <p className="text-[11px] mutating-text-muted mt-1 leading-snug">{en ? coolingEnglishCopy[cool.id]?.desc ?? cool.desc : cool.desc}</p>
                         <span className="text-[11px] theme-success-text block mt-1.5 font-bold">
-                          {localize(state.language, 'Disipación:', 'Cooling capacity:')} {cool.capacity}
+                          {tr(state.language, 'genesisOnboarding.coolingCapacity')} {cool.capacity}
                         </span>
                       </button>
                     );
@@ -574,7 +574,7 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="pt-2">
                 <h3 className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
                   <DollarSign className="w-4 h-4 theme-warn-text" />
-                  {localize(state.language, '3. CONEXIÓN A RED ELÉCTRICA (OBLIGATORIA PARA ENCENDER EL CLÚSTER):', '3. POWER GRID CONNECTION (MANDATORY TO POWER ON CLUSTER):')}
+                  {tr(state.language, 'genesisOnboarding.n3PowerGridConnectionMandatory')}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                   {starterPowerOptions.map(pow => {
@@ -596,7 +596,7 @@ export const GenesisOnboarding: React.FC = () => {
                         </div>
                         <p className="text-[11px] mutating-text-muted mt-1 leading-snug">{en ? powerEnglishCopy[pow.id]?.desc ?? pow.desc : pow.desc}</p>
                         <span className="text-[11px] theme-warn-text block mt-1.5 font-bold">
-                          {localize(state.language, 'Capacidad:', 'Power capacity:')} {pow.capacity}
+                          {tr(state.language, 'genesisOnboarding.powerCapacity')} {pow.capacity}
                         </span>
                       </button>
                     );
@@ -608,7 +608,7 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="pt-2">
                 <h3 className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
                   <Network className="w-4 h-4 mutating-accent-text" />
-                  {localize(state.language, '4. INTERCONEXIÓN DE RED (OBLIGATORIA PARA DESCARGAR DATOS Y AGENTES):', '4. NETWORK INTERCONNECT (MANDATORY TO FETCH DATASETS & AGENTS):')}
+                  {tr(state.language, 'genesisOnboarding.n4NetworkInterconnectMandatoryFetch')}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                   {starterNetworkOptions.map(net => {
@@ -630,7 +630,7 @@ export const GenesisOnboarding: React.FC = () => {
                         </div>
                         <p className="text-[11px] mutating-text-muted mt-1 leading-snug">{en ? networkEnglishCopy[net.id]?.desc ?? net.desc : net.desc}</p>
                         <span className="text-[11px] mutating-accent-text block mt-1.5 font-bold">
-                          {localize(state.language, 'Ancho de banda:', 'Bandwidth:')} {net.bandwidth}
+                          {tr(state.language, 'genesisOnboarding.bandwidth')} {net.bandwidth}
                         </span>
                       </button>
                     );
@@ -642,7 +642,7 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="p-3 theme-panel-bg border theme-accent-border rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <span className="font-bold mutating-accent-text text-[11px]">
-                    {localize(state.language, 'ESTADO DEL RIG (4/4 COMPONENTES):', 'RIG STATUS (4/4 COMPONENTS):')}
+                    {tr(state.language, 'genesisOnboarding.rigStatus44Components')}
                   </span>
                   <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${selectedGpu ? 'theme-success-text theme-success-soft border theme-success-border' : 'theme-danger-text theme-danger-soft border theme-danger-border'}`}>
                     1. GPU {selectedGpu ? '✓' : '✗'}
@@ -659,7 +659,7 @@ export const GenesisOnboarding: React.FC = () => {
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[11px] mutating-text-muted block">{localize(state.language, 'PRESUPUESTO:', 'BUDGET:')}</span>
+                  <span className="text-[11px] mutating-text-muted block">{tr(state.language, 'genesisOnboarding.budget')}</span>
                   <span className={`font-bold text-xs ${remainingBudget >= 0 ? 'theme-warn-text' : 'theme-danger-text'}`}>
                     ${remainingBudget} CR / ${INITIAL_GRANT} CR
                   </span>
@@ -674,10 +674,10 @@ export const GenesisOnboarding: React.FC = () => {
               <div>
                 <h3 className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
                   <Database className="w-4 h-4 mutating-accent-text" />
-                  {localize(state.language, 'MODALIDAD DE CONOCIMIENTO INICIAL (PIPELINE):', 'INITIAL KNOWLEDGE SOURCE (DATA PIPELINE):')}
+                  {tr(state.language, 'genesisOnboarding.initialKnowledgeSourceDataPipeline')}
                 </h3>
                 <p className="mutating-text-muted text-[11px] mt-0.5">
-                  {localize(state.language, 'Tu laboratorio comenzará equipado con el pipeline relacional fundamental para alimentar tus primeros modelos y contratos:', 'Your lab begins equipped with the foundational relational pipeline to power initial models and contracts:')}
+                  {tr(state.language, 'genesisOnboarding.labBeginsEquippedFoundationalRelational')}
                 </p>
               </div>
 
@@ -697,7 +697,7 @@ export const GenesisOnboarding: React.FC = () => {
                           <h4 className="font-bold text-xs theme-text">{en ? dataEnglishCopy[ds.id]?.name ?? ds.name : ds.name}</h4>
                           <span className="text-[11px] px-2 py-0.5 theme-success-soft border theme-success-border theme-success-text font-bold rounded flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5 theme-success-text" />
-                            {isEs ? 'INCLUIDO DE SERIE' : 'STARTER PIPELINE'}
+                            {tr((isEs ? 'es' : 'en'), 'genesisOnboarding.starterPipeline')}
                           </span>
                         </div>
                         <p className="text-xs theme-text mt-1">{en ? dataEnglishCopy[ds.id]?.desc ?? ds.desc : ds.desc}</p>
@@ -714,9 +714,7 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="p-2.5 rounded theme-sub-bg border theme-border text-[11px] mutating-text-muted flex items-center gap-2">
                 <Sparkles className="w-4 h-4 mutating-accent-text shrink-0" />
                 <span>
-                  {isEs 
-                    ? 'Los motores avanzados (Bases Vectoriales HNSW, Grafos Ontológicos y Cómputo Sintético) se desbloquearán en la pestaña DATOS conforme expanda su laboratorio.'
-                    : 'Advanced modalities (HNSW Vector Embeddings, Knowledge Graphs, and Synthetic Data) will unlock in the DATA tab as your lab scales.'}
+                  {tr((isEs ? 'es' : 'en'), 'genesisOnboarding.advancedModalitiesHnswVectorEmbeddings')}
                 </span>
               </div>
             </div>
@@ -730,36 +728,32 @@ export const GenesisOnboarding: React.FC = () => {
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
                       <Layers className="w-4 h-4 mutating-accent-text" />
-                      {localize(state.language, 'ARQUITECTURA DEL MODELO (CALIBRACIÓN AUTOMATIZADA):', 'FIRST MODEL ARCHITECTURE (AUTOMATED CALIBRATION):')}
+                      {tr(state.language, 'genesisOnboarding.firstModelArchitectureAutomatedCalibration')}
                     </h3>
                     <span className="text-[11px] px-2 py-0.5 rounded theme-success-soft border theme-success-border theme-success-text font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5 theme-success-text" />
-                      {localize(state.language, 'AUTOMATIZADO PARA PRINCIPIANTES', 'AUTOMATED FOR BEGINNERS')}
+                      {tr(state.language, 'genesisOnboarding.automatedBeginners')}
                     </span>
                   </div>
                   <p className="mutating-text-muted text-[11px] mt-1 leading-snug">
-                    {localize(
-                      state.language,
-                      'Para garantizar una experiencia sin errores de memoria (OOM) ni sobrecalentamiento, la topología, los parámetros y la cuantización de pesos se configuran automáticamente calibrados para tu hardware inicial:',
-                      'To ensure seamless training without Out-Of-Memory (OOM) errors or overheating, the neural topology, parameter scale, and weight quantization are automatically calibrated for your starter hardware:'
-                    )}
+                    {tr(state.language, 'genesisOnboarding.ensureSeamlessTrainingWithoutOut')}
                   </p>
                 </div>
               ) : (
                 <div>
                   <h3 className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
                     <Layers className="w-4 h-4 mutating-accent-text" />
-                    {localize(state.language, 'DISEÑA LA ARQUITECTURA DE TU PRIMER MODELO:', 'DESIGN YOUR FIRST MODEL ARCHITECTURE:')}
+                    {tr(state.language, 'genesisOnboarding.designFirstModelArchitecture')}
                   </h3>
                   <p className="mutating-text-muted text-[11px] mt-0.5">
-                    {localize(state.language, 'Configura la topología, el tamaño de parámetros y la precisión matemática inicial:', 'Configure the topology, parameter count, and initial numerical precision:')}
+                    {tr(state.language, 'genesisOnboarding.configureTopologyParameterCountInitial')}
                   </p>
                 </div>
               )}
 
               {/* Model Name Input */}
               <div className="space-y-1">
-                <label className="text-[11px] mutating-text-muted block font-bold">{localize(state.language, 'NOMBRE DE LA RED NEURONAL:', 'MODEL NAME:')}</label>
+                <label className="text-[11px] mutating-text-muted block font-bold">{tr(state.language, 'genesisOnboarding.modelName')}</label>
                 <input
                   type="text"
                   value={modelName}
@@ -783,18 +777,14 @@ export const GenesisOnboarding: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <span className="font-bold text-xs mutating-accent-text">
-                          {localize(state.language, 'Topología: Transformer Autoregresivo (Decoder-Only)', 'Topology: Autoregressive Transformer (Decoder-Only)')}
+                          {tr(state.language, 'genesisOnboarding.topologyAutoregressiveTransformerDecoderOnly')}
                         </span>
                         <span className="text-[11px] px-1.5 py-0.2 rounded theme-accent-soft mutating-accent-text border theme-accent-border font-bold">
-                          {localize(state.language, 'INICIAL ESTÁNDAR ✓', 'STARTER STANDARD ✓')}
+                          {tr(state.language, 'genesisOnboarding.starterStandard')}
                         </span>
                       </div>
                       <p className="text-[11px] theme-text mt-1 leading-snug">
-                        {localize(
-                          state.language,
-                          'Mecanismo de auto-atención densa con enmascaramiento causal. Es el estándar de la industria: estable, determinista y de convergencia rápida garantizada.',
-                          'Dense self-attention mechanism with causal masking. The battle-tested industry standard: reliable, deterministic, and fast converging.'
-                        )}
+                        {tr(state.language, 'genesisOnboarding.denseSelfAttentionMechanismCausal')}
                       </p>
                     </div>
                   </div>
@@ -807,18 +797,14 @@ export const GenesisOnboarding: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <span className="font-bold text-xs theme-warn-text">
-                          {localize(state.language, 'Escala de Parámetros: 14 Millones (14M / 0.014B)', 'Parameter Scale: 14 Million (14M / 0.014B)')}
+                          {tr(state.language, 'genesisOnboarding.parameterScale14Million14m')}
                         </span>
                         <span className="text-[11px] px-1.5 py-0.2 rounded theme-warn-soft theme-warn-text border theme-warn-border font-bold">
-                          {localize(state.language, 'CALIBRADO AUTOMÁTICO ✓', 'AUTO-CALIBRATED ✓')}
+                          {tr(state.language, 'genesisOnboarding.autoCalibrated')}
                         </span>
                       </div>
                       <p className="text-[11px] theme-text mt-1 leading-snug">
-                        {localize(
-                          state.language,
-                          'Calibrado óptimamente para la memoria VRAM y ancho de banda de tu GPU inicial. Permite completar épocas de entrenamiento en segundos.',
-                          'Optimally calibrated to fit comfortably in your starter GPU VRAM with zero risk of Out-Of-Memory (OOM) errors.'
-                        )}
+                        {tr(state.language, 'genesisOnboarding.optimallyCalibratedFitComfortablyStarter')}
                       </p>
                     </div>
                   </div>
@@ -831,18 +817,14 @@ export const GenesisOnboarding: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <span className="font-bold text-xs mutating-accent-text">
-                          {localize(state.language, 'Precisión de Pesos: INT8 Cuantizado (1 Byte / Peso)', 'Weight Precision: INT8 Quantized (1 Byte / Weight)')}
+                          {tr(state.language, 'genesisOnboarding.weightPrecisionInt8Quantized1')}
                         </span>
                         <span className="text-[11px] px-1.5 py-0.2 rounded theme-accent-soft mutating-accent-text border theme-accent-border font-bold">
-                          {localize(state.language, 'OPTIMIZADO AUTOMÁTICO ✓', 'AUTO-OPTIMIZED ✓')}
+                          {tr(state.language, 'genesisOnboarding.autoOptimized')}
                         </span>
                       </div>
                       <p className="text-[11px] theme-text mt-1 leading-snug">
-                        {localize(
-                          state.language,
-                          'Cuantización por tensores enteros de 8 bits. Reduce el uso de memoria a la mitad manteniendo más del 99% de la precisión de razonamiento.',
-                          '8-bit integer tensor quantization. Halves memory requirements while retaining 99%+ of full-precision reasoning accuracy.'
-                        )}
+                        {tr(state.language, 'genesisOnboarding.n8BitIntegerTensorQuantization')}
                       </p>
                     </div>
                   </div>
@@ -852,12 +834,12 @@ export const GenesisOnboarding: React.FC = () => {
                 <div className="space-y-3">
                   {/* Parameter Size */}
                   <div className="space-y-1.5">
-                    <label className="text-[11px] mutating-text-muted block font-bold">{localize(state.language, 'ESCALA DE PARÁMETROS INICIAL:', 'INITIAL PARAMETER SCALE:')}</label>
+                    <label className="text-[11px] mutating-text-muted block font-bold">{tr(state.language, 'genesisOnboarding.initialParameterScale')}</label>
                     <div className="grid grid-cols-3 gap-2">
                       {[
-                        { val: 7_000_000, label: localize(state.language, '7M Parámetros', '7M Parameters'), note: localize(state.language, 'Ultraligero, converge en segundos.', 'Very lightweight; converges in seconds.') },
-                        { val: 14_000_000, label: localize(state.language, '14M Parámetros', '14M Parameters'), note: localize(state.language, 'Recomendado. Buen balance inicial.', 'Recommended. A good starting balance.') },
-                        { val: 28_000_000, label: localize(state.language, '28M Parámetros', '28M Parameters'), note: localize(state.language, 'Mayor razonamiento, exige más VRAM.', 'More reasoning capacity; requires more VRAM.') }
+                        { val: 7_000_000, label: tr(state.language, 'genesisOnboarding.n7mParameters'), note: tr(state.language, 'genesisOnboarding.veryLightweightConvergesSeconds') },
+                        { val: 14_000_000, label: tr(state.language, 'genesisOnboarding.n14mParameters'), note: tr(state.language, 'genesisOnboarding.recommendedGoodStartingBalance') },
+                        { val: 28_000_000, label: tr(state.language, 'genesisOnboarding.n28mParameters'), note: tr(state.language, 'genesisOnboarding.moreReasoningCapacityRequiresMore') }
                       ].map(p => (
                         <button
                           key={p.val}
@@ -878,7 +860,7 @@ export const GenesisOnboarding: React.FC = () => {
 
                   {/* Quantization */}
                   <div className="space-y-1.5">
-                    <label className="text-[11px] mutating-text-muted block font-bold">{localize(state.language, 'CUANTIZACIÓN DE PESOS:', 'WEIGHT QUANTIZATION:')}</label>
+                    <label className="text-[11px] mutating-text-muted block font-bold">{tr(state.language, 'genesisOnboarding.weightQuantization')}</label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
@@ -887,8 +869,8 @@ export const GenesisOnboarding: React.FC = () => {
                           modelQuant === 'int8' ? 'theme-accent-soft theme-accent-border mutating-accent-text' : 'theme-sub-bg theme-border mutating-text-muted'
                         }`}
                       >
-                        <div className="font-bold text-xs">{localize(state.language, 'INT8 Cuantizado (Recomendado)', 'INT8 Quantized (Recommended)')}</div>
-                        <div className="text-[11px] mutating-text-muted">{localize(state.language, '1 byte por peso. Cabe holgadamente en tu GPU.', '1 byte per weight. Fits easily in your GPU memory.')}</div>
+                        <div className="font-bold text-xs">{tr(state.language, 'genesisOnboarding.int8QuantizedRecommended')}</div>
+                        <div className="text-[11px] mutating-text-muted">{tr(state.language, 'genesisOnboarding.n1BytePerWeightFits')}</div>
                       </button>
                       <button
                         type="button"
@@ -897,8 +879,8 @@ export const GenesisOnboarding: React.FC = () => {
                           modelQuant === 'bf16' ? 'theme-accent-soft theme-accent-border mutating-accent-text' : 'theme-sub-bg theme-border mutating-text-muted'
                         }`}
                       >
-                        <div className="font-bold text-xs">{localize(state.language, 'BF16 Precisión Media', 'BF16 Half Precision')}</div>
-                        <div className="text-[11px] mutating-text-muted">{localize(state.language, '2 bytes por peso. Mayor fidelidad de gradiente.', '2 bytes per weight. Greater gradient fidelity.')}</div>
+                        <div className="font-bold text-xs">{tr(state.language, 'genesisOnboarding.bf16HalfPrecision')}</div>
+                        <div className="text-[11px] mutating-text-muted">{tr(state.language, 'genesisOnboarding.n2BytesPerWeightGreater')}</div>
                       </button>
                     </div>
                   </div>
@@ -909,11 +891,7 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="p-2.5 rounded theme-success-soft border theme-success-border text-[11px] theme-success-text flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 theme-success-text shrink-0" />
                 <span>
-                  {localize(
-                    state.language,
-                    'ARQUITECTURA LISTA: Haz clic en SIGUIENTE para ejecutar la corrida de inicialización y calibrar los tensores.',
-                    'ARCHITECTURE READY: Click NEXT to execute the genesis initialization run and calibrate the neural tensors.'
-                  )}
+                  {tr(state.language, 'genesisOnboarding.architectureReadyClickNextExecute')}
                 </span>
               </div>
             </div>
@@ -925,10 +903,10 @@ export const GenesisOnboarding: React.FC = () => {
               <div className="p-3 theme-panel-bg border theme-accent-border rounded-lg space-y-1">
                 <span className="mutating-accent-text font-bold text-xs flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 mutating-accent-text" />
-                  {localize(state.language, 'CORRIDA DE INICIALIZACIÓN GÉNESIS', 'GENESIS INITIALIZATION RUN')}
+                  {tr(state.language, 'genesisOnboarding.genesisInitializationRun')}
                 </span>
                 <p className="theme-text text-xs">
-                  {localize(state.language, 'Todo está conectado: tu GPU ', 'Everything is connected: your GPU ')}<strong className="mutating-accent-text">{currentGpuObj.name}</strong>{localize(state.language, ', el motor de datos ', ', the data engine ')}<strong className="theme-success-text">{en ? dataEnglishCopy[selectedData]?.name.split(' (')[0] ?? starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0] : starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0]}</strong>{localize(state.language, ' y tu modelo ', ' and your model ')}<strong className="theme-warn-text">{modelName}</strong>{localize(state.language, '. Inicia la corrida para verificar la convergencia inicial de los pesos.', '. Start the run to verify initial weight convergence.')}
+                  {tr(state.language, 'genesisOnboarding.everythingConnectedGpu')}<strong className="mutating-accent-text">{currentGpuObj.name}</strong>{tr(state.language, 'genesisOnboarding.dataEngine')}<strong className="theme-success-text">{en ? dataEnglishCopy[selectedData]?.name.split(' (')[0] ?? starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0] : starterDataOptions.find(d => d.id === selectedData)?.name.split(' (')[0]}</strong>{tr(state.language, 'genesisOnboarding.model')}<strong className="theme-warn-text">{modelName}</strong>{tr(state.language, 'genesisOnboarding.startRunVerifyInitialWeight')}
                 </p>
               </div>
 
@@ -937,9 +915,9 @@ export const GenesisOnboarding: React.FC = () => {
                 <div className="p-8 theme-panel-bg border theme-accent-border rounded-lg text-center space-y-3">
                   <Activity className="w-10 h-10 mutating-accent-text mx-auto animate-pulse" />
                   <div>
-                    <h4 className="font-bold theme-text text-sm">{localize(state.language, 'CLÚSTER PREPARADO PARA INICIAR', 'CLUSTER READY TO START')}</h4>
+                    <h4 className="font-bold theme-text text-sm">{tr(state.language, 'genesisOnboarding.clusterReadyStart')}</h4>
                     <p className="mutating-text-muted text-xs mt-1">
-                      {localize(state.language, 'Presiona el botón para compilar los tensores y ejecutar las primeras épocas de optimización.', 'Compile the tensors and run the first optimization epochs.')}
+                      {tr(state.language, 'genesisOnboarding.compileTensorsRunFirstOptimization')}
                     </p>
                   </div>
                   <button
@@ -948,7 +926,7 @@ export const GenesisOnboarding: React.FC = () => {
                     className="px-5 py-2.5 mutating-btn-primary theme-on-accent font-bold text-xs rounded flex items-center gap-2 mx-auto cursor-pointer"
                   >
                     <Play className="w-4 h-4 fill-current" />
-                    <span>{localize(state.language, 'INICIAR ENTRENAMIENTO GÉNESIS', 'START GENESIS TRAINING')}</span>
+                    <span>{tr(state.language, 'genesisOnboarding.startGenesisTraining')}</span>
                   </button>
                 </div>
               ) : (
@@ -956,10 +934,10 @@ export const GenesisOnboarding: React.FC = () => {
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold mutating-accent-text flex items-center gap-1.5">
                       <Activity className="w-4 h-4 theme-success-text animate-spin" />
-                      {localize(state.language, 'PROGRESO DE OPTIMIZACIÓN:', 'OPTIMIZATION PROGRESS:')} {trainingProgress}%
+                      {tr(state.language, 'genesisOnboarding.optimizationProgress')} {trainingProgress}%
                     </span>
                     <span className="theme-success-text font-bold font-mono">
-                      {localize(state.language, 'Pérdida', 'Loss')}: {simLoss} {simComplete ? localize(state.language, '(CONVERGENCIA OK)', '(CONVERGED)') : ''}
+                      {tr(state.language, 'genesisOnboarding.loss')}: {simLoss} {simComplete ? tr(state.language, 'genesisOnboarding.converged') : ''}
                     </span>
                   </div>
 
@@ -986,12 +964,10 @@ export const GenesisOnboarding: React.FC = () => {
                     <div className="p-3 theme-accent-soft border theme-accent-border rounded mutating-accent-text text-xs space-y-1 animate-fadeIn">
                       <div className="font-bold mutating-accent-text flex items-center gap-1">
                         <Sparkles className="w-3.5 h-3.5" />
-                        {localize(state.language, 'PENSAMIENTO EMERGENTE // DESPERTAR NEURONAL:', 'EMERGENT THOUGHT // NEURAL AWAKENING:')}
+                        {tr(state.language, 'genesisOnboarding.emergentThoughtNeuralAwakening')}
                       </div>
                       <p className="italic text-[11px] theme-text">
-                        {en
-                          ? `"BUDDYBOT ONLINE: Hi! I am up and running. My gradients are stable. ${callsign}, shall we take a few jobs to upgrade your PC? I would love to learn more."`
-                          : `"BUDDYBOT EN LÍNEA: ¡Hola! Ya estoy funcionando. Mis gradientes están estables. ${callsign}, ¿tomamos algunos trabajos para mejorar tu PC? Me encantaría aprender más."`}
+                        {tr((en ? 'en' : 'es'), 'genesisOnboarding.buddybotOnlineHiIAm', { callsign })}
                       </p>
                     </div>
                   )}
@@ -1010,10 +986,10 @@ export const GenesisOnboarding: React.FC = () => {
               className="px-3 py-2 theme-raised-bg theme-text rounded text-xs flex items-center gap-1.5 transition-colors cursor-pointer touch-manipulation"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>{localize(state.language, 'ANTERIOR', 'BACK')}</span>
+              <span>{tr(state.language, 'genesisOnboarding.back')}</span>
             </button>
           ) : (
-            <span className="text-[11px] mutating-text-muted">{localize(state.language, 'FASE 1 // PROTOCOLO DE IDENTIDAD', 'PHASE 1 // IDENTITY PROTOCOL')}</span>
+            <span className="text-[11px] mutating-text-muted">{tr(state.language, 'genesisOnboarding.phase1IdentityProtocol')}</span>
           )}
 
           {step < 5 ? (
@@ -1022,21 +998,21 @@ export const GenesisOnboarding: React.FC = () => {
               onClick={() => { sound.playNavSwitch(); setStep(step + 1); }}
               className="px-4 py-2 mutating-btn-primary theme-on-accent font-bold rounded text-xs flex items-center gap-1.5 transition-all cursor-pointer touch-manipulation ml-auto sm:ml-0"
             >
-              <span>{localize(state.language, 'SIGUIENTE', 'NEXT')}</span>
+              <span>{tr(state.language, 'genesisOnboarding.next')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto justify-end">
               {!simComplete && (
                 <span className="text-[11px] theme-warn-text font-mono animate-pulse">
-                  {isEs ? '👈 Primero ejecuta "INICIAR ENTRENAMIENTO GÉNESIS" arriba' : '👈 Click "START GENESIS TRAINING" above first'}
+                  {tr((isEs ? 'es' : 'en'), 'genesisOnboarding.clickStartGenesisTrainingAbove')}
                 </span>
               )}
               <button
                 type="button"
                 onClick={handleFinishOnboarding}
                 disabled={!simComplete}
-                title={!simComplete ? (isEs ? 'Ejecuta el entrenamiento génesis arriba primero para desbloquear' : 'Run genesis training above first to unlock') : undefined}
+                title={!simComplete ? (tr((isEs ? 'es' : 'en'), 'genesisOnboarding.runGenesisTrainingAboveFirst')) : undefined}
                 className={`w-full sm:w-auto justify-center px-4 sm:px-5 py-2.5 rounded-lg text-xs font-black flex items-center gap-2 transition-all touch-manipulation ${
                   simComplete
                     ? 'theme-gradient theme-on-accent cursor-pointer hover:scale-[1.02] active:scale-95 animate-pulse'
@@ -1044,7 +1020,7 @@ export const GenesisOnboarding: React.FC = () => {
                 }`}
               >
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span className="text-center">{localize(state.language, 'INGRESAR A SYNAPSE OS (COMENZAR SIMULACIÓN)', 'ENTER SYNAPSE OS (START SIMULATION)')}</span>
+                <span className="text-center">{tr(state.language, 'genesisOnboarding.enterSynapseOsStartSimulation')}</span>
               </button>
             </div>
           )}

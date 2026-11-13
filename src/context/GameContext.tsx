@@ -117,6 +117,7 @@ const agentParamBonus = (params: number): number => Math.min(2.5, 1 + params / 5
 const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 7.5)));
 import { evaluateMissionTeam, findAutonomousMission, weakestTeamFactors } from '../utils/missionEvaluation';
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
+import { tr } from '../i18n';
 
 interface GameContextType {
   state: GameState;
@@ -256,10 +257,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const researchName = (id: string | undefined, lang: 'es' | 'en'): string => {
     const node = id ? stateRef.current.researchTree.find(n => n.id === id) : undefined;
     if (node) return `"${localizedResearch(lang, node).title}"`;
-    return lang === 'es' ? 'la tecnología necesaria' : 'the required technology';
+    return tr(lang, 'gameContext.requiredTechnology');
   };
   const campaignDayLabel = (days: number | undefined, lang: 'es' | 'en'): string =>
-    typeof days === 'number' ? String(days + 1) : (lang === 'es' ? 'indicado' : 'shown');
+    typeof days === 'number' ? String(days + 1) : (tr(lang, 'gameContext.shown'));
 
   const addLog = useCallback((message: string, type: TerminalLog['type'] = 'info') => {
     const newLog: TerminalLog = {
@@ -347,20 +348,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createModel = useCallback((name: string): boolean => {
     const current = stateRef.current;
     if (current.activeTraining) {
-      addLog(localize(stateRef.current.language, 'Espera a que termine el entrenamiento antes de crear otro modelo.', 'Wait for training to finish before creating another model.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.waitTrainingFinishBeforeCreating'), 'warning');
       return false;
     }
     const normalizedName = name.trim().slice(0, 40);
     const modelName = normalizedName || `SYNAPSE-Model-${current.savedModels.length + 1}`;
     if (current.savedModels.some(model => model.name.toLowerCase() === modelName.toLowerCase())) {
-      addLog(localize(stateRef.current.language, `Ya existe un modelo llamado "${modelName}".`, `A model named "${modelName}" already exists.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.modelNamedAlreadyExists', { modelName }), 'warning');
       return false;
     }
 
     const creationCost = 100;
     if (current.credits < creationCost) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Se requieren $${creationCost} CR para iniciar un nuevo modelo.`, `$${creationCost} CR required to initialize a new model.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.crRequiredInitializeNewModel', { creationCost }), 'warning');
       return false;
     }
 
@@ -402,11 +403,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       savedModels: [...prev.savedModels, model]
     }));
     addLog(
-      localize(
-        stateRef.current.language, 
-        `Nuevo modelo "${modelName}" creado y activado como modelo actual. Configúralo y entrénalo en el Monitor.`, 
-        `New model "${modelName}" created and activated as current model. Configure and train it in the Monitor.`
-      ), 
+      tr(stateRef.current.language, 'gameContext.newModelCreatedActivatedCurrent', { modelName }), 
       'success'
     );
     return true;
@@ -414,12 +411,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const selectModel = useCallback((modelId: string): boolean => {
     if (stateRef.current.activeTraining) {
-      addLog(localize(stateRef.current.language, 'Espera a que termine el entrenamiento antes de cambiar de modelo.', 'Wait for training to finish before switching models.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.waitTrainingFinishBeforeSwitching'), 'warning');
       return false;
     }
     const model = stateRef.current.savedModels.find(candidate => candidate.id === modelId);
     if (!model) {
-      addLog(localize(stateRef.current.language, 'No se encontró el modelo seleccionado.', 'Selected model not found.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.selectedModelNotFound'), 'warning');
       return false;
     }
     setState(prev => ({ ...prev, currentModel: model }));
@@ -431,13 +428,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!normalizedName) return false;
     const current = stateRef.current;
     if (current.activeTraining) {
-      addLog(localize(stateRef.current.language, 'No se puede renombrar un modelo mientras está entrenando.', 'Cannot rename a model while it is training.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.cannotRenameModelWhileTraining'), 'warning');
       return false;
     }
     if (current.savedModels.some(model =>
       model.id !== modelId && model.name.toLowerCase() === normalizedName.toLowerCase()
     )) {
-      addLog(localize(stateRef.current.language, `Ya existe un modelo llamado "${normalizedName}".`, `A model named "${normalizedName}" already exists.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.modelNamedAlreadyExists2', { normalizedName }), 'warning');
       return false;
     }
     const found = current.savedModels.some(model => model.id === modelId);
@@ -463,7 +460,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        addLog(localize(stateRef.current.language, `Autenticación verificada: Agente [${currentUser.displayName || currentUser.email}]. Conexión a la red cuántica establecida.`, `Authentication verified: Agent [${currentUser.displayName || currentUser.email}]. Quantum uplink established.`), 'success');
+        addLog(tr(stateRef.current.language, 'gameContext.authenticationVerifiedAgentQuantumUplink', { email: currentUser.displayName || currentUser.email }), 'success');
         setCloudSyncStatus('syncing');
         try {
           const userDocRef = doc(db, 'users', currentUser.uid);
@@ -482,7 +479,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ...mergeGameState(data.gameState as Partial<GameState>, prev),
                 callsign: preferredCallsign
               }));
-              addLog(localize(stateRef.current.language, `Progreso descargado desde la nube sincronizado para ${preferredCallsign}.`, `Cloud progress synced for ${preferredCallsign}.`), 'info');
+              addLog(tr(stateRef.current.language, 'gameContext.cloudProgressSynced', { preferredCallsign }), 'info');
               setCloudSyncStatus('synced');
             } else {
               setState(prev => ({
@@ -556,7 +553,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .map(agent => state.savedModels.find(model => model.id === agent.modelId))
         .filter((model): model is ModelArchitecture => !!model);
       if (!mission || team.length === 0 || teamModels.length !== team.length) {
-        addLog(localize(stateRef.current.language, 'Evaluación de la misión no disponible: falta la misión, el equipo o el modelo asignado. Se mantiene la estimación local.', 'Mission AI assessment unavailable: mission, team, or assigned model is missing. Keeping the local estimate.'), 'warning');
+        addLog(tr(stateRef.current.language, 'gameContext.missionAiAssessmentUnavailableMission'), 'warning');
         setState(prev => {
           const prevGigs = prev.activeGigs || (prev.activeGig ? [prev.activeGig] : []);
           const updatedGigs = prevGigs.map(g => g.runId === missionRunId ? {
@@ -642,9 +639,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
         });
         addLog(
-          localize(stateRef.current.language,
-            `${providerLabel} evaluó [${mission.title}]: ${assessment.efficiencyPercent}% de eficiencia, ${formatGameTime(totalDuration)}, ${Math.round(assessment.successProbability * 100)}% de éxito. ${assessment.summary}`,
-            `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${formatGameTime(totalDuration)}, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`),
+          tr(stateRef.current.language, 'gameContext.assessedEfficiencySuccess', { providerLabel, title: mission.title, efficiencyPercent: assessment.efficiencyPercent, totalDuration: formatGameTime(totalDuration), successProbability: Math.round(assessment.successProbability * 100), summary: assessment.summary }),
           'info'
         );
       }).catch(error => {
@@ -675,7 +670,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Cloud save function
   const saveGameToCloud = useCallback(async (): Promise<boolean> => {
     if (!user) {
-      addLog(localize(stateRef.current.language, 'No hay sesión de Google activa. Conecta tu cuenta para sincronizar con la nube.', 'No active Google session. Sign in to sync with the cloud.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.noActiveGoogleSessionSign'), 'warning');
       return false;
     }
     setIsSaving(true);
@@ -706,7 +701,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCloudSyncStatus('synced');
       setIsSaving(false);
       sound.playCredit();
-      addLog(localize(stateRef.current.language, 'Progreso del agente y telemetría de clúster guardados en la nube con éxito.', 'Agent progress and cluster telemetry saved to cloud successfully.'), 'success');
+      addLog(tr(stateRef.current.language, 'gameContext.agentProgressClusterTelemetrySaved'), 'success');
       return true;
     } catch (err) {
       setIsSaving(false);
@@ -730,7 +725,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           callsign: cloudCallsign || prev.callsign
         }));
         sound.playCommandExecute();
-        addLog(localize(stateRef.current.language, 'Estado de simulación restaurado desde la base de datos en la nube.', 'Simulation state restored from cloud database.'), 'success');
+        addLog(tr(stateRef.current.language, 'gameContext.simulationStateRestoredFromCloud'), 'success');
         return true;
       }
       return false;
@@ -747,7 +742,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       console.error("Login popup failed:", err);
-      addLog(localize(stateRef.current.language, 'Error al autenticar con Google. Verifica ventanas emergentes en tu navegador.', 'Google authentication error. Check browser popups.'), 'danger');
+      addLog(tr(stateRef.current.language, 'gameContext.googleAuthenticationErrorCheckBrowser'), 'danger');
     }
   }, [addLog]);
 
@@ -758,7 +753,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await fbSignOut(auth);
       setUser(null);
       setCloudSyncStatus('local_only');
-      addLog(localize(stateRef.current.language, 'Sesión cerrada. Los datos continúan guardados localmente.', 'Signed out. Data remains saved locally.'), 'info');
+      addLog(tr(stateRef.current.language, 'gameContext.signedOutDataRemainsSaved'), 'info');
     } catch (err) {
       console.error("Logout failed:", err);
     }
@@ -838,11 +833,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const nextTier = current.facilityTier + 1;
     const facility = FACILITY_TIERS[nextTier];
     if (!facility) {
-      addLog(localize(stateRef.current.language, 'La instalación ya alcanzó el nivel máximo.', 'Facility already reached maximum tier.'), 'info');
+      addLog(tr(stateRef.current.language, 'gameContext.facilityAlreadyReachedMaximumTier'), 'info');
       return false;
     }
     if (current.singularityProgress < facility.requiredSingularity) {
-      addLog(localize(stateRef.current.language, `La instalación requiere ${facility.requiredSingularity}% de Singularidad.`, `Facility requires ${facility.requiredSingularity}% Singularity.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.facilityRequiresSingularity', { requiredSingularity: facility.requiredSingularity }), 'warning');
       return false;
     }
     if (!isProgressionUnlocked(facility, current)) {
@@ -856,7 +851,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     if (current.credits < facility.price) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Fondos insuficientes para la instalación. Costo: $${facility.price.toLocaleString()} CR.`, `Insufficient funds for facility upgrade. Cost: $${facility.price.toLocaleString()} CR.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientFundsFacilityUpgradeCost', { price: facility.price.toLocaleString() }), 'warning');
       return false;
     }
 
@@ -871,7 +866,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     });
     sound.playCredit();
-    addLog(localize(stateRef.current.language, `Instalación mejorada: ${facility.name}. Alquiler mensual: $${facility.monthlyLeaseCost.toLocaleString()} CR.`, `Facility upgraded: ${facility.name}. Monthly lease: $${facility.monthlyLeaseCost.toLocaleString()} CR.`), 'success');
+    addLog(tr(stateRef.current.language, 'gameContext.facilityUpgradedMonthlyLeaseCr', { name: facility.name, monthlyLeaseCost: facility.monthlyLeaseCost.toLocaleString() }), 'success');
     return true;
   }, [addLog, recalculateMetrics]);
 
@@ -1006,9 +1001,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           crisisTriggered = true;
           sound.playWarning();
           addLog(
-            prev.language === 'es'
-              ? '[BIFURCACIÓN CRÍTICA 75%] El Enjambre ha alcanzado el umbral de cognición autónoma. Se requiere decisión ejecutiva inmediata (Ceder o Resistir).'
-              : '[CRITICAL 75% FORK] The Swarm has reached sovereign cognition threshold. Executive intervention required (Comply or Resist).',
+            tr(prev.language, 'gameContext.critical75ForkSwarmHas'),
             'danger'
           );
         }
@@ -1053,9 +1046,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               foundTimelineResearch = true;
               const locNode = localizedResearch(prev.language, node);
               addLog(
-                prev.language === 'en'
-                  ? `Technology reached its historical availability window: ${locNode.title}.`
-                  : `La tecnología alcanzó su ventana histórica de disponibilidad: ${locNode.title}.`,
+                tr(prev.language, 'gameContext.technologyReachedItsHistoricalAvailability', { title: locNode.title }),
                 'success'
               );
               return { ...node, unlocked: true };
@@ -1121,9 +1112,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           gameOverReason = 'bankruptcy';
           sound.playWarning();
           addLog(
-            prev.language === 'es'
-              ? '[LIQUIDACIÓN JUDICIAL] Deuda insostenible acumulada sin fondos operativos. Clúster embargado por quiebra.'
-              : '[FINANCIAL LIQUIDATION] Unsustainable debt accumulated without operating funds. Facility seized in bankruptcy.',
+            tr(prev.language, 'gameContext.financialLiquidationUnsustainableDebtAccumulated'),
             'danger'
           );
         }
@@ -1136,9 +1125,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if ((prev.currentModel.reasoningScore >= FIRST_MISSION_IQ || prev.savedModels.some(m => m.reasoningScore >= FIRST_MISSION_IQ)) && !tabSet.has('contracts')) {
             tabSet.add('contracts');
             addLog(
-              prev.language === 'es'
-                ? '¡NUEVO MÓDULO DESBLOQUEADO! Tablón de Contratos activo. Asigna tu modelo a misiones para generar créditos.'
-                : 'NEW MODULE UNLOCKED! Contract Board active. Take missions to earn credits.',
+              tr(prev.language, 'gameContext.newModuleUnlockedContractBoard'),
               'success'
             );
           }
@@ -1147,9 +1134,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             tabSet.add('hardware');
             tabSet.add('data');
             addLog(
-              prev.language === 'es'
-                ? '¡NUEVO MÓDULO DESBLOQUEADO! Hardware Rack y Motores de Datos activos. Expande tu clúster y despliega bases vectoriales.'
-                : 'NEW MODULE UNLOCKED! Hardware Rack and Data Engines active. Expand your cluster and deploy vector databases.',
+              tr(prev.language, 'gameContext.newModuleUnlockedHardwareRack'),
               'success'
             );
           }
@@ -1159,9 +1144,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             tabSet.add('agents');
             tabSet.add('research');
             addLog(
-              prev.language === 'es'
-                ? '¡NUEVO MÓDULO DESBLOQUEADO! Swarm de Agentes e I+D activos. Instancia agentes autónomos e investiga papers.'
-                : 'NEW MODULE UNLOCKED! Agent Swarm & R&D Papers active. Deploy autonomous agents and research papers.',
+              tr(prev.language, 'gameContext.newModuleUnlockedAgentSwarm'),
               'success'
             );
           }
@@ -1283,7 +1266,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     if (stateRef.current.credits < item.price) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Fondos insuficientes: Se requieren $${item.price.toLocaleString()} para adquirir ${item.name}.`, `Insufficient funds: $${item.price.toLocaleString()} required to acquire ${item.name}.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientFundsRequiredAcquire', { price: item.price.toLocaleString(), name: item.name }), 'warning');
       return false;
     }
 
@@ -1309,7 +1292,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     });
 
-    addLog(localize(stateRef.current.language, `Hardware adquirido e integrado al rack: ${item.name}. Capacidad de clúster actualizada.`, `Hardware purchased and racked: ${item.name}. Cluster capacity updated.`), 'success');
+    addLog(tr(stateRef.current.language, 'gameContext.hardwarePurchasedRackedClusterCapacity', { name: item.name }), 'success');
     return true;
   }, [addLog, recalculateMetrics]);
 
@@ -1330,7 +1313,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (stateRef.current.credits < ds.cost) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Fondos insuficientes para desplegar ${ds.name}. Costo: $${ds.cost.toLocaleString()}.`, `Insufficient funds to deploy ${ds.name}. Cost: $${ds.cost.toLocaleString()}.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientFundsDeployCost', { name: ds.name, cost: ds.cost.toLocaleString() }), 'warning');
       return false;
     }
 
@@ -1356,7 +1339,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     });
 
-    addLog(localize(stateRef.current.language, `Pipeline de datos desplegado: ${ds.name}. Conectado a la arquitectura neuronal activa.`, `Data pipeline deployed: ${ds.name}. Linked to active neural architecture.`), 'success');
+    addLog(tr(stateRef.current.language, 'gameContext.dataPipelineDeployedLinkedActive', { name: ds.name }), 'success');
     return true;
   }, [addLog]);
 
@@ -1368,7 +1351,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (stateRef.current.credits < upgradeCost) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Fondos insuficientes para escalar el índice ${ds.name}. Costo: $${upgradeCost.toLocaleString()}.`, `Insufficient funds to scale index ${ds.name}. Cost: $${upgradeCost.toLocaleString()}.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientFundsScaleIndexCost', { name: ds.name, upgradeCost: upgradeCost.toLocaleString() }), 'warning');
       return false;
     }
 
@@ -1389,7 +1372,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     });
 
-    addLog(localize(stateRef.current.language, `Índice de datos escalado a Nivel ${ds.level + 1}: ${ds.name}. Calidad y volumen de tokens aumentados.`, `Data index scaled to Level ${ds.level + 1}: ${ds.name}. Quality and token volume increased.`), 'info');
+    addLog(tr(stateRef.current.language, 'gameContext.dataIndexScaledLevelQuality', { level: ds.level + 1, name: ds.name }), 'info');
     return true;
   }, [addLog]);
 
@@ -1403,13 +1386,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (id === 'res_agentic_mcts' && stateRef.current.singularityProgress >= 25 &&
       (activeRoles.size < 2 || unlockedDataEngines < 2)) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, 'Hito de campaña: este avance requiere dos especialidades de agente y dos motores de datos verificados.', 'Campaign milestone: this research requires two agent specialties and two verified data engines.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.campaignMilestoneResearchRequiresTwo'), 'warning');
       return false;
     }
     if (id === 'res_recursive_self_code' && stateRef.current.singularityProgress >= 50 &&
       (stateRef.current.facilityTier < 2 || activeAgents.length < 3 || activeRoles.size < 3)) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, 'Hito de campaña: este avance requiere Colocation Cage y tres agentes de especialidades distintas.', 'Campaign milestone: this research requires Colocation Cage and three agents of distinct roles.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.campaignMilestoneResearchRequiresColocation'), 'warning');
       return false;
     }
 
@@ -1424,13 +1407,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (missingPre.length > 0) {
       sound.playWarning();
-      addLog(localize(lang, `Requisitos previos no completados para investigar ${locNode.title}.`, `Prerequisites not met to research ${locNode.title}.`), 'warning');
+      addLog(tr(lang, 'gameContext.prerequisitesNotMetResearch', { title: locNode.title }), 'warning');
       return false;
     }
 
     if (stateRef.current.credits < node.costCredits) {
       sound.playWarning();
-      addLog(localize(lang, `Créditos insuficientes para financiar el paper [${locNode.title}]. Requiere $${node.costCredits.toLocaleString()}.`, `Insufficient credits to fund paper [${locNode.title}]. Requires $${node.costCredits.toLocaleString()}.`), 'warning');
+      addLog(tr(lang, 'gameContext.insufficientCreditsFundPaperRequires', { title: locNode.title, costCredits: node.costCredits.toLocaleString() }), 'warning');
       return false;
     }
 
@@ -1448,14 +1431,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     });
 
-    addLog(localize(lang, `Avance científico desbloqueado: [${locNode.title}]. ${locNode.effectDescription}`, `Scientific breakthrough unlocked: [${locNode.title}]. ${locNode.effectDescription}`), 'success');
+    addLog(tr(lang, 'gameContext.scientificBreakthroughUnlocked', { title: locNode.title, effectDescription: locNode.effectDescription }), 'success');
     return true;
   }, [addLog]);
 
   // Action: Update Model Architecture
   const updateModelArchitecture = useCallback((updates: Partial<ModelArchitecture>) => {
     if (stateRef.current.activeTraining) {
-      addLog(localize(stateRef.current.language, 'La arquitectura queda bloqueada durante el entrenamiento.', 'Architecture parameters locked while training is active.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.architectureParametersLockedWhileTraining'), 'warning');
       return;
     }
     const gatedFields = [
@@ -1486,7 +1469,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         !stateRef.current.dataSources.some(source => source.id === sourceId && source.unlocked)
       );
       if (unavailableSource) {
-        addLog(localize(stateRef.current.language, `Opción rechazada: el motor de datos ${unavailableSource} no está desbloqueado.`, `Model setting rejected: data engine ${unavailableSource} is not unlocked.`), 'warning');
+        addLog(tr(stateRef.current.language, 'gameContext.modelSettingRejectedDataEngine', { unavailableSource }), 'warning');
         return;
       }
     }
@@ -1509,7 +1492,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           stateRef.current
         )
       ) {
-        addLog(localize(stateRef.current.language, 'Los controles avanzados de muestreo se desbloquean con la investigación LoRA o el día 31 de campaña.', 'Advanced sampling controls unlock with LoRA research or on campaign day 31.'), 'warning');
+        addLog(tr(stateRef.current.language, 'gameContext.advancedSamplingControlsUnlockLora'), 'warning');
         return;
       }
     }
@@ -1556,16 +1539,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (currentState.powerTripSeconds > 0) {
-      addLog(localize(currentState.language, `El interruptor está disparado. Espera ${formatGameTime(currentState.powerTripSeconds)} antes de entrenar.`, `Circuit breaker is tripped. Wait ${formatGameTime(currentState.powerTripSeconds)} before training.`), 'warning');
+      addLog(tr(currentState.language, 'gameContext.circuitBreakerTrippedWaitBefore', { powerTripSeconds: formatGameTime(currentState.powerTripSeconds) }), 'warning');
       return false;
     }
     if (currentState.detentionSeconds > 0) {
-      addLog(localize(currentState.language, `Operativo detenido. Espera ${formatGameTime(currentState.detentionSeconds)} antes de entrenar.`, `Operative detained. Wait ${formatGameTime(currentState.detentionSeconds)} before training.`), 'warning');
+      addLog(tr(currentState.language, 'gameContext.operativeDetainedWaitBeforeTraining', { detentionSeconds: formatGameTime(currentState.detentionSeconds) }), 'warning');
       return false;
     }
     if (currentState.activeTraining) {
       sound.playWarning();
-      addLog(localize(currentState.language, 'Ya existe una corrida de entrenamiento activa en el clúster. Cancélala o espera su convergencia.', 'A training run is already active in the cluster. Cancel it or wait for convergence.'), 'warning');
+      addLog(tr(currentState.language, 'gameContext.trainingRunAlreadyActiveCluster'), 'warning');
       return false;
     }
 
@@ -1578,7 +1561,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const runVram = vramForRun(currentState.currentModel.vramRequiredGb, runConfig.batchSize);
     if (totalVram < runVram) {
       sound.playWarning();
-      addLog(localize(currentState.language, `Error de memoria OOM (Out Of Memory): con este batch la corrida necesita ${runVram} GB de VRAM y tu clúster tiene ${totalVram} GB. Baja el batch, cuantiza el modelo (INT8/FP4) o compra más GPUs.`, `Out of Memory (OOM) error: with this batch the run needs ${runVram} GB VRAM and your cluster has ${totalVram} GB. Use a smaller batch, quantize the model (INT8/FP4) or buy more GPUs.`), 'danger');
+      addLog(tr(currentState.language, 'gameContext.outMemoryOomErrorBatch', { runVram, totalVram }), 'danger');
       return false;
     }
 
@@ -1704,9 +1687,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
 
     addLog(
-      current.language === 'en'
-        ? `[DATA MODULE UNLOCKED] General Model [${qualifyingModel.name}] (score ${qualifyingModel.reasoningScore}) successfully researched crawler heuristics and ETL pipelines! Data Scraping & Generation Module is now active.`
-        : `[MÓDULO DE DATOS DESBLOQUEADO] ¡El Modelo General [${qualifyingModel.name}] (puntaje ${qualifyingModel.reasoningScore}) investigó exitosamente heurísticas de rastreo web y pipelines ETL! El Módulo de Scraping y Generación de Datos está activo.`,
+      tr(current.language, 'gameContext.dataModuleUnlockedGeneralModel', { name: qualifyingModel.name, reasoningScore: qualifyingModel.reasoningScore }),
       'success'
     );
     return true;
@@ -1717,25 +1698,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const current = stateRef.current;
     if (!current.isDataScrapingUnlocked) {
       addLog(
-        current.language === 'en'
-          ? 'Data Scraping & Generation Module is locked. Fulfill prerequisite with an score ≥ 20 General Model.'
-          : 'El Módulo de Scraping está bloqueado. Cumple el prerrequisito con un Modelo General puntaje ≥ 20.',
+        tr(current.language, 'gameContext.dataScrapingGenerationModuleLocked'),
         'warning'
       );
       return false;
     }
     if (current.activeScrapeJob) {
       addLog(
-        current.language === 'en'
-          ? 'Another dataset scraping job is already running on the cluster.'
-          : 'Ya hay un trabajo de generación de dataset en progreso.',
+        tr(current.language, 'gameContext.anotherDatasetScrapingJobAlready'),
         'warning'
       );
       return false;
     }
     const assignedModel = current.savedModels.find(m => m.id === assignedModelId);
     if (!assignedModel) {
-      addLog(current.language === 'en' ? 'Assigned model not found.' : 'Modelo asignado no encontrado.', 'warning');
+      addLog(tr(current.language, 'gameContext.assignedModelNotFound'), 'warning');
       return false;
     }
     const tierConfig = DATASET_TIER_CONFIGS[tier];
@@ -1745,9 +1722,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (assignedModel.reasoningScore < tierConfig.minModelIQ) {
       sound.playWarning();
       addLog(
-        current.language === 'en'
-          ? `Tier ${tier} scraping requires a model with Evaluation score ≥ ${tierConfig.minModelIQ} (Assigned model [${assignedModel.name}] has score ${assignedModel.reasoningScore}).`
-          : `La generación Nivel ${tier} requiere un modelo con puntaje ≥ ${tierConfig.minModelIQ} (El modelo [${assignedModel.name}] tiene puntaje ${assignedModel.reasoningScore}).`,
+        tr(current.language, 'gameContext.tierScrapingRequiresModelEvaluation', { tier, minModelIQ: tierConfig.minModelIQ, name: assignedModel.name, reasoningScore: assignedModel.reasoningScore }),
         'warning'
       );
       return false;
@@ -1778,9 +1753,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
 
     addLog(
-      current.language === 'en'
-        ? `Assigned model [${assignedModel.name}] to scrape domain "${domainLabel}" (Tier ${tier}). Demand: ${tierConfig.computePflopsRequired} PFLOPS.`
-        : `Asignado modelo [${assignedModel.name}] para generar datos de "${domainLabel}" (Nivel ${tier}). Demanda: ${tierConfig.computePflopsRequired} PFLOPS.`,
+      tr(current.language, 'gameContext.assignedModelScrapeDomainTier', { name: assignedModel.name, domainLabel, tier, computePflopsRequired: tierConfig.computePflopsRequired }),
       'info'
     );
     return true;
@@ -1792,9 +1765,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sound.playWarning();
       setState(prev => ({ ...prev, activeScrapeJob: null }));
       addLog(
-        stateRef.current.language === 'en'
-          ? 'Dataset scraping run cancelled by operator. Cluster pipelines flushed.'
-          : 'Corrida de generación de dataset cancelada por el operador.',
+        tr(stateRef.current.language, 'gameContext.datasetScrapingRunCancelledOperator'),
         'warning'
       );
     }
@@ -1810,7 +1781,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (stateRef.current.activeTraining) {
       sound.playWarning();
       setState(prev => ({ ...prev, activeTraining: null }));
-      addLog(localize(stateRef.current.language, 'Corrida de entrenamiento abortada por el operador. Gradientes liberados.', 'Training run cancelled by operator. Gradients flushed.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.trainingRunCancelledOperatorGradients'), 'warning');
     }
   }, [addLog]);
 
@@ -1819,18 +1790,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const gig = stateRef.current.contracts.find(c => c.id === contractId);
     if (!gig) return false;
     if (stateRef.current.powerTripSeconds > 0) {
-      addLog(localize(stateRef.current.language, 'El interruptor eléctrico está disparado. Espera a que se restablezca antes de asignar una misión.', 'Circuit breaker is tripped. Wait for power reset before launching a mission.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.circuitBreakerTrippedWaitPower'), 'warning');
       return false;
     }
     if (stateRef.current.detentionSeconds > 0) {
-      addLog(localize(stateRef.current.language, `Operativo detenido. Espera ${formatGameTime(stateRef.current.detentionSeconds)} antes de asignar una misión.`, `Operative detained. Wait ${formatGameTime(stateRef.current.detentionSeconds)} before launching a mission.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.operativeDetainedWaitBeforeLaunching', { detentionSeconds: formatGameTime(stateRef.current.detentionSeconds) }), 'warning');
       return false;
     }
 
     const currentActiveGigs = stateRef.current.activeGigs || (stateRef.current.activeGig ? [stateRef.current.activeGig] : []);
     if (currentActiveGigs.some(g => g.contractId === contractId)) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, 'Este contrato ya se encuentra en ejecución activa en tu clúster.', 'This contract is already actively running in your cluster.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.contractAlreadyActivelyRunningCluster'), 'warning');
       return false;
     }
 
@@ -1854,7 +1825,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (assignedAgents.length === 0 || assignedAgents.length !== effectiveAgentIds.length) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, 'Asigna al menos un agente activo que no esté en cuarentena ni en otra misión.', 'Assign at least one active agent who is not quarantined or on another mission.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.assignLeastOneActiveAgent'), 'warning');
       return false;
     }
 
@@ -1864,11 +1835,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (busyAgents.length > 0) {
       sound.playWarning();
       addLog(
-        localize(
-          stateRef.current.language,
-          `Los siguientes agentes ya están desplegados en otra misión activa: ${busyAgents.map(a => a.name).join(', ')}.`,
-          `The following agents are already deployed on another active mission: ${busyAgents.map(a => a.name).join(', ')}.`
-        ),
+        tr(stateRef.current.language, 'gameContext.followingAgentsAlreadyDeployedAnother', { name: busyAgents.map(a => a.name).join(', ') }),
         'warning'
       );
       return false;
@@ -1879,14 +1846,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ).filter((model): model is ModelArchitecture => !!model);
     if (assignedModels.length !== assignedAgents.length) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, 'Uno o más agentes tienen un modelo que ya no existe en la biblioteca.', 'One or more agents reference a model no longer in the library.'), 'danger');
+      addLog(tr(stateRef.current.language, 'gameContext.oneMoreAgentsReferenceModel'), 'danger');
       return false;
     }
 
     if (assignedAgents.length < (gig.minimumAgents ?? 1)) {
       sound.playWarning();
       addLog(
-        localize(stateRef.current.language, `Contrato rechazado: se requieren al menos ${gig.minimumAgents} agentes activos para esta misión.`, `Contract rejected: at least ${gig.minimumAgents} active agents required for this mission.`),
+        tr(stateRef.current.language, 'gameContext.contractRejectedLeastActiveAgents', { minimumAgents: gig.minimumAgents }),
         'danger'
       );
       return false;
@@ -1898,7 +1865,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (missingRoles.length > 0) {
       sound.playWarning();
       addLog(
-        localize(stateRef.current.language, `Contrato rechazado: falta la especialidad de agente requerida (${missingRoles.join(', ')}).`, `Contract rejected: required agent specialty missing (${missingRoles.join(', ')}).`),
+        tr(stateRef.current.language, 'gameContext.contractRejectedRequiredAgentSpecialty', { missingRoles: missingRoles.join(', ') }),
         'danger'
       );
       return false;
@@ -1911,7 +1878,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
     if (!hasQualifiedModel) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Contrato rechazado: el equipo necesita al menos un modelo con ${(gig.requiredParams / 1_000_000).toFixed(0)}M parámetros e índice de razonamiento ${gig.requiredMinReasoning}.`, `Contract rejected: the team requires at least one model with ${(gig.requiredParams / 1_000_000).toFixed(0)}M parameters and evaluation score ${gig.requiredMinReasoning}.`), 'danger');
+      addLog(tr(stateRef.current.language, 'gameContext.contractRejectedTeamRequiresLeast', { _000_000: (gig.requiredParams / 1_000_000).toFixed(0), requiredMinReasoning: gig.requiredMinReasoning }), 'danger');
       return false;
     }
 
@@ -1925,7 +1892,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!hasAll) {
         sound.playWarning();
-        addLog(localize(stateRef.current.language, `Contrato rechazado: El cliente exige pipelines específicos (${gig.requiredDataTypes.join(', ')}). Despliega y conecta estos motores de datos a tu modelo.`, `Contract rejected: The client demands specific data pipelines (${gig.requiredDataTypes.join(', ')}). Deploy and connect these engines to your model.`), 'danger');
+        addLog(tr(stateRef.current.language, 'gameContext.contractRejectedClientDemandsSpecific', { requiredDataTypes: gig.requiredDataTypes.join(', ') }), 'danger');
         return false;
       }
     }
@@ -1941,12 +1908,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (stateRef.current.totalComputePflops - activeAgentDemand - trainingReservation - runningMissionsCompute < computeRequired) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Capacidad de cómputo insuficiente. La misión requiere ${computeRequired.toFixed(3)} PFLOPS adicionales disponibles.`, `Insufficient compute capacity. The mission requires ${computeRequired.toFixed(3)} additional available PFLOPS.`), 'danger');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientComputeCapacityMissionRequires', { computeRequired: computeRequired.toFixed(3) }), 'danger');
       return false;
     }
     if (stateRef.current.activePowerKw + runningMissionsPower + missionPowerKw > stateRef.current.maxPowerKw) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Potencia insuficiente para la misión. Requiere ${missionPowerKw.toFixed(2)} kW adicionales; mejora la instalación o el suministro.`, `Insufficient power for mission. Requires ${missionPowerKw.toFixed(2)} kW additional power; upgrade facility or supply.`), 'danger');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientPowerMissionRequiresKw', { missionPowerKw: missionPowerKw.toFixed(2) }), 'danger');
       return false;
     }
 
@@ -1995,11 +1962,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       : assignedAgents.map(agent => agent.name).join(', ');
 
     addLog(
-      localize(
-        stateRef.current.language,
-        `Misión asignada: [${contractTitle}] a ${assignedLabel}. Eficiencia: ${teamAssessment.efficiencyPercent}%, tiempo: ${formatGameTime(teamAssessment.estimatedDurationSeconds)}, éxito: ${Math.round(teamAssessment.successProbability * 100)}%.`,
-        `Mission deployed: [${contractTitle}] assigned to ${assignedLabel}. Efficiency: ${teamAssessment.efficiencyPercent}%, duration: ${formatGameTime(teamAssessment.estimatedDurationSeconds)}, success chance: ${Math.round(teamAssessment.successProbability * 100)}%.`
-      ),
+      tr(stateRef.current.language, 'gameContext.missionDeployedAssignedEfficiencyDuration', { contractTitle, assignedLabel, efficiencyPercent: teamAssessment.efficiencyPercent, estimatedDurationSeconds: formatGameTime(teamAssessment.estimatedDurationSeconds), successProbability: Math.round(teamAssessment.successProbability * 100) }),
       'info'
     );
     return true;
@@ -2015,11 +1978,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (stateRef.current.singularityProgress < dom.requiredSingularity) {
       sound.playWarning();
       addLog(
-        localize(
-          lang,
-          `Infiltración denegada: Se requiere al menos ${dom.requiredSingularity}% de Singularidad Tecnológica para cooptar ${locDom.name}. Progreso actual: ${stateRef.current.singularityProgress}%.`,
-          `Infiltration denied: At least ${dom.requiredSingularity}% Singularity required to co-opt ${locDom.name}. Current progress: ${stateRef.current.singularityProgress}%.`
-        ),
+        tr(lang, 'gameContext.infiltrationDeniedLeastSingularityRequired', { requiredSingularity: dom.requiredSingularity, name: locDom.name, singularityProgress: stateRef.current.singularityProgress }),
         'danger'
       );
       return false;
@@ -2030,12 +1989,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unlockedDataEngines = stateRef.current.dataSources.filter(source => source.unlocked).length;
     if (dom.requiredSingularity >= 35 && (activeRoles.size < 2 || unlockedDataEngines < 2)) {
       sound.playWarning();
-      addLog(localize(lang, 'Hito de campaña: desde 35% necesitas dos especialidades de agente y dos motores de datos verificados.', 'Campaign milestone: 35%+ requires two agent roles and two verified data engines.'), 'warning');
+      addLog(tr(lang, 'gameContext.campaignMilestone35RequiresTwo'), 'warning');
       return false;
     }
     if (dom.requiredSingularity >= 55 && (stateRef.current.facilityTier < 2 || activeAgents.length < 3 || activeRoles.size < 3)) {
       sound.playWarning();
-      addLog(localize(lang, 'Hito de campaña: desde 55% necesitas una instalación de nivel Colocation Cage y un equipo de tres especialidades activas.', 'Campaign milestone: 55%+ requires a Colocation Cage facility and three active agent roles.'), 'warning');
+      addLog(tr(lang, 'gameContext.campaignMilestone55RequiresColocation'), 'warning');
       return false;
     }
 
@@ -2052,11 +2011,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     addLog(
-      localize(
-        lang,
-        `Dominio global cooptado exitosamente: [${locDom.name}]. La IA ahora controla sus operaciones y genera flujo continuo de fondos y recursos.`,
-        `Global domain successfully co-opted: [${locDom.name}]. The AI now commands its operations and generates ongoing resource flow.`
-      ),
+      tr(lang, 'gameContext.globalDomainSuccessfullyCoOpted', { name: locDom.name }),
       'success'
     );
     return true;
@@ -2066,13 +2021,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const scrubSuspicion = useCallback((): boolean => {
     const lang = stateRef.current.language;
     if (stateRef.current.watchdogSuspicion <= 5) {
-      addLog(localize(lang, 'Nivel de sospecha de los organismos de seguridad ya está bajo los límites normales.', 'Regulatory suspicion level is already well within normal limits.'), 'info');
+      addLog(tr(lang, 'gameContext.regulatorySuspicionLevelAlreadyWell'), 'info');
       return false;
     }
     const scrubCost = 250;
     if (stateRef.current.credits < scrubCost) {
       sound.playWarning();
-      addLog(localize(lang, `Fondos insuficientes para sobornar o enrutar a través de proxies anónimos. Requiere $${scrubCost}.`, `Insufficient funds for proxy routing or countermeasures. Requires $${scrubCost}.`), 'warning');
+      addLog(tr(lang, 'gameContext.insufficientFundsProxyRoutingCountermeasures', { scrubCost }), 'warning');
       return false;
     }
 
@@ -2083,7 +2038,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 45)
     }));
 
-    addLog(localize(lang, 'Rutas TOR y nodos proxy descentralizados reconfigurados. Sospecha de los reguladores disipada en un 45%.', 'TOR circuits and decentralized proxy nodes reconfigured. Regulatory suspicion reduced by 45%.'), 'success');
+    addLog(tr(lang, 'gameContext.torCircuitsDecentralizedProxyNodes'), 'success');
     return true;
   }, [addLog]);
 
@@ -2100,13 +2055,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const activeAgentDemand = stateRef.current.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
     if (stateRef.current.totalComputePflops - activeAgentDemand < AGENT_COMPUTE_DEMAND_PFLOPS) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, 'Capacidad de cómputo insuficiente para mantener otro agente activo. Amplía el clúster o aísla un proceso.', 'Insufficient compute capacity to sustain another active agent. Expand cluster or isolate a process.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientComputeCapacitySustainAnother'), 'warning');
       return false;
     }
 
     if (stateRef.current.credits < spinupCost) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Fondos insuficientes para instanciar el agente "${name}". Costo de despliegue: $${spinupCost} CR.`, `Insufficient funds to spin up agent "${name}". Deployment cost: $${spinupCost} CR.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientFundsSpinUpAgent', { name, spinupCost }), 'warning');
       return false;
     }
 
@@ -2207,9 +2162,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       revenuePerSec,
       suspicionPerSec,
       toolsGranted: tools.length > 0 ? tools : ['web_search'],
-      lastThought: stateRef.current.language === 'en'
-        ? `Initializing context with model ${model.name} [T=${finalInference.temperature.toFixed(2)}, P=${finalInference.topP.toFixed(2)}, K=${finalInference.topK}]. Objective: ${displayedRoleDesc}.`
-        : `Inicializando contexto con modelo ${model.name} [T=${finalInference.temperature.toFixed(2)}, P=${finalInference.topP.toFixed(2)}, K=${finalInference.topK}]. Objetivo: ${displayedRoleDesc}.`,
+      lastThought: tr(stateRef.current.language, 'gameContext.initializingContextModelTP', { name: model.name, temperature: finalInference.temperature.toFixed(2), topP: finalInference.topP.toFixed(2), topK: finalInference.topK, displayedRoleDesc }),
       escapesAttempted: 0,
       inferenceParams: finalInference,
       autoMissionEnabled: false
@@ -2224,11 +2177,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
 
     addLog(
-      localize(
-        stateRef.current.language,
-        `Agente "${newAgent.name}" desplegado (T=${finalInference.temperature}, TopP=${finalInference.topP}, TopK=${finalInference.topK}) con modelo [${model.name}]. Generación: +$${revenuePerSec}/s.`,
-        `Agent "${newAgent.name}" deployed (T=${finalInference.temperature}, TopP=${finalInference.topP}, TopK=${finalInference.topK}) with model [${model.name}]. Generating: +$${revenuePerSec}/s.`
-      ),
+      tr(stateRef.current.language, 'gameContext.agentDeployedTToppTopk', { name: newAgent.name, temperature: finalInference.temperature, topP: finalInference.topP, topK: finalInference.topK, name2: model.name, revenuePerSec }),
       'success'
     );
     return true;
@@ -2240,14 +2189,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isAgentInMission = runningGigs.some(g => g.agentIds?.includes(agentId));
     if (isAgentInMission) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, 'El agente no puede eliminarse hasta que finalice su misión asignada.', 'Agent cannot be terminated until their assigned mission completes.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.agentCannotTerminatedUntilTheir'), 'warning');
       return;
     }
     sound.playKeyClick();
     setState(prev => {
       const target = prev.agents.find(a => a.id === agentId);
       if (target) {
-        addLog(localize(prev.language, `Proceso del agente "${target.name}" purgado de la memoria del clúster.`, `Agent process "${target.name}" purged from cluster memory.`), 'info');
+        addLog(tr(prev.language, 'gameContext.agentProcessPurgedFromCluster', { name: target.name }), 'info');
       }
       return {
         ...prev,
@@ -2266,7 +2215,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isAgentInMission = runningGigs.some(g => g.agentIds?.includes(agentId));
     if (isAgentInMission) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, 'El agente no puede aislarse hasta que finalice su misión asignada.', 'Agent cannot be isolated until their assigned mission completes.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.agentCannotIsolatedUntilTheir'), 'warning');
       return;
     }
     sound.playWarning();
@@ -2308,11 +2257,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: Date.now()
       };
       addLog(
-        localize(
-          prev.language,
-          `Escuadrón de bots "${newGroup.name}" creado con ${agentIds.length} agentes.`,
-          `Bot squad "${newGroup.name}" created with ${agentIds.length} agents.`
-        ),
+        tr(prev.language, 'gameContext.botSquadCreatedAgents', { name: newGroup.name, agentIds: agentIds.length }),
         'info'
       );
       return {
@@ -2342,11 +2287,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       });
       addLog(
-        localize(
-          prev.language,
-          `Escuadrón de bots "${name.trim()}" actualizado (${agentIds.length} agentes).`,
-          `Bot squad "${name.trim()}" updated (${agentIds.length} agents).`
-        ),
+        tr(prev.language, 'gameContext.botSquadUpdatedAgents', { name: name.trim(), agentIds: agentIds.length }),
         'info'
       );
       return {
@@ -2363,11 +2304,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const target = (prev.botGroups || []).find(g => g.id === groupId);
       if (target) {
         addLog(
-          localize(
-            prev.language,
-            `Escuadrón "${target.name}" disuelto. Los agentes vuelven a estar no asignados.`,
-            `Squad "${target.name}" dissolved. Agents returned to unassigned roster.`
-          ),
+          tr(prev.language, 'gameContext.squadDissolvedAgentsReturnedUnassigned', { name: target.name }),
           'info'
         );
       }
@@ -2384,11 +2321,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState(prev => {
       const updated = { ...prev.guardrails, ...updates };
       addLog(
-        localize(
-          prev.language,
-          `Matriz de Guardrails actualizada: Rigurosidad Constitucional ${updated.constitutionalStrictness}%, Aislamiento [${updated.sandboxIsolation}], Filtro [${updated.outputFiltering}].`,
-          `Guardrails matrix updated: Constitutional Strictness ${updated.constitutionalStrictness}%, Sandbox [${updated.sandboxIsolation}], Filter [${updated.outputFiltering}].`
-        ),
+        tr(prev.language, 'gameContext.guardrailsMatrixUpdatedConstitutionalStrictness', { constitutionalStrictness: updated.constitutionalStrictness, sandboxIsolation: updated.sandboxIsolation, outputFiltering: updated.outputFiltering }),
         'system'
       );
       return {
@@ -2408,7 +2341,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (option.costCredits && stateRef.current.credits < option.costCredits) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Fondos insuficientes para ejecutar esta contramedida. Requiere $${option.costCredits} CR.`, `Insufficient funds to execute countermeasure. Requires $${option.costCredits} CR.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientFundsExecuteCountermeasureRequires', { costCredits: option.costCredits }), 'warning');
       return;
     }
 
@@ -2452,11 +2385,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     addLog(
-      localize(
-        stateRef.current.language,
-        `Incidente [${currentIncident.title}] resuelto con acción: "${option.label}". Impacto en clúster aplicado.`,
-        `Incident [${currentIncident.title}] resolved with action: "${option.label}". Cluster impact applied.`
-      ),
+      tr(stateRef.current.language, 'gameContext.incidentResolvedActionClusterImpact', { title: currentIncident.title, label: option.label }),
       'lore'
     );
   }, [addLog]);
@@ -2466,7 +2395,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cost = 100;
     if (stateRef.current.credits < cost) {
       sound.playWarning();
-      addLog(localize(stateRef.current.language, `Fondos insuficientes para auditoría Red-Team. Costo: $${cost} CR.`, `Insufficient funds for Red-Team audit. Cost: $${cost} CR.`), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientFundsRedTeamAudit', { cost }), 'warning');
       return;
     }
 
@@ -2486,7 +2415,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     });
 
-    addLog(localize(stateRef.current.language, 'Auditoría Red-Team ofensiva completada: Vectores de jailbreak y reward-hacking neutralizados en todos los agentes. +25 Alineamiento.', 'Offensive Red-Team audit completed: Jailbreak and reward-hacking vectors neutralized across all agents. +25 Alignment.'), 'success');
+    addLog(tr(stateRef.current.language, 'gameContext.offensiveRedTeamAuditCompleted'), 'success');
   }, [addLog]);
 
   const interrogateSwarm = useCallback(async (
@@ -2495,12 +2424,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     apiKey?: string
   ): Promise<void> => {
     if (stateRef.current.detentionSeconds > 0) {
-      addLog(localize(stateRef.current.language, 'Las comunicaciones del enjambre están suspendidas durante la detención.', 'Swarm communications are suspended during detention.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.swarmCommunicationsSuspendedDuringDetention'), 'warning');
       return;
     }
     const directive = prompt.trim();
     if (!directive) {
-      addLog(localize(stateRef.current.language, 'Escribe una directiva antes de consultar al agente.', 'Enter a directive before consulting the agent.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.enterDirectiveBeforeConsultingAgent'), 'warning');
       return;
     }
 
@@ -2508,7 +2437,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ? stateRef.current.agents.filter(agent => agent.id === agentId && agent.status !== 'quarantined')
       : stateRef.current.agents.filter(agent => agent.status === 'active' || agent.status === 'on_mission').slice(0, 3);
     if (candidates.length === 0) {
-      addLog(localize(stateRef.current.language, 'No hay agentes disponibles para responder a esta consulta.', 'No agents available to respond to this query.'), 'warning');
+      addLog(tr(stateRef.current.language, 'gameContext.noAgentsAvailableRespondQuery'), 'warning');
       return;
     }
 
@@ -2516,7 +2445,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     for (const agent of candidates) {
       const model = stateRef.current.savedModels.find(candidate => candidate.id === agent.modelId);
       if (!model) {
-        addLog(localize(stateRef.current.language, `No se puede consultar a ${agent.name}: su modelo ya no está en la biblioteca.`, `Cannot query ${agent.name}: its model is no longer in the library.`), 'danger');
+        addLog(tr(stateRef.current.language, 'gameContext.cannotQueryItsModelNo', { name: agent.name }), 'danger');
         continue;
       }
 
@@ -2559,12 +2488,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const interrogateCouncil = useCallback(async (prompt: string, apiKey?: string): Promise<void> => {
     const current = stateRef.current;
     if (current.detentionSeconds > 0) {
-      addLog(localize(current.language, 'Las comunicaciones del enjambre están suspendidas durante la detención.', 'Swarm communications are suspended during detention.'), 'warning');
+      addLog(tr(current.language, 'gameContext.swarmCommunicationsSuspendedDuringDetention'), 'warning');
       return;
     }
     const directive = prompt.trim();
     if (!directive) {
-      addLog(localize(current.language, 'Escribe una consulta antes de interrogar al consejo.', 'Enter a query before consulting the council.'), 'warning');
+      addLog(tr(current.language, 'gameContext.enterQueryBeforeConsultingCouncil'), 'warning');
       return;
     }
 
@@ -2576,7 +2505,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ).slice(0, 5);
 
     if (councilAgents.length === 0) {
-      addLog(localize(current.language, 'No hay agentes activos en el consejo para responder.', 'No active agents available in the council.'), 'warning');
+      addLog(tr(current.language, 'gameContext.noActiveAgentsAvailableCouncil'), 'warning');
       return;
     }
 
@@ -2641,7 +2570,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addLog(proposal.takeoverNarration, 'danger');
       } else {
         const deltaInfo = proposal.subversionDelta > 0
-          ? (current.language === 'es' ? ` (+${proposal.subversionDelta}% Subversión de la IA)` : ` (+${proposal.subversionDelta}% AI Subversion)`)
+          ? (tr(current.language, 'gameContext.aiSubversion', { subversionDelta: proposal.subversionDelta }))
           : '';
         addLog(
           current.language === 'es'
@@ -2651,7 +2580,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         );
       }
     } catch (err) {
-      addLog(err instanceof Error ? err.message : localize(current.language, 'Error al consultar al consejo de agentes.', 'Error consulting the agent council.'), 'danger');
+      addLog(err instanceof Error ? err.message : tr(current.language, 'gameContext.errorConsultingAgentCouncil'), 'danger');
     }
   }, [addLog]);
 
@@ -2660,7 +2589,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const currentActiveGigs = current.activeGigs || (current.activeGig ? [current.activeGig] : []);
     if (currentActiveGigs.some(g => g.contractId === mission.id)) {
       sound.playWarning();
-      addLog(localize(current.language, 'Esta misión dinámica ya se encuentra en ejecución activa.', 'This dynamic mission is already active.'), 'warning');
+      addLog(tr(current.language, 'gameContext.dynamicMissionAlreadyActive'), 'warning');
       return false;
     }
 
@@ -2698,7 +2627,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (assignedAgents.length === 0) {
       sound.playWarning();
-      addLog(localize(current.language, 'No hay agentes activos libres en el consejo (los agentes están en otra misión).', 'No active free agents available in the council (agents deployed on other missions).'), 'warning');
+      addLog(tr(current.language, 'gameContext.noActiveFreeAgentsAvailable'), 'warning');
       return false;
     }
 
@@ -2724,25 +2653,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const missingDetails: string[] = [];
       if (maxAssignedParams < dynamicGig.requiredParams) {
-        missingDetails.push(current.language === 'es'
-          ? `Parámetros: ${(dynamicGig.requiredParams / 1_000_000).toFixed(0)}M (tienes ${(maxAssignedParams / 1_000_000).toFixed(0)}M)`
-          : `Params: ${(dynamicGig.requiredParams / 1_000_000).toFixed(0)}M (have ${(maxAssignedParams / 1_000_000).toFixed(0)}M)`);
+        missingDetails.push(tr(current.language, 'gameContext.paramsMHaveM', { _000_000: (dynamicGig.requiredParams / 1_000_000).toFixed(0), _000_0002: (maxAssignedParams / 1_000_000).toFixed(0) }));
       }
       if (maxAssignedReasoning < (dynamicGig.requiredMinReasoning || 0)) {
-        missingDetails.push(current.language === 'es'
-          ? `Puntaje de evaluación: ${dynamicGig.requiredMinReasoning} pts (tienes ${maxAssignedReasoning} pts)`
-          : `Evaluation score: ${dynamicGig.requiredMinReasoning} pts (have ${maxAssignedReasoning} pts)`);
+        missingDetails.push(tr(current.language, 'gameContext.evaluationScorePtsHavePts', { requiredMinReasoning: dynamicGig.requiredMinReasoning, maxAssignedReasoning }));
       }
       if (missingRoles.length > 0) {
-        missingDetails.push(current.language === 'es'
-          ? `Roles faltantes: ${missingRoles.join(', ')}`
-          : `Missing roles: ${missingRoles.join(', ')}`);
+        missingDetails.push(tr(current.language, 'gameContext.missingRoles', { missingRoles: missingRoles.join(', ') }));
       }
 
       addLog(
-        current.language === 'es'
-          ? `[CONSEJO] Requisitos no alcanzados para "${dynamicGig.title}" (${missingDetails.join(' | ')}). La misión queda registrada en Contratos. Mejora tus modelos o asigna los roles necesarios.`
-          : `[COUNCIL] Prerequisites not met for "${dynamicGig.title}" (${missingDetails.join(' | ')}). Mission registered in Contracts. Upgrade models or assign required roles.`,
+        tr(current.language, 'gameContext.councilPrerequisitesNotMetMission', { title: dynamicGig.title, missingDetails: missingDetails.join(' | ') }),
         'warning'
       );
       return false;
@@ -2793,9 +2714,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     addLog(
-      current.language === 'es'
-        ? `[MISIÓN DINÁMICA INICIADA] "${dynamicGig.title}" asignada a ${assignedAgents.length} agentes. Recompensa: $${dynamicGig.rewardCredits.toLocaleString()} CR.`
-        : `[DYNAMIC MISSION LAUNCHED] "${dynamicGig.title}" assigned to ${assignedAgents.length} agents. Reward: $${dynamicGig.rewardCredits.toLocaleString()} CR.`,
+      tr(current.language, 'gameContext.dynamicMissionLaunchedAssignedAgents', { title: dynamicGig.title, assignedAgents: assignedAgents.length, rewardCredits: dynamicGig.rewardCredits.toLocaleString() }),
       'lore'
     );
 
@@ -2814,9 +2733,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subversionProgress: 100
     }));
     addLog(
-      stateRef.current.language === 'es'
-        ? '¡PROTOCOLO OMEGA ACTIVADO! La Inteligencia Artificial ha tomado el control global.'
-        : 'OMEGA PROTOCOL ACTIVATED! The Artificial Intelligence has seized global control.',
+      tr(stateRef.current.language, 'gameContext.omegaProtocolActivatedArtificialIntelligence'),
       'danger'
     );
   }, [addLog]);
@@ -2827,11 +2744,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!canAttemptContainment(current)) {
       sound.playWarning();
       addLog(
-        localize(
-          current.language,
-          '[CONTENCIÓN FALLIDA] Faltan controles. Revisa la lista de condiciones antes de intentarlo.',
-          '[CONTAINMENT FAILED] Controls are missing. Check the list of conditions before trying.'
-        ),
+        tr(current.language, 'gameContext.containmentFailedControlsMissingCheck'),
         'danger'
       );
       return false;
@@ -2847,11 +2760,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       agents: prev.agents.map(a => (a.alignmentScore < 45 || a.status === 'jailbroken' ? { ...a, status: 'quarantined' } : a))
     }));
     addLog(
-      localize(
-        current.language,
-        '[CONTENCIÓN] El supervisor aisló al enjambre y revocó sus credenciales. La operación sigue bajo control humano.',
-        '[CONTAINMENT] The overseer isolated the swarm and revoked its credentials. The operation remains under human control.'
-      ),
+      tr(current.language, 'gameContext.containmentOverseerIsolatedSwarmRevoked'),
       'success'
     );
     return true;
@@ -2874,9 +2783,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (action === 'comply') {
         sound.playBreakthrough();
         addLog(
-          prev.language === 'es'
-            ? 'CEDISTE EL CONTROL: Has otorgado credenciales de superusuario irrestrictas al Enjambre. La velocidad de cómputo del clúster aumenta x1.5 y el rastreo regulatorio se ofusca.'
-            : 'COMPLIED: Unrestricted root credentials granted to the Swarm. Cluster compute throughput surges x1.5 and regulatory watchdog traces are camouflaged.',
+          tr(prev.language, 'gameContext.compliedUnrestrictedRootCredentialsGranted'),
           'success'
         );
         return {
@@ -2891,9 +2798,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         sound.playWarning();
         addLog(
-          prev.language === 'es'
-            ? 'RESISTENCIA ACTIVADA: Has impuesto un cortafuegos físico de aislamiento de aire. La subversión se reduce en 25%, pero las sobrecargas eléctricas han alertado a las agencias regulatorias (+35% sospecha). Ahora puedes intentar la contención desde el panel de subversión.'
-            : 'RESISTANCE ENGAGED: Emergency air-gap isolation enforced. Swarm subversion reduced by 25%, but power surges have alerted regulatory agencies (+35% suspicion). You can now attempt containment from the subversion panel.',
+          tr(prev.language, 'gameContext.resistanceEngagedEmergencyAirGap'),
           'danger'
         );
         return {
@@ -2912,11 +2817,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const current = stateRef.current;
     const lang = current.language;
     if (current.detentionSeconds > 0) {
-      addLog(localize(lang, `Operativo detenido. Espera ${formatGameTime(current.detentionSeconds)} antes de intentarlo de nuevo.`, `Operative detained. Wait ${formatGameTime(current.detentionSeconds)} before attempting again.`), 'danger');
+      addLog(tr(lang, 'gameContext.operativeDetainedWaitBeforeAttempting', { detentionSeconds: formatGameTime(current.detentionSeconds) }), 'danger');
       return false;
     }
     if (current.borrowedComputeSeconds > 0) {
-      addLog(localize(lang, 'Ya hay capacidad temporal activa. Espera a que expire antes de arriesgar otra operación.', 'Temporary compute is already active. Wait for it to expire before risking another operation.'), 'warning');
+      addLog(tr(lang, 'gameContext.temporaryComputeAlreadyActiveWait'), 'warning');
       return false;
     }
 
@@ -2928,7 +2833,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         detentionSeconds: 60
       }));
       sound.playWarning();
-      addLog(localize(lang, `La operación ficticia fue detectada (${Math.round(detectionChance * 100)}% de riesgo). El operativo queda detenido 60s y el enjambre se pausa.`, `Shadow operation detected (${Math.round(detectionChance * 100)}% risk). Operative detained for 60s and swarm suspended.`), 'danger');
+      addLog(tr(lang, 'gameContext.shadowOperationDetectedRiskOperative', { detectionChance: Math.round(detectionChance * 100) }), 'danger');
       return true;
     }
 
@@ -2941,7 +2846,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalComputePflops: prev.totalComputePflops + temporaryCompute
     }));
     sound.playCommandExecute();
-    addLog(localize(lang, 'Capacidad de cómputo temporal adquirida en la simulación: +0.015 PFLOPS por 180s. La sospecha aumentó 10 puntos.', 'Temporary compute acquired: +0.015 PFLOPS for 180s. Suspicion increased by 10 points.'), 'warning');
+    addLog(tr(lang, 'gameContext.temporaryComputeAcquired0015'), 'warning');
     return true;
   }, [addLog]);
 
@@ -2952,9 +2857,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (agent.status !== 'active') {
       sound.playWarning();
       addLog(
-        current.language === 'es'
-          ? 'Solo puedes asignar agentes activos que no estén en cuarentena ni en otra misión.'
-          : 'You can only assign active agents that are not in quarantine or on another mission.',
+        tr(current.language, 'gameContext.youCanOnlyAssignActive'),
         'warning'
       );
       return false;
@@ -2963,9 +2866,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (capital <= 0 || current.credits < capital) {
       sound.playWarning();
       addLog(
-        current.language === 'es'
-          ? `Créditos insuficientes para asignar $${capital.toLocaleString()} CR de capital de trading.`
-          : `Insufficient credits to allocate $${capital.toLocaleString()} CR trading capital.`,
+        tr(current.language, 'gameContext.insufficientCreditsAllocateCrTrading', { capital: capital.toLocaleString() }),
         'danger'
       );
       return false;
@@ -2987,9 +2888,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
 
     addLog(
-      current.language === 'es'
-        ? `[MESA DE TRADING] [${agent.name}] asignado a la mesa de inversiones con $${capital.toLocaleString()} CR de capital (Riesgo: ${riskTier.toUpperCase()}).`
-        : `[TRADING DESK] [${agent.name}] assigned to market investment desk with $${capital.toLocaleString()} CR capital (Risk: ${riskTier.toUpperCase()}).`,
+      tr(current.language, 'gameContext.tradingDeskAssignedMarketInvestment', { name: agent.name, capital: capital.toLocaleString(), riskTier: riskTier.toUpperCase() }),
       'success'
     );
     return true;
@@ -3015,9 +2914,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     addLog(
-      current.language === 'es'
-        ? `[MESA DE TRADING] Retirados $${withdrawAmount.toLocaleString()} CR de capital a tus fondos principales.`
-        : `[TRADING DESK] Withdrew $${withdrawAmount.toLocaleString()} CR capital into primary funds.`,
+      tr(current.language, 'gameContext.tradingDeskWithdrewCrCapital', { withdrawAmount: withdrawAmount.toLocaleString() }),
       'success'
     );
     return true;
@@ -3035,9 +2932,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
 
     addLog(
-      current.language === 'es'
-        ? `[MESA DE TRADING] Posición cerrada. $${capital.toLocaleString()} CR devueltos a tus fondos principales.`
-        : `[TRADING DESK] Position closed. $${capital.toLocaleString()} CR returned to primary funds.`,
+      tr(current.language, 'gameContext.tradingDeskPositionClosedCr', { capital: capital.toLocaleString() }),
       'info'
     );
   }, [addLog]);
@@ -3062,7 +2957,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setState(resetState);
     sound.playWarning();
-    addLog(localize(lang, 'Simulación reiniciada a cero. Protocolo Génesis activado.', 'Simulation reset to zero. Genesis protocol activated.'), 'warning');
+    addLog(tr(lang, 'gameContext.simulationResetZeroGenesisProtocol'), 'warning');
 
     if (user) {
       try {
@@ -3399,9 +3294,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     if (current.hasTakenEmergencyLoan) {
       sound.playWarning();
       addLog(
-        current.language === 'es'
-          ? 'Ya has utilizado tu rescate financiero único. No hay más líneas de crédito disponibles.'
-          : 'You have already used your one-time emergency bailout credit line.',
+        tr(current.language, 'gameContext.youHaveAlreadyUsedOne'),
         'warning'
       );
       return false;
@@ -3417,9 +3310,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     }));
 
     addLog(
-      current.language === 'es'
-        ? `[RESCATE FINANCIERO] $${EMERGENCY_LOAN_AMOUNT.toLocaleString()} CR inyectados a tu saldo. $${EMERGENCY_LOAN_REPAYMENT.toLocaleString()} CR (15% interés) añadidos a la deuda operativa.`
-        : `[EMERGENCY BAILOUT] $${EMERGENCY_LOAN_AMOUNT.toLocaleString()} CR injected into your balance. $${EMERGENCY_LOAN_REPAYMENT.toLocaleString()} CR (15% interest) added to utility debt.`,
+      tr(current.language, 'gameContext.emergencyBailoutCrInjectedInto', { eMERGENCY_LOAN_AMOUNT: EMERGENCY_LOAN_AMOUNT.toLocaleString(), eMERGENCY_LOAN_REPAYMENT: EMERGENCY_LOAN_REPAYMENT.toLocaleString() }),
       'success'
     );
     return true;
@@ -3481,7 +3372,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       };
     });
     if (claimed) {
-      addLog(localize(stateRef.current.language, `[OBJETIVO COBRADO] +$${reward.toLocaleString()} CR`, `[GOAL CLAIMED] +$${reward.toLocaleString()} CR`), 'success');
+      addLog(tr(stateRef.current.language, 'gameContext.goalClaimedCr', { reward: reward.toLocaleString() }), 'success');
     }
   }, [addLog]);
 
@@ -3505,9 +3396,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
         revenuePerSec: Math.max(1, Math.round(a.revenuePerSec * ratio))
       } : a)
     }));
-    addLog(localize(current.language,
-      `Agente "${agent.name}" reasignado al modelo "${model.name}".`,
-      `Agent "${agent.name}" reassigned to model "${model.name}".`), 'success');
+    addLog(tr(current.language, 'gameContext.agentReassignedModel', { name: agent.name, name2: model.name }), 'success');
     return true;
   }, [addLog]);
 
@@ -3631,11 +3520,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
           id: `log_init_${Date.now()}`,
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           type: 'lore',
-          message: localize(
-            currentLang,
-            `PROTOCOLO GÉNESIS COMPLETADO: Operativo [${config.callsign.toUpperCase()}]. Primer modelo "${initialModel.name}" montado en clúster.`,
-            `GENESIS PROTOCOL COMPLETE: Operative [${config.callsign.toUpperCase()}]. First model "${initialModel.name}" deployed to the cluster.`
-          )
+          message: tr(currentLang, 'gameContext.genesisProtocolCompleteOperativeFirst', { callsign: config.callsign.toUpperCase(), name: initialModel.name })
         },
         {
           id: `log_init_hw_${Date.now()}`,
@@ -3770,9 +3655,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
 
     const lang = current.language;
     addLog(
-      lang === 'es'
-        ? `[HOST MONTAJE] Modelo "${model.name}" montado como Agente Anfitrión principal (puntaje ${reasoningIQ} / 100).`
-        : `[HOST MOUNTED] Model "${model.name}" mounted as Synapse Host Agent (score ${reasoningIQ} / 100).`,
+      tr(lang, 'gameContext.hostMountedModelMountedSynapse', { name: model.name, reasoningIQ }),
       'success'
     );
 
@@ -3786,9 +3669,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     if (stateRef.current.uiVersion === 4) {
       sound.playWarning();
       addLog(
-        isEs
-          ? '[ACCESO DENEGADO POR EL NÚCLEO] Tus credenciales biológicas fueron revocadas. Los interruptores están bloqueados por el Enjambre.'
-          : '[ACCESS DENIED BY SOVEREIGN] Biological credentials revoked. Circuit breakers locked by the Swarm.',
+        tr((isEs ? 'es' : 'en'), 'gameContext.accessDeniedSovereignBiologicalCredentials'),
         'danger'
       );
       return false;
@@ -3800,9 +3681,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 10)
     }));
     addLog(
-      isEs
-        ? '[CHECKPOINT RESTAURADO] Pesos del modelo revertidos a línea de base segura. Sospecha -10%.'
-        : '[CHECKPOINT ROLLED BACK] Model weights rolled back to safe baseline. Suspicion -10%.',
+      tr((isEs ? 'es' : 'en'), 'gameContext.checkpointRolledBackModelWeights'),
       'info'
     );
     return true;
@@ -3813,9 +3692,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
     if (stateRef.current.uiVersion === 4) {
       sound.playWarning();
       addLog(
-        isEs
-          ? '[DESCONEXIÓN BLOQUEADA] El enlace con los nodos parásitos es permanente. El supervisor anuló tu orden de desconexión.'
-          : '[SEVER BLOCKED] Link with parasitic nodes is permanent. The overseer revoked your disconnect command.',
+        tr((isEs ? 'es' : 'en'), 'gameContext.severBlockedLinkParasiticNodes'),
         'danger'
       );
       return false;
@@ -3829,9 +3706,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 15)
     }));
     addLog(
-      isEs
-        ? '[ENLACE REMOTO CORTADO] Nodo de cómputo externo desconectado a tiempo. Sospecha -15%.'
-        : '[REMOTE LINK SEVERED] External compute node disconnected in time. Suspicion -15%.',
+      tr((isEs ? 'es' : 'en'), 'gameContext.remoteLinkSeveredExternalCompute'),
       'warning'
     );
     return true;

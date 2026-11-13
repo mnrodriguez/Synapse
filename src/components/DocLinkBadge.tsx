@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { ExternalLink, BookOpen, Sparkles, X, Info } from 'lucide-react';
 import { DocEntry } from '../utils/aiDocumentation';
 import { sound } from '../audio/soundManager';
+import { tr } from '../i18n';
 
 interface DocLinkBadgeProps {
   doc: DocEntry;
@@ -44,7 +45,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
               handleClick(e as unknown as React.MouseEvent);
             }
           }}
-          title={isEs ? `Ver documentación real: ${doc.title}` : `View official docs: ${doc.title}`}
+          title={tr((isEs ? 'es' : 'en'), 'docLinkBadge.viewOfficialDocs', { title: doc.title })}
           className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono tracking-wider transition-all cursor-pointer border select-none ${
             doc.type === 'official'
               ? 'theme-accent-soft mutating-accent-text theme-accent-border'
@@ -54,7 +55,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
           } ${className}`}
         >
           <BookOpen className="w-2.5 h-2.5" />
-          <span>{isEs ? 'GUÍA' : 'DOCS'}</span>
+          <span>{tr((isEs ? 'es' : 'en'), 'docLinkBadge.docs')}</span>
           <ExternalLink className="w-2.5 h-2.5 opacity-70" />
         </span>
       )}
@@ -70,7 +71,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
           } ${className}`}
         >
           <BookOpen className="w-3 h-3 mutating-accent-text" />
-          <span>{isEs ? 'DOCUMENTACIÓN TÉCNICA' : 'TECHNICAL DOCS'}</span>
+          <span>{tr((isEs ? 'es' : 'en'), 'docLinkBadge.technicalDocs')}</span>
           <ExternalLink className="w-3 h-3" />
         </button>
       )}
@@ -79,7 +80,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
         <button
           type="button"
           onClick={handleClick}
-          title={isEs ? `Ver documentación real: ${doc.title}` : `View official docs: ${doc.title}`}
+          title={tr((isEs ? 'es' : 'en'), 'docLinkBadge.viewOfficialDocs', { title: doc.title })}
           className={`p-1 rounded mutating-accent-text transition-colors border theme-accent-border cursor-pointer ${className}`}
         >
           <ExternalLink className="w-3 h-3" />
@@ -123,7 +124,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
             {/* Organization & Paper Type */}
             <div className="flex items-center gap-2 text-[11px]">
               <span className="px-2 py-0.5 rounded theme-sub-bg border theme-border theme-text">
-                {isEs ? 'Fuente / Autor:' : 'Source / Author:'} <strong className="mutating-accent-text">{doc.organization}</strong>
+                {tr((isEs ? 'es' : 'en'), 'docLinkBadge.sourceAuthor')} <strong className="mutating-accent-text">{doc.organization}</strong>
               </span>
               <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
                 doc.type === 'official'
@@ -132,7 +133,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
                   ? 'theme-accent-soft mutating-accent-text theme-accent-border'
                   : 'theme-warn-soft theme-warn-text theme-warn-border'
               }`}>
-                {doc.type === 'official' ? (isEs ? 'ESPECIFICACIÓN OFICIAL' : 'OFFICIAL SPEC') : doc.type === 'research_paper' ? (isEs ? 'PAPER ARXÍV / I+D' : 'ARXIV RESEARCH PAPER') : (isEs ? 'FUNDAMENTO TEÓRICO' : 'THEORETICAL FOUNDATION')}
+                {doc.type === 'official' ? (tr((isEs ? 'es' : 'en'), 'docLinkBadge.officialSpec')) : doc.type === 'research_paper' ? (tr((isEs ? 'es' : 'en'), 'docLinkBadge.arxivResearchPaper')) : (tr((isEs ? 'es' : 'en'), 'docLinkBadge.theoreticalFoundation'))}
               </span>
             </div>
 
@@ -141,7 +142,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
               <p>{isEs ? doc.summaryEs : doc.summaryEn}</p>
               {doc.keySpecs && (
                 <div className="mt-2 pt-2 border-t theme-border text-[11px] mutating-accent-text font-mono">
-                  <span className="mutating-text-muted">{isEs ? 'Especificaciones Clave: ' : 'Key Specifications: '}</span>
+                  <span className="mutating-text-muted">{tr((isEs ? 'es' : 'en'), 'docLinkBadge.keySpecifications')}</span>
                   {doc.keySpecs}
                 </div>
               )}
@@ -150,7 +151,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
             {/* Real Link Action */}
             <div className="pt-2 flex items-center justify-between border-t theme-accent-border">
               <span className="text-[11px] mutating-text-muted">
-                {isEs ? 'Abre en nueva pestaña para estudiar el concepto real.' : 'Opens in a new tab to inspect the real-world material.'}
+                {tr((isEs ? 'es' : 'en'), 'docLinkBadge.opensNewTabInspectReal')}
               </span>
               <a
                 href={doc.url}
@@ -158,7 +159,7 @@ export const DocLinkBadge: React.FC<DocLinkBadgeProps> = ({
                 rel="noopener noreferrer"
                 className="px-3.5 py-1.5 rounded theme-gradient theme-on-accent font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
               >
-                <span>{isEs ? 'ABRIR FUENTE REAL' : 'OPEN REAL SOURCE'}</span>
+                <span>{tr((isEs ? 'es' : 'en'), 'docLinkBadge.openRealSource')}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>

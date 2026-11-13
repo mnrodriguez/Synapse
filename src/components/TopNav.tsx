@@ -22,8 +22,8 @@ import {
   CloudOff
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
-import { localize } from '../utils/i18n';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
+import { tr } from '../i18n';
 
 export interface TopNavProps {
   onOpenManual: () => void;
@@ -130,7 +130,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             title="Pause / Resume Simulation (Space)"
           >
             {state.gameSpeed === 0 ? <Play className="w-3 h-3 fill-current" /> : <Pause className="w-3 h-3 fill-current" />}
-            <span>{state.gameSpeed === 0 ? (lang === 'es' ? 'PAUSADO' : 'PAUSED') : '1x'}</span>
+            <span>{state.gameSpeed === 0 ? (tr(lang, 'topNav.paused')) : '1x'}</span>
           </button>
           {[1, 5, 20, 50].map(speed => (
             <button
@@ -157,9 +157,9 @@ export const TopNav: React.FC<TopNavProps> = ({
             title="Language Switcher / Selector de Idioma"
           >
             <Languages className="w-3.5 h-3.5 mutating-accent-text" />
-            <span className={`px-1.5 py-0.2 rounded font-bold ${state.language === 'en' ? 'mutating-btn-primary' : 'mutating-text-muted'}`}>EN</span>
+            <span className={`px-1.5 py-0.2 rounded font-bold ${tr(state.language, 'topNav.mutatingBtnPrimary')}`}>EN</span>
             <span className="opacity-40">|</span>
-            <span className={`px-1.5 py-0.2 rounded font-bold ${state.language === 'es' ? 'mutating-btn-primary' : 'mutating-text-muted'}`}>ES</span>
+            <span className={`px-1.5 py-0.2 rounded font-bold ${tr(state.language, 'topNav.mutatingTextMuted')}`}>ES</span>
           </button>
 
           {/* Official PDF Manual Link */}
@@ -196,7 +196,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             title="Sync & Save Progress"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSaving || savingAnim ? 'animate-spin theme-success-text' : 'mutating-text-muted'}`} />
-            <span className="hidden sm:inline">{isSaving ? (lang === 'es' ? 'Guardando...' : 'Saving...') : (lang === 'es' ? 'Guardar' : 'Save')}</span>
+            <span className="hidden sm:inline">{isSaving ? (tr(lang, 'topNav.saving')) : (tr(lang, 'topNav.save'))}</span>
           </button>
 
           {/* User Account / Auth Trigger */}
@@ -209,7 +209,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             }`}
           >
             {user ? <User className="w-3.5 h-3.5 mutating-accent-text" /> : <CloudOff className="w-3.5 h-3.5 theme-warn-text" />}
-            <span className="hidden md:inline truncate max-w-[90px]">{user ? user.displayName?.split(' ')[0] || 'Operative' : (lang === 'es' ? 'Cuenta' : 'Account')}</span>
+            <span className="hidden md:inline truncate max-w-[90px]">{user ? user.displayName?.split(' ')[0] || 'Operative' : (tr(lang, 'topNav.account'))}</span>
           </button>
         </div>
 

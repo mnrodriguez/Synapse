@@ -9,6 +9,7 @@ import { DAYS_PER_GAME_MONTH, ELECTRICITY_RATE_PER_KWH, FACILITY_TIERS } from '.
 import { universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
 import { LOAN_WARNING_DAY } from '../utils/storyEvents';
 import { effectCollector } from './effects';
+import { tr } from '../i18n';
 
 // One tick of the calendar: half an hour passes, days and months roll over, the university loan is
 // audited at the end of its trial week, and the monthly bill is paid when a month ends.
@@ -83,12 +84,8 @@ export function calendarTick(input: CalendarInput) {
     utilityDebt = Number((totalDue - paid).toFixed(2));
     addLog(
       utilityDebt > 0
-        ? (prev.language === 'en'
-            ? `Unpaid bill for Month ${prev.gameMonth || 1} (Day ${prev.gameDay || 1}): $${utilityDebt.toLocaleString()} CR debt.`
-            : `Factura mensual del Mes ${prev.gameMonth || 1} (Día ${prev.gameDay || 1}) impaga: $${utilityDebt.toLocaleString()} CR de deuda operativa.`)
-        : (prev.language === 'en'
-            ? `Month ${prev.gameMonth || 1} (Day ${prev.gameDay || 1}) bill paid: $${currentMonthBill.toFixed(2)} CR (Lease: $${facility.monthlyLeaseCost} CR, Power: $${(effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2)} CR).`
-            : `Factura del Mes ${prev.gameMonth || 1} (Día ${prev.gameDay || 1}) pagada: $${currentMonthBill.toFixed(2)} CR (Alquiler: $${facility.monthlyLeaseCost} CR, Energía: $${(effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2)} CR).`),
+        ? (tr(prev.language, 'calendarTick.unpaidBillMonthDayCr', { gameMonth: prev.gameMonth || 1, gameDay: prev.gameDay || 1, utilityDebt: utilityDebt.toLocaleString() }))
+        : (tr(prev.language, 'calendarTick.monthDayBillPaidCr', { gameMonth: prev.gameMonth || 1, gameDay: prev.gameDay || 1, currentMonthBill: currentMonthBill.toFixed(2), monthlyLeaseCost: facility.monthlyLeaseCost, eLECTRICITY_RATE_PER_KWH: (effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2) })),
       utilityDebt > 0 ? 'danger' : 'info'
     );
   }

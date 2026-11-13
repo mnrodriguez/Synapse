@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { useGame } from '../context/GameContext';
-import { localize } from '../utils/i18n';
+import { tr } from '../i18n';
 
 interface HelpManualProps {
   isOpen: boolean;
@@ -45,7 +45,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 mutating-accent-text" />
             <h3 className="font-bold text-sm mutating-accent-text tracking-wider">
-              {localize(state.language, 'MANUAL TÉCNICO OFICIAL // ARQUITECTURA DE IA', 'OFFICIAL TECHNICAL MANUAL // AI ARCHITECTURE')}
+              {tr(state.language, 'helpManual.officialTechnicalManualAiArchitecture')}
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -54,19 +54,19 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded theme-sub-bg border theme-border theme-text text-xs font-bold transition-all"
-              title={localize(state.language, 'Abrir PDF en pestaña nueva', 'Open PDF in new tab')}
+              title={tr(state.language, 'helpManual.openPdfNewTab')}
             >
               <ExternalLink className="w-3.5 h-3.5 mutating-accent-text" />
-              <span>{localize(state.language, 'ABRIR PDF', 'OPEN PDF')}</span>
+              <span>{tr(state.language, 'helpManual.openPdf')}</span>
             </a>
             <a
               href={pdfUrl}
               download="SYNAPSE_AI_Architecture_Manual.pdf"
               className="flex items-center gap-1.5 px-2.5 py-1 rounded theme-accent-soft border theme-accent-border mutating-accent-text text-xs font-bold transition-all"
-              title={localize(state.language, 'Descargar el manual técnico oficial de IA en PDF', 'Download official AI technical manual as PDF')}
+              title={tr(state.language, 'helpManual.downloadOfficialAiTechnicalManual')}
             >
               <Download className="w-3.5 h-3.5 mutating-accent-text" />
-              <span>{localize(state.language, 'DESCARGAR PDF', 'DOWNLOAD PDF')}</span>
+              <span>{tr(state.language, 'helpManual.downloadPdf')}</span>
             </a>
             <button
               onClick={() => { sound.playNavSwitch(); onClose(); }}
@@ -80,12 +80,12 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
         {/* Section Tabs */}
         <div className="flex items-center gap-1 p-2 theme-panel-bg border-b theme-border text-xs overflow-x-auto">
           {[
-            { id: 'pdf', label: localize(state.language, '📄 MANUAL COMPLETO (PDF)', '📄 FULL MANUAL (PDF)') },
-            { id: 'intro', label: localize(state.language, '1. INTRODUCCIÓN', '1. INTRODUCTION') },
-            { id: 'data', label: localize(state.language, '2. GRAFOS, VECTORES & SQL', '2. GRAPHS, VECTORS & SQL') },
-            { id: 'arch', label: localize(state.language, '3. TOPOLOGÍA & CUANTIZACIÓN', '3. TOPOLOGY & QUANTIZATION') },
-            { id: 'infra', label: localize(state.language, '4. CLÚSTER & FÍSICA', '4. CLUSTER & PHYSICS') },
-            { id: 'singularity', label: localize(state.language, '5. LA SINGULARIDAD', '5. THE SINGULARITY') }
+            { id: 'pdf', label: tr(state.language, 'helpManual.fullManualPdf') },
+            { id: 'intro', label: tr(state.language, 'helpManual.n1Introduction') },
+            { id: 'data', label: tr(state.language, 'helpManual.n2GraphsVectorsSql') },
+            { id: 'arch', label: tr(state.language, 'helpManual.n3TopologyQuantization') },
+            { id: 'infra', label: tr(state.language, 'helpManual.n4ClusterPhysics') },
+            { id: 'singularity', label: tr(state.language, 'helpManual.n5Singularity') }
           // The Singularity chapter would spoil the story before v3.
           ].filter(tab => tab.id !== 'singularity' || (state.uiVersion || 1) >= 3).map(tab => (
             <button
@@ -110,7 +110,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 mutating-accent-text" />
                   <span className="font-bold mutating-accent-text">
-                    {localize(state.language, 'MANUAL OFICIAL // ARQUITECTURAS, ENTRENAMIENTO & FÍSICA DEL CLÚSTER (9 PÁGS)', 'OFFICIAL MANUAL // AI ARCHITECTURES, TRAINING & CLUSTER PHYSICS (9 PAGES)')}
+                    {tr(state.language, 'helpManual.officialManualAiArchitecturesTraining')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -121,7 +121,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                     className="px-2.5 py-1 rounded theme-sub-bg border theme-border theme-text flex items-center gap-1.5 transition-colors"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>{localize(state.language, 'PANTALLA COMPLETA', 'FULLSCREEN VIEW')}</span>
+                    <span>{tr(state.language, 'helpManual.fullscreenView')}</span>
                   </a>
                   <a
                     href={pdfUrl}
@@ -129,7 +129,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                     className="px-2.5 py-1 rounded mutating-btn-primary theme-on-accent font-bold flex items-center gap-1.5 transition-colors"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>{localize(state.language, 'DESCARGAR PDF', 'DOWNLOAD PDF')}</span>
+                    <span>{tr(state.language, 'helpManual.downloadPdf')}</span>
                   </a>
                 </div>
               </div>
@@ -146,7 +146,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                   >
                     <div className="p-8 text-center space-y-4">
                       <p className="mutating-text-muted">
-                        {localize(state.language, 'El visor PDF integrado no está disponible en este navegador.', 'The embedded PDF viewer is not supported in this browser.')}
+                        {tr(state.language, 'helpManual.embeddedPdfViewerNotSupported')}
                       </p>
                       <a
                         href={pdfUrl}
@@ -154,7 +154,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                         className="inline-flex items-center gap-2 px-4 py-2 mutating-btn-primary theme-on-accent font-bold rounded"
                       >
                         <Download className="w-4 h-4" />
-                        {localize(state.language, 'Descargar Manual PDF Oficial', 'Download Official PDF Manual')}
+                        {tr(state.language, 'helpManual.downloadOfficialPdfManual')}
                       </a>
                     </div>
                   </iframe>
@@ -165,7 +165,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
           {activeSection === 'intro' && (
             <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{localize(state.language, 'EL CAMINO DE SYNAPSE', 'THE SYNAPSE PATH')}</h4>
+              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.synapsePath')}</h4>
               <p>
                 {state.language === 'en'
                   ? <>Inspired by cybersecurity simulators such as <em>Uplink</em> and <em>Hacknet</em>, your mission in SYNAPSE is not easy money from breaking firewalls, but to <strong>train an artificial intelligence from scratch</strong> until it becomes the dominant intellectual force on the planet.</>
@@ -175,14 +175,10 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5 mutating-accent-text font-bold">
                     <FileText className="w-4 h-4 mutating-accent-text" />
-                    <span>{localize(state.language, 'MANUAL TÉCNICO OFICIAL DE IA & SISTEMAS (PDF DE 9 PÁGINAS)', 'OFFICIAL AI & SYSTEMS TECHNICAL MANUAL (9-PAGE PDF)')}</span>
+                    <span>{tr(state.language, 'helpManual.officialAiSystemsTechnicalManual')}</span>
                   </div>
                   <p className="text-[11px] mutating-text-muted">
-                    {localize(
-                      state.language,
-                      'Documento PDF oficial de 9 páginas con topologías neuronales, física de clúster, cuantización, fórmulas de cálculo y guía estratégica de campaña.',
-                      'Official 9-page PDF manual covering neural topologies, cluster physics, quantization formats, mathematical sizing, and campaign strategy.'
-                    )}
+                    {tr(state.language, 'helpManual.official9PagePdfManual')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -191,7 +187,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                     className="px-3 py-1.5 rounded theme-raised-bg border theme-border theme-text font-bold text-xs flex items-center gap-1.5 whitespace-nowrap transition-all"
                   >
                     <BookOpen className="w-3.5 h-3.5 mutating-accent-text" />
-                    <span>{localize(state.language, 'VER EN VISOR', 'VIEW IN VIEWER')}</span>
+                    <span>{tr(state.language, 'helpManual.viewViewer')}</span>
                   </button>
                   <a
                     href={pdfUrl}
@@ -199,13 +195,13 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
                     className="px-3 py-1.5 rounded mutating-btn-primary theme-on-accent font-bold text-xs flex items-center gap-1.5 whitespace-nowrap transition-all"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>{localize(state.language, 'DESCARGAR PDF', 'DOWNLOAD PDF')}</span>
+                    <span>{tr(state.language, 'helpManual.downloadPdf')}</span>
                   </a>
                 </div>
               </div>
 
               <div className="p-3 theme-panel-bg border theme-accent-border rounded space-y-1.5">
-                <span className="theme-warn-text font-bold block">{localize(state.language, 'EL CICLO DE PROGRESIÓN BÁSICO:', 'THE CORE PROGRESSION LOOP:')}</span>
+                <span className="theme-warn-text font-bold block">{tr(state.language, 'helpManual.coreProgressionLoop')}</span>
                 <ol className="list-decimal list-inside space-y-1 mutating-text-muted text-[11px]">
                   {state.language === 'en' ? <>
                     <li><strong>Train your first model</strong> (Proto-14M) in Architecture or with the <code className="mutating-accent-text">train</code> command.</li>
@@ -229,37 +225,37 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
           {activeSection === 'data' && (
             <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{localize(state.language, 'MOTORES DE DATOS: GRAFOS, VECTORES Y BASES RELACIONALES', 'DATA ENGINES: GRAPHS, VECTORS & RELATIONAL DATABASES')}</h4>
+              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.dataEnginesGraphsVectorsRelational')}</h4>
               <p>
-                {localize(state.language, 'Entrenar una IA avanzada requiere más que texto sin procesar. Cada modalidad de datos otorga facultades cognitivas irreemplazables:', 'Training an advanced AI requires more than raw text. Each data type provides distinct capabilities:')}
+                {tr(state.language, 'helpManual.trainingAdvancedAiRequiresMore')}
               </p>
 
               <div className="space-y-2">
                 <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold mutating-accent-text block">{localize(state.language, '1. Bases de Datos Relacionales (SQL / Tabulares)', '1. Relational Databases (SQL / Tabular)')}</span>
+                  <span className="font-bold mutating-accent-text block">{tr(state.language, 'helpManual.n1RelationalDatabasesSqlTabular')}</span>
                   <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {localize(state.language, 'Esquemas normalizados con integridad referencial ACID. Proporcionan exactitud matemática estricta, registros de transacciones financieras y contabilidad determinista. Sin ellos, los modelos sufren en razonamiento aritmético riguroso.', 'Normalized schemas with ACID referential integrity provide numerical accuracy, financial transaction records, and deterministic accounting.')}
+                    {tr(state.language, 'helpManual.normalizedSchemasAcidReferentialIntegrity')}
                   </p>
                 </div>
 
                 <div className="p-2.5 theme-panel-bg border theme-success-border rounded">
-                  <span className="font-bold theme-success-text block">{localize(state.language, '2. Bases de Datos Vectoriales & RAG (HNSW / Cosine Similarity)', '2. Vector Databases & RAG (HNSW / Cosine Similarity)')}</span>
+                  <span className="font-bold theme-success-text block">{tr(state.language, 'helpManual.n2VectorDatabasesRagHnsw')}</span>
                   <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {localize(state.language, 'Proyectan conceptos en espacios latentes de alta dimensionalidad (ej: 1536 dimensiones). Permiten búsqueda semántica asociativa y memoria externa de contexto infinito, conectando documentos corporativos y literatura científica sin necesidad de reentrenar todos los pesos.', 'They embed concepts in high-dimensional spaces (for example, 1,536 dimensions) for semantic search and external memory over documents without retraining model weights.')}
+                    {tr(state.language, 'helpManual.theyEmbedConceptsHighDimensional')}
                   </p>
                 </div>
 
                 <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold mutating-accent-text block">{localize(state.language, '3. Grafos de Conocimiento (Knowledge Graphs / RDF / Cypher)', '3. Knowledge Graphs (RDF / Cypher)')}</span>
+                  <span className="font-bold mutating-accent-text block">{tr(state.language, 'helpManual.n3KnowledgeGraphsRdfCypher')}</span>
                   <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {localize(state.language, 'Estructuras de entidades, propiedades y relaciones causales (Sujeto-Predicado-Objeto). Permiten multi-hop reasoning (deducciones lógicas en múltiples pasos) y validación de relaciones.', 'Represent entities, properties, and causal relationships (subject-predicate-object) for multi-hop reasoning and relationship validation.')}
+                    {tr(state.language, 'helpManual.representEntitiesPropertiesCausalRelationships')}
                   </p>
                 </div>
 
                 <div className="p-2.5 theme-panel-bg border theme-warn-border rounded">
-                  <span className="font-bold theme-warn-text block">{localize(state.language, '4. Generación Sintética & Auto-Juego (MCTS Flywheel)', '4. Synthetic Data & Self-Play (MCTS Flywheel)')}</span>
+                  <span className="font-bold theme-warn-text block">{tr(state.language, 'helpManual.n4SyntheticDataSelfPlay')}</span>
                   <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {localize(state.language, 'Cuando la humanidad agota sus datos textuales ("Data Wall"), la IA genera sus propios problemas, los verifica en simuladores cerrados y aprende de sus éxitos. Inspirado en AlphaZero y búsqueda en árbol Monte Carlo (Q*).', 'When human text data runs short, the AI generates problems, verifies them in closed simulations, and learns from validated solutions. Inspired by AlphaZero and Monte Carlo tree search.')}
+                    {tr(state.language, 'helpManual.whenHumanTextDataRuns')}
                   </p>
                 </div>
               </div>
@@ -268,30 +264,30 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
           {activeSection === 'arch' && (
             <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{localize(state.language, 'ARQUITECTURAS, CUANTIZACIÓN Y ATENCIÓN', 'ARCHITECTURES, QUANTIZATION & ATTENTION')}</h4>
+              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.architecturesQuantizationAttention')}</h4>
               
               <div className="space-y-2">
                 <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold mutating-accent-text block">{localize(state.language, 'Topologías Neuronales:', 'Neural topologies:')}</span>
+                  <span className="font-bold mutating-accent-text block">{tr(state.language, 'helpManual.neuralTopologies')}</span>
                   <ul className="list-disc list-inside text-[11px] mutating-text-muted space-y-1 mt-1">
-                    <li><strong>Transformer:</strong> {localize(state.language, 'Mecanismo de auto-atención densa estándar. Calidad insuperable pero cuadrático en contexto.', 'Standard dense self-attention. Strong quality, but quadratic in context length.')}</li>
-                    <li><strong>Mixture-of-Experts (MoE):</strong> {localize(state.language, 'Redes dispersas que enrutan cada token a expertos especializados para ampliar capacidad.', 'Sparse networks route each token to specialized experts to increase capacity.')}</li>
-                    <li><strong>State Space Models (Mamba):</strong> {localize(state.language, 'Complejidad lineal O(n) ideal para secuencias largas.', 'Linear O(n) complexity, suitable for long sequences.')}</li>
-                    <li><strong>GNN Hybrids:</strong> {localize(state.language, 'Redes de paso de mensajes en grafos para análisis relacional.', 'Message-passing networks over graphs for relational analysis.')}</li>
+                    <li><strong>Transformer:</strong> {tr(state.language, 'helpManual.standardDenseSelfAttentionStrong')}</li>
+                    <li><strong>Mixture-of-Experts (MoE):</strong> {tr(state.language, 'helpManual.sparseNetworksRouteEachToken')}</li>
+                    <li><strong>State Space Models (Mamba):</strong> {tr(state.language, 'helpManual.linearONComplexitySuitable')}</li>
+                    <li><strong>GNN Hybrids:</strong> {tr(state.language, 'helpManual.messagePassingNetworksOverGraphs')}</li>
                   </ul>
                 </div>
 
                 <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold theme-warn-text block">{localize(state.language, 'Cuantización y Presupuesto de VRAM:', 'Quantization & VRAM Budget:')}</span>
+                  <span className="font-bold theme-warn-text block">{tr(state.language, 'helpManual.quantizationVramBudget')}</span>
                   <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {localize(state.language, 'Un modelo de 70B en FP32 requiere casi 280 GB de VRAM. Con cuantización INT8 baja a 70 GB, con FP4 a 35 GB, y con BitNet 1.58-bit Ternary a menos de 15 GB, permitiendo ejecutar modelos titánicos en tu clúster.', 'A 70B model in FP32 needs about 280 GB of VRAM. INT8 reduces this to 70 GB, FP4 to 35 GB, and ternary BitNet to under 15 GB.')}
+                    {tr(state.language, 'helpManual.n70bModelFp32NeedsAbout')}
                   </p>
                 </div>
 
                 <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold theme-success-text block">{localize(state.language, 'Alineación: DPO vs PPO', 'Alignment: DPO vs PPO')}</span>
+                  <span className="font-bold theme-success-text block">{tr(state.language, 'helpManual.alignmentDpoVsPpo')}</span>
                   <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {localize(state.language, 'Direct Preference Optimization (DPO) simplifica el alineamiento eliminando el inestable modelo de recompensa por refuerzo (PPO/RLHF), calculando la política analítica de forma directa.', 'Direct Preference Optimization (DPO) simplifies alignment by removing the unstable reinforcement-learning reward model (PPO/RLHF) and computing the policy directly.')}
+                    {tr(state.language, 'helpManual.directPreferenceOptimizationDpoSimplifies')}
                   </p>
                 </div>
               </div>
@@ -300,26 +296,26 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
           {activeSection === 'infra' && (
             <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{localize(state.language, 'FÍSICA DEL CLÚSTER: ENERGÍA, CALOR Y REGULADORES', 'CLUSTER PHYSICS: POWER, HEAT & REGULATORS')}</h4>
+              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.clusterPhysicsPowerHeatRegulators')}</h4>
               <p>
-                {localize(state.language, 'No puedes entrenar un supermodelo sin lidiar con las limitaciones del mundo físico:', 'Training a large model also means managing real-world constraints:')}
+                {tr(state.language, 'helpManual.trainingLargeModelAlsoMeans')}
               </p>
               <ul className="list-disc list-inside space-y-1.5 mutating-text-muted text-[11px]">
-                <li><strong>{localize(state.language, 'Calor y Límite Térmico:', 'Heat & Thermal Limits:')}</strong> {localize(state.language, 'Si tu calor excede los 85°C, las GPUs aplicarán thermal throttling y reducirán el rendimiento. Mejora la refrigeración para evitar sobrecalentamiento.', 'Above 85°C, GPUs throttle and lose performance. Upgrade cooling to prevent overheating.')}</li>
-                <li><strong>{localize(state.language, 'Capacidad Eléctrica:', 'Power Capacity:')}</strong> {localize(state.language, 'La instalación limita la potencia disponible. Superar el límite puede disparar el interruptor; mejora tu suministro o instalación.', 'Your facility limits available power. Exceeding capacity can trip the breaker; upgrade power or facilities.')}</li>
-                <li><strong>{localize(state.language, 'Sospecha de los Watchdogs:', 'Watchdog Suspicion:')}</strong> {localize(state.language, 'El consumo elevado y las misiones de riesgo aumentan la sospecha de las agencias. Consulta el panel de hardware para administrar tus recursos.', 'High power draw and risky missions increase agency suspicion. Use the hardware panel to manage resources.')}</li>
+                <li><strong>{tr(state.language, 'helpManual.heatThermalLimits')}</strong> {tr(state.language, 'helpManual.above85CGpusThrottle')}</li>
+                <li><strong>{tr(state.language, 'helpManual.powerCapacity')}</strong> {tr(state.language, 'helpManual.facilityLimitsAvailablePowerExceeding')}</li>
+                <li><strong>{tr(state.language, 'helpManual.watchdogSuspicion')}</strong> {tr(state.language, 'helpManual.highPowerDrawRiskyMissions')}</li>
               </ul>
             </div>
           )}
 
           {activeSection === 'singularity' && (
             <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{localize(state.language, 'LA SINGULARIDAD TECNOLÓGICA (ASI)', 'THE TECHNOLOGICAL SINGULARITY (ASI)')}</h4>
+              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.technologicalSingularityAsi')}</h4>
               <p>
-                {localize(state.language, 'La Singularidad ocurre cuando la IA es capaz de rediseñar su propio software y hardware más rápido de lo que los humanos pueden entenderlo (el bucle de despegue recursivo).', 'The Singularity is reached when AI can redesign its own software and hardware faster than humans can understand it (a recursive takeoff loop).')}
+                {tr(state.language, 'helpManual.singularityReachedWhenAiCan')}
               </p>
               <p className="mutating-text-muted text-[11px]">
-                {localize(state.language, 'Al alcanzar el 100% de Singularidad, desbloquearás la Ignición de Superinteligencia y completarás la campaña.', 'Reach 100% Singularity to unlock Superintelligence Ignition and complete the campaign.')}
+                {tr(state.language, 'helpManual.reach100SingularityUnlockSuperintelligence')}
               </p>
             </div>
           )}
@@ -331,7 +327,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
             onClick={() => { sound.playNavSwitch(); onClose(); }}
             className="px-3 py-1 theme-accent-soft mutating-accent-text border theme-accent-border rounded text-xs"
           >
-            {localize(state.language, 'CERRAR MANUAL', 'CLOSE MANUAL')}
+            {tr(state.language, 'helpManual.closeManual')}
           </button>
         </div>
       </div>
