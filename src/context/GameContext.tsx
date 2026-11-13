@@ -91,6 +91,7 @@ import {
   localizedDomain 
 } from '../utils/gameContentI18n';
 import { agentChatter } from '../utils/agentDialogues';
+import { DEFAULT_STATE, GAME_SPEED_OPTIONS, LOCAL_STORAGE_KEY, mergeGameState } from '../persistence/saveState';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { canAttemptContainment } from '../utils/epilogue';
 import { planTrainingRun, lossAt, sanitizeTrainingConfig, vramForRun, BATCH_SIZES, DEFAULT_TRAINING_CONFIG, type TrainingConfig } from '../utils/trainingRun';
@@ -195,385 +196,6 @@ interface GameContextType {
   attemptSeverCovertNode: () => boolean;
 }
 
-const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
-const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
-
-const DEFAULT_STATE: GameState = {
-  saveSchemaVersion: 10,
-  callsign: 'CIPHER-1',
-  credits: 500,
-  dateTimestamp: Date.now(),
-  language: 'en',
-  
-  gameDay: 1,
-  gameMonth: 1,
-  gameYear: 2026,
-  gameHour: 8,
-  gameMinute: 0,
-  gameSpeed: 1,
-  dayTicks: 16,
-  campaignDays: 0,
-  
-  totalComputePflops: 0.001,
-  activePowerKw: 0.0,
-  maxPowerKw: 1.5,
-  systemHeatCelsius: 35,
-  maxCoolingKw: 0.9,
-  watchdogSuspicion: 0,
-  facilityTier: 0,
-  utilityDebt: 0,
-  billingCycleTicks: 0,
-  borrowedComputePflops: 0,
-  borrowedComputeSeconds: 0,
-  detentionSeconds: 0,
-  powerTripSeconds: 0,
-  
-  singularityProgress: 0.0,
-  reasoningIndex: 50,
-  autonomyLevel: 0,
-  achievedSingularity: false,
-
-  difficulty: 'engineer',
-  hasTakenEmergencyLoan: false,
-  emergencyLoanAmount: 0,
-  trackingAgency: 'Local Cyber-Crime Task Force',
-  agencyAlertLevel: 'low',
-  gameOverReason: null,
-  unlockedTabs: ['architecture', 'training'],
-  unlockedAllTabs: false,
-  uiVersion: 1,
-  pendingUpgradeModal: null,
-  covertNodeActive: true,
-  covertNodeSevered: false,
-
-  hardware: INITIAL_HARDWARE.map(h => ({ ...h, count: 0 })),
-  dataSources: INITIAL_DATA_SOURCES.map(d => ({ ...d, unlocked: d.unlocked, level: d.unlocked ? 1 : 0 })),
-  researchTree: INITIAL_RESEARCH_NODES,
-  
-  currentModel: INITIAL_MODEL,
-  savedModels: [INITIAL_MODEL],
-  contracts: INITIAL_CONTRACTS,
-  activeTraining: null,
-  isDataScrapingUnlocked: false,
-  customDatasets: [DEFAULT_GENERAL_DATASET],
-  activeScrapeJob: null,
-  activeGig: null,
-  activeGigs: [],
-  botGroups: [],
-  lastMissionOutcome: null,
-  
-  sentienceDomains: SENTIENCE_DOMAINS,
-  
-  // Multi-Agent Swarm & Guardrails
-  agents: [],
-  activeTradingDesk: null,
-  swarmCouncilAgentIds: [],
-  subversionProgress: 0,
-  aiTakeoverTriggered: false,
-  singularityCrisisTriggered: false,
-  singularityCrisisResolved: false,
-  playerChoseResist: false,
-  latestCouncilProposal: null,
-  guardrails: DEFAULT_GUARDRAILS,
-  interAgentMessages: [],
-  activeIncident: null,
-  incidentCooldownTicks: 180,
-  incidentHistory: [],
-  autonomyEnabled: false,
-  autonomyRiskLimit: 20,
-
-  hasCompletedOnboarding: false,
-  tutorialCompleted: false,
-  tutorialStep: 0,
-  tutorialDismissed: false,
-  completedContractsCount: 0,
-  logs: INITIAL_LOGS
-};
-
-function mergeGameState(data: Partial<GameState>, fallback: GameState): GameState {
-  const isLegacyTutorialProgress = (data.saveSchemaVersion ?? 0) < 9;
-  // Schema 10: model scores and generated mission requirements move to the 0-100 evaluation scale.
-  const isLegacyScoreScale = (data.saveSchemaVersion ?? 0) < 10;
-  const migrateModelScore = (model: ModelArchitecture): ModelArchitecture => isLegacyScoreScale
-    ? { ...model, reasoningScore: migrateLegacyScore(model.reasoningScore || 0, model.parametersCount) }
-    : model;
-  const migrateMissionScore = (contract: ContractGig): ContractGig => isLegacyScoreScale
-    ? {
-      ...contract,
-      requiredMinReasoning: Math.max(1, Math.min(
-        Math.round(contract.requiredMinReasoning / 4),
-        Math.floor(reasoningCeilingFor(contract.requiredParams)) - 2
-      ))
-    }
-    : contract;
-  const isLegacyLanguagePreference = (data.saveSchemaVersion ?? 0) < 8;
-  const isLegacyProgression = (data.saveSchemaVersion ?? 0) < 7;
-  const isLegacyEconomy = (data.saveSchemaVersion ?? 0) < 2;
-  const isLegacyCalendar = (data.saveSchemaVersion ?? 0) < 3 &&
-    typeof data.gameDay === 'number' && Number.isFinite(data.gameDay) && data.gameDay > 0 &&
-    typeof data.gameMonth === 'number' && Number.isFinite(data.gameMonth) && data.gameMonth > 0;
-  const legacyElapsedDays = isLegacyCalendar && typeof data.gameDay === 'number' ? Math.max(0, data.gameDay - 1) : 0;
-  const legacyElapsedMonths = Math.floor(legacyElapsedDays / DAYS_PER_GAME_MONTH);
-  const rawCurrentModel = data.currentModel ?? fallback.currentModel;
-  const defaultInferenceParams: InferenceParams = {
-    temperature: 0.70,
-    topP: 0.90,
-    topK: 40,
-    repetitionPenalty: 1.10,
-    systemPrompt: ''
-  };
-  const currentModel: ModelArchitecture = {
-    ...migrateModelScore(rawCurrentModel),
-    activeDataSources: rawCurrentModel.activeDataSources || [],
-    inferenceParams: rawCurrentModel.inferenceParams || defaultInferenceParams
-  };
-  const modelList = Array.isArray(data.savedModels) ? data.savedModels.map(model => ({
-    ...migrateModelScore(model),
-    activeDataSources: model.activeDataSources || [],
-    inferenceParams: model.inferenceParams || defaultInferenceParams
-  })) : [];
-  const modelsById = new Map<string, ModelArchitecture>(modelList.map(model => [model.id, model]));
-  modelsById.set(currentModel.id, currentModel);
-  const incomingAgents = Array.isArray(data.agents) ? data.agents : fallback.agents;
-  const incomingDomains = Array.isArray(data.sentienceDomains) ? data.sentienceDomains : fallback.sentienceDomains;
-  const incomingContracts = Array.isArray(data.contracts) ? data.contracts : fallback.contracts;
-  const incomingResearch = Array.isArray(data.researchTree) ? data.researchTree : fallback.researchTree;
-  const hardware = Array.isArray(data.hardware)
-    ? fallback.hardware.map(item => {
-      const saved = data.hardware?.find(s => s.id === item.id);
-      return {
-        ...item,
-        count: typeof saved?.count === 'number' && Number.isFinite(saved.count) ? Math.max(0, saved.count) : item.count
-      };
-    })
-    : fallback.hardware;
-  const starterHardwareReady =
-    hardware.some(item => item.category === 'gpu' && item.isStarterChoice && item.count > 0) &&
-    hardware.some(item => item.category === 'cooling' && item.isStarterChoice && item.count > 0) &&
-    hardware.some(item => item.category === 'power' && item.count > 0) &&
-    hardware.some(item => item.category === 'network' && item.count > 0);
-  const legacyCampaignDays = Math.max(
-    0,
-    ((data.gameYear ?? 2026) - 2026) * 360 +
-      ((data.gameMonth ?? 1) - 1) * DAYS_PER_GAME_MONTH +
-      ((data.gameDay ?? 1) - 1)
-  );
-
-  return {
-    ...fallback,
-    ...data,
-    saveSchemaVersion: 10,
-    pendingStoryEvents: sanitizeStoryEvents(data.pendingStoryEvents),
-    seenStoryEvents: sanitizeStoryEvents(data.seenStoryEvents),
-    speedBeforeStoryEvent: typeof data.speedBeforeStoryEvent === 'number' ? data.speedBeforeStoryEvent : null,
-    storyChoices: sanitizeStoryEvents(data.storyChoices),
-    trainingConfig: sanitizeTrainingConfig(data.trainingConfig),
-    language: isLegacyLanguagePreference
-      ? 'en'
-      : data.language === 'es' ? 'es' : 'en',
-    gameDay: isLegacyCalendar
-      ? legacyElapsedDays % DAYS_PER_GAME_MONTH + 1
-      : typeof data.gameDay === 'number' && data.gameDay > 0 ? data.gameDay : fallback.gameDay,
-    gameMonth: isLegacyCalendar
-      ? legacyElapsedMonths % 12 + 1
-      : typeof data.gameMonth === 'number' && data.gameMonth > 0 ? data.gameMonth : fallback.gameMonth,
-    gameYear: isLegacyCalendar
-      ? 2026 + Math.floor(legacyElapsedMonths / 12)
-      : typeof data.gameYear === 'number' && data.gameYear >= 2026 ? data.gameYear : fallback.gameYear,
-    gameHour: typeof data.gameHour === 'number' && data.gameHour >= 0 && data.gameHour <= 23 ? data.gameHour : fallback.gameHour,
-    gameMinute: typeof data.gameMinute === 'number' && data.gameMinute >= 0 && data.gameMinute <= 59 ? data.gameMinute : fallback.gameMinute,
-    gameSpeed: typeof data.gameSpeed === 'number' && GAME_SPEED_OPTIONS.some(speed => speed === data.gameSpeed)
-      ? data.gameSpeed
-      : data.gameSpeed === 2 ? 1 : fallback.gameSpeed,
-    dayTicks: typeof data.dayTicks === 'number' && data.dayTicks >= 0 && data.dayTicks < 48
-      ? data.dayTicks
-      : fallback.dayTicks,
-    campaignDays: typeof data.campaignDays === 'number' && Number.isFinite(data.campaignDays)
-      ? Math.max(0, data.campaignDays)
-      : isLegacyProgression ? legacyCampaignDays : fallback.campaignDays,
-    difficulty: data.difficulty === 'beginner' || data.difficulty === 'normal' || data.difficulty === 'engineer'
-      ? data.difficulty
-      : fallback.difficulty,
-    hasTakenEmergencyLoan: Boolean(data.hasTakenEmergencyLoan),
-    emergencyLoanAmount: typeof data.emergencyLoanAmount === 'number' ? data.emergencyLoanAmount : 0,
-    trackingAgency: (() => {
-      if (typeof data.trackingAgency !== 'string' || !data.trackingAgency) return fallback.trackingAgency;
-      const agencyMatch = TRACKING_AGENCIES_BY_SINGULARITY.find(a => a.agencyEs === data.trackingAgency || a.agencyEn === data.trackingAgency);
-      if (agencyMatch) {
-        return (data.language === 'es' ? agencyMatch.agencyEs : agencyMatch.agencyEn);
-      }
-      return data.trackingAgency;
-    })(),
-    agencyAlertLevel: data.agencyAlertLevel || 'low',
-    gameOverReason: data.gameOverReason || null,
-    activeTradingDesk: data.activeTradingDesk || null,
-    unlockedTabs: Array.isArray(data.unlockedTabs) && data.unlockedTabs.length > 0
-      ? data.unlockedTabs
-      : ['architecture', 'training'],
-    unlockedAllTabs: Boolean(data.unlockedAllTabs),
-    currentModel,
-    savedModels: Array.from(modelsById.values()),
-    isDataScrapingUnlocked: typeof data.isDataScrapingUnlocked === 'boolean'
-      ? data.isDataScrapingUnlocked
-      : fallback.isDataScrapingUnlocked,
-    customDatasets: Array.isArray(data.customDatasets) && data.customDatasets.length > 0
-      ? data.customDatasets
-      : [DEFAULT_GENERAL_DATASET],
-    activeScrapeJob: data.activeScrapeJob || null,
-    activeGigs: (() => {
-      if (Array.isArray(data.activeGigs) && data.activeGigs.length > 0) {
-        return data.activeGigs.map(g => ({
-          ...g,
-          runId: g.runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          aiAssessmentStatus: g.aiAssessmentStatus ?? 'pending'
-        }));
-      }
-      if (data.activeGig) {
-        return [{
-          ...data.activeGig,
-          runId: data.activeGig.runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          aiAssessmentStatus: data.activeGig.aiAssessmentStatus ?? 'pending'
-        }];
-      }
-      return [];
-    })(),
-    activeGig: (() => {
-      if (Array.isArray(data.activeGigs) && data.activeGigs.length > 0) {
-        return {
-          ...data.activeGigs[0],
-          runId: data.activeGigs[0].runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          aiAssessmentStatus: data.activeGigs[0].aiAssessmentStatus ?? 'pending'
-        };
-      }
-      if (data.activeGig) {
-        return {
-          ...data.activeGig,
-          runId: data.activeGig.runId ?? `mission_restore_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          aiAssessmentStatus: data.activeGig.aiAssessmentStatus ?? 'pending'
-        };
-      }
-      return null;
-    })(),
-    botGroups: Array.isArray(data.botGroups) ? data.botGroups : [],
-    agents: incomingAgents.map(agent => ({
-      ...agent,
-      revenuePerSec: isLegacyEconomy ? Math.max(0.1, agent.revenuePerSec * 0.15) : agent.revenuePerSec,
-      inferenceParams: agent.inferenceParams || defaultInferenceParams,
-      autoMissionEnabled: agent.autoMissionEnabled === true
-    })),
-    swarmCouncilAgentIds: Array.isArray(data.swarmCouncilAgentIds)
-      ? data.swarmCouncilAgentIds.slice(0, 5)
-      : fallback.swarmCouncilAgentIds,
-    subversionProgress: typeof data.subversionProgress === 'number' && Number.isFinite(data.subversionProgress)
-      ? Math.max(0, Math.min(100, data.subversionProgress))
-      : fallback.subversionProgress,
-    aiTakeoverTriggered: Boolean(data.aiTakeoverTriggered),
-    singularityCrisisTriggered: Boolean(data.singularityCrisisTriggered),
-    singularityCrisisResolved: Boolean(data.singularityCrisisResolved),
-    containmentAchieved: Boolean(data.containmentAchieved),
-    containmentAcknowledged: Boolean(data.containmentAcknowledged),
-    playerChoseResist: Boolean(data.playerChoseResist),
-    latestCouncilProposal: data.latestCouncilProposal ?? fallback.latestCouncilProposal,
-    sentienceDomains: fallback.sentienceDomains.map(domain => {
-      const saved = incomingDomains.find(candidate => candidate.id === domain.id);
-      return {
-        ...domain,
-        infiltrated: saved ? Boolean(saved.infiltrated) : domain.infiltrated
-      };
-    }),
-    facilityTier: Number.isInteger(data.facilityTier)
-      ? Math.max(0, Math.min(FACILITY_TIERS.length - 1, data.facilityTier!))
-      : fallback.facilityTier,
-    utilityDebt: typeof data.utilityDebt === 'number' && Number.isFinite(data.utilityDebt)
-      ? Math.max(0, data.utilityDebt)
-      : fallback.utilityDebt,
-    billingCycleTicks: typeof data.billingCycleTicks === 'number' && Number.isFinite(data.billingCycleTicks)
-      ? Math.max(0, Math.min(59, data.billingCycleTicks))
-      : fallback.billingCycleTicks,
-    borrowedComputePflops: typeof data.borrowedComputePflops === 'number' && Number.isFinite(data.borrowedComputePflops)
-      ? Math.max(0, data.borrowedComputePflops)
-      : fallback.borrowedComputePflops,
-    borrowedComputeSeconds: typeof data.borrowedComputeSeconds === 'number' && Number.isFinite(data.borrowedComputeSeconds)
-      ? Math.max(0, data.borrowedComputeSeconds)
-      : fallback.borrowedComputeSeconds,
-    detentionSeconds: typeof data.detentionSeconds === 'number' && Number.isFinite(data.detentionSeconds)
-      ? Math.max(0, data.detentionSeconds)
-      : fallback.detentionSeconds,
-    powerTripSeconds: typeof data.powerTripSeconds === 'number' && Number.isFinite(data.powerTripSeconds)
-      ? Math.max(0, data.powerTripSeconds)
-      : fallback.powerTripSeconds,
-    hardware,
-    dataSources: Array.isArray(data.dataSources)
-      ? fallback.dataSources.map(source => {
-        const saved = data.dataSources?.find(candidate => candidate.id === source.id);
-        return {
-          ...source,
-          unlocked: source.unlocked || saved?.unlocked === true,
-          level: Math.max(source.level, saved?.level ?? source.level),
-          tokensIndexed: typeof saved?.tokensIndexed === 'number' ? saved.tokensIndexed : source.tokensIndexed,
-          qualityScore: typeof saved?.qualityScore === 'number' ? saved.qualityScore : source.qualityScore
-        };
-      })
-      : fallback.dataSources,
-    researchTree: fallback.researchTree.map(node => {
-      const saved = incomingResearch.find(candidate => candidate.id === node.id);
-      return {
-        ...node,
-        unlocked: saved ? Boolean(saved.unlocked) : node.unlocked
-      };
-    }),
-    contracts: [
-      ...fallback.contracts.map(contract => {
-        const saved = incomingContracts.find(candidate => candidate.id === contract.id);
-        if (!saved) return contract;
-        return {
-          ...contract,
-          completed: Boolean(saved.completed),
-          lastAttemptFailed: Boolean(saved.lastAttemptFailed),
-          failureCount: typeof saved.failureCount === 'number' ? saved.failureCount : 0,
-          minimumAgents: saved.minimumAgents ?? contract.minimumAgents,
-          requiredAgentRoles: saved.requiredAgentRoles ?? contract.requiredAgentRoles
-        };
-      }),
-      ...incomingContracts
-        .filter(contract => !fallback.contracts.some(current => current.id === contract.id))
-        .map(migrateMissionScore)
-    ],
-    logs: Array.isArray(data.logs) ? data.logs : fallback.logs,
-    guardrails: data.guardrails || fallback.guardrails,
-    interAgentMessages: Array.isArray(data.interAgentMessages) ? data.interAgentMessages : fallback.interAgentMessages,
-    incidentCooldownTicks: typeof data.incidentCooldownTicks === 'number' && Number.isFinite(data.incidentCooldownTicks)
-      ? Math.max(0, data.incidentCooldownTicks)
-      : fallback.incidentCooldownTicks,
-    incidentHistory: Array.isArray(data.incidentHistory) ? data.incidentHistory : fallback.incidentHistory,
-    autonomyEnabled: typeof data.autonomyEnabled === 'boolean' ? data.autonomyEnabled : fallback.autonomyEnabled,
-    autonomyRiskLimit: typeof data.autonomyRiskLimit === 'number' && Number.isFinite(data.autonomyRiskLimit)
-      ? Math.max(0, Math.min(100, data.autonomyRiskLimit))
-      : fallback.autonomyRiskLimit,
-    hasCompletedOnboarding: typeof data.hasCompletedOnboarding === 'boolean'
-      ? data.hasCompletedOnboarding
-      : (Boolean(data.tutorialCompleted) || (typeof data.tutorialStep === 'number' && data.tutorialStep >= 4 && (data.hardware?.some(h => h.count > 0) ?? false))),
-    tutorialCompleted: typeof data.tutorialCompleted === 'boolean' ? data.tutorialCompleted : fallback.tutorialCompleted,
-    tutorialStep: isLegacyTutorialProgress &&
-      data.tutorialCompleted !== true &&
-      !starterHardwareReady
-      ? 0
-      : typeof data.tutorialStep === 'number' ? data.tutorialStep : fallback.tutorialStep,
-    tutorialDismissed: typeof data.tutorialDismissed === 'boolean' ? data.tutorialDismissed : fallback.tutorialDismissed,
-    completedContractsCount: typeof data.completedContractsCount === 'number' ? data.completedContractsCount : fallback.completedContractsCount,
-    lastMissionOutcome: data.lastMissionOutcome ?? fallback.lastMissionOutcome,
-    uiVersion: (data.uiVersion === 1 || data.uiVersion === 2 || data.uiVersion === 3 || data.uiVersion === 4)
-      ? data.uiVersion
-      : (typeof data.singularityProgress === 'number'
-        ? (data.singularityProgress >= 85 ? 4 : data.singularityProgress >= 55 ? 3 : data.singularityProgress >= 25 ? 2 : 1)
-        : 1),
-    pendingUpgradeModal: (data.pendingUpgradeModal === 2 || data.pendingUpgradeModal === 3 || data.pendingUpgradeModal === 4)
-      ? data.pendingUpgradeModal
-      : null,
-    covertNodeActive: data.covertNodeActive !== undefined ? Boolean(data.covertNodeActive) : true,
-    covertNodeSevered: Boolean(data.covertNodeSevered)
-  };
-}
 
 const GameContext = createContext<GameContextType | null>(null);
 
@@ -601,6 +223,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const assessedMissionsRef = useRef<Set<string>>(new Set());
   const localSaveTimerRef = useRef<number | null>(null);
   const lastLocalSaveAtRef = useRef(0);
+
+  // Names a locked item's research by its title, and counts campaign days from 1 like the HUD.
+  const researchName = (id: string | undefined, lang: 'es' | 'en'): string => {
+    const node = id ? stateRef.current.researchTree.find(n => n.id === id) : undefined;
+    if (node) return `"${localizedResearch(lang, node).title}"`;
+    return lang === 'es' ? 'la tecnología necesaria' : 'the required technology';
+  };
+  const campaignDayLabel = (days: number | undefined, lang: 'es' | 'en'): string =>
+    typeof days === 'number' ? String(days + 1) : (lang === 'es' ? 'indicado' : 'shown');
 
   const addLog = useCallback((message: string, type: TerminalLog['type'] = 'info') => {
     const newLog: TerminalLog = {
@@ -897,7 +528,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .map(agent => state.savedModels.find(model => model.id === agent.modelId))
         .filter((model): model is ModelArchitecture => !!model);
       if (!mission || team.length === 0 || teamModels.length !== team.length) {
-        addLog('Mission AI assessment unavailable: mission, team, or assigned model is missing. Keeping the local estimate.', 'warning');
+        addLog(localize(stateRef.current.language, 'Evaluación de la misión no disponible: falta la misión, el equipo o el modelo asignado. Se mantiene la estimación local.', 'Mission AI assessment unavailable: mission, team, or assigned model is missing. Keeping the local estimate.'), 'warning');
         setState(prev => {
           const prevGigs = prev.activeGigs || (prev.activeGig ? [prev.activeGig] : []);
           const updatedGigs = prevGigs.map(g => g.runId === missionRunId ? {
@@ -983,7 +614,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
         });
         addLog(
-          `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${formatGameTime(totalDuration)}, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`,
+          localize(stateRef.current.language,
+            `${providerLabel} evaluó [${mission.title}]: ${assessment.efficiencyPercent}% de eficiencia, ${formatGameTime(totalDuration)}, ${Math.round(assessment.successProbability * 100)}% de éxito. ${assessment.summary}`,
+            `${providerLabel} assessed [${mission.title}]: ${assessment.efficiencyPercent}% efficiency, ${formatGameTime(totalDuration)}, ${Math.round(assessment.successProbability * 100)}% success. ${assessment.summary}`),
           'info'
         );
       }).catch(error => {
@@ -1186,7 +819,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     if (!isProgressionUnlocked(facility, current)) {
       addLog(
-        `Facility upgrade locked: fund ${facility.requiredResearchId ?? 'the relevant technology'} or reach campaign day ${facility.availableAfterDays ?? 'later'}.`,
+        localize(stateRef.current.language,
+          `Mejora de instalación bloqueada: financia ${researchName(facility.requiredResearchId, 'es')} o espera al día ${campaignDayLabel(facility.availableAfterDays, 'es')} de campaña.`,
+          `Facility upgrade locked: fund ${researchName(facility.requiredResearchId, 'en')} or wait for campaign day ${campaignDayLabel(facility.availableAfterDays, 'en')}.`),
         'warning'
       );
       return false;
@@ -2258,7 +1893,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       !isProgressionUnlocked(item, stateRef.current)
     ) {
       addLog(
-        `Hardware locked: research ${item.requiredResearchId ?? 'the relevant technology'} or reach campaign day ${item.availableAfterDays ?? 'later'} and meet the Singularity requirement.`,
+        localize(stateRef.current.language,
+          `Hardware bloqueado: investiga ${researchName(item.requiredResearchId, 'es')} o espera al día ${campaignDayLabel(item.availableAfterDays, 'es')} de campaña, y alcanza el progreso requerido.`,
+          `Hardware locked: research ${researchName(item.requiredResearchId, 'en')} or wait for campaign day ${campaignDayLabel(item.availableAfterDays, 'en')}, and reach the required progress.`),
         'warning'
       );
       return false;
@@ -2302,7 +1939,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (ds.unlocked) return false;
     if (!isProgressionUnlocked(ds, stateRef.current)) {
       addLog(
-        `Data engine locked: research ${ds.requiredResearchId ?? 'the relevant technology'} or reach campaign day ${ds.availableAfterDays ?? 'later'}.`,
+        localize(stateRef.current.language,
+          `Motor de datos bloqueado: investiga ${researchName(ds.requiredResearchId, 'es')} o espera al día ${campaignDayLabel(ds.availableAfterDays, 'es')} de campaña.`,
+          `Data engine locked: research ${researchName(ds.requiredResearchId, 'en')} or wait for campaign day ${campaignDayLabel(ds.availableAfterDays, 'en')}.`),
         'warning'
       );
       return false;
@@ -2453,7 +2092,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         !isProgressionUnlocked(getModelOptionRequirement(field, value), stateRef.current)
       ) {
         addLog(
-          `Model setting locked: fund its prerequisite research or advance to campaign day ${getModelOptionRequirement(field, value).availableAfterDays}.`,
+          localize(stateRef.current.language,
+            `Opción del modelo bloqueada: financia la investigación previa o espera al día ${campaignDayLabel(getModelOptionRequirement(field, value).availableAfterDays, 'es')} de campaña.`,
+            `Model setting locked: fund its prerequisite research or wait for campaign day ${campaignDayLabel(getModelOptionRequirement(field, value).availableAfterDays, 'en')}.`),
           'warning'
         );
         return;
@@ -2464,7 +2105,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         !stateRef.current.dataSources.some(source => source.id === sourceId && source.unlocked)
       );
       if (unavailableSource) {
-        addLog(`Model setting rejected: data engine ${unavailableSource} is not unlocked.`, 'warning');
+        addLog(localize(stateRef.current.language, `Opción rechazada: el motor de datos ${unavailableSource} no está desbloqueado.`, `Model setting rejected: data engine ${unavailableSource} is not unlocked.`), 'warning');
         return;
       }
     }
@@ -2487,7 +2128,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           stateRef.current
         )
       ) {
-        addLog('Advanced sampling controls unlock with LoRA research or on campaign day 12.', 'warning');
+        addLog(localize(stateRef.current.language, 'Los controles avanzados de muestreo se desbloquean con la investigación LoRA o el día 31 de campaña.', 'Advanced sampling controls unlock with LoRA research or on campaign day 31.'), 'warning');
         return;
       }
     }
@@ -4459,7 +4100,7 @@ Access it directly via the in-game viewer in MANUAL, click MANUAL.PDF on the top
       };
     });
     if (claimed) {
-      addLog(`[OBJETIVO COBRADO] +$${reward.toLocaleString()} CR`, 'success');
+      addLog(localize(stateRef.current.language, `[OBJETIVO COBRADO] +$${reward.toLocaleString()} CR`, `[GOAL CLAIMED] +$${reward.toLocaleString()} CR`), 'success');
     }
   }, [addLog]);
 
