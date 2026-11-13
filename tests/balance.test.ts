@@ -1,7 +1,7 @@
 // Game balance checks, run with `bun test`. They guard the calibration of the 0-100 evaluation score:
 // every mission, upgrade and data tier must stay reachable, and the first run must stay short.
 import { describe, expect, test } from 'bun:test';
-import { INITIAL_CONTRACTS, DATASET_TIER_CONFIGS, STARTER_TRAINING_DATASET, INITIAL_MODEL } from '../src/utils/constants';
+import { INITIAL_CONTRACTS, DATASET_TIER_CONFIGS, STARTER_TRAINING_DATASET, INITIAL_MODEL, INITIAL_RESEARCH_NODES } from '../src/utils/constants';
 import { PROCEDURAL_CONTRACT_TEMPLATES } from '../src/services/aiService';
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY } from '../src/utils/missionTiers';
 import {
@@ -19,6 +19,7 @@ import { HARDWARE_SPEC_NOTES } from '../src/utils/hardwareSpecs';
 import { planTrainingRun, lossAt, vramForRun, sanitizeTrainingConfig, DEFAULT_TRAINING_CONFIG, MAX_EPOCHS } from '../src/utils/trainingRun';
 import { buildEpilogue, canAttemptContainment, endingTitle, CONTAINMENT_MAX_SUBVERSION } from '../src/utils/epilogue';
 import { agentChatter, AGENT_DIALOGUE_ROLES, STORY_LINES_FOR_TESTS, COVERT_LINES_FOR_TESTS } from '../src/utils/agentDialogues';
+import { researchStatus } from '../src/utils/progression';
 
 const STARTER_GPU_PFLOPS = 0.0044; // GTX 1060
 
@@ -333,5 +334,37 @@ describe('one clock, hardware notes and mission evaluation', () => {
     expect(HARDWARE_SPEC_NOTES.quantum_photonic_asic.source).toBe('fiction');
     expect(HARDWARE_SPEC_NOTES.tpu_v5p_pod.source).toBe('estimate');
     expect(HARDWARE_SPEC_NOTES.gpu_h100_sxm5.precision).toBe('BF16 tensor');
+  });
+});
+
+describe('research opens by stage, not by date (L-5)', () => {
+  const byId = new Map(INITIAL_RESEARCH_NODES.map(n => [n.id, n]));
+
+  test('every paper can be funded inside its version, before the next upgrade', () => {
+    for (const node of INITIAL_RESEARCH_NODES) {
+      const next = node.requiredVersion < 4 ? UPGRADE_SCORE[(node.requiredVersion + 1) as 2 | 3 | 4] : 100;
+      expect(`${node.id}:${node.requiredScore < next}`).toBe(`${node.id}:true`);
+    }
+  });
+
+  test('a prerequisite never asks for a later stage than the paper that needs it', () => {
+    for (const node of INITIAL_RESEARCH_NODES) {
+      for (const pre of node.prerequisites.map(id => byId.get(id)!)) {
+        expect(pre.requiredVersion).toBeLessThanOrEqual(node.requiredVersion);
+        expect(pre.requiredScore).toBeLessThanOrEqual(node.requiredScore);
+      }
+    }
+  });
+
+  test('the status combines version, best score and prerequisites', () => {
+    const lora = byId.get('res_lora_peft')!;
+    const base = { uiVersion: 1, currentModel: { ...INITIAL_MODEL, reasoningScore: 5 }, savedModels: [], researchTree: INITIAL_RESEARCH_NODES };
+    expect(researchStatus(lora, base).scoreMet).toBe(false);
+    const trained = { ...base, savedModels: [{ ...INITIAL_MODEL, reasoningScore: 20 }] };
+    expect(researchStatus(lora, trained).scoreMet).toBe(true);
+    expect(researchStatus(lora, trained).prerequisitesMet).toBe(false); // BPE not funded yet
+    const withBpe = { ...trained, researchTree: INITIAL_RESEARCH_NODES.map(n => n.id === 'res_bpe_tokenizer' ? { ...n, unlocked: true } : n) };
+    expect(researchStatus(lora, withBpe).available).toBe(true);
+    expect(researchStatus(byId.get('res_moe_architecture')!, withBpe).versionMet).toBe(false);
   });
 });

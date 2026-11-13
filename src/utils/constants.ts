@@ -626,7 +626,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_bpe_tokenizer.effectDescription'),
     technicalLore: tr('en', 'content.research.res_bpe_tokenizer.technicalLore'),
     releaseYear: 2016,
-    availableAfterDays: 0
+    requiredVersion: 1,
+    requiredScore: 0
   },
   {
     id: 'res_lora_peft',
@@ -638,7 +639,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_lora_peft.effectDescription'),
     technicalLore: tr('en', 'content.research.res_lora_peft.technicalLore'),
     releaseYear: 2021,
-    availableAfterDays: 30
+    requiredVersion: 1,
+    requiredScore: 18
   },
   {
     id: 'res_flash_attention',
@@ -650,7 +652,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_flash_attention.effectDescription'),
     technicalLore: tr('en', 'content.research.res_flash_attention.technicalLore'),
     releaseYear: 2022,
-    availableAfterDays: 42
+    requiredVersion: 2,
+    requiredScore: 30
   },
   {
     id: 'res_rope_embeddings',
@@ -662,7 +665,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_rope_embeddings.effectDescription'),
     technicalLore: tr('en', 'content.research.res_rope_embeddings.technicalLore'),
     releaseYear: 2023,
-    availableAfterDays: 50
+    requiredVersion: 2,
+    requiredScore: 35
   },
   {
     id: 'res_dpo_alignment',
@@ -674,7 +678,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_dpo_alignment.effectDescription'),
     technicalLore: tr('en', 'content.research.res_dpo_alignment.technicalLore'),
     releaseYear: 2023,
-    availableAfterDays: 52
+    requiredVersion: 2,
+    requiredScore: 35
   },
   {
     id: 'res_moe_architecture',
@@ -686,7 +691,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_moe_architecture.effectDescription'),
     technicalLore: tr('en', 'content.research.res_moe_architecture.technicalLore'),
     releaseYear: 2023,
-    availableAfterDays: 54
+    requiredVersion: 2,
+    requiredScore: 38
   },
   {
     id: 'res_agentic_mcts',
@@ -698,7 +704,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_agentic_mcts.effectDescription'),
     technicalLore: tr('en', 'content.research.res_agentic_mcts.technicalLore'),
     releaseYear: 2024,
-    availableAfterDays: 70
+    requiredVersion: 3,
+    requiredScore: 42
   },
   {
     id: 'res_recursive_self_code',
@@ -710,7 +717,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_recursive_self_code.effectDescription'),
     technicalLore: tr('en', 'content.research.res_recursive_self_code.technicalLore'),
     releaseYear: 2026,
-    availableAfterDays: 100
+    requiredVersion: 3,
+    requiredScore: 48
   },
   {
     id: 'res_graph_reasoning',
@@ -722,7 +730,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_graph_reasoning.effectDescription'),
     technicalLore: tr('en', 'content.research.res_graph_reasoning.technicalLore'),
     releaseYear: 2017,
-    availableAfterDays: 6
+    requiredVersion: 1,
+    requiredScore: 10
   },
   {
     id: 'res_bf16_training',
@@ -734,7 +743,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_bf16_training.effectDescription'),
     technicalLore: tr('en', 'content.research.res_bf16_training.technicalLore'),
     releaseYear: 2018,
-    availableAfterDays: 12
+    requiredVersion: 1,
+    requiredScore: 15
   },
   {
     id: 'res_gqa_attention',
@@ -746,7 +756,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_gqa_attention.effectDescription'),
     technicalLore: tr('en', 'content.research.res_gqa_attention.technicalLore'),
     releaseYear: 2023,
-    availableAfterDays: 48
+    requiredVersion: 2,
+    requiredScore: 33
   },
   {
     id: 'res_mamba_ssm',
@@ -758,7 +769,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_mamba_ssm.effectDescription'),
     technicalLore: tr('en', 'content.research.res_mamba_ssm.technicalLore'),
     releaseYear: 2023,
-    availableAfterDays: 58
+    requiredVersion: 3,
+    requiredScore: 42
   },
   {
     id: 'res_multimodal_diffusion',
@@ -770,7 +782,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_multimodal_diffusion.effectDescription'),
     technicalLore: tr('en', 'content.research.res_multimodal_diffusion.technicalLore'),
     releaseYear: 2022,
-    availableAfterDays: 38
+    requiredVersion: 2,
+    requiredScore: 30
   },
   {
     id: 'res_long_context',
@@ -782,7 +795,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_long_context.effectDescription'),
     technicalLore: tr('en', 'content.research.res_long_context.technicalLore'),
     releaseYear: 2024,
-    availableAfterDays: 72
+    requiredVersion: 3,
+    requiredScore: 44
   },
   {
     id: 'res_rlhf_training',
@@ -794,7 +808,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_rlhf_training.effectDescription'),
     technicalLore: tr('en', 'content.research.res_rlhf_training.technicalLore'),
     releaseYear: 2022,
-    availableAfterDays: 36
+    requiredVersion: 2,
+    requiredScore: 28
   },
   {
     id: 'res_contrastive_learning',
@@ -806,7 +821,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_contrastive_learning.effectDescription'),
     technicalLore: tr('en', 'content.research.res_contrastive_learning.technicalLore'),
     releaseYear: 2021,
-    availableAfterDays: 24
+    requiredVersion: 1,
+    requiredScore: 22
   },
   {
     id: 'res_energy_models',
@@ -818,7 +834,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_energy_models.effectDescription'),
     technicalLore: tr('en', 'content.research.res_energy_models.technicalLore'),
     releaseYear: 2025,
-    availableAfterDays: 84
+    requiredVersion: 3,
+    requiredScore: 46
   },
   {
     id: 'res_blackwell_fp4',
@@ -830,7 +847,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_blackwell_fp4.effectDescription'),
     technicalLore: tr('en', 'content.research.res_blackwell_fp4.technicalLore'),
     releaseYear: 2025,
-    availableAfterDays: 86
+    requiredVersion: 3,
+    requiredScore: 48
   },
   {
     id: 'res_bitnet_quantization',
@@ -842,7 +860,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_bitnet_quantization.effectDescription'),
     technicalLore: tr('en', 'content.research.res_bitnet_quantization.technicalLore'),
     releaseYear: 2024,
-    availableAfterDays: 76
+    requiredVersion: 3,
+    requiredScore: 45
   },
   {
     id: 'res_speculative_compute',
@@ -854,7 +873,8 @@ export const INITIAL_RESEARCH_NODES: ResearchNode[] = [
     effectDescription: tr('en', 'content.research.res_speculative_compute.effectDescription'),
     technicalLore: tr('en', 'content.research.res_speculative_compute.technicalLore'),
     releaseYear: 2030,
-    availableAfterDays: 300
+    requiredVersion: 4,
+    requiredScore: 52
   }
 ];
 

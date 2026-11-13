@@ -66,6 +66,8 @@ Objetivo del juego según el autor: un simulador lo bastante realista como para 
 | 6 | L-10 a 20x y 50x corren varios ticks por cuadro (máximo 10 cuadros por segundo); un sonido por cuadro | Aplicado |
 | 6 | L-9 guardado inmediato en momentos clave y al cerrar u ocultar la pestaña | Aplicado |
 | 6 | L-6 misiones generadas por IA validadas contra los rangos de su tier, con puntaje alcanzable y enlaces https | Aplicado |
+| 6 | L-3 la sospecha suma el riesgo de cada agente (que antes se mostraba y no se aplicaba) y el tráfico de scraping; el HUD muestra por día cuánto aporta cada fuente | Aplicado |
+| 6 | L-5 los papers se habilitan por versión y puntaje del mejor modelo, se financian siempre (ya no se regalan al llegar un día de campaña) | Aplicado |
 
 Pendiente dentro de la fase 1: medir en una partida real que cada versión dure lo previsto (P0-8). Los incidentes y las mejoras de versión ya tenían su propia ventana (`BreachModal`, `TrojanUpgradeModal`).
 

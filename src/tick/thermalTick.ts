@@ -3,7 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ActiveGig, GameState, StoryEventId } from '../types/game';
+import type { ActiveGig, GameState, StoryEventId, SuspicionRates } from '../types/game';
+
+// An agent's listed risk ("+0.35 susp/s") is per second of its own work; one tick weighs this much of it.
+export const AGENT_SUSPICION_SCALE = 0.05;
+export const SCRAPING_SUSPICION_PER_TICK = 0.03;
 import { formatGameTime } from '../utils/training';
 import { effectCollector, type Random } from './effects';
 import { tr } from '../i18n';
@@ -52,18 +56,29 @@ export function thermalTick(input: ThermalInput) {
     }
   }
 
-  // 4. Watchdog Suspicion:
-  // Dissipates naturally when cluster is idle / quiet.
-  // Only rises if facility grid capacity is overloaded or critical thermal runaway (>95°C)
-  const hasOverseerEarly = prev.agents.some(a => a.role === 'overseer' && a.status === 'active');
-  if (effectivePowerKw > metrics.maxPowerKw || systemHeatCelsius > 95) {
-    watchdogSuspicion = Math.min(100, watchdogSuspicion + 0.25);
-  } else if (currentActiveGigs.length === 0 && !prev.activeIncident) {
-    // No active missions or incidents: suspicion dissipates towards 0%
-    const dissipationRate = hasOverseerEarly ? 0.45 : 0.25;
-    watchdogSuspicion = Math.max(0, watchdogSuspicion - dissipationRate);
-  }
+  // 4. Watchdog suspicion, by source (see SuspicionRates):
+  //  - overload: the grid over capacity or the cluster above 95 °C;
+  //  - agents: each deployed agent's risk per tick (tools, temperature and role; an overseer subtracts);
+  //  - scraping: crawler traffic while a dataset is being scraped;
+  //  - dissipation: it fades while no mission or incident is running and nothing is overloaded.
+  // Missions add their share when they finish (missionTick) and the trading desk its own (tradingTick).
+  const overload = effectivePowerKw > metrics.maxPowerKw || systemHeatCelsius > 95 ? 0.25 : 0;
+  const agents = prev.agents
+    .filter(a => a.status !== 'quarantined')
+    .reduce((sum, a) => sum + (a.suspicionPerSec || 0) * AGENT_SUSPICION_SCALE, 0);
+  const scraping = prev.activeScrapeJob ? SCRAPING_SUSPICION_PER_TICK : 0;
+  const hasOverseer = prev.agents.some(a => a.role === 'overseer' && a.status === 'active');
+  const quiet = overload === 0 && currentActiveGigs.length === 0 && !prev.activeIncident;
+  const dissipation = quiet ? -(hasOverseer ? 0.45 : 0.25) : 0;
+  watchdogSuspicion = Math.min(100, Math.max(0, watchdogSuspicion + overload + agents + scraping + dissipation));
+  const suspicionRates: SuspicionRates = {
+    overload,
+    agents: Number(agents.toFixed(4)),
+    scraping,
+    trading: 0,
+    dissipation,
+    missionsRunning: currentActiveGigs.length
+  };
 
-
-  return { systemHeatCelsius, powerTripSeconds, watchdogSuspicion, storyEvents, effects };
+  return { systemHeatCelsius, powerTripSeconds, watchdogSuspicion, suspicionRates, storyEvents, effects };
 }

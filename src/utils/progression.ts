@@ -1,5 +1,6 @@
 import type {
   AttentionType,
+  ResearchNode,
   DataSourceNode,
   GameState,
   LossFunction,
@@ -132,4 +133,29 @@ export function isDataSourceProgressionUnlocked(
   state: Pick<GameState, 'campaignDays' | 'researchTree' | 'singularityProgress'>
 ): boolean {
   return isProgressionUnlocked(source, state);
+}
+
+// Papers open by stage, not by date: the UI version the campaign has reached and the best evaluation score
+// of any saved model, plus the prerequisite papers.
+export interface ResearchStatus {
+  versionMet: boolean;
+  scoreMet: boolean;
+  prerequisitesMet: boolean;
+  bestScore: number;
+  available: boolean;
+}
+
+export function bestModelScore(state: Pick<GameState, 'savedModels' | 'currentModel'>): number {
+  return Math.max(state.currentModel?.reasoningScore ?? 0, ...state.savedModels.map(m => m.reasoningScore));
+}
+
+export function researchStatus(
+  node: ResearchNode,
+  state: Pick<GameState, 'uiVersion' | 'savedModels' | 'currentModel' | 'researchTree'>
+): ResearchStatus {
+  const bestScore = bestModelScore(state);
+  const versionMet = (state.uiVersion || 1) >= (node.requiredVersion ?? 1);
+  const scoreMet = bestScore >= (node.requiredScore ?? 0);
+  const prerequisitesMet = node.prerequisites.every(id => state.researchTree.some(r => r.id === id && r.unlocked));
+  return { versionMet, scoreMet, prerequisitesMet, bestScore, available: versionMet && scoreMet && prerequisitesMet };
 }

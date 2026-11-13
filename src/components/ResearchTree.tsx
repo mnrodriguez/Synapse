@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { useGame } from '../context/GameContext';
-import { ResearchNode } from '../types/game';
+import { researchStatus } from '../utils/progression';
 import { 
   BookOpen, 
   CheckCircle2, 
@@ -49,12 +49,6 @@ export const ResearchTree: React.FC = () => {
     }
   };
 
-  const isPrerequisitesMet = (node: ResearchNode) => {
-    return node.prerequisites.every(preId => {
-      const p = state.researchTree.find(r => r.id === preId);
-      return p && p.unlocked;
-    });
-  };
 
   return (
     <div className="flex flex-col h-full mutating-panel border rounded-lg p-3 overflow-y-auto space-y-4 font-mono">
@@ -102,10 +96,11 @@ export const ResearchTree: React.FC = () => {
       {/* Tech Tree Nodes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {[...state.researchTree]
-          .sort((a, b) => (a.availableAfterDays ?? 0) - (b.availableAfterDays ?? 0))
+          .sort((a, b) => (a.requiredVersion - b.requiredVersion) || (a.requiredScore - b.requiredScore))
           .map(node => {
           const content = localizedResearch(state.language, node);
-          const preMet = isPrerequisitesMet(node);
+          const status = researchStatus(node, state);
+          const preMet = status.prerequisitesMet;
           const canAfford = state.credits >= node.costCredits;
 
           return (
@@ -161,13 +156,21 @@ export const ResearchTree: React.FC = () => {
                         : tr(state.language, 'researchTree.milestone', { releaseYear: node.releaseYear })}
                     </span>
                   )}
-                  {node.availableAfterDays !== undefined && !node.unlocked && (
-                    <span className={state.campaignDays >= node.availableAfterDays ? 'theme-success-text' : 'mutating-accent-text'}>
-                      {state.campaignDays >= node.availableAfterDays
-                        ? tr(state.language, 'researchTree.timelineAvailabilityReached')
-                        : tr(state.language, 'researchTree.timelineUnlockDayDays', { availableAfterDays: node.availableAfterDays + 1, campaignDays: node.availableAfterDays - state.campaignDays }) }
-                    </span>
-                  )}
+                  {!node.unlocked && (() => {
+                    const status = researchStatus(node, state);
+                    return (
+                      <>
+                        {!status.versionMet && (
+                          <span className="mutating-accent-text">{tr(state.language, 'researchTree.laterVersion')}</span>
+                        )}
+                        {node.requiredScore > 0 && (
+                          <span className={status.scoreMet ? 'theme-success-text' : 'theme-warn-text'}>
+                            {tr(state.language, 'researchTree.needsScore', { score: node.requiredScore, best: status.bestScore.toFixed(1) })}
+                          </span>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div className="mt-2 p-2 rounded theme-panel-bg border theme-accent-border text-[11px] mutating-text-muted">
@@ -194,17 +197,17 @@ export const ResearchTree: React.FC = () => {
                 <div className="mt-3 pt-2 border-t theme-border flex items-center justify-end">
                   <button
                     onClick={() => unlockResearch(node.id)}
-                    disabled={!preMet || !canAfford}
+                    disabled={!status.available || !canAfford}
                     className={`py-1.5 px-3 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
-                      preMet && canAfford
+                      status.available && canAfford
                         ? 'mutating-btn-primary theme-on-accent cursor-pointer'
                         : 'theme-raised-bg mutating-text-muted cursor-not-allowed border theme-border'
                     }`}
                   >
-                    {!preMet ? (
+                    {!status.available ? (
                       <>
                         <Lock className="w-3.5 h-3.5" />
-                        <span>{tr(state.language, 'researchTree.prerequisitesNotMet')}</span>
+                        <span>{tr(state.language, !preMet ? 'researchTree.prerequisitesNotMet' : !status.versionMet ? 'researchTree.laterVersion' : 'researchTree.scoreTooLow')}</span>
                       </>
                     ) : (
                       <>

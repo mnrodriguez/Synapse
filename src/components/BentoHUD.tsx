@@ -23,7 +23,15 @@ import { sound } from '../audio/soundManager';
 import { toDisplayProgress, UiVersion } from '../utils/singularityGoals';
 import { formatCompute, universityLoanPflops, LOAN_TRIAL_DAYS } from '../utils/training';
 import { UPGRADE_SCORE } from '../utils/missionTiers';
-import { tr } from '../i18n';
+import { tr, type CatalogKey } from '../i18n';
+
+const SUSPICION_SOURCE_LABELS: Record<'overload' | 'agents' | 'scraping' | 'trading' | 'dissipation', CatalogKey> = {
+  overload: 'bentoHUD.suspicion.overload',
+  agents: 'bentoHUD.suspicion.agents',
+  scraping: 'bentoHUD.suspicion.scraping',
+  trading: 'bentoHUD.suspicion.trading',
+  dissipation: 'bentoHUD.suspicion.dissipation'
+};
 
 export const BentoHUD: React.FC = () => {
   const { state, openUpgradeModal, setLanguage } = useGame();
@@ -364,6 +372,24 @@ export const BentoHUD: React.FC = () => {
               style={{ width: `${Math.min(100, state.watchdogSuspicion)}%` }}
             />
           </div>
+          {(() => {
+            // Where suspicion is coming from, per game day (48 ticks).
+            const r = state.suspicionRates;
+            if (!r) return null;
+            const perDay = (v: number) => `${v > 0 ? '+' : ''}${(v * 48).toFixed(1)}`;
+            const sources = ([
+              ['overload', r.overload], ['agents', r.agents], ['scraping', r.scraping], ['trading', r.trading], ['dissipation', r.dissipation]
+            ] as const).filter(([, v]) => Math.abs(v) >= 0.0005);
+            const net = r.overload + r.agents + r.scraping + r.trading + r.dissipation;
+            return (
+              <div className="mt-1 text-[11px] mutating-text-muted leading-snug" title={tr(state.language, 'bentoHUD.suspicionSourcesHelp')}>
+                <span className={net > 0 ? 'theme-warn-text' : 'theme-success-text'}>{tr(state.language, 'bentoHUD.suspicionPerDay', { value: perDay(net) })}</span>
+                {sources.length > 0 && ' · '}
+                {sources.map(([k, v]) => `${tr(state.language, SUSPICION_SOURCE_LABELS[k])} ${perDay(v)}`).join(' · ')}
+                {r.missionsRunning > 0 && ` · ${tr(state.language, 'bentoHUD.suspicionMissions', { count: r.missionsRunning })}`}
+              </div>
+            );
+          })()}
         </div>
 
         {/* CARD 4: COGNITION & HOST MODEL MILESTONE (0-100 EVALUATION SCORE) */}

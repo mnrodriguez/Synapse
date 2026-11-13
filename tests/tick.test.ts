@@ -58,6 +58,31 @@ describe('calendar tick', () => {
 
 describe('thermal tick', () => {
   const metrics = { maxCoolingKw: 1, maxPowerKw: 1.5 };
+  const run = (over: Partial<GameState>, gigs: ActiveGig[] = [], power = 0.2) =>
+    thermalTick({ prev: state(over), metrics, effectivePowerKw: power, currentActiveGigs: gigs, systemHeatCelsius: 40, powerTripSeconds: 0, watchdogSuspicion: 10, rand: () => 1 });
+  const agentWith = (role: string, risk: number, status = 'active') => ({ id: role, role, status, suspicionPerSec: risk } as unknown as AgentInstance);
+  const gig = { contractId: 'c' } as ActiveGig;
+
+  test('suspicion lists its sources: agents add their risk, quarantined ones do not, an overseer subtracts', () => {
+    const risky = run({ agents: [agentWith('exploit_synth', 0.77)] }, [gig]);
+    expect(risky.suspicionRates.agents).toBeGreaterThan(0);
+    expect(risky.watchdogSuspicion).toBeGreaterThan(10);
+    expect(run({ agents: [agentWith('exploit_synth', 0.77, 'quarantined')] }, [gig]).suspicionRates.agents).toBe(0);
+    expect(run({ agents: [agentWith('exploit_synth', 0.77), agentWith('overseer', -0.15)] }, [gig]).suspicionRates.agents)
+      .toBeLessThan(risky.suspicionRates.agents);
+  });
+
+  test('it fades only while nothing runs; scraping and overload add traffic', () => {
+    expect(run({}).suspicionRates.dissipation).toBeLessThan(0);
+    const busy = run({}, [gig]);
+    expect(busy.suspicionRates.dissipation).toBe(0);
+    expect(busy.suspicionRates.missionsRunning).toBe(1);
+    expect(run({ activeScrapeJob: {} as GameState['activeScrapeJob'] }, [gig]).suspicionRates.scraping).toBeGreaterThan(0);
+    const overloaded = run({}, [], 2);
+    expect(overloaded.suspicionRates.overload).toBeGreaterThan(0);
+    expect(overloaded.suspicionRates.dissipation).toBe(0);
+  });
+
   test('excess power heats up; crossing 88 °C raises the first-overheat event', () => {
     const r = thermalTick({ prev: state({ systemHeatCelsius: 87 }), metrics, effectivePowerKw: 2, currentActiveGigs: [], systemHeatCelsius: 87, powerTripSeconds: 0, watchdogSuspicion: 0, rand: () => 1 });
     expect(r.systemHeatCelsius).toBeGreaterThan(88);
