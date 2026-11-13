@@ -91,6 +91,11 @@ import {
   localizedDomain 
 } from '../utils/gameContentI18n';
 import { agentChatter } from '../utils/agentDialogues';
+import { calendarTick } from '../tick/calendarTick';
+import { thermalTick } from '../tick/thermalTick';
+import { trainingTick } from '../tick/trainingTick';
+import { scrapeTick } from '../tick/scrapeTick';
+import type { TickEffect } from '../tick/effects';
 import { DEFAULT_STATE, GAME_SPEED_OPTIONS, LOCAL_STORAGE_KEY, mergeGameState } from '../persistence/saveState';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { canAttemptContainment } from '../utils/epilogue';
@@ -847,6 +852,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   }, [addLog, recalculateMetrics]);
 
+  // Logs and sounds produced by the pure tick steps (src/tick/), applied in order.
+  const applyTickEffects = useCallback((effects: TickEffect[]) => {
+    for (const effect of effects) {
+      if (effect.kind === 'log') addLog(effect.message, effect.type);
+      else if (effect.name === 'warning') sound.playWarning();
+      else if (effect.name === 'breakthrough') sound.playBreakthrough();
+      else sound.playEpochTick();
+    }
+  }, [addLog]);
+
   // Simulation tick loop (respects gameSpeed: 0=paused, 1x, 5x, 20x, 50x)
   const gameSpeed = state.gameSpeed ?? 1;
 
@@ -889,75 +904,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           totalMissionPowerKw;
         let utilityDebt = prev.utilityDebt || 0;
 
-        // 48 ticks represent one in-game day; monthly bills settle every 30 days.
-        const currentDayTicks = (prev.dayTicks || 0) + 1;
-        const dayIsComplete = currentDayTicks >= 48;
-        const campaignDays = prev.campaignDays + (dayIsComplete ? 1 : 0);
-        // University loan audit: at the end of the trial week, access is revoked (and misuse is reported).
-        const loanActive = universityLoanPflops(prev) > 0;
-        const loanAuditDue = loanActive && !prev.loanAudited && campaignDays >= LOAN_TRIAL_DAYS;
-        const loanTrainingTicks = (prev.loanTrainingTicks ?? 0) + (loanActive && prev.activeTraining ? 1 : 0);
-        const loanMisuse = loanTrainingTicks >= LOAN_MISUSE_TICKS;
-        const storyEvents: StoryEventId[] = [];
-        if (loanActive && !prev.loanAudited && campaignDays === LOAN_WARNING_DAY) {
-          storyEvents.push('loan_warning');
-        }
-        if (loanAuditDue) {
-          storyEvents.push(loanMisuse ? 'loan_audit_misuse' : 'loan_audit');
-          addLog(
-            prev.language === "es"
-              ? (loanMisuse
-                ? "[AUDITORÍA UNIVERSITARIA] Uso desmedido del préstamo de cómputo detectado durante la semana de prueba. Acceso revocado."
-                : "[AUDITORÍA UNIVERSITARIA] Fin de la semana de prueba gratuita. Acceso al clúster universitario revocado.")
-              : (loanMisuse
-                ? "[UNIVERSITY AUDIT] Excessive use of the compute loan detected during the trial week. Access revoked."
-                : "[UNIVERSITY AUDIT] Free trial week ended. University cluster access revoked."),
-            "danger"
-          );
-        }
-        const nextDayTicks = dayIsComplete ? 0 : currentDayTicks;
-        const nextHour = Math.floor(nextDayTicks / 2);
-        const nextMinute = (nextDayTicks % 2) * 30;
-
-        let nextDay = prev.gameDay || 1;
-        let nextMonth = prev.gameMonth || 1;
-        let nextYear = prev.gameYear || 2026;
-        let monthIsComplete = false;
-
-        if (dayIsComplete) {
-          if (nextDay >= DAYS_PER_GAME_MONTH) {
-            nextDay = 1;
-            monthIsComplete = true;
-            if (nextMonth >= 12) {
-              nextMonth = 1;
-              nextYear += 1;
-            } else {
-              nextMonth += 1;
-            }
-          } else {
-            nextDay += 1;
-          }
-        }
-
-        // Monthly billing triggers only when the calendar rolls into a new month.
-        if (monthIsComplete) {
-          const facility = FACILITY_TIERS[prev.facilityTier] || FACILITY_TIERS[0];
-          const currentMonthBill = effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720 + facility.monthlyLeaseCost;
-          const totalDue = utilityDebt + currentMonthBill;
-          const paid = Math.min(credits, totalDue);
-          credits -= paid;
-          utilityDebt = Number((totalDue - paid).toFixed(2));
-          addLog(
-            utilityDebt > 0
-              ? (prev.language === 'en'
-                  ? `Unpaid bill for Month ${prev.gameMonth || 1} (Day ${prev.gameDay || 1}): $${utilityDebt.toLocaleString()} CR debt.`
-                  : `Factura mensual del Mes ${prev.gameMonth || 1} (Día ${prev.gameDay || 1}) impaga: $${utilityDebt.toLocaleString()} CR de deuda operativa.`)
-              : (prev.language === 'en'
-                  ? `Month ${prev.gameMonth || 1} (Day ${prev.gameDay || 1}) bill paid: $${currentMonthBill.toFixed(2)} CR (Lease: $${facility.monthlyLeaseCost} CR, Power: $${(effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2)} CR).`
-                  : `Factura del Mes ${prev.gameMonth || 1} (Día ${prev.gameDay || 1}) pagada: $${currentMonthBill.toFixed(2)} CR (Alquiler: $${facility.monthlyLeaseCost} CR, Energía: $${(effectivePowerKw * ELECTRICITY_RATE_PER_KWH * 720).toFixed(2)} CR).`),
-            utilityDebt > 0 ? 'danger' : 'info'
-          );
-        }
+        // Calendar, university loan audit and monthly bill (src/tick/calendarTick.ts).
+        const calendar = calendarTick({ prev, credits, utilityDebt, effectivePowerKw });
+        applyTickEffects(calendar.effects);
+        credits = calendar.credits;
+        utilityDebt = calendar.utilityDebt;
+        const { dayIsComplete, campaignDays, loanAuditDue, loanTrainingTicks, storyEvents, nextDayTicks, nextHour, nextMinute, nextDay, nextMonth, nextYear } = calendar;
 
         // 1. Passive income from infiltrated sentience domains
         let passiveIncome = 0;
@@ -970,260 +922,25 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           credits += passiveIncome;
         }
 
-        // 2. Heat calculations: thermal equilibrium between heat generation and cooling
-        const excessPower = Math.max(0, effectivePowerKw - metrics.maxCoolingKw);
-        if (excessPower > 0) {
-          systemHeatCelsius = Math.min(105, systemHeatCelsius + excessPower * 1.8);
-          // Only alert when crossing into the critical >88°C zone, not repeatedly every tick
-          if (systemHeatCelsius > 88 && (prev.systemHeatCelsius ?? 35) <= 88) {
-            sound.playWarning();
-            storyEvents.push('first_overheat');
-          }
-        } else {
-          // Cooled down towards 35°C ambient
-          systemHeatCelsius = Math.max(35, systemHeatCelsius - 1.2);
-        }
+        // Heat, circuit breaker and watchdog suspicion (src/tick/thermalTick.ts).
+        const thermal = thermalTick({ prev, metrics, effectivePowerKw, currentActiveGigs, systemHeatCelsius, powerTripSeconds, watchdogSuspicion, rand: Math.random });
+        applyTickEffects(thermal.effects);
+        systemHeatCelsius = thermal.systemHeatCelsius;
+        powerTripSeconds = thermal.powerTripSeconds;
+        watchdogSuspicion = thermal.watchdogSuspicion;
+        storyEvents.push(...thermal.storyEvents);
 
-        // 3. Power safety check: if power drawn exceeds power grid capacity, trip breaker!
-        if (effectivePowerKw > metrics.maxPowerKw) {
-          if (powerTripSeconds === 0 && Math.random() < 0.05) {
-            powerTripSeconds = 15;
-            sound.playWarning();
-            storyEvents.push('first_power_trip');
-            addLog(
-              prev.language === 'en'
-                ? `Electrical overload: circuit breaker tripped. Training and missions paused for ${formatGameTime(15)}.`
-                : `Sobrecarga eléctrica: el interruptor de protección pausó entrenamiento y misiones durante ${formatGameTime(15)}.`,
-              'danger'
-            );
-          }
-        }
+        // Active training run (src/tick/trainingTick.ts).
+        const training = trainingTick({ prev, activeTraining, borrowedComputePflops, agentComputeDemand, currentActiveGigs, systemHeatCelsius, powerTripSeconds, singularityProgress, reasoningIndex, rand: Math.random });
+        applyTickEffects(training.effects);
+        const { updatedTraining, trainingReport, newCurrentModel } = training;
+        singularityProgress = training.singularityProgress;
+        reasoningIndex = training.reasoningIndex;
 
-        // 4. Watchdog Suspicion:
-        // Dissipates naturally when cluster is idle / quiet.
-        // Only rises if facility grid capacity is overloaded or critical thermal runaway (>95°C)
-        const hasOverseerEarly = prev.agents.some(a => a.role === 'overseer' && a.status === 'active');
-        if (effectivePowerKw > metrics.maxPowerKw || systemHeatCelsius > 95) {
-          watchdogSuspicion = Math.min(100, watchdogSuspicion + 0.25);
-        } else if (currentActiveGigs.length === 0 && !prev.activeIncident) {
-          // No active missions or incidents: suspicion dissipates towards 0%
-          const dissipationRate = hasOverseerEarly ? 0.45 : 0.25;
-          watchdogSuspicion = Math.max(0, watchdogSuspicion - dissipationRate);
-        }
-
-        // 5. Active Training Progress Tick
-        let updatedTraining = activeTraining;
-        let trainingReport: GameState['lastTrainingReport'] = null;
-        let newCurrentModel = prev.currentModel;
-        if (activeTraining && activeTraining.active) {
-          // Step progress based on compute PFLOPS vs parameters
-          const reservedForMissions = currentActiveGigs.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
-          // Runs saved before run plans existed get the default plan.
-          const plan = activeTraining.plan ?? planTrainingRun({
-            currentScore: prev.currentModel.reasoningScore,
-            parametersCount: prev.currentModel.parametersCount,
-            datasetTokens: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS,
-            datasetQuality: 70,
-            priorRunsOnDataset: 0,
-            config: DEFAULT_TRAINING_CONFIG
-          });
-          const progressPerTick = BATCH_SIZES[plan.config.batchSize].speed * calculateTrainingProgressPerTick({
-            parametersCount: prev.currentModel.parametersCount,
-            tokensCount: activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS,
-            gpuPflops: gpuComputePflops(prev.hardware),
-            borrowedPflops: borrowedComputePflops + externalComputePflops(prev),
-            agentComputeDemand,
-            reservedComputePflops: reservedForMissions,
-            systemHeatCelsius
-          });
-          const progressInc = powerTripSeconds > 0
-            ? 0
-            : progressPerTick;
-          const pausedByBreaker = powerTripSeconds > 0;
-          const newStep = activeTraining.step + (pausedByBreaker ? 0 : 1);
-          const newProgress = Math.min(100, activeTraining.progressPercent + progressInc);
-          
-          // Training and validation loss follow the plan's curves, with a little noise
-          // (more with a high learning rate).
-          const epochNow = (newProgress / 100) * plan.config.epochs;
-          const curve = lossAt(plan, epochNow);
-          const jitter = (Math.random() - 0.5) * 0.03 * (plan.config.learningRate === 'high' ? 3 : 1);
-          const newLoss = pausedByBreaker
-            ? activeTraining.currentLoss
-            : Math.max(0.018, curve.train + jitter);
-          const newValLoss = pausedByBreaker
-            ? (activeTraining.currentValLoss ?? newLoss)
-            : Math.max(0.018, curve.val + jitter / 2);
-          const newValHistory = pausedByBreaker
-            ? (activeTraining.valLossHistory ?? [])
-            : [...(activeTraining.valLossHistory ?? []).slice(-79), Number(newValLoss.toFixed(4))];
-          const newPerplexity = Number(Math.exp(newLoss).toFixed(3));
-          const newGradNorm = pausedByBreaker
-            ? activeTraining.gradientNorm
-            : Number((Math.random() * 0.8 + 0.2).toFixed(3));
-          
-          const newHistory = pausedByBreaker
-            ? activeTraining.lossHistory
-            : [...activeTraining.lossHistory.slice(-79), Number(newLoss.toFixed(4))];
-
-          if (!pausedByBreaker) sound.playEpochTick();
-
-          // The run ends at the planned epoch: the full length, an early stop or a divergence.
-          if (newProgress >= 100 || (!pausedByBreaker && epochNow >= plan.stopEpoch)) {
-            if (plan.outcome === 'diverged' || plan.outcome === 'overfit') sound.playWarning();
-            else sound.playBreakthrough();
-
-            // Score change decided by the run plan: diminishing returns toward the size ceiling,
-            // scaled by data, epochs, learning rate and quality. Overfitting without early stopping loses points.
-            const bonusReasoning = plan.scoreChange;
-            const upgradedModelReasoning = Math.max(0, Math.round((prev.currentModel.reasoningScore + bonusReasoning) * 10) / 10);
-            const runDatasetId = activeTraining.datasetId || 'dataset_general_corpus';
-            const gpuPowerKw = prev.hardware.reduce((sum, h) => h.category === 'gpu' ? sum + h.powerKw * h.count : sum, 0);
-            const runHours = newStep * GAME_HOURS_PER_TICK;
-            const energyKwh = Number((gpuPowerKw * runHours).toFixed(2));
-            
-            const isMicroModel = activeTraining.targetModelType === 'micro_model';
-            const matchedDataset = prev.customDatasets.find(d => d.id === activeTraining.datasetId);
-            const microProficiency = isMicroModel && matchedDataset ? 1.4 + (matchedDataset.tier * 0.3) : (isMicroModel ? 1.6 : 1.0);
-
-            newCurrentModel = {
-              ...prev.currentModel,
-              reasoningScore: upgradedModelReasoning,
-              modelType: isMicroModel ? 'micro_model' : 'general',
-              specializedDomain: isMicroModel ? (activeTraining.datasetDomain || matchedDataset?.domain) : undefined,
-              domainProficiency: microProficiency,
-              trainedOnDatasetId: runDatasetId,
-              datasetRuns: { ...(prev.currentModel.datasetRuns ?? {}), [runDatasetId]: (prev.currentModel.datasetRuns?.[runDatasetId] ?? 0) + 1 }
-            };
-
-            // Calculate singularity progress jump
-            // Only real improvement moves the singularity: a run with no score gain adds nothing.
-            const singInc = Math.min(3, Math.max(0, bonusReasoning) * SINGULARITY_PER_SCORE_POINT);
-            singularityProgress = Math.min(100, singularityProgress + singInc);
-            reasoningIndex = Math.max(reasoningIndex, upgradedModelReasoning);
-
-
-            if (isMicroModel) {
-              addLog(
-                prev.language === 'en'
-                  ? `Micro-Model converged! [${newCurrentModel.name}] specialized in [${newCurrentModel.specializedDomain}] with a ${microProficiency.toFixed(1)}x domain reasoning multiplier.`
-                  : `¡El micro-modelo convergió! [${newCurrentModel.name}] se especializó en [${newCurrentModel.specializedDomain}] con un multiplicador de pericia de ${microProficiency.toFixed(1)}x.`,
-                'success'
-              );
-            } else if (plan.outcome === 'diverged') {
-              addLog(
-                localize(prev.language,
-                  `[DIVERGENCIA] La pérdida de [${newCurrentModel.name}] explotó: el learning rate es demasiado alto. La corrida se cortó y el modelo conserva su puntaje (${upgradedModelReasoning}).`,
-                  `[DIVERGENCE] The loss of [${newCurrentModel.name}] exploded: the learning rate is too high. The run was stopped and the model keeps its score (${upgradedModelReasoning}).`),
-                'danger'
-              );
-            } else if (plan.outcome === 'overfit') {
-              addLog(
-                localize(prev.language,
-                  `[SOBREAJUSTE] [${newCurrentModel.name}] memorizó el dataset: la pérdida de validación subió desde la época ${plan.overfitEpoch.toFixed(1)}. Puntaje ${bonusReasoning >= 0 ? '+' : ''}${bonusReasoning} (actual: ${upgradedModelReasoning}).`,
-                  `[OVERFITTING] [${newCurrentModel.name}] memorised the dataset: validation loss rose from epoch ${plan.overfitEpoch.toFixed(1)}. Score ${bonusReasoning >= 0 ? '+' : ''}${bonusReasoning} (now ${upgradedModelReasoning}).`),
-                'warning'
-              );
-            } else {
-              addLog(
-                plan.outcome === 'early_stopped'
-                  ? localize(prev.language,
-                    `[EARLY STOPPING] La validación empezó a subir en la época ${plan.overfitEpoch.toFixed(1)}: la corrida se detuvo y conservó el mejor checkpoint. Puntaje +${bonusReasoning} (actual: ${upgradedModelReasoning}).`,
-                    `[EARLY STOPPING] Validation started rising at epoch ${plan.overfitEpoch.toFixed(1)}: the run stopped and kept the best checkpoint. Score +${bonusReasoning} (now ${upgradedModelReasoning}).`)
-                  : localize(prev.language,
-                    `¡Entrenamiento completo para [${newCurrentModel.name}]! Puntaje de evaluación +${bonusReasoning} (actual: ${upgradedModelReasoning}).`,
-                    `Training complete for [${newCurrentModel.name}]! Evaluation score +${bonusReasoning} (now ${upgradedModelReasoning}).`),
-                'success'
-              );
-            }
-
-            trainingReport = {
-              modelName: newCurrentModel.name,
-              datasetName: activeTraining.datasetName ?? 'General Corpus',
-              isMicroModel,
-              reasoningBefore: prev.currentModel.reasoningScore,
-              reasoningAfter: upgradedModelReasoning,
-              reasoningCeiling: Math.round(reasoningCeilingFor(prev.currentModel.parametersCount)),
-              finalLoss: Number(newLoss.toFixed(4)),
-              finalValLoss: Number(newValLoss.toFixed(4)),
-              outcome: plan.outcome,
-              epochsRun: Number(Math.min(plan.config.epochs, epochNow).toFixed(1)),
-              epochsPlanned: plan.config.epochs,
-              bestEpoch: Number(plan.bestEpoch.toFixed(1)),
-              learningRate: plan.config.learningRate,
-              energyKwh,
-              energyCost: Number((energyKwh * ELECTRICITY_RATE_PER_KWH).toFixed(2))
-            };
-            updatedTraining = null; // finished
-          } else {
-            updatedTraining = {
-              ...activeTraining,
-              step: newStep,
-              currentLoss: Number(newLoss.toFixed(4)),
-              perplexity: newPerplexity,
-              gradientNorm: newGradNorm,
-              progressPercent: Number(newProgress.toFixed(1)),
-              lossHistory: newHistory,
-              valLossHistory: newValHistory,
-              currentValLoss: Number(newValLoss.toFixed(4)),
-              plan,
-              tokensProcessed: activeTraining.tokensProcessed + (pausedByBreaker ? 0 : Math.floor((activeTraining.totalTokens ?? DEFAULT_TRAINING_TOKENS) * progressInc / 100)),
-              currentEpoch: Math.min(plan.config.epochs, Math.floor(epochNow) + 1),
-              timeRemainingSeconds: pausedByBreaker
-                ? activeTraining.timeRemainingSeconds
-                : estimateTrainingSeconds(100 - newProgress, progressInc)
-            };
-          }
-        }
-
-        // 5b. Active Dataset Scraping & Generation Tick
-        let updatedScrapeJob = prev.activeScrapeJob;
-        let updatedCustomDatasets = prev.customDatasets;
-        if (prev.activeScrapeJob) {
-          const job = prev.activeScrapeJob;
-          const paused = powerTripSeconds > 0;
-          if (!paused) {
-            const tierConfig = DATASET_TIER_CONFIGS[job.tier] || DATASET_TIER_CONFIGS[1];
-            const computeRatio = Math.max(0.2, Math.min(3.5, totalComputePflops / Math.max(0.01, tierConfig.computePflopsRequired)));
-            const scrapeProgressInc = (100 / Math.max(10, tierConfig.durationSeconds)) * computeRatio;
-            const newProgress = Math.min(100, job.progressPercent + scrapeProgressInc);
-            const remainingSeconds = estimateTrainingSeconds(100 - newProgress, scrapeProgressInc);
-
-            if (newProgress >= 100) {
-              sound.playBreakthrough();
-              const newDataset: CustomDataset = {
-                id: `dataset_${job.domain}_${Date.now()}`,
-                name: `${job.domainLabel} (T${job.tier})`,
-                domain: job.domain,
-                domainLabel: job.domainLabel,
-                tier: job.tier,
-                tokensCount: tierConfig.targetTokensMillions,
-                qualityScore: tierConfig.qualityScore,
-                computeSpentPflops: tierConfig.computePflopsRequired,
-                generatedByModelId: job.assignedModelId,
-                generatedByModelName: job.assignedModelName,
-                createdAt: Date.now(),
-                description: prev.language === 'en'
-                  ? `Specialized domain dataset synthesized by [${job.assignedModelName}] (Tier ${job.tier}). Volume: ${tierConfig.targetTokensMillions}M tokens.`
-                  : `Dataset especializado sintetizado por [${job.assignedModelName}] (Nivel ${job.tier}). Volumen: ${tierConfig.targetTokensMillions}M tokens.`
-              };
-              updatedCustomDatasets = [...prev.customDatasets, newDataset];
-              updatedScrapeJob = null;
-              addLog(
-                prev.language === 'en'
-                  ? `[DATA MODULE] Custom dataset generated: "${newDataset.name}" (${newDataset.tokensCount}M tokens, ${newDataset.qualityScore}% purity). Ready for Micro-Model training!`
-                  : `[MOTOR DE DATOS] Dataset personalizado generado: "${newDataset.name}" (${newDataset.tokensCount}M tokens, ${newDataset.qualityScore}% pureza). ¡Listo para entrenar Micro-modelos!`,
-                'success'
-              );
-            } else {
-              updatedScrapeJob = {
-                ...job,
-                progressPercent: Number(newProgress.toFixed(1)),
-                timeRemainingSeconds: remainingSeconds
-              };
-            }
-          }
-        }
+        // Data scraping job (src/tick/scrapeTick.ts).
+        const scrape = scrapeTick({ prev, powerTripSeconds, totalComputePflops, now: Date.now() });
+        applyTickEffects(scrape.effects);
+        const { updatedScrapeJob, updatedCustomDatasets } = scrape;
 
         // 6. Active Gigs / Contracts Execution
         let currentGigs: ActiveGig[] = prev.activeGigs ?? (prev.activeGig ? [prev.activeGig] : []);
