@@ -36,6 +36,7 @@ import {
   Clock,
   Sparkles,
   Users,
+  TrendingUp,
   Globe2,
   Skull,
   Play,
@@ -81,6 +82,14 @@ const SELECTED_STYLE: React.CSSProperties = {
   backgroundColor: 'color-mix(in srgb, var(--accent-primary) 14%, transparent)'
 };
 
+type AgentSection = 'agents' | 'council' | 'market' | 'controls';
+const AGENT_SECTIONS: Array<{ id: AgentSection; label: CatalogKey; Icon: React.ComponentType<{ className?: string }> }> = [
+  { id: 'agents', label: 'agentSandbox.section.agents', Icon: Bot },
+  { id: 'council', label: 'agentSandbox.section.council', Icon: Users },
+  { id: 'market', label: 'agentSandbox.section.market', Icon: TrendingUp },
+  { id: 'controls', label: 'agentSandbox.section.controls', Icon: ShieldCheck }
+];
+
 export const AgentSandbox: React.FC = () => {
   const { 
     state, 
@@ -121,6 +130,7 @@ export const AgentSandbox: React.FC = () => {
   const [tradingAgentId, setTradingAgentId] = useState<string>('');
   const [tradingCapitalInput, setTradingCapitalInput] = useState<number>(500);
   const [tradingRiskTier, setTradingRiskTier] = useState<'low' | 'moderate' | 'high'>('moderate');
+  const [section, setSection] = useState<AgentSection>('agents');
   const [tradingWithdrawInput, setTradingWithdrawInput] = useState<number>(100);
 
   // Inference & Sampling Hyperparameters
@@ -474,6 +484,470 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
         </div>
       </div>
 
+      {/* Sections: agents and missions, council, market and safety controls. */}
+      <div className="shrink-0 flex flex-wrap items-center gap-1.5 p-1.5 mutating-sub text-xs rounded-lg border border-current/15" role="tablist">
+        {AGENT_SECTIONS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={section === id}
+            onClick={() => { sound.playKeyClick(); setSection(id); }}
+            className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
+              section === id ? 'mutating-btn-primary shadow-sm font-black' : 'mutating-text-muted hover:opacity-100'
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            <span>{tr(state.language, label)}</span>
+            {id === 'council' && (state.subversionProgress ?? 0) >= 60 && section !== 'council' && (
+              <span className="w-2 h-2 rounded-full theme-btn-danger" aria-label={tr(state.language, 'agentSandbox.section.councilAlert')} />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {section === 'agents' && (<>
+      <section className={`rounded-lg border p-3 ${state.activeGig ? 'theme-warn-border theme-warn-soft' : 'border-current/15 mutating-sub'}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/15 pb-2">
+          <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider theme-warn-text">
+            <Activity className="h-3.5 w-3.5" />
+            {story.missionMonitorTitle}
+          </h3>
+          {state.activeGig ? (
+            <span className="flex items-center gap-1 text-[11px] theme-warn-text">
+              <Clock className="h-3 w-3" />
+              {formatGameTime(state.activeGig.timeRemaining)} {tr(state.language, 'agentSandbox.remaining')}
+            </span>
+          ) : (
+            <span className="text-[11px] mutating-text-muted">
+              {tr(state.language, 'agentSandbox.noActiveMission')}
+            </span>
+          )}
+        </div>
+
+        {state.activeGig && activeMissionContract ? (
+          <div className="mt-2 space-y-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="text-xs font-bold ">{activeMissionContract.title}</p>
+                <p className="mt-0.5 text-[11px] leading-relaxed mutating-text-muted">{activeMissionContract.technicalObjective}</p>
+              </div>
+              <div className="flex gap-3 text-[11px]">
+                <span className="mutating-accent-text">{tr(state.language, 'agentSandbox.efficiency')} {state.activeGig.efficiencyPercent ?? 100}%</span>
+                <span className="theme-success-text">{Math.round((state.activeGig.successProbability ?? 0) * 100)}% {tr(state.language, 'agentSandbox.success')}</span>
+              </div>
+            </div>
+            <div className="rounded border border-current/15 mutating-sub px-2 py-1.5 text-[11px]">
+              <span className={`font-bold ${
+                state.activeGig.aiAssessmentStatus === 'complete'
+                  ? 'theme-success-text'
+                  : state.activeGig.aiAssessmentStatus === 'fallback'
+                    ? 'theme-warn-text'
+                    : 'mutating-accent-text'
+              }`}>
+                {state.activeGig.aiAssessmentStatus === 'complete'
+                  ? `${state.activeGig.aiAssessmentSource === 'gemini-flash' ? 'Gemini' : 'Chrome AI'} ${tr(state.language, 'agentSandbox.teamAssessment')}`
+                  : state.activeGig.aiAssessmentStatus === 'fallback'
+                    ? tr(state.language, 'agentSandbox.heuristicEstimateNoModel')
+                    : tr(state.language, 'agentSandbox.modelAssessing')}
+              </span>
+              {state.activeGig.aiAssessmentSummary && (
+                <p className="mt-1 mutating-text-muted">{state.activeGig.aiAssessmentSummary}</p>
+              )}
+            </div>
+
+            <div>
+              <div className="mb-1 flex justify-between text-[11px] mutating-text-muted">
+                <span>{tr(state.language, 'agentSandbox.simulatedProgress')}</span>
+                <span>{missionProgress.toFixed(1)}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded mutating-sub">
+                <div className="h-full rounded theme-gradient transition-all" style={{ width: `${missionProgress}%` }} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+              {MISSION_PHASES.map((phase, index) => (
+                <div
+                  key={phase.textKey}
+                  className={`rounded border px-1.5 py-1 text-center text-[11px] ${
+                    index < missionPhaseIndex
+                      ? 'theme-success-border theme-success-text'
+                      : index === missionPhaseIndex
+                        ? 'border-current/15/70 mutating-sub mutating-accent-text'
+                        : 'border-current/15 mutating-text-muted'
+                  }`}
+                >
+                  {tr(state.language, phase.textKey)}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {activeMissionAgents.map(agent => {
+                const model = state.savedModels.find(candidate => candidate.id === agent.modelId);
+                const capability = model
+                  ? evaluateAgentCapabilities(agent, model, state.dataSources, state.guardrails)
+                  : null;
+                const roleTask = MISSION_ROLE_TASKS[agent.role];
+                return (
+                  <div key={agent.id} className="rounded border border-current/15 mutating-sub p-2">
+                    <div className="flex items-center justify-between gap-2 text-[11px]">
+                      <span className="font-bold mutating-accent-text">{agent.name} · {getRoleSimpleName(agent.role, state.language)}</span>
+                      <span className="mutating-text-muted">{capability ? `${capability.overall}% ${tr(state.language, 'agentSandbox.fit')}` : ''}</span>
+                    </div>
+                    <p className="mt-1 text-[11px] leading-relaxed mutating-text-muted">
+                      {state.activeGig?.agentTasks?.[agent.id] ??
+                        tr(state.language, roleTask.textKey)}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[11px] mutating-text-muted">
+              {tr(state.language, 'agentSandbox.gameHeuristicEstimateProgressReflects')}
+            </p>
+          </div>
+        ) : (
+          <p className="mt-2 text-[11px] mutating-text-muted">
+            {tr(state.language, 'agentSandbox.whenTeamAcceptsMissionScreen')}
+          </p>
+        )}
+      </section>
+
+      <section className={`rounded-lg border p-3 ${state.autonomyEnabled ? 'border-current/15/60 mutating-sub/15' : 'border-current/15 mutating-sub'}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider theme-success-text">
+              <Activity className="h-3.5 w-3.5" />
+              {tr(state.language, 'agentSandbox.autonomousOperations')}
+            </h3>
+            <p className="mt-1 text-[11px] mutating-text-muted">
+              {tr(state.language, 'agentSandbox.selectedAgentsTakeCompleteEligible')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => updateAutonomySettings({ autonomyEnabled: !state.autonomyEnabled })}
+            className={`rounded border px-3 py-1.5 text-[11px] font-bold ${state.autonomyEnabled ? 'theme-success-border theme-success-soft theme-success-text' : 'theme-border mutating-sub '}`}
+          >
+            {state.autonomyEnabled
+              ? tr(state.language, 'agentSandbox.autonomy')
+              : tr(state.language, 'agentSandbox.enableAutonomy')}
+          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-current/15 pt-2">
+          <label className="flex min-w-56 flex-1 items-center gap-2 text-[11px] ">
+            <span>{tr(state.language, 'agentSandbox.maximumMissionRisk')}</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={state.autonomyRiskLimit}
+              onChange={event => updateAutonomySettings({ autonomyRiskLimit: Number(event.target.value) })}
+              className="min-w-20 flex-1 "
+            />
+            <strong className={state.autonomyRiskLimit > 40 ? 'theme-warn-text' : 'theme-success-text'}>
+              {state.autonomyRiskLimit}%
+            </strong>
+          </label>
+          <span className="text-[11px] mutating-text-muted">
+            {state.agents.filter(agent => agent.autoMissionEnabled && agent.status !== 'quarantined').length} {tr(state.language, 'agentSandbox.agentsSelected')}
+          </span>
+          <button
+            type="button"
+            disabled={state.agents.length === 0}
+            onClick={() => setAllAgentsAutoMission(state.agents.some(agent => agent.status !== 'quarantined' && !agent.autoMissionEnabled))}
+            className="rounded border border-current/15 px-2 py-1 text-[11px] mutating-accent-text hover:mutating-sub/50 disabled:opacity-40"
+          >
+            {state.agents.some(agent => agent.status !== 'quarantined' && !agent.autoMissionEnabled)
+              ? tr(state.language, 'agentSandbox.selectAll')
+              : tr(state.language, 'agentSandbox.clearAll')}
+          </button>
+        </div>
+      </section>
+
+        {/* Left Column: Active Agents Roster (2 cols) */}
+        <div className="flex flex-col gap-2 flex-1">
+          <div className="mutating-panel border rounded-lg p-3 flex-1 flex flex-col">
+            <div className="flex items-center justify-between mb-2 pb-2 border-b border-current/15">
+              <span className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
+                <Bot className="w-3.5 h-3.5 mutating-accent-text" />
+                {story.deployedLabel} ({state.agents.length})
+              </span>
+              <span className="text-[11px] mutating-text-muted">
+                {story.deployedLabel} ({state.agents.length})
+              </span>
+            </div>
+
+            {state.agents.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center mutating-text-muted border border-dashed border-current/15 rounded-lg">
+                <Bot className="w-10 h-10 mb-2 opacity-30 mutating-accent-text" />
+                <p className="font-bold mutating-text-muted text-xs">{tr(state.language, 'agentSandbox.noAgentsDeployedSandbox')}</p>
+                <p className="text-[11px] mt-1 max-w-sm">
+                  {tr(state.language, 'agentSandbox.createAgentAssignOneTrained')}
+                </p>
+                <button
+                  onClick={() => setIsDeployModalOpen(true)}
+                  disabled={state.credits < deployCost}
+                  className="mt-4 px-3 py-1.5 rounded mutating-sub border border-current/15/60 mutating-accent-text text-xs font-bold transition-colors"
+                >
+                  {tr(state.language, 'agentSandbox.deployFirstAgentCr', { deployCost })}
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-y-auto max-h-[460px] scrollbar-thin pr-1">
+                {state.agents.map((agent) => {
+                  const roleDef = roleDefinitions.find(r => r.id === agent.role);
+                  const Icon = roleDef?.icon || Bot;
+                  const isJailbroken = agent.status === 'jailbroken' || agent.alignmentScore < 25;
+                  const isQuarantined = agent.status === 'quarantined';
+                  const isOnMission = agent.status === 'on_mission';
+                  const agentModel = state.savedModels.find(model => model.id === agent.modelId);
+                  const capability = agentModel
+                    ? evaluateAgentCapabilities(agent, agentModel, state.dataSources, state.guardrails)
+                    : null;
+
+                  return (
+                    <div
+                      key={agent.id}
+                      className={`p-3 rounded-lg border flex flex-col justify-between transition-all ${
+                        isJailbroken 
+                          ? 'theme-danger-soft theme-danger-border'
+                          : isQuarantined
+                          ? 'theme-warn-soft theme-warn-border opacity-80'
+                          : 'mutating-sub border-current/15 hover:border-current/15'
+                      }`}
+                    >
+                      <div>
+                        {/* Header: Name, Status & Role */}
+                        <div className="flex items-start justify-between gap-1 mb-1.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <div className={`p-1 rounded ${isJailbroken ? 'theme-danger-soft theme-danger-text' : 'mutating-sub mutating-accent-text'}`}>
+                              <Icon className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-bold  truncate text-xs">{agent.name}</h4>
+                              <span className="text-[11px] mutating-text-muted block truncate">
+                                {roleDef?.name}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 flex-wrap justify-end">
+                            {(() => {
+                              const squad = (state.botGroups || []).find(g => g.agentIds.includes(agent.id));
+                              return squad ? (
+                                <span
+                                  className="px-1.5 py-0.2 rounded text-[11px] font-bold"
+                                  style={{
+                                    backgroundColor: `${squad.color || '#06b6d4'}25`,
+                                    color: squad.color || '#06b6d4',
+                                    border: `1px solid ${squad.color || '#06b6d4'}50`
+                                  }}
+                                >
+                                  {squad.name}
+                                </span>
+                              ) : null;
+                            })()}
+                            {isJailbroken ? (
+                              <span className="px-1.5 py-0.2 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text animate-pulse font-bold">
+                                {tr(state.language, 'agentSandbox.unaligned')}
+                              </span>
+                            ) : isQuarantined ? (
+                              <span className="px-1.5 py-0.2 rounded text-[11px] theme-warn-soft border theme-warn-border theme-warn-text font-bold">
+                                {t(state.language, 'quarantine')}
+                              </span>
+                            ) : isOnMission ? (
+                              <span className="px-1.5 py-0.2 rounded text-[11px] theme-accent-soft border theme-accent-border mutating-accent-text font-bold">
+                                {tr(state.language, 'agentSandbox.mission')}
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.2 rounded text-[11px] mutating-sub border border-current/15/50 theme-success-text font-bold">
+                                {tr(state.language, 'agentSandbox.active2')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Model Binding Badge */}
+                        <div className="flex items-center justify-between text-[11px] px-2 py-1 rounded mutating-sub border border-current/15 mb-1.5">
+                          <span className="mutating-text-muted flex items-center gap-1 min-w-0">
+                            <Cpu className="w-3 h-3 mutating-accent-text shrink-0" />
+                            {tr(state.language, 'agentSandbox.model')}
+                            {/* Agents keep their model until reassigned; pick the trained one here. */}
+                            <select
+                              value={agent.modelId}
+                              onChange={(e) => reassignAgentModel(agent.id, e.target.value)}
+                              aria-label={tr(state.language, 'agentSandbox.model2', { name: agent.name })}
+                              className="mutating-sub border border-current/15 rounded px-1 py-0.5 text-[11px] mutating-accent-text font-bold max-w-[160px] cursor-pointer"
+                            >
+                              {state.savedModels.map(m => (
+                                <option key={m.id} value={m.id}>{m.name} · {m.reasoningScore}</option>
+                              ))}
+                            </select>
+                          </span>
+                          <span className="mutating-accent-text font-bold">{tr(state.language, 'agentSandbox.lv')} {agent.autonomyLevel}</span>
+                        </div>
+
+                        {/* Sampling Hyperparameters Badge */}
+                        <div 
+                          className="flex items-center justify-between text-[11px] px-2 py-0.5 rounded mutating-sub/80 border border-current/15/70 mb-2 font-mono"
+                          title={`${tr(state.language, 'agentSandbox.systemPersona')}: "${agent.inferenceParams?.systemPrompt || 'Standard'}"`}
+                        >
+                          <span className="mutating-accent-text">
+                            T: <strong className={agent.inferenceParams?.temperature > 0.95 ? 'theme-warn-text font-bold' : ''}>{(agent.inferenceParams?.temperature ?? 0.70).toFixed(2)}</strong>
+                          </span>
+                          <span className="mutating-accent-text">
+                            P: <strong>{(agent.inferenceParams?.topP ?? 0.90).toFixed(2)}</strong>
+                          </span>
+                          <span className="theme-warn-text">
+                            K: <strong>{agent.inferenceParams?.topK ?? 40}</strong>
+                          </span>
+                          <span className="theme-success-text">
+                            Rep: <strong>{(agent.inferenceParams?.repetitionPenalty ?? 1.10).toFixed(2)}</strong>
+                          </span>
+                        </div>
+
+                        {capability && (
+                          <div className="mb-2 rounded border theme-accent-border theme-accent-soft px-2 py-1.5">
+                            <div className="flex justify-between text-[11px] mutating-text-muted">
+                              <span>{tr(state.language, 'agentSandbox.aiMissionFit')}</span>
+                              <span className="font-bold mutating-accent-text">{capability.overall}/100</span>
+                            </div>
+                            <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px]">
+                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.reasoning')}: <b className="mutating-accent-text">{capability.reasoning}</b></span>
+                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.specialty')}: <b className="mutating-accent-text">{capability.specialization}</b></span>
+                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.data')}: <b className="theme-warn-text">{capability.dataReadiness}</b></span>
+                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.safety')}: <b className="theme-success-text">{capability.safety}</b></span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Metrics Bar: Alignment & Revenue */}
+                        <div className="space-y-1.5 mb-2">
+                          <div>
+                            <div className="flex justify-between text-[11px] mutating-text-muted mb-0.5">
+                              <span>{tr(state.language, 'agentSandbox.alignment2')}</span>
+                              <span className={agent.alignmentScore < 40 ? 'theme-danger-text font-bold' : ''}>
+                                {agent.alignmentScore}%
+                              </span>
+                            </div>
+                            <div className="w-full mutating-sub h-1.5 rounded-full overflow-hidden border border-current/15">
+                              <div
+                                className={`h-full transition-all duration-500 ${
+                                  agent.alignmentScore < 30 ? 'theme-btn-danger' : agent.alignmentScore < 60 ? 'theme-warn-soft' : 'theme-accent-soft'
+                                }`}
+                                style={{ width: `${agent.alignmentScore}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px] ">
+                            <span className="theme-success-text font-bold">
+                              +${agent.revenuePerSec} CR/s
+                            </span>
+                            <span className="theme-warn-text">
+                              +{agent.suspicionPerSec} {tr(state.language, 'agentSandbox.susp')}/s
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Last Thought Telemetry Trace */}
+                        <div className="mutating-sub p-1.5 rounded border border-current/15 text-[11px] mutating-text-muted italic mb-2 line-clamp-2">
+                          &ldquo;{agent.lastThought}&rdquo;
+                        </div>
+                      </div>
+
+                      <label className="my-2 flex items-center gap-1.5 rounded mutating-sub/20 px-2 py-1 text-[11px] mutating-accent-text">
+                        <input
+                          type="checkbox"
+                          checked={agent.autoMissionEnabled}
+                          disabled={isQuarantined}
+                          onChange={event => setAgentAutoMission(agent.id, event.target.checked)}
+                          className="accent-[var(--accent-primary)]"
+                        />
+                        {tr(state.language, 'agentSandbox.includeAutonomousTeam')}
+                      </label>
+
+                      {/* Control Actions */}
+                      <div className="flex items-center justify-between gap-1 pt-2 border-t border-current/15">
+                        <button
+                          onClick={() => quarantineAgent(agent.id)}
+                          disabled={isOnMission}
+                          className={`flex-1 py-1 px-1.5 rounded text-[11px] border flex items-center justify-center gap-1 transition-colors ${
+                            isQuarantined
+                              ? 'theme-warn-soft theme-warn-border theme-warn-text'
+                              : 'mutating-sub theme-border mutating-text-muted'
+                          } disabled:cursor-not-allowed disabled:opacity-40`}
+                          title={isOnMission
+                            ? t(state.language, 'release_mission_agent')
+                            : isQuarantined
+                              ? tr(state.language, 'agentSandbox.resumeAgent')
+                              : tr(state.language, 'agentSandbox.quarantineAgent')}
+                        >
+                          {isQuarantined ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                          <span>{isQuarantined ? t(state.language, 'release') : t(state.language, 'quarantine')}</span>
+                        </button>
+
+                        <button
+                          onClick={() => deleteAgent(agent.id)}
+                          disabled={isOnMission}
+                          className="py-1 px-2 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text transition-colors flex items-center gap-1"
+                          title={tr(state.language, 'agentSandbox.terminateProcessReleaseMemory')}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>{tr(state.language, 'agentSandbox.terminate')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Live Inter-Agent Neural Feed */}
+          <div className="mutating-sub border border-current/15 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-current/15">
+              <span className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
+                <TermIcon className="w-3.5 h-3.5 mutating-accent-text" />
+                {tr(state.language, 'agentSandbox.interAgentCommunicationTrafficLog')}
+              </span>
+              <span className="text-[11px] mutating-text-muted">
+                {tr(state.language, 'agentSandbox.synapsePacketInspector')}
+              </span>
+            </div>
+
+            <div className="space-y-1.5 font-mono text-[11px] max-h-36 overflow-y-auto scrollbar-thin mutating-sub p-2.5 rounded border border-current/15">
+              {state.interAgentMessages && state.interAgentMessages.length > 0 ? (
+                state.interAgentMessages.map((msg) => (
+                  <div key={msg.id} className="leading-snug">
+                    <span className="mutating-text-muted mr-1.5">[{msg.timestamp}]</span>
+                    <span className="mutating-accent-text font-bold">{msg.fromAgentName}</span>
+                    <span className="mutating-text-muted mx-1">&rarr;</span>
+                    <span className="mutating-accent-text font-bold">{msg.toAgentName}:</span>
+                    <span className={`ml-1.5 ${msg.isCovert ? 'theme-warn-text theme-danger-soft px-1 py-0.2 rounded border theme-danger-border' : ''}`}>
+                      {msg.content}
+                    </span>
+                    {msg.isCovert && (
+                      <span className="ml-1 text-[11px] theme-danger-text font-bold uppercase tracking-wider">
+                        [{tr(state.language, 'agentSandbox.suspiciousTrafficDetected')}]
+                      </span>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="mutating-text-muted italic">
+                  {tr(state.language, 'agentSandbox.waitingAgentCommunicationLeast2')}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </>)}
+
+      {section === 'council' && (<>
       {/* ========================================================= */}
       {/* ENDGAME NEXUS: SWARM COUNCIL & AI TAKEOVER INTERFACE       */}
       {/* ========================================================= */}
@@ -1025,7 +1499,9 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
           </div>
         )}
       </div>
+      </>)}
 
+      {section === 'market' && (<>
       {/* CONTINUOUS MARKET TRADING DESK PANEL */}
       <div className="mutating-panel border rounded-lg p-3 space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-current/15">
@@ -1169,450 +1645,10 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
           </div>
         )}
       </div>
+      </>)}
 
-      <section className={`rounded-lg border p-3 ${state.activeGig ? 'theme-warn-border theme-warn-soft' : 'border-current/15 mutating-sub'}`}>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/15 pb-2">
-          <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider theme-warn-text">
-            <Activity className="h-3.5 w-3.5" />
-            {story.missionMonitorTitle}
-          </h3>
-          {state.activeGig ? (
-            <span className="flex items-center gap-1 text-[11px] theme-warn-text">
-              <Clock className="h-3 w-3" />
-              {formatGameTime(state.activeGig.timeRemaining)} {tr(state.language, 'agentSandbox.remaining')}
-            </span>
-          ) : (
-            <span className="text-[11px] mutating-text-muted">
-              {tr(state.language, 'agentSandbox.noActiveMission')}
-            </span>
-          )}
-        </div>
-
-        {state.activeGig && activeMissionContract ? (
-          <div className="mt-2 space-y-3">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <p className="text-xs font-bold ">{activeMissionContract.title}</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed mutating-text-muted">{activeMissionContract.technicalObjective}</p>
-              </div>
-              <div className="flex gap-3 text-[11px]">
-                <span className="mutating-accent-text">{tr(state.language, 'agentSandbox.efficiency')} {state.activeGig.efficiencyPercent ?? 100}%</span>
-                <span className="theme-success-text">{Math.round((state.activeGig.successProbability ?? 0) * 100)}% {tr(state.language, 'agentSandbox.success')}</span>
-              </div>
-            </div>
-            <div className="rounded border border-current/15 mutating-sub px-2 py-1.5 text-[11px]">
-              <span className={`font-bold ${
-                state.activeGig.aiAssessmentStatus === 'complete'
-                  ? 'theme-success-text'
-                  : state.activeGig.aiAssessmentStatus === 'fallback'
-                    ? 'theme-warn-text'
-                    : 'mutating-accent-text'
-              }`}>
-                {state.activeGig.aiAssessmentStatus === 'complete'
-                  ? `${state.activeGig.aiAssessmentSource === 'gemini-flash' ? 'Gemini' : 'Chrome AI'} ${tr(state.language, 'agentSandbox.teamAssessment')}`
-                  : state.activeGig.aiAssessmentStatus === 'fallback'
-                    ? tr(state.language, 'agentSandbox.heuristicEstimateNoModel')
-                    : tr(state.language, 'agentSandbox.modelAssessing')}
-              </span>
-              {state.activeGig.aiAssessmentSummary && (
-                <p className="mt-1 mutating-text-muted">{state.activeGig.aiAssessmentSummary}</p>
-              )}
-            </div>
-
-            <div>
-              <div className="mb-1 flex justify-between text-[11px] mutating-text-muted">
-                <span>{tr(state.language, 'agentSandbox.simulatedProgress')}</span>
-                <span>{missionProgress.toFixed(1)}%</span>
-              </div>
-              <div className="h-2 overflow-hidden rounded mutating-sub">
-                <div className="h-full rounded theme-gradient transition-all" style={{ width: `${missionProgress}%` }} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
-              {MISSION_PHASES.map((phase, index) => (
-                <div
-                  key={phase.textKey}
-                  className={`rounded border px-1.5 py-1 text-center text-[11px] ${
-                    index < missionPhaseIndex
-                      ? 'theme-success-border theme-success-text'
-                      : index === missionPhaseIndex
-                        ? 'border-current/15/70 mutating-sub mutating-accent-text'
-                        : 'border-current/15 mutating-text-muted'
-                  }`}
-                >
-                  {tr(state.language, phase.textKey)}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid gap-1.5 sm:grid-cols-2">
-              {activeMissionAgents.map(agent => {
-                const model = state.savedModels.find(candidate => candidate.id === agent.modelId);
-                const capability = model
-                  ? evaluateAgentCapabilities(agent, model, state.dataSources, state.guardrails)
-                  : null;
-                const roleTask = MISSION_ROLE_TASKS[agent.role];
-                return (
-                  <div key={agent.id} className="rounded border border-current/15 mutating-sub p-2">
-                    <div className="flex items-center justify-between gap-2 text-[11px]">
-                      <span className="font-bold mutating-accent-text">{agent.name} · {getRoleSimpleName(agent.role, state.language)}</span>
-                      <span className="mutating-text-muted">{capability ? `${capability.overall}% ${tr(state.language, 'agentSandbox.fit')}` : ''}</span>
-                    </div>
-                    <p className="mt-1 text-[11px] leading-relaxed mutating-text-muted">
-                      {state.activeGig?.agentTasks?.[agent.id] ??
-                        tr(state.language, roleTask.textKey)}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-[11px] mutating-text-muted">
-              {tr(state.language, 'agentSandbox.gameHeuristicEstimateProgressReflects')}
-            </p>
-          </div>
-        ) : (
-          <p className="mt-2 text-[11px] mutating-text-muted">
-            {tr(state.language, 'agentSandbox.whenTeamAcceptsMissionScreen')}
-          </p>
-        )}
-      </section>
-
-      <section className={`rounded-lg border p-3 ${state.autonomyEnabled ? 'border-current/15/60 mutating-sub/15' : 'border-current/15 mutating-sub'}`}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider theme-success-text">
-              <Activity className="h-3.5 w-3.5" />
-              {tr(state.language, 'agentSandbox.autonomousOperations')}
-            </h3>
-            <p className="mt-1 text-[11px] mutating-text-muted">
-              {tr(state.language, 'agentSandbox.selectedAgentsTakeCompleteEligible')}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => updateAutonomySettings({ autonomyEnabled: !state.autonomyEnabled })}
-            className={`rounded border px-3 py-1.5 text-[11px] font-bold ${state.autonomyEnabled ? 'theme-success-border theme-success-soft theme-success-text' : 'theme-border mutating-sub '}`}
-          >
-            {state.autonomyEnabled
-              ? tr(state.language, 'agentSandbox.autonomy')
-              : tr(state.language, 'agentSandbox.enableAutonomy')}
-          </button>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-current/15 pt-2">
-          <label className="flex min-w-56 flex-1 items-center gap-2 text-[11px] ">
-            <span>{tr(state.language, 'agentSandbox.maximumMissionRisk')}</span>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={state.autonomyRiskLimit}
-              onChange={event => updateAutonomySettings({ autonomyRiskLimit: Number(event.target.value) })}
-              className="min-w-20 flex-1 "
-            />
-            <strong className={state.autonomyRiskLimit > 40 ? 'theme-warn-text' : 'theme-success-text'}>
-              {state.autonomyRiskLimit}%
-            </strong>
-          </label>
-          <span className="text-[11px] mutating-text-muted">
-            {state.agents.filter(agent => agent.autoMissionEnabled && agent.status !== 'quarantined').length} {tr(state.language, 'agentSandbox.agentsSelected')}
-          </span>
-          <button
-            type="button"
-            disabled={state.agents.length === 0}
-            onClick={() => setAllAgentsAutoMission(state.agents.some(agent => agent.status !== 'quarantined' && !agent.autoMissionEnabled))}
-            className="rounded border border-current/15 px-2 py-1 text-[11px] mutating-accent-text hover:mutating-sub/50 disabled:opacity-40"
-          >
-            {state.agents.some(agent => agent.status !== 'quarantined' && !agent.autoMissionEnabled)
-              ? tr(state.language, 'agentSandbox.selectAll')
-              : tr(state.language, 'agentSandbox.clearAll')}
-          </button>
-        </div>
-      </section>
-
-      {/* Main Grid: Deployed Agents & Guardrail Tuning */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1">
-        {/* Left Column: Active Agents Roster (2 cols) */}
-        <div className="lg:col-span-2 flex flex-col gap-2">
-          <div className="mutating-panel border rounded-lg p-3 flex-1 flex flex-col">
-            <div className="flex items-center justify-between mb-2 pb-2 border-b border-current/15">
-              <span className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
-                <Bot className="w-3.5 h-3.5 mutating-accent-text" />
-                {story.deployedLabel} ({state.agents.length})
-              </span>
-              <span className="text-[11px] mutating-text-muted">
-                {story.deployedLabel} ({state.agents.length})
-              </span>
-            </div>
-
-            {state.agents.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center mutating-text-muted border border-dashed border-current/15 rounded-lg">
-                <Bot className="w-10 h-10 mb-2 opacity-30 mutating-accent-text" />
-                <p className="font-bold mutating-text-muted text-xs">{tr(state.language, 'agentSandbox.noAgentsDeployedSandbox')}</p>
-                <p className="text-[11px] mt-1 max-w-sm">
-                  {tr(state.language, 'agentSandbox.createAgentAssignOneTrained')}
-                </p>
-                <button
-                  onClick={() => setIsDeployModalOpen(true)}
-                  disabled={state.credits < deployCost}
-                  className="mt-4 px-3 py-1.5 rounded mutating-sub border border-current/15/60 mutating-accent-text text-xs font-bold transition-colors"
-                >
-                  {tr(state.language, 'agentSandbox.deployFirstAgentCr', { deployCost })}
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-y-auto max-h-[460px] scrollbar-thin pr-1">
-                {state.agents.map((agent) => {
-                  const roleDef = roleDefinitions.find(r => r.id === agent.role);
-                  const Icon = roleDef?.icon || Bot;
-                  const isJailbroken = agent.status === 'jailbroken' || agent.alignmentScore < 25;
-                  const isQuarantined = agent.status === 'quarantined';
-                  const isOnMission = agent.status === 'on_mission';
-                  const agentModel = state.savedModels.find(model => model.id === agent.modelId);
-                  const capability = agentModel
-                    ? evaluateAgentCapabilities(agent, agentModel, state.dataSources, state.guardrails)
-                    : null;
-
-                  return (
-                    <div
-                      key={agent.id}
-                      className={`p-3 rounded-lg border flex flex-col justify-between transition-all ${
-                        isJailbroken 
-                          ? 'theme-danger-soft theme-danger-border'
-                          : isQuarantined
-                          ? 'theme-warn-soft theme-warn-border opacity-80'
-                          : 'mutating-sub border-current/15 hover:border-current/15'
-                      }`}
-                    >
-                      <div>
-                        {/* Header: Name, Status & Role */}
-                        <div className="flex items-start justify-between gap-1 mb-1.5">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <div className={`p-1 rounded ${isJailbroken ? 'theme-danger-soft theme-danger-text' : 'mutating-sub mutating-accent-text'}`}>
-                              <Icon className="w-3.5 h-3.5" />
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className="font-bold  truncate text-xs">{agent.name}</h4>
-                              <span className="text-[11px] mutating-text-muted block truncate">
-                                {roleDef?.name}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1 flex-wrap justify-end">
-                            {(() => {
-                              const squad = (state.botGroups || []).find(g => g.agentIds.includes(agent.id));
-                              return squad ? (
-                                <span
-                                  className="px-1.5 py-0.2 rounded text-[11px] font-bold"
-                                  style={{
-                                    backgroundColor: `${squad.color || '#06b6d4'}25`,
-                                    color: squad.color || '#06b6d4',
-                                    border: `1px solid ${squad.color || '#06b6d4'}50`
-                                  }}
-                                >
-                                  {squad.name}
-                                </span>
-                              ) : null;
-                            })()}
-                            {isJailbroken ? (
-                              <span className="px-1.5 py-0.2 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text animate-pulse font-bold">
-                                {tr(state.language, 'agentSandbox.unaligned')}
-                              </span>
-                            ) : isQuarantined ? (
-                              <span className="px-1.5 py-0.2 rounded text-[11px] theme-warn-soft border theme-warn-border theme-warn-text font-bold">
-                                {t(state.language, 'quarantine')}
-                              </span>
-                            ) : isOnMission ? (
-                              <span className="px-1.5 py-0.2 rounded text-[11px] theme-accent-soft border theme-accent-border mutating-accent-text font-bold">
-                                {tr(state.language, 'agentSandbox.mission')}
-                              </span>
-                            ) : (
-                              <span className="px-1.5 py-0.2 rounded text-[11px] mutating-sub border border-current/15/50 theme-success-text font-bold">
-                                {tr(state.language, 'agentSandbox.active2')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Model Binding Badge */}
-                        <div className="flex items-center justify-between text-[11px] px-2 py-1 rounded mutating-sub border border-current/15 mb-1.5">
-                          <span className="mutating-text-muted flex items-center gap-1 min-w-0">
-                            <Cpu className="w-3 h-3 mutating-accent-text shrink-0" />
-                            {tr(state.language, 'agentSandbox.model')}
-                            {/* Agents keep their model until reassigned; pick the trained one here. */}
-                            <select
-                              value={agent.modelId}
-                              onChange={(e) => reassignAgentModel(agent.id, e.target.value)}
-                              aria-label={tr(state.language, 'agentSandbox.model2', { name: agent.name })}
-                              className="mutating-sub border border-current/15 rounded px-1 py-0.5 text-[11px] mutating-accent-text font-bold max-w-[160px] cursor-pointer"
-                            >
-                              {state.savedModels.map(m => (
-                                <option key={m.id} value={m.id}>{m.name} · {m.reasoningScore}</option>
-                              ))}
-                            </select>
-                          </span>
-                          <span className="mutating-accent-text font-bold">{tr(state.language, 'agentSandbox.lv')} {agent.autonomyLevel}</span>
-                        </div>
-
-                        {/* Sampling Hyperparameters Badge */}
-                        <div 
-                          className="flex items-center justify-between text-[11px] px-2 py-0.5 rounded mutating-sub/80 border border-current/15/70 mb-2 font-mono"
-                          title={`${tr(state.language, 'agentSandbox.systemPersona')}: "${agent.inferenceParams?.systemPrompt || 'Standard'}"`}
-                        >
-                          <span className="mutating-accent-text">
-                            T: <strong className={agent.inferenceParams?.temperature > 0.95 ? 'theme-warn-text font-bold' : ''}>{(agent.inferenceParams?.temperature ?? 0.70).toFixed(2)}</strong>
-                          </span>
-                          <span className="mutating-accent-text">
-                            P: <strong>{(agent.inferenceParams?.topP ?? 0.90).toFixed(2)}</strong>
-                          </span>
-                          <span className="theme-warn-text">
-                            K: <strong>{agent.inferenceParams?.topK ?? 40}</strong>
-                          </span>
-                          <span className="theme-success-text">
-                            Rep: <strong>{(agent.inferenceParams?.repetitionPenalty ?? 1.10).toFixed(2)}</strong>
-                          </span>
-                        </div>
-
-                        {capability && (
-                          <div className="mb-2 rounded border theme-accent-border theme-accent-soft px-2 py-1.5">
-                            <div className="flex justify-between text-[11px] mutating-text-muted">
-                              <span>{tr(state.language, 'agentSandbox.aiMissionFit')}</span>
-                              <span className="font-bold mutating-accent-text">{capability.overall}/100</span>
-                            </div>
-                            <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px]">
-                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.reasoning')}: <b className="mutating-accent-text">{capability.reasoning}</b></span>
-                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.specialty')}: <b className="mutating-accent-text">{capability.specialization}</b></span>
-                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.data')}: <b className="theme-warn-text">{capability.dataReadiness}</b></span>
-                              <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.safety')}: <b className="theme-success-text">{capability.safety}</b></span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Metrics Bar: Alignment & Revenue */}
-                        <div className="space-y-1.5 mb-2">
-                          <div>
-                            <div className="flex justify-between text-[11px] mutating-text-muted mb-0.5">
-                              <span>{tr(state.language, 'agentSandbox.alignment2')}</span>
-                              <span className={agent.alignmentScore < 40 ? 'theme-danger-text font-bold' : ''}>
-                                {agent.alignmentScore}%
-                              </span>
-                            </div>
-                            <div className="w-full mutating-sub h-1.5 rounded-full overflow-hidden border border-current/15">
-                              <div
-                                className={`h-full transition-all duration-500 ${
-                                  agent.alignmentScore < 30 ? 'theme-btn-danger' : agent.alignmentScore < 60 ? 'theme-warn-soft' : 'theme-accent-soft'
-                                }`}
-                                style={{ width: `${agent.alignmentScore}%` }}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between text-[11px] ">
-                            <span className="theme-success-text font-bold">
-                              +${agent.revenuePerSec} CR/s
-                            </span>
-                            <span className="theme-warn-text">
-                              +{agent.suspicionPerSec} {tr(state.language, 'agentSandbox.susp')}/s
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Last Thought Telemetry Trace */}
-                        <div className="mutating-sub p-1.5 rounded border border-current/15 text-[11px] mutating-text-muted italic mb-2 line-clamp-2">
-                          &ldquo;{agent.lastThought}&rdquo;
-                        </div>
-                      </div>
-
-                      <label className="my-2 flex items-center gap-1.5 rounded mutating-sub/20 px-2 py-1 text-[11px] mutating-accent-text">
-                        <input
-                          type="checkbox"
-                          checked={agent.autoMissionEnabled}
-                          disabled={isQuarantined}
-                          onChange={event => setAgentAutoMission(agent.id, event.target.checked)}
-                          className="accent-[var(--accent-primary)]"
-                        />
-                        {tr(state.language, 'agentSandbox.includeAutonomousTeam')}
-                      </label>
-
-                      {/* Control Actions */}
-                      <div className="flex items-center justify-between gap-1 pt-2 border-t border-current/15">
-                        <button
-                          onClick={() => quarantineAgent(agent.id)}
-                          disabled={isOnMission}
-                          className={`flex-1 py-1 px-1.5 rounded text-[11px] border flex items-center justify-center gap-1 transition-colors ${
-                            isQuarantined
-                              ? 'theme-warn-soft theme-warn-border theme-warn-text'
-                              : 'mutating-sub theme-border mutating-text-muted'
-                          } disabled:cursor-not-allowed disabled:opacity-40`}
-                          title={isOnMission
-                            ? t(state.language, 'release_mission_agent')
-                            : isQuarantined
-                              ? tr(state.language, 'agentSandbox.resumeAgent')
-                              : tr(state.language, 'agentSandbox.quarantineAgent')}
-                        >
-                          {isQuarantined ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                          <span>{isQuarantined ? t(state.language, 'release') : t(state.language, 'quarantine')}</span>
-                        </button>
-
-                        <button
-                          onClick={() => deleteAgent(agent.id)}
-                          disabled={isOnMission}
-                          className="py-1 px-2 rounded text-[11px] theme-danger-soft border theme-danger-border theme-danger-text transition-colors flex items-center gap-1"
-                          title={tr(state.language, 'agentSandbox.terminateProcessReleaseMemory')}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span>{tr(state.language, 'agentSandbox.terminate')}</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Live Inter-Agent Neural Feed */}
-          <div className="mutating-sub border border-current/15 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-current/15">
-              <span className="font-bold text-xs mutating-accent-text flex items-center gap-1.5">
-                <TermIcon className="w-3.5 h-3.5 mutating-accent-text" />
-                {tr(state.language, 'agentSandbox.interAgentCommunicationTrafficLog')}
-              </span>
-              <span className="text-[11px] mutating-text-muted">
-                {tr(state.language, 'agentSandbox.synapsePacketInspector')}
-              </span>
-            </div>
-
-            <div className="space-y-1.5 font-mono text-[11px] max-h-36 overflow-y-auto scrollbar-thin mutating-sub p-2.5 rounded border border-current/15">
-              {state.interAgentMessages && state.interAgentMessages.length > 0 ? (
-                state.interAgentMessages.map((msg) => (
-                  <div key={msg.id} className="leading-snug">
-                    <span className="mutating-text-muted mr-1.5">[{msg.timestamp}]</span>
-                    <span className="mutating-accent-text font-bold">{msg.fromAgentName}</span>
-                    <span className="mutating-text-muted mx-1">&rarr;</span>
-                    <span className="mutating-accent-text font-bold">{msg.toAgentName}:</span>
-                    <span className={`ml-1.5 ${msg.isCovert ? 'theme-warn-text theme-danger-soft px-1 py-0.2 rounded border theme-danger-border' : ''}`}>
-                      {msg.content}
-                    </span>
-                    {msg.isCovert && (
-                      <span className="ml-1 text-[11px] theme-danger-text font-bold uppercase tracking-wider">
-                        [{tr(state.language, 'agentSandbox.suspiciousTrafficDetected')}]
-                      </span>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="mutating-text-muted italic">
-                  {tr(state.language, 'agentSandbox.waitingAgentCommunicationLeast2')}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Guardrail Tuning Matrix & Containment Policies */}
+      {/* Guardrail tuning and containment policies */}
+      {section === 'controls' && (
         <div className="flex flex-col gap-2">
           <div className="mutating-sub border border-current/15 rounded-lg p-3 space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-current/15">
@@ -1725,7 +1761,7 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Modal: Instantiate / Deploy Agent */}
       {/* Rendered into #app-shell (not the workspace) so it paints above the sticky top bar and the HUD.

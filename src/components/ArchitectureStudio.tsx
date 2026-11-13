@@ -433,7 +433,7 @@ export const ArchitectureStudio: React.FC = () => {
       </div>
 
       {/* Expansive Sub-Navigation Menu */}
-      <div className="flex items-center gap-1.5 p-1.5 mutating-sub text-xs overflow-x-auto shadow-sm">
+      <div className="shrink-0 flex flex-wrap items-center gap-1.5 p-1.5 mutating-sub text-xs shadow-sm">
         <button
           onClick={() => { sound.playKeyClick(); setActiveArchTab('topology'); }}
           className={`px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
