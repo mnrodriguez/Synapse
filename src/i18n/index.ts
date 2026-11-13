@@ -27,6 +27,11 @@ export function tr(language: Language, key: CatalogKey, params?: TextParams): st
   return interpolate(catalog[key] ?? en[key] ?? key, params);
 }
 
+// For texts keyed by data (content.<kind>.<id>.<field>): the key may not exist for items created at runtime.
+export function hasCatalogKey(key: string): key is CatalogKey {
+  return key in en;
+}
+
 export function trv(language: Language, key: CatalogKey, version: number, params?: TextParams): string {
   const catalog = CATALOGS[language === 'es' ? 'es' : 'en'];
   const variant = catalog[`${key}@v${version}`];

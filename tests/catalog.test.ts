@@ -42,6 +42,11 @@ describe('text catalog', () => {
     expect(unclosed).toEqual([]);
   });
 
+  test('no CSS classes in the catalog', () => {
+    const classes = Object.entries(en).filter(([, v]) => /(^|\s)(theme|mutating)-[\w-]+/.test(v)).map(([k]) => k);
+    expect(classes).toEqual([]);
+  });
+
   test('every key is used by the code', () => {
     const unused = Object.keys(en).filter(key => {
       const base = key.replace(/@v[1-4]$/, '');
@@ -51,9 +56,8 @@ describe('text catalog', () => {
     expect(unused).toEqual([]);
   });
 
-  test('no new inline translations: literal localize() calls are gone', () => {
-    const inline = code.match(/localize\([^,()]+,\s*['`][^'`]*['`],\s*['`][^'`]*['`]\)/g) ?? [];
-    expect(inline).toEqual([]);
+  test('no inline translations: the localize(es, en) helper is gone', () => {
+    expect(code.match(/\blocalize\(/g) ?? []).toEqual([]);
   });
 
   test('parameters are filled in and versions fall back to the plain key', () => {

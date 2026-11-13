@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   BookOpen, 
   X, 
@@ -24,6 +24,7 @@ import { sound } from '../audio/soundManager';
 import { useGame } from '../context/GameContext';
 import { tr } from '../i18n';
 import { RichText } from '../i18n/RichText';
+import { MANUAL_PDF_URL } from '../utils/assets';
 
 interface HelpManualProps {
   isOpen: boolean;
@@ -34,9 +35,16 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
   const { state } = useGame();
   const [activeSection, setActiveSection] = useState<'pdf' | 'intro' | 'data' | 'arch' | 'infra' | 'singularity'>('pdf');
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
-  const pdfUrl = '/assets/aistudio/SYNAPSE_AI_Architecture___Systems_Manual__1__73b90381.pdf';
+  const pdfUrl = MANUAL_PDF_URL;
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 font-mono select-none">
@@ -72,6 +80,8 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
             <button
               onClick={() => { sound.playNavSwitch(); onClose(); }}
               className="p-1 rounded mutating-text-muted"
+              aria-label={tr(state.language, 'helpManual.closeManual')}
+              title={tr(state.language, 'helpManual.closeManual')}
             >
               <X className="w-4 h-4" />
             </button>
