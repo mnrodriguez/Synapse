@@ -174,4 +174,13 @@ const LEARNING_RATE_LABELS: Record<LearningRatePreset, CatalogKey> = {
   very_high: 'trainingRun.lr.veryHigh'
 };
 
+// The settings a run actually uses. In beginner mode learning rate and batch stay at their defaults
+// (epochs and early stopping remain the player's choice: they are the lesson on overfitting).
+export function runConfigFor(state: { trainingConfig?: unknown; difficulty?: string }): TrainingConfig {
+  const config = sanitizeTrainingConfig(state.trainingConfig);
+  return state.difficulty === 'beginner'
+    ? { ...config, learningRate: DEFAULT_TRAINING_CONFIG.learningRate, batchSize: DEFAULT_TRAINING_CONFIG.batchSize }
+    : config;
+}
+
 export const learningRateLabel = (language: Language, lr: LearningRatePreset): string => tr(language, LEARNING_RATE_LABELS[lr]);

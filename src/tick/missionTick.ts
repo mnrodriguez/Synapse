@@ -12,6 +12,7 @@ import { evaluateMissionTeam, findAutonomousMission, weakestTeamFactors } from '
 import { MISSION_SINGULARITY } from '../utils/missionTiers';
 import { effectCollector, type Random } from './effects';
 import { tr } from '../i18n';
+import { difficultyConfigFor } from '../utils/constants';
 
 // Running missions for one tick: countdown, success or failure, rewards and replacement contracts, and
 // autonomous bots taking new missions.
@@ -62,9 +63,10 @@ export function missionTick(input: MissionTickInput) {
         const contractTitle = localizedContractTitle(prev.language, gig);
         if (success) {
           // Autonomous bot commission deduction: 40% compute delegation overhead, 60% net payout
-          const earnedCredits = isAutonomous ? Math.round(gig.rewardCredits * 0.60) : gig.rewardCredits;
+          const difficulty = difficultyConfigFor(prev);
+          const earnedCredits = Math.round((isAutonomous ? gig.rewardCredits * 0.60 : gig.rewardCredits) * difficulty.rewardMultiplier);
           credits += earnedCredits;
-          const suspicionAdded = Number((gig.suspicionRisk * 0.25).toFixed(1));
+          const suspicionAdded = Number((gig.suspicionRisk * 0.25 * difficulty.suspicionMultiplier).toFixed(1));
           watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
           completedContractsCount += 1;
           singularityProgress = Math.min(100, singularityProgress + (MISSION_SINGULARITY[gig.tier] ?? 1));
@@ -118,7 +120,7 @@ export function missionTick(input: MissionTickInput) {
         } else {
           // Mission Failed:
           // Keep the contract unconsumed and mark it with lastAttemptFailed so the user can easily retry it!
-          const suspicionAdded = gig.suspicionRisk;
+          const suspicionAdded = Number((gig.suspicionRisk * difficultyConfigFor(prev).suspicionMultiplier).toFixed(1));
           watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
           play('warning');
           addLog(

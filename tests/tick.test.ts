@@ -174,6 +174,18 @@ describe('mission tick', () => {
     expect(r.effects.some(e => e.kind === 'sound' && e.name === 'credit')).toBe(true);
   });
 
+  test('the difficulty scales rewards and suspicion (beginner: +25% reward, 40% less suspicion)', () => {
+    const at = (difficulty: GameState['difficulty'], roll: number) => missionTick({
+      prev: state({ activeGigs: [gig({ outcomeRoll: roll })], agents: [agent], difficulty }), activeTraining: null, contracts: DEFAULT_STATE.contracts.map(c => c.id === contract.id ? { ...c, suspicionRisk: 20 } : c),
+      detentionSeconds: 0, effectivePowerKw: 0.5, metrics: { totalComputePflops: 1, activePowerKw: 0.5, maxPowerKw: 10, maxCoolingKw: 10 },
+      powerTripSeconds: 0, totalComputePflops: 1, completedContractsCount: 0, credits: 0, singularityProgress: 1,
+      tutorialCompleted: true, tutorialStep: 5, watchdogSuspicion: 0, rand: () => 0.99, now: 1
+    });
+    expect(at('beginner', 0.1).credits).toBe(Math.round(contract.rewardCredits * 1.25));
+    expect(at('engineer', 0.1).credits).toBe(contract.rewardCredits);
+    expect(at('beginner', 0.95).watchdogSuspicion).toBeLessThan(at('normal', 0.95).watchdogSuspicion);
+  });
+
   test('a failed mission keeps the contract and explains why', () => {
     const r = run(gig({ outcomeRoll: 0.95 }));
     expect(r.credits).toBe(100);

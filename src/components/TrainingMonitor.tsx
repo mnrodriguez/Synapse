@@ -22,7 +22,7 @@ import { sound } from '../audio/soundManager';
 import { gpuComputePflops, formatTrainingTime, externalComputePflops, formatCompute } from '../utils/training';
 import { STARTER_TRAINING_DATASET } from '../utils/constants';
 import { TrainingConfigPanel } from './TrainingConfigPanel';
-import { sanitizeTrainingConfig, vramForRun, BATCH_SIZES, learningRateLabel } from '../utils/trainingRun';
+import { vramForRun, BATCH_SIZES, learningRateLabel, runConfigFor } from '../utils/trainingRun';
 import { tr } from '../i18n';
 
 // Selected dataset: an inline style so the accent border and tint win over the theme surface classes.
@@ -45,7 +45,7 @@ export const TrainingMonitor: React.FC = () => {
     h.category === 'gpu' ? sum + (h.vramGb * h.count) : sum, 0
   );
   // The batch changes the memory a run needs (see utils/trainingRun.ts).
-  const runVramGb = vramForRun(current.vramRequiredGb, sanitizeTrainingConfig(state.trainingConfig).batchSize);
+  const runVramGb = vramForRun(current.vramRequiredGb, runConfigFor(state).batchSize);
   const isVramSufficient = totalClusterVram >= runVramGb;
   const isBreakerTripped = state.powerTripSeconds > 0;
   const isDetained = state.detentionSeconds > 0;

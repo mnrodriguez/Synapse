@@ -49,7 +49,7 @@ import { t } from '../utils/i18n';
 import { INFERENCE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { evaluateAgentCapabilities } from '../utils/missionEvaluation';
-import { getRoleSimpleName, AGENT_SPINUP_COST } from '../utils/constants';
+import { getRoleSimpleName, AGENT_SPINUP_COST, difficultyConfigFor } from '../utils/constants';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { ContainmentPanel } from './ContainmentPanel';
 import { formatGameTime } from '../utils/training';
@@ -2021,7 +2021,8 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
                   </>
                 )}
 
-                {/* Root System Prompt */}
+                {/* Root System Prompt (engineer mode) */}
+                {difficultyConfigFor(state).fullControls && (
                 <div className="pt-2 border-t border-current/15">
                   <label className=" font-bold block mb-1 text-xs">
                     {t(state.language, 'param_system_prompt')}
@@ -2035,6 +2036,7 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
                   />
                   <p className="text-[11px] mutating-text-muted mt-0.5">{t(state.language, 'param_system_prompt_desc')}</p>
                 </div>
+                )}
               </div>
 
               {/* Submit Buttons */}

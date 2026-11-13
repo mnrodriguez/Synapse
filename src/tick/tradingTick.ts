@@ -7,6 +7,7 @@
 import type { GameState, ContractGig, AgentInstance } from '../types/game';
 import { effectCollector, type Random } from './effects';
 import { tr } from '../i18n';
+import { difficultyConfigFor } from '../utils/constants';
 
 // The trading desk for one tick.
 
@@ -64,8 +65,8 @@ export function tradingTick(input: TradingTickInput) {
         lastTickChange: tickChange
       };
 
-      watchdogSuspicion = Math.min(100, watchdogSuspicion + tickSuspicion);
-      tradingSuspicion = tickSuspicion;
+      tradingSuspicion = tickSuspicion * difficultyConfigFor(prev).suspicionMultiplier;
+      watchdogSuspicion = Math.min(100, watchdogSuspicion + tradingSuspicion);
 
       if (newCapital <= 0) {
         updatedTradingDesk = null;

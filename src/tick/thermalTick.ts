@@ -11,6 +11,7 @@ export const SCRAPING_SUSPICION_PER_TICK = 0.03;
 import { formatGameTime } from '../utils/training';
 import { effectCollector, type Random } from './effects';
 import { tr } from '../i18n';
+import { difficultyConfigFor } from '../utils/constants';
 
 // Heat, the circuit breaker and the watchdog's suspicion for one tick.
 export interface ThermalInput {
@@ -62,11 +63,13 @@ export function thermalTick(input: ThermalInput) {
   //  - scraping: crawler traffic while a dataset is being scraped;
   //  - dissipation: it fades while no mission or incident is running and nothing is overloaded.
   // Missions add their share when they finish (missionTick) and the trading desk its own (tradingTick).
-  const overload = effectivePowerKw > metrics.maxPowerKw || systemHeatCelsius > 95 ? 0.25 : 0;
+  // Increases are scaled by the difficulty (beginner: lower suspicion); fading is not.
+  const scale = difficultyConfigFor(prev).suspicionMultiplier;
+  const overload = effectivePowerKw > metrics.maxPowerKw || systemHeatCelsius > 95 ? 0.25 * scale : 0;
   const agents = prev.agents
     .filter(a => a.status !== 'quarantined')
-    .reduce((sum, a) => sum + (a.suspicionPerSec || 0) * AGENT_SUSPICION_SCALE, 0);
-  const scraping = prev.activeScrapeJob ? SCRAPING_SUSPICION_PER_TICK : 0;
+    .reduce((sum, a) => sum + (a.suspicionPerSec || 0) * AGENT_SUSPICION_SCALE, 0) * (scale);
+  const scraping = prev.activeScrapeJob ? SCRAPING_SUSPICION_PER_TICK * scale : 0;
   const hasOverseer = prev.agents.some(a => a.role === 'overseer' && a.status === 'active');
   const quiet = overload === 0 && currentActiveGigs.length === 0 && !prev.activeIncident;
   const dissipation = quiet ? -(hasOverseer ? 0.45 : 0.25) : 0;

@@ -1367,12 +1367,19 @@ export interface DifficultyConfig {
   nameKey: CatalogKey;
   descriptionKey: CatalogKey;
   rewardMultiplier: number;
-  powerMultiplier: number;
   suspicionMultiplier: number;
   initialCreditsBonus: number;
+  // Beginner: precision, loss, sampling, learning rate and batch are set automatically.
   simplifiedControls: boolean;
+  // Engineer: also edits the agents' system prompt.
+  fullControls: boolean;
   educationalCards: boolean;
 }
+
+// What the chosen difficulty changes. Mission rewards and every suspicion increase are scaled here;
+// simplifiedControls and fullControls decide which settings the player edits by hand.
+export const difficultyConfigFor = (state: { difficulty?: GameDifficulty }): DifficultyConfig =>
+  DIFFICULTY_CONFIGS[state.difficulty ?? 'normal'] ?? DIFFICULTY_CONFIGS.normal;
 
 export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
   beginner: {
@@ -1380,10 +1387,10 @@ export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
     nameKey: 'constants.difficultyConfigs.beginner.name',
     descriptionKey: 'constants.difficultyConfigs.beginner.description',
     rewardMultiplier: 1.25,
-    powerMultiplier: 0.70,
     suspicionMultiplier: 0.60,
     initialCreditsBonus: 300,
     simplifiedControls: true,
+    fullControls: false,
     educationalCards: true
   },
   normal: {
@@ -1391,10 +1398,10 @@ export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
     nameKey: 'constants.difficultyConfigs.normal.name',
     descriptionKey: 'constants.difficultyConfigs.normal.description',
     rewardMultiplier: 1.0,
-    powerMultiplier: 1.0,
     suspicionMultiplier: 1.0,
     initialCreditsBonus: 0,
     simplifiedControls: false,
+    fullControls: false,
     educationalCards: true
   },
   engineer: {
@@ -1402,10 +1409,10 @@ export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
     nameKey: 'constants.difficultyConfigs.engineer.name',
     descriptionKey: 'constants.difficultyConfigs.engineer.description',
     rewardMultiplier: 1.0,
-    powerMultiplier: 1.0,
     suspicionMultiplier: 1.0,
     initialCreditsBonus: 0,
     simplifiedControls: false,
+    fullControls: true,
     educationalCards: false
   }
 };

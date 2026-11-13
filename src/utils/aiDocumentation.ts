@@ -10,7 +10,7 @@ export interface DocEntry {
   url: string;
   organization: string;
   type: 'official' | 'research_paper' | 'theory_foundations';
-  category: string;
+  categoryKey: CatalogKey; // label in the catalog (src/i18n/)
   summaryKey: CatalogKey; // summary text in the catalog (src/i18n/)
   keySpecs?: string;
 }
@@ -22,7 +22,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.nvidia.com/en-us/geforce/10-series/',
     organization: 'NVIDIA',
     type: 'official',
-    category: 'Hardware · Desktop GPU',
+    categoryKey: 'aiDocs.category.hardwareDesktopGpu',
     summaryKey: 'aiDocs.hardwareDocs.gpuGtx1060.summary',
     keySpecs: '4.4 TFLOPS FP32 · 6GB GDDR5 · 120W TDP'
   },
@@ -31,7 +31,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.amd.com/en/products/graphics/radeon-rx-580',
     organization: 'AMD',
     type: 'official',
-    category: 'Hardware · Desktop GPU',
+    categoryKey: 'aiDocs.category.hardwareDesktopGpu',
     summaryKey: 'aiDocs.hardwareDocs.gpuRx580Dual.summary',
     keySpecs: '11.0 TFLOPS FP32 · 16GB GDDR5 · 320W TDP'
   },
@@ -40,7 +40,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.nvidia.com/en-us/data-center/tesla-k80/',
     organization: 'NVIDIA Enterprise',
     type: 'official',
-    category: 'Hardware · Enterprise Accelerator',
+    categoryKey: 'aiDocs.category.hardwareEnterpriseAccelerator',
     summaryKey: 'aiDocs.hardwareDocs.gpuTeslaK80.summary',
     keySpecs: '8.7 TFLOPS FP32 · 24GB GDDR5 ECC · 300W TDP'
   },
@@ -49,7 +49,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://coral.ai/docs/edgetpu/benchmarks/',
     organization: 'Google',
     type: 'official',
-    category: 'Hardware · Edge ASIC',
+    categoryKey: 'aiDocs.category.hardwareEdgeAsic',
     summaryKey: 'aiDocs.hardwareDocs.gpuCoralEdge.summary',
     keySpecs: '4.0 TOPS INT8 · 2W TDP · USB 3.0 / M.2 PCIe'
   },
@@ -58,7 +58,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3090/',
     organization: 'NVIDIA',
     type: 'official',
-    category: 'Hardware · High-End GPU',
+    categoryKey: 'aiDocs.category.hardwareHighEndGpu',
     summaryKey: 'aiDocs.hardwareDocs.gpuRtx3090.summary',
     keySpecs: '35.6 TFLOPS FP32 · 24GB GDDR6X · 350W TDP'
   },
@@ -67,7 +67,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.nvidia.com/en-us/geforce/graphics-cards/40-series/rtx-4090/',
     organization: 'NVIDIA',
     type: 'official',
-    category: 'Hardware · Flagship GPU',
+    categoryKey: 'aiDocs.category.hardwareFlagshipGpu',
     summaryKey: 'aiDocs.hardwareDocs.gpuRtx4090.summary',
     keySpecs: '82.6 TFLOPS FP32 · 1,321 TFLOPS FP8 · 24GB GDDR6X · 450W TDP'
   },
@@ -76,7 +76,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.nvidia.com/en-us/data-center/h100/',
     organization: 'NVIDIA Enterprise',
     type: 'official',
-    category: 'Hardware · Enterprise Server',
+    categoryKey: 'aiDocs.category.hardwareEnterpriseServer',
     summaryKey: 'aiDocs.hardwareDocs.gpuH100Node.summary',
     keySpecs: '2,000 TFLOPS FP8 · 80GB HBM3 · 700W TDP'
   },
@@ -85,7 +85,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.nvidia.com/en-us/data-center/blackwell-architecture/',
     organization: 'NVIDIA Enterprise',
     type: 'official',
-    category: 'Hardware · Hyperscale AI Superchip',
+    categoryKey: 'aiDocs.category.hardwareHyperscaleAiSuperchip',
     summaryKey: 'aiDocs.hardwareDocs.gpuBlackwellB200.summary',
     keySpecs: '20,000 TFLOPS FP4 · 192GB HBM3e · 1,000W TDP'
   },
@@ -94,7 +94,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://cerebras.ai/wafer-scale-engine-3/',
     organization: 'Cerebras Systems',
     type: 'official',
-    category: 'Hardware · Wafer-Scale Chip',
+    categoryKey: 'aiDocs.category.hardwareWaferScaleChip',
     summaryKey: 'aiDocs.hardwareDocs.accelCerebrasWse.summary',
     keySpecs: '125 PFLOPS FP16 · 44GB On-chip SRAM · 21 PB/s bandwidth'
   },
@@ -103,7 +103,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://lightmatter.co/',
     organization: 'Lightmatter / Nature Photonics',
     type: 'theory_foundations',
-    category: 'Hardware · Theoretical Optical Computing',
+    categoryKey: 'aiDocs.category.hardwareTheoreticalOpticalComputing',
     summaryKey: 'aiDocs.hardwareDocs.accelOpticalTpu.summary',
     keySpecs: 'Photonic MVM · Zero-latency optical interconnect · Nature Photonics 2017'
   },
@@ -112,7 +112,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.dwavesys.com/learn/quantum-computing/',
     organization: 'D-Wave Systems / MIT',
     type: 'theory_foundations',
-    category: 'Hardware · Quantum Computing',
+    categoryKey: 'aiDocs.category.hardwareQuantumComputing',
     summaryKey: 'aiDocs.hardwareDocs.accelQuantumAnnealer.summary',
     keySpecs: '5,000+ Superconducting Flux Qubits · 15 millikelvin cryostat'
   },
@@ -121,7 +121,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.microsoft.com/en-us/research/project/station-q/',
     organization: 'Microsoft Station Q / Nature',
     type: 'theory_foundations',
-    category: 'Hardware · Theoretical Quantum Coprocessor',
+    categoryKey: 'aiDocs.category.hardwareTheoreticalQuantumCoprocessor',
     summaryKey: 'aiDocs.hardwareDocs.accelTopologicalQubit.summary',
     keySpecs: 'Non-Abelian Anyon Braiding · Exponential quantum speedup'
   },
@@ -130,7 +130,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://en.wikipedia.org/wiki/Matrioshka_brain',
     organization: 'Robert Bradbury / SETI Institute',
     type: 'theory_foundations',
-    category: 'Hardware · Ultimate Computation Scale',
+    categoryKey: 'aiDocs.category.hardwareUltimateComputationScale',
     summaryKey: 'aiDocs.hardwareDocs.accelDysonMatrioshka.summary',
     keySpecs: '3.8×10²⁶ Watts · 10⁴² FLOPS thermodynamic capacity'
   },
@@ -141,7 +141,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://en.wikipedia.org/wiki/Computer_cooling#Air_cooling',
     organization: 'IEEE Thermal & Thermomechanical Phenomena',
     type: 'theory_foundations',
-    category: 'Cooling · Air Flow',
+    categoryKey: 'aiDocs.category.coolingAirFlow',
     summaryKey: 'aiDocs.hardwareDocs.coolAirBasic.summary',
     keySpecs: 'Convective Heat Transfer · 0.9 kW capacity'
   },
@@ -150,7 +150,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://en.wikipedia.org/wiki/Heat_pipe',
     organization: 'ASME Heat Transfer',
     type: 'official',
-    category: 'Cooling · Vapor Phase Change',
+    categoryKey: 'aiDocs.category.coolingVaporPhaseChange',
     summaryKey: 'aiDocs.hardwareDocs.coolCopperPipes.summary',
     keySpecs: 'Phase Change Vapor Chamber · 2.5 kW capacity'
   },
@@ -159,7 +159,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.opencompute.org/projects/advanced-cooling-solutions',
     organization: 'Open Compute Project (OCP)',
     type: 'official',
-    category: 'Cooling · Direct Liquid',
+    categoryKey: 'aiDocs.category.coolingDirectLiquid',
     summaryKey: 'aiDocs.hardwareDocs.coolLiquidLoop.summary',
     keySpecs: 'Direct-to-Chip Cold Plates · 8 kW capacity'
   },
@@ -168,7 +168,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://www.grcooling.com/immersion-cooling-explained/',
     organization: 'GRC / 3M Engineered Fluids',
     type: 'official',
-    category: 'Cooling · Dielectric Immersion',
+    categoryKey: 'aiDocs.category.coolingDielectricImmersion',
     summaryKey: 'aiDocs.hardwareDocs.coolImmersionTank.summary',
     keySpecs: 'Two-Phase Dielectric Boil & Condense · 35 kW capacity'
   },
@@ -177,7 +177,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://en.wikipedia.org/wiki/Cryocooler',
     organization: 'Cryogenic Society of America',
     type: 'theory_foundations',
-    category: 'Cooling · Cryogenic Systems',
+    categoryKey: 'aiDocs.category.coolingCryogenicSystems',
     summaryKey: 'aiDocs.hardwareDocs.coolCryoChiller.summary',
     keySpecs: 'Sub-Zero Active Vapor-Compression · 120 kW capacity'
   },
@@ -186,7 +186,7 @@ export const HARDWARE_DOCS: Record<string, DocEntry> = {
     url: 'https://en.wikipedia.org/wiki/Dilution_refrigerator',
     organization: 'Oxford Instruments / Bluefors',
     type: 'official',
-    category: 'Cooling · Quantum Cryogenics',
+    categoryKey: 'aiDocs.category.coolingQuantumCryogenics',
     summaryKey: 'aiDocs.hardwareDocs.coolLiquidHelium.summary',
     keySpecs: '10 mK Cryostat · Continuous Dilution Cycle · 500 kW capacity'
   }
@@ -199,7 +199,7 @@ export const TOPOLOGY_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/1706.03762',
     organization: 'Google Brain / NeurIPS',
     type: 'research_paper',
-    category: 'Architecture · Transformer',
+    categoryKey: 'aiDocs.category.architectureTransformer',
     summaryKey: 'aiDocs.topologyDocs.transformer.summary',
     keySpecs: 'O(N²) context complexity · Scaled dot-product attention'
   },
@@ -208,7 +208,7 @@ export const TOPOLOGY_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/1701.06538',
     organization: 'Google Brain / ICLR',
     type: 'research_paper',
-    category: 'Architecture · Mixture of Experts',
+    categoryKey: 'aiDocs.category.architectureMixtureOfExperts',
     summaryKey: 'aiDocs.topologyDocs.moe.summary',
     keySpecs: 'Sparse Routing Gate · Mixtral 8x7B & Switch Transformer basis'
   },
@@ -217,7 +217,7 @@ export const TOPOLOGY_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2312.00752',
     organization: 'Carnegie Mellon & Princeton',
     type: 'research_paper',
-    category: 'Architecture · State Space Models',
+    categoryKey: 'aiDocs.category.architectureStateSpaceModels',
     summaryKey: 'aiDocs.topologyDocs.mambaSsm.summary',
     keySpecs: 'O(N) complexity · Million-token context without quadratic memory'
   },
@@ -226,7 +226,7 @@ export const TOPOLOGY_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/1806.01261',
     organization: 'DeepMind / Google',
     type: 'research_paper',
-    category: 'Architecture · Graph Neural Networks',
+    categoryKey: 'aiDocs.category.architectureGraphNeuralNetworks',
     summaryKey: 'aiDocs.topologyDocs.gnnHybrid.summary',
     keySpecs: 'Graph Attention Networks (GAT) · Message Passing over RDF Triples'
   },
@@ -235,7 +235,7 @@ export const TOPOLOGY_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2112.10752',
     organization: 'CompVis / LMU Munich / CVPR',
     type: 'research_paper',
-    category: 'Architecture · Latent Diffusion',
+    categoryKey: 'aiDocs.category.architectureLatentDiffusion',
     summaryKey: 'aiDocs.topologyDocs.multimodalDiffusion.summary',
     keySpecs: 'Stable Diffusion & FLUX foundation · Latent VAE space'
   }
@@ -248,7 +248,7 @@ export const ATTENTION_DOCS: Record<string, DocEntry> = {
     url: 'https://pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html',
     organization: 'PyTorch / Linux Foundation',
     type: 'official',
-    category: 'Attention Mechanism',
+    categoryKey: 'aiDocs.category.attentionMechanism',
     summaryKey: 'aiDocs.attentionDocs.standardMha.summary',
     keySpecs: 'H independent heads · Softmax(QKᵀ / √d) V'
   },
@@ -257,7 +257,7 @@ export const ATTENTION_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2305.13245',
     organization: 'Google Research / EMNLP',
     type: 'research_paper',
-    category: 'Attention Mechanism',
+    categoryKey: 'aiDocs.category.attentionMechanism',
     summaryKey: 'aiDocs.attentionDocs.groupedQueryGqa.summary',
     keySpecs: 'Llama 3 & Mistral KV-cache standard · 8x memory reduction'
   },
@@ -266,7 +266,7 @@ export const ATTENTION_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2407.08608',
     organization: 'Stanford & Together AI',
     type: 'research_paper',
-    category: 'Attention Mechanism',
+    categoryKey: 'aiDocs.category.attentionMechanism',
     summaryKey: 'aiDocs.attentionDocs.flashAttention3.summary',
     keySpecs: 'Up to 75% peak H100 TFLOPS · Zero approximation error'
   },
@@ -275,7 +275,7 @@ export const ATTENTION_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2006.16236',
     organization: 'Idiap & EPFL / ICML',
     type: 'research_paper',
-    category: 'Attention Mechanism',
+    categoryKey: 'aiDocs.category.attentionMechanism',
     summaryKey: 'aiDocs.attentionDocs.linearAttention.summary',
     keySpecs: 'Linear time complexity · Constant memory per token'
   }
@@ -288,7 +288,7 @@ export const QUANTIZATION_DOCS: Record<string, DocEntry> = {
     url: 'https://en.wikipedia.org/wiki/Single-precision_floating-point_format',
     organization: 'IEEE Standards Association',
     type: 'official',
-    category: 'Precision & Quantization',
+    categoryKey: 'aiDocs.category.precisionQuantization',
     summaryKey: 'aiDocs.quantizationDocs.fp32.summary',
     keySpecs: '4 bytes/parameter · 1e-38 to 3e38 range'
   },
@@ -297,7 +297,7 @@ export const QUANTIZATION_DOCS: Record<string, DocEntry> = {
     url: 'https://en.wikipedia.org/wiki/Bfloat16_floating-point_format',
     organization: 'Google Cloud & NVIDIA',
     type: 'official',
-    category: 'Precision & Quantization',
+    categoryKey: 'aiDocs.category.precisionQuantization',
     summaryKey: 'aiDocs.quantizationDocs.bf16.summary',
     keySpecs: '2 bytes/parameter · Standard for modern LLM pre-training'
   },
@@ -306,7 +306,7 @@ export const QUANTIZATION_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2208.07339',
     organization: 'University of Washington & bitsandbytes / NeurIPS',
     type: 'research_paper',
-    category: 'Precision & Quantization',
+    categoryKey: 'aiDocs.category.precisionQuantization',
     summaryKey: 'aiDocs.quantizationDocs.int8.summary',
     keySpecs: '1 byte/parameter · INT8 Matrix Multiplication with FP16 outliers'
   },
@@ -315,7 +315,7 @@ export const QUANTIZATION_DOCS: Record<string, DocEntry> = {
     url: 'https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf',
     organization: 'Open Compute Project / NVIDIA Blackwell',
     type: 'official',
-    category: 'Precision & Quantization',
+    categoryKey: 'aiDocs.category.precisionQuantization',
     summaryKey: 'aiDocs.quantizationDocs.fp4.summary',
     keySpecs: '0.5 bytes/parameter · 4x throughput over FP16'
   },
@@ -324,7 +324,7 @@ export const QUANTIZATION_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2402.17764',
     organization: 'Microsoft Research',
     type: 'research_paper',
-    category: 'Precision & Quantization',
+    categoryKey: 'aiDocs.category.precisionQuantization',
     summaryKey: 'aiDocs.quantizationDocs.ternary1bit.summary',
     keySpecs: '1.58 bits/parameter · Pure addition kernels (zero FP multiplier)'
   }
@@ -337,7 +337,7 @@ export const LOSS_DOCS: Record<string, DocEntry> = {
     url: 'https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html',
     organization: 'PyTorch Documentation',
     type: 'official',
-    category: 'Training Objective',
+    categoryKey: 'aiDocs.category.trainingObjective',
     summaryKey: 'aiDocs.lossDocs.crossEntropy.summary',
     keySpecs: 'L = -∑ y_i log(p_i) · Autoregressive next-token prediction'
   },
@@ -346,7 +346,7 @@ export const LOSS_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2305.18290',
     organization: 'Stanford University / NeurIPS',
     type: 'research_paper',
-    category: 'Alignment & RLHF',
+    categoryKey: 'aiDocs.category.alignmentRlhf',
     summaryKey: 'aiDocs.lossDocs.dpo.summary',
     keySpecs: 'Closed-form implicit reward · Stable reinforcement alignment'
   },
@@ -355,7 +355,7 @@ export const LOSS_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2203.02155',
     organization: 'OpenAI (InstructGPT / ChatGPT paper)',
     type: 'research_paper',
-    category: 'Alignment & RLHF',
+    categoryKey: 'aiDocs.category.alignmentRlhf',
     summaryKey: 'aiDocs.lossDocs.ppoRlhf.summary',
     keySpecs: 'Actor-Critic PPO · KL penalty constraint · InstructGPT foundation'
   },
@@ -364,7 +364,7 @@ export const LOSS_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/1807.03748',
     organization: 'Google DeepMind',
     type: 'research_paper',
-    category: 'Self-Supervised Learning',
+    categoryKey: 'aiDocs.category.selfSupervisedLearning',
     summaryKey: 'aiDocs.lossDocs.contrastiveInfonce.summary',
     keySpecs: 'InfoNCE Loss · Foundation for CLIP & multimodal alignment'
   },
@@ -373,7 +373,7 @@ export const LOSS_DOCS: Record<string, DocEntry> = {
     url: 'http://yann.lecun.com/exdb/publis/pdf/lecun-06.pdf',
     organization: 'Yann LeCun / New York University',
     type: 'theory_foundations',
-    category: 'Energy-Based Learning',
+    categoryKey: 'aiDocs.category.energyBasedLearning',
     summaryKey: 'aiDocs.lossDocs.energyBased.summary',
     keySpecs: 'Non-probabilistic inference · Implicit constraint modeling'
   }
@@ -386,7 +386,7 @@ export const DATA_DOCS: Record<string, DocEntry> = {
     url: 'https://www.postgresql.org/docs/current/',
     organization: 'PostgreSQL Global Development Group',
     type: 'official',
-    category: 'Data Engine · Relational Tabular',
+    categoryKey: 'aiDocs.category.dataEngineRelationalTabular',
     summaryKey: 'aiDocs.dataDocs.dataRelationalSql.summary',
     keySpecs: 'ACID Compliance · MVCC Concurrency · Tabular schemas'
   },
@@ -395,7 +395,7 @@ export const DATA_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/1603.09320',
     organization: 'IEEE Transactions on Pattern Analysis & Machine Intelligence',
     type: 'research_paper',
-    category: 'Data Engine · Vector Space / RAG',
+    categoryKey: 'aiDocs.category.dataEngineVectorSpaceRag',
     summaryKey: 'aiDocs.dataDocs.dataVectorRag.summary',
     keySpecs: 'Cosine / Inner-product distance · Sub-millisecond ANN search'
   },
@@ -404,7 +404,7 @@ export const DATA_DOCS: Record<string, DocEntry> = {
     url: 'https://www.w3.org/TR/rdf11-primer/',
     organization: 'World Wide Web Consortium (W3C) & Neo4j',
     type: 'official',
-    category: 'Data Engine · Ontological Graph',
+    categoryKey: 'aiDocs.category.dataEngineOntologicalGraph',
     summaryKey: 'aiDocs.dataDocs.dataKnowledgeGraph.summary',
     keySpecs: 'RDF Triples · SPARQL / Cypher graph traversal · Causal ontology'
   },
@@ -413,7 +413,7 @@ export const DATA_DOCS: Record<string, DocEntry> = {
     url: 'https://www.anthropic.com/research/constitutional-ai',
     organization: 'Anthropic & DeepMind',
     type: 'research_paper',
-    category: 'Data Engine · Synthetic Self-Play Flywheel',
+    categoryKey: 'aiDocs.category.dataEngineSyntheticSelfPlayFlywheel',
     summaryKey: 'aiDocs.dataDocs.dataSyntheticFlywheel.summary',
     keySpecs: 'RLAIF (RL from AI Feedback) · AlphaZero MCTS verification'
   }
@@ -426,7 +426,7 @@ export const RESEARCH_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/1508.07909',
     organization: 'ACL Anthology / Edinburgh',
     type: 'research_paper',
-    category: 'R&D Paper · Tokenization',
+    categoryKey: 'aiDocs.category.rDPaperTokenization',
     summaryKey: 'aiDocs.researchDocs.resBpeTokenizer.summary',
     keySpecs: 'Byte-Pair Encoding · HuggingFace Tokenizers basis'
   },
@@ -435,7 +435,7 @@ export const RESEARCH_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2106.09685',
     organization: 'Microsoft Research / ICLR',
     type: 'research_paper',
-    category: 'R&D Paper · Parameter-Efficient Fine-Tuning',
+    categoryKey: 'aiDocs.category.rDPaperParameterEfficientFineTuning',
     summaryKey: 'aiDocs.researchDocs.resLoraPeft.summary',
     keySpecs: 'Rank r=8..64 · 10,000x fewer gradient parameters'
   },
@@ -444,7 +444,7 @@ export const RESEARCH_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2205.14135',
     organization: 'Stanford University / NeurIPS',
     type: 'research_paper',
-    category: 'R&D Paper · Kernel Optimization',
+    categoryKey: 'aiDocs.category.rDPaperKernelOptimization',
     summaryKey: 'aiDocs.researchDocs.resFlashAttention.summary',
     keySpecs: 'Fused CUDA kernel · 3x training acceleration'
   },
@@ -453,7 +453,7 @@ export const RESEARCH_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2104.09864',
     organization: 'Zhuiyi Technology / Neurocomputing',
     type: 'research_paper',
-    category: 'R&D Paper · Positional Encoding',
+    categoryKey: 'aiDocs.category.rDPaperPositionalEncoding',
     summaryKey: 'aiDocs.researchDocs.resRopeEmbeddings.summary',
     keySpecs: 'Rotary Position Embedding · 128k+ token extrapolation'
   },
@@ -462,7 +462,7 @@ export const RESEARCH_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2305.18290',
     organization: 'Stanford University / NeurIPS',
     type: 'research_paper',
-    category: 'R&D Paper · Post-Training Alignment',
+    categoryKey: 'aiDocs.category.rDPaperPostTrainingAlignment',
     summaryKey: 'aiDocs.researchDocs.resDpoAlignment.summary',
     keySpecs: 'Analytical RLHF · Closed-form policy gradients'
   },
@@ -471,7 +471,7 @@ export const RESEARCH_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2101.03961',
     organization: 'Google Research / JMLR',
     type: 'research_paper',
-    category: 'R&D Paper · Scalable Sparsity',
+    categoryKey: 'aiDocs.category.rDPaperScalableSparsity',
     summaryKey: 'aiDocs.researchDocs.resMoeArchitecture.summary',
     keySpecs: 'Top-1 / Top-2 gating · 4x speedup over dense models'
   },
@@ -480,7 +480,7 @@ export const RESEARCH_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/2305.10601',
     organization: 'Princeton University & Google DeepMind / NeurIPS',
     type: 'research_paper',
-    category: 'R&D Paper · Inference-Time Reasoning',
+    categoryKey: 'aiDocs.category.rDPaperInferenceTimeReasoning',
     summaryKey: 'aiDocs.researchDocs.resAgenticMcts.summary',
     keySpecs: 'Q* / o1 deliberate inference-time reasoning'
   },
@@ -489,7 +489,7 @@ export const RESEARCH_DOCS: Record<string, DocEntry> = {
     url: 'https://arxiv.org/abs/cs/0309048',
     organization: 'IDSIA / Jürgen Schmidhuber',
     type: 'theory_foundations',
-    category: 'R&D Paper · Recursive Self-Improvement',
+    categoryKey: 'aiDocs.category.rDPaperRecursiveSelfImprovement',
     summaryKey: 'aiDocs.researchDocs.resRecursiveSelfCode.summary',
     keySpecs: 'Provably optimal self-modification · Singularity threshold'
   }
@@ -505,7 +505,7 @@ export const INFERENCE_DOCS: Record<
     url: 'https://huggingface.co/blog/how-to-generate',
     organization: 'Hugging Face / Geoffrey Hinton (Knowledge Distillation 2015)',
     type: 'official',
-    category: 'Inference Parameter',
+    categoryKey: 'aiDocs.category.inferenceParameter',
     summaryKey: 'aiDocs.inferenceDocs.temperature.summary',
     keySpecs: 'T ∈ [0.0, 2.0] · Softmax Logit Temperature Scaling'
   },
@@ -514,7 +514,7 @@ export const INFERENCE_DOCS: Record<
     url: 'https://arxiv.org/abs/1904.09751',
     organization: 'University of Washington & Allen Institute / ICLR',
     type: 'research_paper',
-    category: 'Inference Parameter',
+    categoryKey: 'aiDocs.category.inferenceParameter',
     summaryKey: 'aiDocs.inferenceDocs.topP.summary',
     keySpecs: 'P ∈ [0.05, 1.0] · Eliminates low-probability tail tokens'
   },
@@ -523,7 +523,7 @@ export const INFERENCE_DOCS: Record<
     url: 'https://arxiv.org/abs/1805.04833',
     organization: 'Facebook AI Research (FAIR) / ACL',
     type: 'research_paper',
-    category: 'Inference Parameter',
+    categoryKey: 'aiDocs.category.inferenceParameter',
     summaryKey: 'aiDocs.inferenceDocs.topK.summary',
     keySpecs: 'K ∈ [1, 100] · Fixed-count candidate truncation'
   },
@@ -532,7 +532,7 @@ export const INFERENCE_DOCS: Record<
     url: 'https://arxiv.org/abs/1909.05858',
     organization: 'Salesforce Research',
     type: 'research_paper',
-    category: 'Inference Parameter',
+    categoryKey: 'aiDocs.category.inferenceParameter',
     summaryKey: 'aiDocs.inferenceDocs.repetitionPenalty.summary',
     keySpecs: 'θ ∈ [1.0, 2.0] · Contextual logit discount'
   },
@@ -541,7 +541,7 @@ export const INFERENCE_DOCS: Record<
     url: 'https://www.anthropic.com/research/constitutional-ai',
     organization: 'Anthropic',
     type: 'research_paper',
-    category: 'Safety & Guardrails',
+    categoryKey: 'aiDocs.category.safetyGuardrails',
     summaryKey: 'aiDocs.inferenceDocs.constitutionalGuardrails.summary',
     keySpecs: 'Rule-based automated alignment · Llama Guard & Constitutional frameworks'
   }
