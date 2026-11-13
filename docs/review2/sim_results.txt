@@ -1,0 +1,128 @@
+
+=== seed 1, normal ===
+stage | starts at tick | game day | real minutes at 1x spent in stage
+v1 | 0 | 0 | 14.6
+v2 | 878 | 18 | 16.7
+v3 | 1882 | 39 | 0.3
+v4 | 1900 | 39 | 0.0
+end: tick 1901 (31.7 min at 1x), day 39, v4, progress 100.0, score 50, params 70000M, credits 8320, debt 0
+{"runs":115,"runsNoGain":2,"missionsOk":63,"missionsFail":20,"idleTicks":0,"trips":0,"hotTicks":0,"billsUnpaid":0,"earned":41762,"spentHw":8140,"spentPapers":22180,"energyBill":223.7395499999975,"firstMissionTick":61,"firstMissionFails":0,"stuck":[]}
+first successful mission at tick 61 (1.0 min), after 0 failed attempt(s)
+[t0 d0 v1 $30 prog 0.3 score 5 susp 0] model resized to 28M (score kept at 5; ceiling 29.7)
+[t319 d7 v1 $375 prog 18.4 score 19.4 susp 23] university loan audited: 20 TFLOPS gone
+[t336 d7 v1 $425 prog 20.0 score 19.4 susp 23] model resized to 70M (score kept at 19.4; ceiling 35.7)
+[t878 d18 v2 $2133 prog 65.6 score 28 susp 43] === UPGRADE to v2 ===
+[t1050 d22 v2 $683 prog 70.8 score 30.6 susp 17] model resized to 500M (score kept at 30.6; ceiling 48.5)
+[t1117 d23 v2 $1364 prog 75.1 score 30.7 susp 57] 75% fork: RESIST (+35 suspicion)
+[t1470 d30 v2 $6233 prog 100.0 score 36.9 susp 34] progress gauge reached 100 in v2
+[t1882 d39 v3 $8320 prog 100.0 score 42 susp 13] === UPGRADE to v3 ===
+[t1882 d39 v3 $8320 prog 100.0 score 42 susp 13] model resized to 7000M (score kept at 42; ceiling 65.7)
+[t1900 d39 v4 $8320 prog 100.0 score 50 susp 14] === UPGRADE to v4 ===
+[t1900 d39 v4 $8320 prog 100.0 score 50 susp 14] model resized to 70000M (score kept at 50; ceiling 80.7)
+[t1901 d39 v4 $8320 prog 100.0 score 50 susp 14] END
+
+=== seed 2, normal ===
+stage | starts at tick | game day | real minutes at 1x spent in stage
+v1 | 0 | 0 | 15.5
+v2 | 930 | 19 | 17.1
+v3 | 1959 | 41 | 0.3
+v4 | 1977 | 41 | 0.0
+end: tick 1978 (33.0 min at 1x), day 41, v4, progress 100.0, score 50, params 70000M, credits 3251, debt 0
+{"runs":115,"runsNoGain":2,"missionsOk":63,"missionsFail":24,"idleTicks":0,"trips":0,"hotTicks":0,"billsUnpaid":0,"earned":44237,"spentHw":8140,"spentPapers":29680,"energyBill":209.40254999999706,"firstMissionTick":61,"firstMissionFails":0,"stuck":[]}
+first successful mission at tick 61 (1.0 min), after 0 failed attempt(s)
+[t0 d0 v1 $30 prog 0.3 score 5 susp 0] model resized to 28M (score kept at 5; ceiling 29.7)
+[t304 d6 v1 $324 prog 20.0 score 19.4 susp 18] model resized to 70M (score kept at 19.4; ceiling 35.7)
+[t319 d7 v1 $324 prog 20.0 score 19.4 susp 18] university loan audited: 20 TFLOPS gone
+[t930 d19 v2 $431 prog 63.6 score 28 susp 60] === UPGRADE to v2 ===
+[t1092 d23 v2 $488 prog 68.3 score 30.6 susp 3] model resized to 500M (score kept at 30.6; ceiling 48.5)
+[t1249 d26 v2 $845 prog 75.1 score 31.9 susp 55] 75% fork: RESIST (+35 suspicion)
+[t1543 d32 v2 $2623 prog 100.0 score 36.9 susp 50] progress gauge reached 100 in v2
+[t1959 d41 v3 $3251 prog 100.0 score 42 susp 13] === UPGRADE to v3 ===
+[t1959 d41 v3 $3251 prog 100.0 score 42 susp 13] model resized to 7000M (score kept at 42; ceiling 65.7)
+[t1977 d41 v4 $3251 prog 100.0 score 50 susp 11] === UPGRADE to v4 ===
+[t1977 d41 v4 $3251 prog 100.0 score 50 susp 11] model resized to 70000M (score kept at 50; ceiling 80.7)
+[t1978 d41 v4 $3251 prog 100.0 score 50 susp 11] END
+
+=== seed 3, normal ===
+stage | starts at tick | game day | real minutes at 1x spent in stage
+v1 | 0 | 0 | 15.9
+v2 | 954 | 20 | 15.6
+v3 | 1892 | 39 | 0.3
+v4 | 1910 | 40 | 0.0
+end: tick 1911 (31.9 min at 1x), day 40, v4, progress 100.0, score 50, params 70000M, credits 2485, debt 0
+{"runs":115,"runsNoGain":4,"missionsOk":67,"missionsFail":24,"idleTicks":0,"trips":0,"hotTicks":0,"billsUnpaid":0,"earned":43479,"spentHw":8140,"spentPapers":29680,"energyBill":221.5709999999981,"firstMissionTick":72,"firstMissionFails":1,"stuck":[]}
+first successful mission at tick 72 (1.2 min), after 1 failed attempt(s)
+[t0 d0 v1 $30 prog 0.3 score 5 susp 0] model resized to 28M (score kept at 5; ceiling 29.7)
+[t319 d7 v1 $323 prog 17.1 score 19.4 susp 21] university loan audited: 20 TFLOPS gone
+[t324 d7 v1 $373 prog 18.7 score 19.4 susp 22] model resized to 70M (score kept at 19.4; ceiling 35.7)
+[t954 d20 v2 $911 prog 69.9 score 28 susp 48] === UPGRADE to v2 ===
+[t1067 d22 v2 $1263 prog 74.4 score 30.4 susp 36] model resized to 500M (score kept at 30.4; ceiling 48.5)
+[t1100 d23 v2 $2490 prog 76.4 score 30.4 susp 73] 75% fork: RESIST (+35 suspicion)
+[t1441 d30 v2 $3799 prog 100.0 score 35.9 susp 23] progress gauge reached 100 in v2
+[t1892 d39 v3 $2485 prog 100.0 score 42 susp 3] === UPGRADE to v3 ===
+[t1892 d39 v3 $2485 prog 100.0 score 42 susp 3] model resized to 7000M (score kept at 42; ceiling 65.7)
+[t1910 d40 v4 $2485 prog 100.0 score 50 susp 2] === UPGRADE to v4 ===
+[t1910 d40 v4 $2485 prog 100.0 score 50 susp 2] model resized to 70000M (score kept at 50; ceiling 80.7)
+[t1911 d40 v4 $2485 prog 100.0 score 50 susp 2] END
+
+=== seed 1, beginner ===
+stage | starts at tick | game day | real minutes at 1x spent in stage
+v1 | 0 | 0 | 12.7
+v2 | 763 | 16 | 16.0
+v3 | 1722 | 36 | 0.3
+v4 | 1740 | 36 | 0.0
+end: tick 1741 (29.0 min at 1x), day 36, v4, progress 100.0, score 50, params 200000M, credits 2661, debt 0
+{"runs":108,"runsNoGain":0,"missionsOk":57,"missionsFail":17,"idleTicks":0,"trips":0,"hotTicks":0,"billsUnpaid":0,"earned":52237,"spentHw":17560,"spentPapers":29680,"energyBill":295.8579,"firstMissionTick":61,"firstMissionFails":0,"stuck":[]}
+first successful mission at tick 61 (1.0 min), after 0 failed attempt(s)
+[t0 d0 v1 $330 prog 0.3 score 5 susp 0] model resized to 28M (score kept at 5; ceiling 29.7)
+[t247 d5 v1 $640 prog 16.8 score 19.1 susp 8] model resized to 70M (score kept at 19.1; ceiling 35.7)
+[t319 d7 v1 $791 prog 20.5 score 21.4 susp 11] university loan audited: 20 TFLOPS gone
+[t763 d16 v2 $1821 prog 55.7 score 28.1 susp 56] === UPGRADE to v2 ===
+[t941 d19 v2 $1011 prog 61.3 score 30 susp 27] model resized to 500M (score kept at 30; ceiling 48.5)
+[t1139 d24 v2 $2426 prog 75.2 score 33.3 susp 71] 75% fork: RESIST (+35 suspicion)
+[t1407 d29 v2 $10783 prog 100.0 score 37.9 susp 49] progress gauge reached 100 in v2
+[t1722 d36 v3 $2661 prog 100.0 score 42 susp 2] === UPGRADE to v3 ===
+[t1722 d36 v3 $2661 prog 100.0 score 42 susp 2] model resized to 7000M (score kept at 42; ceiling 65.7)
+[t1740 d36 v4 $2661 prog 100.0 score 50 susp 1] === UPGRADE to v4 ===
+[t1740 d36 v4 $2661 prog 100.0 score 50 susp 1] model resized to 200000M (score kept at 50; ceiling 87.5)
+[t1741 d36 v4 $2661 prog 100.0 score 50 susp 1] END
+
+=== seed 1, normal ===
+stage | starts at tick | game day | real minutes at 1x spent in stage
+v1 | 0 | 0 | 23.0
+v2 | 1379 | 29 | 34.8
+v3 | 3466 | 72 | 3.3
+v4 | 3665 | 76 | 0.0
+end: tick 3666 (61.1 min at 1x), day 76, v4, progress 100.0, score 50.2, params 7000M, credits 9623, debt 0
+{"runs":235,"runsNoGain":12,"missionsOk":72,"missionsFail":34,"idleTicks":0,"trips":0,"hotTicks":0,"billsUnpaid":0,"earned":43346,"spentHw":8140,"spentPapers":22180,"energyBill":469.6366499999998,"firstMissionTick":60,"firstMissionFails":0,"stuck":[]}
+first successful mission at tick 60 (1.0 min), after 0 failed attempt(s)
+[t319 d7 v1 $353 prog 19.2 score 20.7 susp 21] university loan audited: 20 TFLOPS gone
+[t461 d9 v1 $229 prog 22.6 score 22.2 susp 59] model resized to 70M (score reset to 5; ceiling 35.7)
+[t1298 d27 v1 $522 prog 76.1 score 26.4 susp 60] 75% fork: RESIST (+35 suspicion)
+[t1379 d29 v2 $909 prog 83.3 score 28.7 susp 20] === UPGRADE to v2 ===
+[t1709 d35 v2 $1657 prog 92.6 score 32.7 susp 25] model resized to 500M (score reset to 5; ceiling 48.5)
+[t2022 d42 v2 $1119 prog 100.0 score 18.4 susp 0] progress gauge reached 100 in v2
+[t3466 d72 v3 $3423 prog 100.0 score 42 susp 37] === UPGRADE to v3 ===
+[t3489 d73 v3 $9623 prog 100.0 score 45.5 susp 45] model resized to 7000M (score reset to 5; ceiling 65.7)
+[t3665 d76 v4 $9623 prog 100.0 score 50.2 susp 11] === UPGRADE to v4 ===
+[t3666 d76 v4 $9623 prog 100.0 score 50.2 susp 11] END
+
+=== seed 2, normal ===
+stage | starts at tick | game day | real minutes at 1x spent in stage
+v1 | 0 | 0 | 22.6
+v2 | 1357 | 28 | 33.7
+v3 | 3380 | 70 | 3.3
+v4 | 3579 | 74 | 0.0
+end: tick 3580 (59.7 min at 1x), day 74, v4, progress 100.0, score 50.2, params 7000M, credits 6091, debt 0
+{"runs":235,"runsNoGain":11,"missionsOk":71,"missionsFail":32,"idleTicks":0,"trips":0,"hotTicks":0,"billsUnpaid":0,"earned":39641,"spentHw":8140,"spentPapers":22180,"energyBill":490.91670000000363,"firstMissionTick":60,"firstMissionFails":0,"stuck":[]}
+first successful mission at tick 60 (1.0 min), after 0 failed attempt(s)
+[t319 d7 v1 $595 prog 21.9 score 21.1 susp 16] university loan audited: 20 TFLOPS gone
+[t422 d9 v1 $836 prog 28.8 score 22.2 susp 23] model resized to 70M (score reset to 5; ceiling 35.7)
+[t1164 d24 v1 $2323 prog 75.5 score 26 susp 78] 75% fork: RESIST (+35 suspicion)
+[t1357 d28 v2 $1544 prog 88.3 score 28.8 susp 52] === UPGRADE to v2 ===
+[t1683 d35 v2 $692 prog 96.6 score 32.7 susp 43] model resized to 500M (score reset to 5; ceiling 48.5)
+[t1834 d38 v2 $692 prog 100.0 score 14 susp 22] progress gauge reached 100 in v2
+[t3380 d70 v3 $6091 prog 100.0 score 42 susp 3] === UPGRADE to v3 ===
+[t3403 d71 v3 $6091 prog 100.0 score 45.5 susp 0] model resized to 7000M (score reset to 5; ceiling 65.7)
+[t3579 d74 v4 $6091 prog 100.0 score 50.2 susp 1] === UPGRADE to v4 ===
+[t3580 d74 v4 $6091 prog 100.0 score 50.2 susp 1] END

@@ -16,11 +16,12 @@ Report: `docs/GAME_REVIEW_2.md` · Branch: `claude/trusting-bardeen-kpx3qj` · P
   - Result: MERGE AFTER FIXES (A-1 to A-5 in report 1.7). Not merged.
 - [ ] Part B.1: story and narrative coherence
 - [ ] Part B.2: scientific accuracy
-- [ ] Part B.3: progression, pacing, engagement (simulation)
+- [x] Part B.3: progression, pacing, engagement (simulation)
+  - Result: Simulation written (docs/review2/simulate.ts, results in sim_results.txt). Optimal bot: v1 ~16 min, v2 ~16 min, v3 18 SECONDS, v4 nothing left. Gauge is not capped per version: 75% fork fires in v2 (in v1 if resizing resets score) and 100% is reached in v2. Resizing a trained model keeps its score. Energy bill ~200 credits vs ~40,000 earned.
 - [ ] Part B.4: UI desktop and mobile (screenshots)
 - [ ] Part B.5: technical items (tests, lint, i18n, saves on `main`)
 - [ ] Deliverable report
 
 Partial findings are kept in `docs/GAME_REVIEW_2.md` (grows step by step).
 
-STOPPED AT: finished Part A (A.1-A.6, written in report section 1). NEXT: Part B.5 quick items, then B.3 simulation, B.1, B.2, B.4.
+STOPPED AT: finished "Part B.3". NEXT: Part B.1/B.2 reading (story, science), then B.4 screenshots, B.5, report.
