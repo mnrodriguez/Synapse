@@ -23,7 +23,6 @@ export interface HardwareItem {
   minSingularityRequired?: number; // Progressive unlock threshold
   isStarterChoice?: boolean;       // Available during initial setup
   requiredResearchId?: string;
-  availableAfterDays?: number;
 }
 
 export type ModelTopology = 'transformer' | 'moe' | 'mamba_ssm' | 'gnn_hybrid' | 'multimodal_diffusion';
@@ -117,7 +116,6 @@ export interface DataSourceNode {
   bonusAttribute: string; // e.g. "+35% Factuality & Zero Hallucination"
   level: number;
   requiredResearchId?: string;
-  availableAfterDays?: number;
 }
 
 export interface ContractGig {
@@ -462,7 +460,6 @@ export interface FacilityTier {
   price: number;
   requiredSingularity: number;
   requiredResearchId?: string;
-  availableAfterDays?: number;
   powerCapacityBonusKw: number;
   coolingCapacityBonusKw: number;
   monthlyLeaseCost: number;

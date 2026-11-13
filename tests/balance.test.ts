@@ -1,7 +1,7 @@
 // Game balance checks, run with `bun test`. They guard the calibration of the 0-100 evaluation score:
 // every mission, upgrade and data tier must stay reachable, and the first run must stay short.
 import { describe, expect, test } from 'bun:test';
-import { INITIAL_CONTRACTS, DATASET_TIER_CONFIGS, STARTER_TRAINING_DATASET, INITIAL_MODEL, INITIAL_RESEARCH_NODES } from '../src/utils/constants';
+import { INITIAL_CONTRACTS, DATASET_TIER_CONFIGS, STARTER_TRAINING_DATASET, INITIAL_MODEL, INITIAL_RESEARCH_NODES, INITIAL_HARDWARE, INITIAL_DATA_SOURCES, FACILITY_TIERS } from '../src/utils/constants';
 import { PROCEDURAL_CONTRACT_TEMPLATES } from '../src/services/aiService';
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY } from '../src/utils/missionTiers';
 import {
@@ -19,7 +19,7 @@ import { HARDWARE_SPEC_NOTES } from '../src/utils/hardwareSpecs';
 import { planTrainingRun, lossAt, vramForRun, sanitizeTrainingConfig, DEFAULT_TRAINING_CONFIG, MAX_EPOCHS, runConfigFor } from '../src/utils/trainingRun';
 import { buildEpilogue, canAttemptContainment, endingTitle, CONTAINMENT_MAX_SUBVERSION } from '../src/utils/epilogue';
 import { agentChatter, AGENT_DIALOGUE_ROLES, STORY_LINES_FOR_TESTS, COVERT_LINES_FOR_TESTS } from '../src/utils/agentDialogues';
-import { researchStatus } from '../src/utils/progression';
+import { researchStatus, isProgressionUnlocked, unlockHint } from '../src/utils/progression';
 
 const STARTER_GPU_PFLOPS = 0.0044; // GTX 1060
 
@@ -375,5 +375,34 @@ describe('difficulty', () => {
     const beginner = runConfigFor({ difficulty: 'beginner', trainingConfig: chosen });
     expect(beginner).toEqual({ epochs: 5, learningRate: 'balanced', batchSize: 'medium', earlyStopping: false });
     expect(runConfigFor({ difficulty: 'normal', trainingConfig: chosen }).learningRate).toBe('very_high');
+  });
+});
+
+describe('items open by stage, not by date', () => {
+  const tree = INITIAL_RESEARCH_NODES;
+  const at = (uiVersion: number, unlocked: string[] = []) => ({
+    uiVersion, singularityProgress: 100,
+    researchTree: tree.map(n => ({ ...n, unlocked: unlocked.includes(n.id) }))
+  });
+
+  test('every locked item names a paper that exists', () => {
+    const ids = new Set(tree.map(n => n.id));
+    const items = [...INITIAL_HARDWARE, ...INITIAL_DATA_SOURCES, ...FACILITY_TIERS];
+    for (const item of items) if (item.requiredResearchId) expect(`${item.id}:${ids.has(item.requiredResearchId)}`).toBe(`${item.id}:true`);
+  });
+
+  test('an item opens with its paper, or one version after the paper without it', () => {
+    const rtx = INITIAL_HARDWARE.find(h => h.id === 'gpu_rtx4090')!; // needs LoRA, a v1 paper
+    expect(isProgressionUnlocked(rtx, at(1))).toBe(false);
+    expect(isProgressionUnlocked(rtx, at(1, ['res_lora_peft']))).toBe(true);
+    expect(isProgressionUnlocked(rtx, at(2))).toBe(true);
+    expect(unlockHint(rtx, at(1), 'en')).toMatch(/or reach a later version/);
+  });
+
+  test('last-version papers have no fallback, and the progress requirement still applies', () => {
+    const quantum = INITIAL_HARDWARE.find(h => h.id === 'quantum_photonic_asic')!;
+    expect(isProgressionUnlocked(quantum, at(4))).toBe(false);
+    expect(unlockHint(quantum, at(4), 'es')).not.toMatch(/versión posterior/);
+    expect(isProgressionUnlocked(quantum, { ...at(4, ['res_speculative_compute']), singularityProgress: 0 })).toBe(false);
   });
 });

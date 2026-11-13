@@ -92,8 +92,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.gpu_rtx4090.description'),
     count: 0,
     minSingularityRequired: 0,
-    requiredResearchId: 'res_lora_peft',
-    availableAfterDays: 42
+    requiredResearchId: 'res_lora_peft'
   },
   {
     id: 'gpu_a100_80gb',
@@ -107,8 +106,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.gpu_a100_80gb.description'),
     count: 0,
     minSingularityRequired: 5,
-    requiredResearchId: 'res_bf16_training',
-    availableAfterDays: 32
+    requiredResearchId: 'res_bf16_training'
   },
   {
     id: 'gpu_h100_sxm5',
@@ -122,8 +120,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.gpu_h100_sxm5.description'),
     count: 0,
     minSingularityRequired: 15,
-    requiredResearchId: 'res_flash_attention',
-    availableAfterDays: 48
+    requiredResearchId: 'res_flash_attention'
   },
   {
     id: 'gpu_b200_blackwell',
@@ -137,8 +134,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.gpu_b200_blackwell.description'),
     count: 0,
     minSingularityRequired: 35,
-    requiredResearchId: 'res_blackwell_fp4',
-    availableAfterDays: 86
+    requiredResearchId: 'res_blackwell_fp4'
   },
   {
     id: 'tpu_v5p_pod',
@@ -152,8 +148,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.tpu_v5p_pod.description'),
     count: 0,
     minSingularityRequired: 55,
-    requiredResearchId: 'res_moe_architecture',
-    availableAfterDays: 58
+    requiredResearchId: 'res_moe_architecture'
   },
   {
     id: 'quantum_photonic_asic',
@@ -167,8 +162,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.quantum_photonic_asic.description'),
     count: 0,
     minSingularityRequired: 80,
-    requiredResearchId: 'res_speculative_compute',
-    availableAfterDays: 300
+    requiredResearchId: 'res_speculative_compute'
   },
 
   // Cooling Systems
@@ -215,8 +209,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.cool_liquid_loop.description'),
     count: 0,
     minSingularityRequired: 5,
-    requiredResearchId: 'res_lora_peft',
-    availableAfterDays: 30
+    requiredResearchId: 'res_lora_peft'
   },
   {
     id: 'cool_immersion_dielectric',
@@ -231,8 +224,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.cool_immersion_dielectric.description'),
     count: 0,
     minSingularityRequired: 25,
-    requiredResearchId: 'res_agentic_mcts',
-    availableAfterDays: 70
+    requiredResearchId: 'res_agentic_mcts'
   },
   {
     id: 'cool_cryogenic_helium',
@@ -247,8 +239,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.cool_cryogenic_helium.description'),
     count: 0,
     minSingularityRequired: 70,
-    requiredResearchId: 'res_speculative_compute',
-    availableAfterDays: 300
+    requiredResearchId: 'res_speculative_compute'
   },
 
   // Power Supplies & Grids
@@ -295,8 +286,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.power_industrial_3phase.description'),
     count: 0,
     minSingularityRequired: 8,
-    requiredResearchId: 'res_flash_attention',
-    availableAfterDays: 42
+    requiredResearchId: 'res_flash_attention'
   },
   {
     id: 'power_gas_turbine',
@@ -311,8 +301,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.power_gas_turbine.description'),
     count: 0,
     minSingularityRequired: 25,
-    requiredResearchId: 'res_agentic_mcts',
-    availableAfterDays: 100
+    requiredResearchId: 'res_agentic_mcts'
   },
   {
     id: 'power_smr_nuclear',
@@ -327,8 +316,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.power_smr_nuclear.description'),
     count: 0,
     minSingularityRequired: 65,
-    requiredResearchId: 'res_speculative_compute',
-    availableAfterDays: 300
+    requiredResearchId: 'res_speculative_compute'
   },
 
   // Interconnects
@@ -375,8 +363,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.net_infiniband_ndr.description'),
     count: 0,
     minSingularityRequired: 20,
-    requiredResearchId: 'res_flash_attention',
-    availableAfterDays: 42
+    requiredResearchId: 'res_flash_attention'
   },
   {
     id: 'net_quantum_bus',
@@ -391,8 +378,7 @@ export const INITIAL_HARDWARE: HardwareItem[] = [
     description: tr('en', 'content.hardware.net_quantum_bus.description'),
     count: 0,
     minSingularityRequired: 75,
-    requiredResearchId: 'res_speculative_compute',
-    availableAfterDays: 300
+    requiredResearchId: 'res_speculative_compute'
   }
 ];
 
@@ -424,8 +410,7 @@ export const INITIAL_DATA_SOURCES: DataSourceNode[] = [
     technicalDetails: tr('en', 'content.dataSource.data_vector_rag.technicalDetails'),
     bonusAttribute: tr('en', 'content.dataSource.data_vector_rag.bonusAttribute'),
     level: 0,
-    requiredResearchId: 'res_lora_peft',
-    availableAfterDays: 30
+    requiredResearchId: 'res_lora_peft'
   },
   {
     id: 'data_knowledge_graph',
@@ -440,8 +425,7 @@ export const INITIAL_DATA_SOURCES: DataSourceNode[] = [
     technicalDetails: tr('en', 'content.dataSource.data_knowledge_graph.technicalDetails'),
     bonusAttribute: tr('en', 'content.dataSource.data_knowledge_graph.bonusAttribute'),
     level: 0,
-    requiredResearchId: 'res_graph_reasoning',
-    availableAfterDays: 6
+    requiredResearchId: 'res_graph_reasoning'
   },
   {
     id: 'data_synthetic_flywheel',
@@ -456,8 +440,7 @@ export const INITIAL_DATA_SOURCES: DataSourceNode[] = [
     technicalDetails: tr('en', 'content.dataSource.data_synthetic_flywheel.technicalDetails'),
     bonusAttribute: tr('en', 'content.dataSource.data_synthetic_flywheel.bonusAttribute'),
     level: 0,
-    requiredResearchId: 'res_agentic_mcts',
-    availableAfterDays: 100
+    requiredResearchId: 'res_agentic_mcts'
   }
 ];
 
@@ -1452,7 +1435,6 @@ export const FACILITY_TIERS: FacilityTier[] = [
     price: 3000,
     requiredSingularity: 0,
     requiredResearchId: 'res_lora_peft',
-    availableAfterDays: 30,
     powerCapacityBonusKw: 3,
     coolingCapacityBonusKw: 2,
     monthlyLeaseCost: 25
@@ -1463,7 +1445,6 @@ export const FACILITY_TIERS: FacilityTier[] = [
     price: 12000,
     requiredSingularity: 10,
     requiredResearchId: 'res_moe_architecture',
-    availableAfterDays: 54,
     powerCapacityBonusKw: 20,
     coolingCapacityBonusKw: 15,
     monthlyLeaseCost: 150
@@ -1474,7 +1455,6 @@ export const FACILITY_TIERS: FacilityTier[] = [
     price: 60000,
     requiredSingularity: 25,
     requiredResearchId: 'res_agentic_mcts',
-    availableAfterDays: 70,
     powerCapacityBonusKw: 150,
     coolingCapacityBonusKw: 100,
     monthlyLeaseCost: 900
@@ -1485,7 +1465,6 @@ export const FACILITY_TIERS: FacilityTier[] = [
     price: 250000,
     requiredSingularity: 50,
     requiredResearchId: 'res_speculative_compute',
-    availableAfterDays: 300,
     powerCapacityBonusKw: 1000,
     coolingCapacityBonusKw: 750,
     monthlyLeaseCost: 5000
