@@ -37,3 +37,23 @@ Implements section 8 of `docs/GAME_REVIEW_2.md` (items M-1 to M-7). Branch: `cla
 - Step 7 done: report section 8.6 written and one pull request opened against main from this branch.
 
 STOPPED AT: all steps finished and pushed; the pull request is open. NEXT: nothing pending. Follow-ups if wanted: G-2 (v3 link), compute for scraping, manual fixes A-1 to A-7.
+
+---
+
+## Second round (2026-11-14): caught without knowing why, early spoilers, research too fast
+
+Reported by the author after playing the published game on a phone (PR #46 merged, branch restarted from `main` at `4efac1f`).
+
+- [x] A. Suspicion is explained: counted by source every tick (`weekStats`, `suspicionTotals`); a dialog the first time it passes 50 % and 80 % (`suspicion_warning`, `suspicion_critical`); the game-over screen lists what raised it and how to avoid it (`SuspicionBreakdown.tsx`).
+- [x] B. Suspicion now also fades while contracts run, at 20 % of the idle rate (`SUSPICION.fadeWhileWorkingShare`). Before, it never fell while anything ran, and with autonomous contracts something always runs.
+- [x] C. Early endings without spoilers: before v3 the game-over screen uses the words of the current version, shows the bar the HUD shows, and the report names neither the end goal nor the arc (`GameOverModal.tsx`, `epilogue.ts`).
+- [x] D. Weekly report: every 7 game days the game pauses and shows jobs, credits, suspicion by source and the new papers with what each opens (`WeeklyReportModal.tsx`, `utils/weeklyReport.ts`).
+- [x] E. Research arrives slower: a paper can be funded only after a weekly report announced it, at most 2 per week (`RESEARCH_PER_WEEK`). A new game starts with one paper. Save schema 13; an older save keeps every paper it could already fund.
+- [x] F. Manual chapters 6 and 9 updated (EN/ES); tests `tests/weekly.test.ts`; browser check `docs/review2/weekly_check.cjs` at 390 px.
+- [ ] G. Pull request opened.
+
+Result: `bun test` 178 pass, 0 fail; lint clean. Browser at 390 px: the report opened by itself at the end of day 7 and closed; the 50 % dialog opened; the v1 game-over screen had the breakdown and no "Singularity".
+
+Not done: the report does not list tabs or hardware that opened during the week on their own; the "features I knew nothing about" may also come from one paper opening many unrelated things (finding C-3 of the review), which is unchanged — the report now at least lists them before the player pays.
+
+STOPPED AT: steps A-F committed. NEXT: push and open the pull request (step G).
