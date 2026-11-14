@@ -174,9 +174,9 @@ describe('autonomous contracts', () => {
   });
 });
 
-describe('save schema 12', () => {
+describe('save schema: autonomy share', () => {
   test('older saves get the default autonomy share; bad values are clamped', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(12);
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(12);
     expect(mergeGameState({ saveSchemaVersion: 11 } as Partial<GameState>, DEFAULT_STATE).autonomyComputeShare).toBe(COMPUTE.autonomyDefaultShare);
     expect(mergeGameState({ autonomyComputeShare: 180 } as Partial<GameState>, DEFAULT_STATE).autonomyComputeShare).toBe(100);
     expect(mergeGameState({ autonomyComputeShare: 45 } as Partial<GameState>, DEFAULT_STATE).autonomyComputeShare).toBe(45);

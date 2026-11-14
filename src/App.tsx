@@ -10,6 +10,7 @@ import { BentoHUD } from './components/BentoHUD';
 import { TrojanUpgradeModal } from './components/TrojanUpgradeModal';
 import { TrainingReportModal } from './components/TrainingReportModal';
 import { StoryEventModal } from './components/StoryEventModal';
+import { WeeklyReportModal } from './components/WeeklyReportModal';
 import { ContainmentEndingModal } from './components/ContainmentEndingModal';
 import { BreachModal } from './components/BreachModal';
 import { GameOverModal } from './components/GameOverModal';
@@ -395,6 +396,7 @@ const MainGameScreen: React.FC = () => {
       {manualOpen && <Suspense fallback={null}><HelpManual isOpen onClose={() => setManualOpen(false)} /></Suspense>}
       <TrainingReportModal />
       <StoryEventModal />
+      <WeeklyReportModal />
       <ContainmentEndingModal />
       {leaderboardOpen && <Suspense fallback={null}><LeaderboardModal isOpen onClose={() => setLeaderboardOpen(false)} /></Suspense>}
       {authOpen && <Suspense fallback={null}><AuthModal isOpen onClose={() => setAuthOpen(false)} /></Suspense>}

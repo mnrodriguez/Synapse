@@ -24,7 +24,7 @@ import {
 import {
   ALIGNMENT_COMPROMISED_BELOW, ALIGNMENT_JAILBREAK_BELOW, HOT_AGENT_MULTIPLIER, HOT_AGENT_TEMPERATURE,
   INCIDENT_CHANCE_CAP, INCIDENT_COOLDOWN_TICKS, MISSION, OVERSEER_ALIGNMENT_PER_TICK, POWER_HEAT, RISKY_TOOLS_MULTIPLIER,
-  SANDBOX_INCIDENT_MULTIPLIER, STRICTNESS_BANDS, SUSPICION, TICKS_PER_DAY, TRADING_TIERS, COMPUTE
+  SANDBOX_INCIDENT_MULTIPLIER, STRICTNESS_BANDS, SUSPICION, TICKS_PER_DAY, TRADING_TIERS, COMPUTE, WEEK_DAYS, RESEARCH_PER_WEEK
 } from '../../utils/rules';
 import { CONTAINMENT_MAX_SUBVERSION } from '../../utils/epilogue';
 import { VERSION_PROFILES } from '../../utils/versionProfiles';
@@ -108,6 +108,11 @@ export function manualParams(language: Language, version: UiVersion): TextParams
     overloadDay: fixed(SUSPICION.overloadPerTick * TICKS_PER_DAY),
     scrapingDay: fixed(SUSPICION.scrapingPerTick * TICKS_PER_DAY),
     successShare: pct(SUSPICION.missionSuccessShare),
+    fadeWorking: pct(SUSPICION.fadeWhileWorkingShare),
+    warnAt: SUSPICION.warnAt,
+    criticalAt: SUSPICION.criticalAt,
+    weekDays: WEEK_DAYS,
+    researchPerWeek: RESEARCH_PER_WEEK,
     scrubCost: SUSPICION.scrubCost,
     scrubDrop: SUSPICION.scrubReduction,
     auditCost: SUSPICION.redTeamCost,
@@ -393,6 +398,7 @@ export function buildManual(language: Language, version: UiVersion, difficulty: 
       list('manual.progress.p1', 'manual.progress.p2', 'manual.progress.p3', 'manual.progress.p4', ...(version >= 3 ? ['manual.progress.p5' as CatalogKey] : [])),
       heading('manual.progress.papersHeading'),
       text('manual.progress.papers'),
+      text('manual.progress.weekly'),
       heading('manual.progress.versionHeading'),
       ...(version < 4 ? [text('manual.progress.upgrade')] : []),
       text('manual.progress.upgradeEffect')

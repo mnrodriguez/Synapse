@@ -22,7 +22,7 @@ export const ContainmentEndingModal: React.FC = () => {
       aria-modal="true"
       aria-labelledby="containment-title"
     >
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border theme-success-border theme-sub-bg p-5 space-y-4 theme-text shadow-xl">
+      <div className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-lg border theme-success-border theme-sub-bg p-5 space-y-4 theme-text shadow-xl">
         <div className="flex items-center gap-3 border-b theme-border pb-3">
           <ShieldCheck className="w-6 h-6 theme-success-text shrink-0" />
           <div>

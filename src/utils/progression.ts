@@ -129,6 +129,7 @@ export function isDataSourceProgressionUnlocked(
 // Papers open by stage, not by date: the UI version the campaign has reached and the best evaluation score
 // of any saved model, plus the prerequisite papers.
 export interface ResearchStatus {
+  announced: boolean; // the weekly report has brought this paper in
   versionMet: boolean;
   scoreMet: boolean;
   prerequisitesMet: boolean;
@@ -142,11 +143,13 @@ export function bestModelScore(state: Pick<GameState, 'savedModels' | 'currentMo
 
 export function researchStatus(
   node: ResearchNode,
-  state: Pick<GameState, 'uiVersion' | 'savedModels' | 'currentModel' | 'researchTree'>
+  state: Pick<GameState, 'uiVersion' | 'savedModels' | 'currentModel' | 'researchTree'> & Partial<Pick<GameState, 'announcedResearchIds'>>
 ): ResearchStatus {
   const bestScore = bestModelScore(state);
   const versionMet = (state.uiVersion || 1) >= (node.requiredVersion ?? 1);
   const scoreMet = bestScore >= (node.requiredScore ?? 0);
   const prerequisitesMet = node.prerequisites.every(id => state.researchTree.some(r => r.id === id && r.unlocked));
-  return { versionMet, scoreMet, prerequisitesMet, bestScore, available: versionMet && scoreMet && prerequisitesMet };
+  // Saves from before weekly reports have no list: everything that qualifies counts as announced.
+  const announced = node.unlocked || !state.announcedResearchIds || state.announcedResearchIds.includes(node.id);
+  return { announced, versionMet, scoreMet, prerequisitesMet, bestScore, available: announced && versionMet && scoreMet && prerequisitesMet };
 }

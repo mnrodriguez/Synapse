@@ -89,7 +89,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono select-none">
-      <div className="theme-panel-bg border theme-accent-border rounded-lg max-w-md w-full max-h-[92vh] overflow-y-auto">
+      <div className="theme-panel-bg border theme-accent-border rounded-lg max-w-md w-full max-h-[92dvh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-3.5 theme-panel-bg border-b theme-accent-border">
           <div className="flex items-center gap-2">

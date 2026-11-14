@@ -9,6 +9,7 @@ import { planTrainingRun, DEFAULT_TRAINING_CONFIG } from '../src/utils/trainingR
 import { DAYS_PER_GAME_MONTH } from '../src/utils/constants';
 import type { GameState, TrainingJob, ActiveGig, AgentInstance } from '../src/types/game';
 import { missionTick } from '../src/tick/missionTick';
+import { SUSPICION } from '../src/utils/rules';
 import { agentTick } from '../src/tick/agentTick';
 import { tradingTick } from '../src/tick/tradingTick';
 
@@ -66,16 +67,18 @@ describe('thermal tick', () => {
   test('suspicion lists its sources: agents add their risk, quarantined ones do not, an overseer subtracts', () => {
     const risky = run({ agents: [agentWith('exploit_synth', 0.77)] }, [gig]);
     expect(risky.suspicionRates.agents).toBeGreaterThan(0);
-    expect(risky.watchdogSuspicion).toBeGreaterThan(10);
+    expect(risky.watchdogSuspicion).toBeGreaterThan(run({}, [gig]).watchdogSuspicion);
     expect(run({ agents: [agentWith('exploit_synth', 0.77, 'quarantined')] }, [gig]).suspicionRates.agents).toBe(0);
     expect(run({ agents: [agentWith('exploit_synth', 0.77), agentWith('overseer', -0.15)] }, [gig]).suspicionRates.agents)
       .toBeLessThan(risky.suspicionRates.agents);
   });
 
-  test('it fades only while nothing runs; scraping and overload add traffic', () => {
-    expect(run({}).suspicionRates.dissipation).toBeLessThan(0);
+  test('it fades fastest while nothing runs, slowly while contracts run, not at all in an overload', () => {
+    const idle = run({});
+    expect(idle.suspicionRates.dissipation).toBeLessThan(0);
     const busy = run({}, [gig]);
-    expect(busy.suspicionRates.dissipation).toBe(0);
+    expect(busy.suspicionRates.dissipation).toBeCloseTo(idle.suspicionRates.dissipation * SUSPICION.fadeWhileWorkingShare, 9);
+    expect(run({ activeIncident: {} as GameState['activeIncident'] }, [gig]).suspicionRates.dissipation).toBe(0);
     expect(busy.suspicionRates.missionsRunning).toBe(1);
     expect(run({ activeScrapeJob: {} as GameState['activeScrapeJob'] }, [gig]).suspicionRates.scraping).toBeGreaterThan(0);
     const overloaded = run({}, [], 2);

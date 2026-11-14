@@ -332,7 +332,7 @@ export const GenesisOnboarding: React.FC = () => {
         </div>
 
         {/* Step Body */}
-        <div className="p-5 flex-1 overflow-y-auto space-y-4 text-xs theme-text max-h-[65vh]">
+        <div className="p-5 flex-1 overflow-y-auto space-y-4 text-xs theme-text max-h-[65dvh]">
           {/* STEP 1: Callsign & Lore */}
           {step === 1 && (
             <div className="space-y-4">

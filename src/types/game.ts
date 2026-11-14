@@ -263,7 +263,40 @@ export interface TrainingReport {
 }
 
 // One-time story dialogs (see utils/storyEvents.ts).
-export type StoryEventId = 'loan_warning' | 'loan_audit' | 'loan_audit_misuse' | 'first_power_trip' | 'first_overheat';
+export type StoryEventId = 'loan_warning' | 'loan_audit' | 'loan_audit_misuse' | 'first_power_trip' | 'first_overheat' | 'suspicion_warning' | 'suspicion_critical';
+
+// Where suspicion came from, added up over a period (a week, or the whole campaign).
+export interface SuspicionSources {
+  agents: number;    // the deployed agents' own risk
+  missions: number;  // finished contracts (a share of the risk on success, all of it on failure)
+  overload: number;  // power above capacity or a runaway temperature
+  scraping: number;  // dataset scraping traffic
+  trading: number;   // the trading desk
+  faded: number;     // what faded away (a positive number)
+}
+
+// Counters of the week in progress; the weekly report reads them and starts a new week.
+export interface WeekStats {
+  startSuspicion: number;
+  sources: SuspicionSources;
+  creditsEarned: number;
+  missionsOk: number;
+  missionsFailed: number;
+}
+
+// The report shown when a game week closes.
+export interface WeeklyReport {
+  week: number;
+  newResearchIds: string[];      // papers that can be funded from now on
+  waitingResearch: number;       // papers that qualify but arrive in a later week
+  suspicionStart: number;
+  suspicionEnd: number;
+  sources: SuspicionSources;
+  other: number;                 // changes outside the tick (incidents, cancelling, scrubbing...)
+  creditsEarned: number;
+  missionsOk: number;
+  missionsFailed: number;
+}
 
 export interface GameState {
   // Settings for the next training run (epochs, learning rate, batch, early stopping).
@@ -272,6 +305,12 @@ export interface GameState {
   pendingStoryEvents?: StoryEventId[];
   seenStoryEvents?: StoryEventId[];
   speedBeforeStoryEvent?: number | null; // speed to restore when the last dialog closes
+  // Papers the weekly report has announced: only these can be funded. New ones arrive a few per week.
+  announcedResearchIds?: string[];
+  weekStats?: WeekStats;
+  suspicionTotals?: SuspicionSources;   // where suspicion came from over the whole campaign
+  pendingWeeklyReport?: WeeklyReport | null; // the report on screen (pauses the game)
+  speedBeforeWeeklyReport?: number | null;
   storyChoices?: string[]; // story events where the player took the alternative choice
   // Last finished training run, awaiting confirmation (see dismissTrainingReport).
   lastTrainingReport?: TrainingReport | null;

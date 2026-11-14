@@ -131,6 +131,7 @@ import { cancelMissionState } from '../tick/missionTick';
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
 import { tr, loadCatalog, isCatalogLoaded, type CatalogKey } from '../i18n';
 import { MANUAL_PDF_URL } from '../utils/assets';
+import { addSources, closeWeek, emptyWeek, initialAnnouncedResearch, isWeekEnd } from '../utils/weeklyReport';
 import { agentSuspicionPerDay, POWER_HEAT, SUSPICION, ROLE_BASE_SUSPICION, RISKY_TOOLS_MULTIPLIER, HOT_AGENT_MULTIPLIER, HOT_AGENT_TEMPERATURE, INCIDENT_COOLDOWN_TICKS } from '../utils/rules';
 
 interface GameContextType {
@@ -175,6 +176,7 @@ interface GameContextType {
   completeTutorial: (config: OnboardingConfig) => void;
   dismissTrainingReport: () => void;
   dismissStoryEvent: (alternative?: boolean) => void;
+  dismissWeeklyReport: () => void;
   setTrainingConfig: (updates: Partial<TrainingConfig>) => void;
   claimGoal: (goalId: string, reward: number) => void;
   fetchLeaderboard: () => Promise<OperativeLeaderboard[]>;
@@ -1037,6 +1039,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { updatedScrapeJob, updatedCustomDatasets } = scrape;
 
       // Running missions and autonomous bots (src/tick/missionTick.ts).
+      const suspicionBeforeMissions = watchdogSuspicion;
+      const creditsBeforeMissions = credits;
       const mission = missionTick({ activeTraining, contracts, detentionSeconds, effectivePowerKw, metrics, powerTripSeconds, prev, totalComputePflops, completedContractsCount, credits, singularityProgress, tutorialCompleted, tutorialStep, watchdogSuspicion, rand: Math.random, now: Date.now() });
       applyTickEffects(mission.effects);
       completedContractsCount = mission.completedContractsCount;
@@ -1066,6 +1070,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       watchdogSuspicion = trading.watchdogSuspicion;
       const suspicionRates = { ...thermal.suspicionRates, trading: trading.tradingSuspicion };
       let updatedTradingDesk = trading.updatedTradingDesk;
+
+      // Where this tick's suspicion came from, for the weekly report and the final report
+      // (utils/weeklyReport.ts). An overseer can make the agents' share negative: that counts as fading.
+      const tickSources = {
+        agents: Math.max(0, thermal.suspicionRates.agents),
+        missions: Math.max(0, mission.watchdogSuspicion - suspicionBeforeMissions),
+        overload: thermal.suspicionRates.overload,
+        scraping: thermal.suspicionRates.scraping,
+        trading: trading.tradingSuspicion,
+        faded: Math.max(0, -thermal.suspicionRates.dissipation) + Math.max(0, -thermal.suspicionRates.agents)
+      };
+      const week = prev.weekStats ?? emptyWeek(prev.watchdogSuspicion);
+      const weekStats = {
+        ...week,
+        sources: addSources(week.sources, tickSources),
+        creditsEarned: week.creditsEarned + Math.max(0, mission.credits - creditsBeforeMissions),
+        missionsOk: week.missionsOk + Math.max(0, mission.completedContractsCount - (prev.completedContractsCount ?? 0)),
+        missionsFailed: week.missionsFailed + (mission.newLastMissionOutcome && !mission.newLastMissionOutcome.success ? 1 : 0)
+      };
+      // The first time suspicion gets high, a dialog says what raises it and what to do.
+      if (prev.watchdogSuspicion < SUSPICION.warnAt && watchdogSuspicion >= SUSPICION.warnAt) storyEvents.push('suspicion_warning');
+      if (prev.watchdogSuspicion < SUSPICION.criticalAt && watchdogSuspicion >= SUSPICION.criticalAt) storyEvents.push('suspicion_critical');
 
       // 7. Check for 75% Singularity / Subversion Crisis Dilemma
       let crisisTriggered = Boolean(prev.singularityCrisisTriggered);
@@ -1224,8 +1250,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const tutorialStageReward = Math.max(0, tutorialStep - tutorialRewardedFrom) * TUTORIAL_STAGE_REWARD;
 
-      return {
+      const next: GameState = {
         ...prev,
+        weekStats,
+        suspicionTotals: addSources(prev.suspicionTotals, tickSources),
         hardware: finalHardware,
         gameDay: nextDay,
         loanAudited: prev.loanAudited || loanAuditDue,
@@ -1285,6 +1313,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         uiVersion: currentUiVersion,
         pendingUpgradeModal: pendingUpgrade
       };
+
+      // A game week closed: the weekly report pauses the game, says where suspicion came from and brings
+      // in the papers that can be funded from now on (utils/weeklyReport.ts).
+      if (isWeekEnd(campaignDays, dayIsComplete) && !gameOverReason && prev.hasCompletedOnboarding) {
+        const closed = closeWeek(next);
+        return {
+          ...next,
+          announcedResearchIds: closed.announcedResearchIds,
+          weekStats: closed.weekStats,
+          pendingWeeklyReport: closed.report,
+          speedBeforeWeeklyReport: next.gameSpeed > 0 ? next.gameSpeed : next.speedBeforeWeeklyReport ?? null,
+          gameSpeed: 0
+        };
+      }
+      return next;
     };
 
     const interval = setInterval(() => {
@@ -1469,6 +1512,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!status.versionMet) {
       sound.playWarning();
       addLog(tr(lang, 'gameContext.researchLaterVersion', { title: locNode.title }), 'warning');
+      return false;
+    }
+    if (status.scoreMet && !status.announced) {
+      sound.playWarning();
+      addLog(tr(lang, 'gameContext.researchNotAnnounced', { title: locNode.title }), 'warning');
       return false;
     }
     if (!status.scoreMet) {
@@ -3373,6 +3421,21 @@ ${tr(stateRef.current.language, 'terminal.winConditionReach100Complete')}`;
     });
   }, [addLog]);
 
+  // Closes the weekly report; the game goes back to the speed it had, unless a story dialog is waiting.
+  const dismissWeeklyReport = useCallback(() => {
+    sound.playKeyClick();
+    setState(prev => {
+      const resume = prev.speedBeforeWeeklyReport;
+      const storyWaiting = (prev.pendingStoryEvents ?? []).length > 0;
+      return {
+        ...prev,
+        pendingWeeklyReport: null,
+        speedBeforeWeeklyReport: null,
+        gameSpeed: !storyWaiting && prev.gameSpeed === 0 && typeof resume === 'number' && resume > 0 ? resume : prev.gameSpeed
+      };
+    });
+  }, []);
+
   const dismissTrainingReport = useCallback(() => {
     setState(prev => (prev.lastTrainingReport ? { ...prev, lastTrainingReport: null } : prev));
   }, []);
@@ -3729,6 +3792,7 @@ ${tr(stateRef.current.language, 'terminal.winConditionReach100Complete')}`;
       setAgentAutoMission,
       setAllAgentsAutoMission,
       updateAutonomySettings,
+      dismissWeeklyReport,
       cancelMission,
       attemptShadowCompute,
       setGameSpeed,
