@@ -22,6 +22,7 @@ import {
 import { sound } from '../audio/soundManager';
 import { toDisplayProgress, UiVersion } from '../utils/singularityGoals';
 import { formatCompute, universityLoanPflops, LOAN_TRIAL_DAYS } from '../utils/training';
+import { computeLedger } from '../utils/computeLedger';
 import { UPGRADE_SCORE } from '../utils/missionTiers';
 import { tr, type CatalogKey } from '../i18n';
 
@@ -45,6 +46,14 @@ export const BentoHUD: React.FC = () => {
   const p = VERSION_PROFILES[lang][ver];
 
   const powerRatio = Math.min(100, (state.activePowerKw / Math.max(0.1, state.maxPowerKw)) * 100);
+  // Compute in use: agents, running contracts and the training run (utils/computeLedger.ts).
+  const ledger = computeLedger(state);
+  const share = (part: number) => (ledger.total > 0 ? Math.min(100, (part / ledger.total) * 100) : 0);
+  const computeBreakdown = tr(state.language, 'bentoHUD.computeBreakdown', {
+    agents: formatCompute(ledger.agents, true),
+    contracts: formatCompute(ledger.missions, true),
+    training: formatCompute(ledger.training, true)
+  });
   const isPowerTrip = state.powerTripSeconds > 0;
 
   // Determine if next upgrade is available to offer via the Co-Pilot CTA
@@ -185,7 +194,7 @@ export const BentoHUD: React.FC = () => {
 
           <div className="flex items-center gap-2.5 overflow-x-auto min-w-0 whitespace-nowrap text-[11px] font-semibold">
             <span className="theme-success-text">${Math.round(state.credits).toLocaleString()}</span>
-            <span className="mutating-accent-text">{formatCompute(state.totalComputePflops)}</span>
+            <span className="mutating-accent-text">{formatCompute(ledger.used + ledger.training, true)}/{formatCompute(ledger.total, true)}</span>
             <span className={isPowerTrip ? 'theme-danger-text' : 'mutating-text-muted'}>
               {isPowerTrip ? tr(state.language, 'bentoHUD.breaker') : `${state.activePowerKw.toFixed(1)}/${state.maxPowerKw.toFixed(1)} kW`}
             </span>
@@ -283,10 +292,18 @@ export const BentoHUD: React.FC = () => {
             <span className="font-semibold uppercase tracking-wider mutating-text-muted font-sans">
               {p.hud2Title}
             </span>
-            <span className="font-mono font-bold mutating-accent-text">
-              {formatCompute(state.totalComputePflops)}
+            <span className="font-mono font-bold mutating-accent-text" title={tr(state.language, 'bentoHUD.computeInUseHelp')}>
+              {tr(state.language, 'bentoHUD.computeInUse', { used: formatCompute(ledger.used + ledger.training, true), total: formatCompute(ledger.total) })}
             </span>
           </div>
+
+          {/* One compute budget: agents and contracts first, training gets the rest. */}
+          <div className="w-full h-1.5 bg-current/15 rounded-full overflow-hidden flex" role="img" aria-label={computeBreakdown}>
+            <div className="h-full theme-btn-warn" style={{ width: `${share(ledger.agents)}%` }} />
+            <div className="h-full mutating-btn-primary" style={{ width: `${share(ledger.missions)}%` }} />
+            <div className="h-full theme-btn-success" style={{ width: `${share(ledger.training)}%` }} />
+          </div>
+          <div className="text-[11px] font-mono mutating-text-muted leading-tight">{computeBreakdown}</div>
 
           {/* The university loan is shown apart from the operative's own hardware, with the days it has left. */}
           {universityLoanPflops(state) > 0 && (
@@ -297,27 +314,13 @@ export const BentoHUD: React.FC = () => {
             </div>
           )}
 
-          <div className="my-1 space-y-1">
-            <div className="flex justify-between text-[11px] font-mono">
-              <span className="mutating-text-muted font-sans">{p.hud2Sub}</span>
-              <span className={`font-semibold ${isPowerTrip ? 'theme-danger-text animate-pulse font-bold' : ''}`}>
-                {isPowerTrip 
-                  ? tr(state.language, 'bentoHUD.breakerTripped')
-                  : `${state.activePowerKw.toFixed(1)} kW / ${state.maxPowerKw.toFixed(1)} kW`}
-              </span>
-            </div>
-            <div className="w-full h-1.5 bg-current/15 rounded-full overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-300 ${
-                  isPowerTrip || powerRatio >= 95 
-                    ? 'theme-btn-danger' 
-                    : powerRatio >= 80 
-                    ? 'theme-warn-soft' 
-                    : 'mutating-btn-primary'
-                }`}
-                style={{ width: `${Math.min(100, powerRatio)}%` }}
-              />
-            </div>
+          <div className="flex justify-between text-[11px] font-mono pt-1">
+            <span className="mutating-text-muted font-sans">{p.hud2Sub}</span>
+            <span className={`font-semibold ${isPowerTrip || powerRatio >= 95 ? 'theme-danger-text font-bold' : powerRatio >= 80 ? 'theme-warn-text' : ''} ${isPowerTrip ? 'animate-pulse' : ''}`}>
+              {isPowerTrip 
+                ? tr(state.language, 'bentoHUD.breakerTripped')
+                : `${state.activePowerKw.toFixed(1)} kW / ${state.maxPowerKw.toFixed(1)} kW`}
+            </span>
           </div>
 
           <div className="flex items-center justify-between text-[11px] pt-1 border-t border-current/10 font-mono">

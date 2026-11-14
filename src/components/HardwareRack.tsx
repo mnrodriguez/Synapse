@@ -35,6 +35,7 @@ import { DocLinkBadge } from './DocLinkBadge';
 import { isProgressionUnlocked, unlockHint } from '../utils/progression';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { formatCompute, externalComputePflops, COVERT_NODE_PFLOPS, UNIVERSITY_LOAN_PFLOPS, formatGameTime, GAME_HOURS_PER_TICK } from '../utils/training';
+import { computeLedger } from '../utils/computeLedger';
 import { PHASE_SCALES, toDisplayProgress, type UiVersion } from '../utils/singularityGoals';
 import { HARDWARE_SPEC_NOTES, specSourceLabel } from '../utils/hardwareSpecs';
 import { tr } from '../i18n';
@@ -71,10 +72,9 @@ export const HardwareRack: React.FC = () => {
     h.category === 'gpu' ? sum + (h.vramGb * h.count) : sum, 0
   );
 
-  const activeComputeReservations =
-    state.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS +
-    ((state.activeGigs || (state.activeGig ? [state.activeGig] : [])).reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0)) +
-    (state.activeTraining ? state.totalComputePflops * 0.5 : 0);
+  // Agents and running contracts; training takes what is left (utils/computeLedger.ts).
+  const ledger = computeLedger(state);
+  const activeComputeReservations = ledger.agents + ledger.missions;
 
   const handleMenuTabChange = (tab: HardwareMenuTab) => {
     sound.playNavSwitch();
@@ -167,7 +167,7 @@ export const HardwareRack: React.FC = () => {
             </div>
             <div>
               <span className="mutating-text-muted text-[11px] block">{tr(state.language, 'hardwareRack.availableCompute')}</span>
-              <span className="theme-success-text font-bold text-sm">{formatCompute(Math.max(0, state.totalComputePflops - activeComputeReservations))}</span>
+              <span className="theme-success-text font-bold text-sm">{formatCompute(ledger.free)}</span>
             </div>
           </div>
 

@@ -15,6 +15,8 @@
 //  10 evaluation score 0-100 (old IQ / 4, capped by the model's ceiling)
 //  11 the monthly bill uses the energy actually used (monthEnergyKwh); older saves start the month
 //     with an estimate at their current power draw
+//  12 compute budget: autonomous contracts get a share of the cluster (autonomyComputeShare); older saves
+//     start with the default share
 // Add a step by bumping SAVE_SCHEMA_VERSION and handling `(data.saveSchemaVersion ?? 0) < N` below.
 
 import { GameState, ModelArchitecture, ContractGig, InferenceParams } from '../types/game';
@@ -23,8 +25,9 @@ import { sanitizeTrainingConfig } from '../utils/trainingRun';
 import { sanitizeStoryEvents } from '../utils/storyEvents';
 import { reasoningCeilingFor, migrateLegacyScore, GAME_HOURS_PER_TICK } from '../utils/training';
 import { tr } from '../i18n';
+import { COMPUTE } from '../utils/rules';
 
-export const SAVE_SCHEMA_VERSION = 11;
+export const SAVE_SCHEMA_VERSION = 12;
 
 export const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 export const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
@@ -113,6 +116,7 @@ export const DEFAULT_STATE: GameState = {
   incidentHistory: [],
   autonomyEnabled: false,
   autonomyRiskLimit: 20,
+  autonomyComputeShare: COMPUTE.autonomyDefaultShare,
 
   hasCompletedOnboarding: false,
   tutorialCompleted: false,
@@ -387,6 +391,9 @@ export function mergeGameState(data: Partial<GameState>, fallback: GameState): G
     autonomyRiskLimit: typeof data.autonomyRiskLimit === 'number' && Number.isFinite(data.autonomyRiskLimit)
       ? Math.max(0, Math.min(100, data.autonomyRiskLimit))
       : fallback.autonomyRiskLimit,
+    autonomyComputeShare: typeof data.autonomyComputeShare === 'number' && Number.isFinite(data.autonomyComputeShare)
+      ? Math.max(0, Math.min(100, Math.round(data.autonomyComputeShare)))
+      : fallback.autonomyComputeShare,
     hasCompletedOnboarding: typeof data.hasCompletedOnboarding === 'boolean'
       ? data.hasCompletedOnboarding
       : (Boolean(data.tutorialCompleted) || (typeof data.tutorialStep === 'number' && data.tutorialStep >= 4 && (data.hardware?.some(h => h.count > 0) ?? false))),

@@ -24,7 +24,7 @@ import {
 import {
   ALIGNMENT_COMPROMISED_BELOW, ALIGNMENT_JAILBREAK_BELOW, HOT_AGENT_MULTIPLIER, HOT_AGENT_TEMPERATURE,
   INCIDENT_CHANCE_CAP, INCIDENT_COOLDOWN_TICKS, MISSION, OVERSEER_ALIGNMENT_PER_TICK, POWER_HEAT, RISKY_TOOLS_MULTIPLIER,
-  SANDBOX_INCIDENT_MULTIPLIER, STRICTNESS_BANDS, SUSPICION, TICKS_PER_DAY, TRADING_TIERS
+  SANDBOX_INCIDENT_MULTIPLIER, STRICTNESS_BANDS, SUSPICION, TICKS_PER_DAY, TRADING_TIERS, COMPUTE
 } from '../../utils/rules';
 import { CONTAINMENT_MAX_SUBVERSION } from '../../utils/epilogue';
 import { VERSION_PROFILES } from '../../utils/versionProfiles';
@@ -143,9 +143,12 @@ export function manualParams(language: Language, version: UiVersion): TextParams
     autoPenalty: pct(MISSION.autonomousPenalty),
     autoPayout: pct(MISSION.autonomousPayout),
     missionProgress: MISSION_SINGULARITY[tierForUiVersion(version)],
-    missionComputePerB: 0.002,
-    missionKwPerPflops: 20,
-    missionMinKw: 0.05,
+    missionAgentMin: formatCompute(COMPUTE.missionAgentMinPflops),
+    missionPerBillion: formatCompute(COMPUTE.missionPflopsPerBillionParams),
+    missionKwPerPflops: COMPUTE.missionKwPerPflops,
+    missionMinKw: COMPUTE.missionMinKw,
+    cancelShare: pct(COMPUTE.cancelRiskShare),
+    autonomyDefault: COMPUTE.autonomyDefaultShare,
     gapShare: pct(0.15),
     maxEpochs: MAX_EPOCHS,
     overfitPenalty: OVERFIT_PENALTY_PER_EPOCH,
@@ -331,6 +334,7 @@ export function buildManual(language: Language, version: UiVersion, difficulty: 
       text('manual.missions.probability'),
       list('manual.missions.p1', 'manual.missions.p2', 'manual.missions.p3', 'manual.missions.p4', 'manual.missions.p5'),
       text('manual.missions.outcome'),
+      text('manual.missions.cancel'),
       heading('manual.missions.agentsHeading'),
       text('manual.missions.agents'),
       text('manual.missions.alignment'),

@@ -21,6 +21,7 @@ import {
 import { sound } from '../audio/soundManager';
 import { gpuComputePflops, formatTrainingTime, externalComputePflops, formatCompute } from '../utils/training';
 import { STARTER_TRAINING_DATASET } from '../utils/constants';
+import { computeLedger } from '../utils/computeLedger';
 import { TrainingConfigPanel } from './TrainingConfigPanel';
 import { vramForRun, BATCH_SIZES, learningRateLabel, runConfigFor } from '../utils/trainingRun';
 import { tr } from '../i18n';
@@ -35,6 +36,8 @@ const DATASET_SELECTED_STYLE: React.CSSProperties = {
 export const TrainingMonitor: React.FC = () => {
   const { state, cancelTraining, startTraining, selectModel } = useGame();
   const job = state.activeTraining;
+  // What agents and running contracts leave for training (utils/computeLedger.ts).
+  const ledger = computeLedger(state);
   const current = state.currentModel;
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>(
     current.trainedOnDatasetId || STARTER_TRAINING_DATASET.id
@@ -84,7 +87,9 @@ export const TrainingMonitor: React.FC = () => {
             </h2>
           </div>
           <div className="flex items-center gap-2 text-[11px] mutating-text-muted">
-            <span>{tr(state.language, 'trainingMonitor.compute')} <strong>{formatCompute((gpuComputePflops(state.hardware) + state.borrowedComputePflops + externalComputePflops(state)))}</strong></span>
+            <span>{tr(state.language, 'trainingMonitor.compute')} <strong>{formatCompute(ledger.total)}</strong></span>
+            <span>•</span>
+            <span>{tr(state.language, 'trainingMonitor.freeForTraining')} <strong className={ledger.free < ledger.total * 0.5 ? 'theme-warn-text' : 'theme-success-text'}>{formatCompute(ledger.free)}</strong></span>
             <span>•</span>
             <span>{tr(state.language, 'trainingMonitor.totalVram')} <strong className="theme-success-text">{totalClusterVram} GB</strong></span>
           </div>
@@ -336,8 +341,13 @@ export const TrainingMonitor: React.FC = () => {
           <div>
             <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'trainingMonitor.computeAllocatedRun')}</span>
             <span className="mutating-accent-text font-bold">
-              {formatCompute((gpuComputePflops(state.hardware) + state.borrowedComputePflops + externalComputePflops(state)))} {tr(state.language, 'trainingMonitor.installedGpusLoan')}
+              {tr(state.language, 'trainingMonitor.runGets', { training: formatCompute(ledger.training), total: formatCompute(ledger.total), percent: Math.round(ledger.trainingShare * 100) })}
             </span>
+            {(ledger.agents > 0 || ledger.missions > 0) && (
+              <span className="theme-warn-text block text-[11px]">
+                {tr(state.language, 'trainingMonitor.slowedBy', { contracts: formatCompute(ledger.missions), agents: formatCompute(ledger.agents) })}
+              </span>
+            )}
           </div>
           <div>
             <span className="mutating-text-muted block text-[11px]">{tr(state.language, 'trainingMonitor.timeLeftGameTime')}</span>

@@ -360,6 +360,8 @@ export interface GameState {
   incidentHistory: BreachIncident[];
   autonomyEnabled: boolean;
   autonomyRiskLimit: number;
+  // Share of the cluster's compute (0-100) the autonomous contracts may use.
+  autonomyComputeShare: number;
 
   // Sentience infiltration
   sentienceDomains: SentienceDomain[];

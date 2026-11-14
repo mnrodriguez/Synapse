@@ -115,7 +115,7 @@ import { canAttemptContainment } from '../utils/epilogue';
 import { planTrainingRun, lossAt, sanitizeTrainingConfig, vramForRun, BATCH_SIZES, DEFAULT_TRAINING_CONFIG, type TrainingConfig, runConfigFor } from '../utils/trainingRun';
 import { enqueueStoryEvents, dismissStoryEventState, sanitizeStoryEvents, storyEventText, LOAN_WARNING_DAY } from '../utils/storyEvents';
 import type { StoryEventId } from '../types/game';
-import { GAME_HOURS_PER_TICK, formatGameTime } from '../utils/training';
+import { GAME_HOURS_PER_TICK, formatGameTime, formatCompute } from '../utils/training';
 import { calculateTrainingProgressPerTick, estimateTrainingSeconds, gpuComputePflops, iqGainForRun, reasoningCeilingFor, migrateLegacyScore, externalComputePflops, universityLoanPflops, LOAN_TRIAL_DAYS, LOAN_MISUSE_TICKS } from '../utils/training';
 
 // Used when a run predates per-run token counts: the general corpus.
@@ -125,7 +125,9 @@ const DEFAULT_TRAINING_TOKENS = 50_000_000;
 const agentReasoningFactor = (score: number): number => Math.max(0.5, score / 20);
 const agentParamBonus = (params: number): number => Math.min(2.5, 1 + params / 50_000_000);
 const agentAutonomyFor = (score: number): number => Math.min(5, Math.max(1, Math.floor(score / 7.5)));
-import { evaluateMissionTeam, findAutonomousMission, weakestTeamFactors } from '../utils/missionEvaluation';
+import { evaluateMissionTeam, weakestTeamFactors } from '../utils/missionEvaluation';
+import { computeLedger, missionComputePflops, missionPowerKw as missionPowerFor } from '../utils/computeLedger';
+import { cancelMissionState } from '../tick/missionTick';
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
 import { tr, loadCatalog, isCatalogLoaded, type CatalogKey } from '../i18n';
 import { MANUAL_PDF_URL } from '../utils/assets';
@@ -197,7 +199,8 @@ interface GameContextType {
   setMissionAiApiKey: (apiKey: string) => void;
   setAgentAutoMission: (agentId: string, enabled: boolean) => void;
   setAllAgentsAutoMission: (enabled: boolean) => void;
-  updateAutonomySettings: (updates: Partial<Pick<GameState, 'autonomyEnabled' | 'autonomyRiskLimit'>>) => void;
+  updateAutonomySettings: (updates: Partial<Pick<GameState, 'autonomyEnabled' | 'autonomyRiskLimit' | 'autonomyComputeShare'>>) => void;
+  cancelMission: (runId: string) => boolean;
   attemptShadowCompute: () => boolean;
   setGameSpeed: (speed: number) => void;
   advanceTutorialStep: (step?: number) => void;
@@ -358,13 +361,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
 
-  const updateAutonomySettings = useCallback((updates: Partial<Pick<GameState, 'autonomyEnabled' | 'autonomyRiskLimit'>>) => {
+  const updateAutonomySettings = useCallback((updates: Partial<Pick<GameState, 'autonomyEnabled' | 'autonomyRiskLimit' | 'autonomyComputeShare'>>) => {
     setState(prev => ({
       ...prev,
       ...updates,
       autonomyRiskLimit: updates.autonomyRiskLimit === undefined
         ? prev.autonomyRiskLimit
-        : Math.max(0, Math.min(100, updates.autonomyRiskLimit))
+        : Math.max(0, Math.min(100, updates.autonomyRiskLimit)),
+      autonomyComputeShare: updates.autonomyComputeShare === undefined
+        ? prev.autonomyComputeShare
+        : Math.max(0, Math.min(100, Math.round(updates.autonomyComputeShare)))
     }));
   }, []);
 
@@ -1951,21 +1957,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    const computeRequired = Math.max(0.001, gig.requiredParams / 1_000_000_000 * 0.002);
-    const missionPowerKw = Math.max(0.05, computeRequired * 20);
-    const activeAgentDemand = stateRef.current.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
-    const trainingReservation = stateRef.current.activeTraining
-      ? stateRef.current.totalComputePflops * 0.5
-      : 0;
-    const runningMissionsCompute = currentActiveGigs.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
-    const runningMissionsPower = currentActiveGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0);
+    // One compute budget (utils/computeLedger.ts): the team's agents run their models, and the contract can
+    // start if that fits in what agents and running contracts leave free. Training gives way and slows down.
+    const computeRequired = missionComputePflops(assignedModels);
+    const missionPowerKw = missionPowerFor(computeRequired);
+    const ledger = computeLedger(stateRef.current, currentActiveGigs);
 
-    if (stateRef.current.totalComputePflops - activeAgentDemand - trainingReservation - runningMissionsCompute < computeRequired) {
+    if (ledger.free < computeRequired) {
       sound.playWarning();
-      addLog(tr(stateRef.current.language, 'gameContext.insufficientComputeCapacityMissionRequires', { computeRequired: computeRequired.toFixed(3) }), 'danger');
+      addLog(tr(stateRef.current.language, 'gameContext.insufficientComputeCapacityMissionRequires', { computeRequired: formatCompute(computeRequired), free: formatCompute(ledger.free) }), 'danger');
       return false;
     }
-    if (stateRef.current.activePowerKw + runningMissionsPower + missionPowerKw > stateRef.current.maxPowerKw) {
+    // activePowerKw already counts the contracts that are running.
+    if (stateRef.current.activePowerKw + missionPowerKw > stateRef.current.maxPowerKw) {
       sound.playWarning();
       addLog(tr(stateRef.current.language, 'gameContext.insufficientPowerMissionRequiresKw', { missionPowerKw: missionPowerKw.toFixed(2) }), 'danger');
       return false;
@@ -2018,6 +2022,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addLog(
       tr(stateRef.current.language, 'gameContext.missionDeployedAssignedEfficiencyDuration', { contractTitle, assignedLabel, efficiencyPercent: teamAssessment.efficiencyPercent, estimatedDurationSeconds: formatGameTime(teamAssessment.estimatedDurationSeconds), successProbability: Math.round(teamAssessment.successProbability * 100) }),
       'info'
+    );
+    return true;
+  }, [addLog]);
+
+  // Action: cancel a running contract (manual or autonomous). See cancelMissionState.
+  const cancelMission = useCallback((runId: string): boolean => {
+    const result = cancelMissionState(stateRef.current, runId);
+    if (!result) return false;
+    const lang = stateRef.current.language;
+    const contract = stateRef.current.contracts.find(c => c.id === result.contractId);
+    sound.playWarning();
+    setState(prev => cancelMissionState(prev, runId)?.state ?? prev);
+    addLog(
+      tr(lang, 'gameContext.missionCancelled', { contractTitle: contract ? localizedContractTitle(lang, contract) : result.contractId, suspicionAdded: result.suspicionAdded }),
+      'warning'
     );
     return true;
   }, [addLog]);
@@ -3710,6 +3729,7 @@ ${tr(stateRef.current.language, 'terminal.winConditionReach100Complete')}`;
       setAgentAutoMission,
       setAllAgentsAutoMission,
       updateAutonomySettings,
+      cancelMission,
       attemptShadowCompute,
       setGameSpeed,
       advanceTutorialStep,
