@@ -55,6 +55,8 @@ import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { ContainmentPanel } from './ContainmentPanel';
 import { formatGameTime, formatCompute } from '../utils/training';
 import { SUSPICION, ROLE_BASE_SUSPICION, agentSuspicionPerDay, strictnessBand, SANDBOX_INCIDENT_MULTIPLIER } from '../utils/rules';
+import { computeLedger, runningGigs } from '../utils/computeLedger';
+import { autonomyShareOf } from '../tick/missionTick';
 import { tr, type CatalogKey } from '../i18n';
 
 const MISSION_ROLE_TASKS: Record<AgentRole, { textKey: CatalogKey }> = {
@@ -154,6 +156,10 @@ export const AgentSandbox: React.FC = () => {
   const agentLoadPflops = operationalAgents.length * AGENT_COMPUTE_DEMAND_PFLOPS;
   const agentLoadKw = operationalAgents.length * AGENT_POWER_DRAW_KW;
   const agentsSuspicionPerDay = operationalAgents.reduce((sum, a) => sum + agentSuspicionPerDay(a.suspicionPerSec, suspicionScale), 0);
+  // Autonomous contracts: the share of the cluster they may use and what they use now.
+  const autonomyLedger = computeLedger(state);
+  const autonomyShare = autonomyShareOf(state);
+  const autonomousRuns = runningGigs(state).filter(g => g.isAutonomous).length;
   const signed = (value: number, digits = 1) => `${value > 0 ? '+' : ''}${value.toFixed(digits)}`;
   const avgAlignment = state.agents.length > 0
     ? Math.round(state.agents.reduce((sum, a) => sum + a.alignmentScore, 0) / state.agents.length)
@@ -444,7 +450,7 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
               <Cpu className="w-3.5 h-3.5 mutating-accent-text" />
             </div>
             <div className="text-sm font-bold mutating-accent-text mt-0.5">
-              {formatCompute(agentLoadPflops)} <span className="text-[11px] mutating-text-muted">· {agentLoadKw.toFixed(2)} kW</span>
+              {formatCompute(agentLoadPflops)} <span className="text-[11px] mutating-text-muted">{tr(state.language, 'agentSandbox.ofCluster', { total: formatCompute(autonomyLedger.total) })}</span>
             </div>
           </div>
 
@@ -647,6 +653,24 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
               {state.autonomyRiskLimit}%
             </strong>
           </label>
+          <label className="flex min-w-56 flex-1 items-center gap-2 text-[11px] " title={tr(state.language, 'agentSandbox.autonomyComputeHelp')}>
+            <span>{tr(state.language, 'agentSandbox.autonomyCompute')}</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={autonomyShare}
+              onChange={event => updateAutonomySettings({ autonomyComputeShare: Number(event.target.value) })}
+              className="min-w-20 flex-1 "
+            />
+            <strong className="mutating-accent-text whitespace-nowrap">
+              {autonomyShare}% · {formatCompute(autonomyLedger.total * autonomyShare / 100, true)}
+            </strong>
+          </label>
+          <span className="text-[11px] mutating-text-muted">
+            {tr(state.language, 'agentSandbox.autonomyUsing', { used: formatCompute(autonomyLedger.autonomous, true), count: autonomousRuns })}
+          </span>
           <span className="text-[11px] mutating-text-muted">
             {state.agents.filter(agent => agent.autoMissionEnabled && agent.status !== 'quarantined').length} {tr(state.language, 'agentSandbox.agentsSelected')}
           </span>

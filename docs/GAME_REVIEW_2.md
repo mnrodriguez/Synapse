@@ -587,3 +587,23 @@ G-2 (the 80 PFLOPS link) should be fixed before or together with step 1.
 | D-3 | Can a contract take compute from a running training? | Yes: training slows and the launch dialog says by how much. |
 | D-4 | Autonomy budget as a share of the cluster or as a fixed amount? | Share (it keeps working when hardware changes); show the TFLOPS next to it. |
 | D-5 | Keep watts anywhere on the contract screen? | Only as the stated reason when power is what blocks a launch. |
+
+### 8.6 What was built (2026-11-14)
+
+Section 8 is implemented on branch `claude/great-bohr-j7lflg`, with the recommended option for D-1 to D-5. Day-by-day log: `docs/COMPUTE_BUDGET_WORKLOG.md`.
+
+| Item | Built | Where |
+|---|---|---|
+| M-1 ledger | One account of compute for the tick, the launch check, the board, the HUD, the hardware tab and autonomy. The "half the cluster for training" rule is removed. A working agent costs 1 TFLOPS per billion parameters of its model, at least 0.5 TFLOPS; an idle agent keeps its 0.2 TFLOPS. | `src/utils/computeLedger.ts`, `COMPUTE` in `src/utils/rules.ts` |
+| M-2 several contracts | A card with no manual choice proposes the smallest free team that qualifies, so contracts can be launched one after another. A blocked card states one reason in words. | `proposeTeam` in `missionEvaluation.ts`, `ContractBoard.tsx` |
+| M-3 cancel | Button on each running contract; a second click confirms and shows the cost. Team and compute are freed, nothing is paid, the contract stays; suspicion +25 % of the risk × share done. | `cancelMissionState` in `missionTick.ts`, `cancelMission` in `GameContext.tsx` |
+| M-4 display | HUD: "X of Y in use" with a bar split into agents, contracts and training. Contract card: compute needed and free, no watts. Training tab: compute free for training and "slowed by contracts and agents". Agents tab: agent load without kW. | `BentoHUD.tsx`, `ContractBoard.tsx`, `TrainingMonitor.tsx`, `AgentSandbox.tsx` |
+| M-5 autonomy | Slider "Compute for autonomous contracts" (default 30 %). The bots start one contract per tick, each with its own smallest team, while agents and budget remain. New saved field `autonomyComputeShare`, save schema 12. | `missionTick.ts`, `AgentSandbox.tsx`, `saveState.ts` |
+| M-6 | Contracts are chosen by code (reward for time, risk and compute). Chrome's model is not used for the choice; no log sentence was added. | `findAutonomousMission` |
+| M-7 | Manual chapter 5 rewritten for the rule, autonomy and cancel, in both languages, with numbers read from `COMPUTE`. Simulation script updated. | `manualContent.ts`, `en.ts`, `es.ts`, `docs/review2/simulate.ts` |
+
+Bugs fixed on the way: the board and the launch check counted the power of running contracts twice; autonomy ignored the compute of contracts already running and sent every bot to one contract.
+
+Checked: `bun test` 166 pass, 0 fail (16 new tests in `tests/compute.test.ts`); `bun run lint` clean. In a browser (`docs/review2/compute_check.cjs`, v1, 1280 px and 390 px): two contracts launched in a row without touching the agent picker, one cancelled, one left running; screenshots in `docs/review2/shots_compute/`. Simulation after the change: v1 14 to 22 minutes, v2 16 to 30, no stuck points.
+
+Not done, as planned or by choice: G-2 (the 80 PFLOPS link) is unchanged, so from v3 the cost of contracts is small next to the cluster; dataset scraping still reserves no compute; the autonomy panel was checked in the browser only for layout, its parallel runs are covered by unit tests; Spanish screens were not screenshotted.

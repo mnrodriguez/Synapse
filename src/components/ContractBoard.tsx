@@ -207,6 +207,16 @@ export const ContractBoard: React.FC = () => {
   const getAssignedAgentsForContract = (contractId: string) => {
     const assignment = contractAssignments[contractId];
 
+    const runningGig = activeGigsList.find(g => g.contractId === contractId);
+    if (runningGig) {
+      // While a contract runs, its card shows the team that is on it.
+      const team = state.agents.filter(agent => runningGig.agentIds?.includes(agent.id));
+      const squad = runningGig.squadId ? botGroups.find(g => g.id === runningGig.squadId) : undefined;
+      return squad
+        ? { mode: 'group' as const, squadId: squad.id, squad, agents: team }
+        : { mode: 'unassigned' as const, unassignedAgentIds: team.map(agent => agent.id), agents: team };
+    }
+
     if (!assignment) {
       // Default: the smallest free team that can run this contract, so several contracts can be launched
       // one after another without picking agents by hand. Agents outside squads first, then a free squad.
@@ -261,8 +271,9 @@ export const ContractBoard: React.FC = () => {
     const hasDetention = state.detentionSeconds > 0;
 
     // Agent availability check
-    const activeAgents = agents.filter(a => a.status === 'active' && !busyAgentIds.has(a.id));
-    const isTeamBusy = agents.length > 0 && activeAgents.length !== agents.length;
+    // A running contract is checked against the team that is on it.
+    const activeAgents = isRunning ? agents : agents.filter(a => a.status === 'active' && !busyAgentIds.has(a.id));
+    const isTeamBusy = !isRunning && agents.length > 0 && activeAgents.length !== agents.length;
     const hasMinAgents = activeAgents.length >= (contract.minimumAgents ?? 1);
 
     // Compute the team would use: each agent runs its own model. Without a team, the estimate is one

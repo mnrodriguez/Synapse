@@ -14,6 +14,7 @@ import { planTrainingRun, vramForRun, MAX_EPOCHS, type TrainingConfig } from '..
 import { externalComputePflops, gpuComputePflops, reasoningCeilingFor, formatGameTime } from '../../src/utils/training';
 import { evaluateMissionTeam } from '../../src/utils/missionEvaluation';
 import { UPGRADE_SCORE, tierForUiVersion, NEW_GPU_SINGULARITY, FIRST_MISSION_IQ } from '../../src/utils/missionTiers';
+import { missionComputePflops, missionPowerKw } from '../../src/utils/computeLedger';
 import { isProgressionUnlocked, getModelOptionRequirement, researchStatus } from '../../src/utils/progression';
 
 let seed = Number(process.argv[2] ?? 1);
@@ -156,10 +157,11 @@ function tryMission() {
     const team = roles.length ? roles.map(r => s.agents.find((a: any) => a.role === r && a.status === 'active')).filter(Boolean) : s.agents.filter((a: any) => a.status === 'active');
     if (team.length < Math.max(roles.length, c.minimumAgents ?? 1)) continue;
     if ((c.requiredDataTypes ?? []).some((t: string) => !s.dataSources.some((d: any) => d.type === t && d.unlocked && model.activeDataSources.includes(d.id)))) continue;
-    const need = Math.max(0.001, c.requiredParams / 1e9 * 0.002), kw = Math.max(0.05, need * 20);
+    // Compute budget rule (utils/computeLedger.ts): each agent of the team runs its model; training gives way.
+    const need = missionComputePflops(team.map(() => model)), kw = missionPowerKw(need);
     const m = metricsOf(s);
     const running = s.activeGigs ?? [];
-    const availC = m.totalComputePflops - s.agents.length * C.AGENT_COMPUTE_DEMAND_PFLOPS - (s.activeTraining ? m.totalComputePflops * 0.5 : 0) - running.reduce((a: number, g: any) => a + g.computePflopsRequired, 0);
+    const availC = m.totalComputePflops - s.agents.length * C.AGENT_COMPUTE_DEMAND_PFLOPS - running.reduce((a: number, g: any) => a + g.computePflopsRequired, 0);
     if (availC < need) { if (!stats.stuck.includes('compute:' + c.id)) stats.stuck.push('compute:' + c.id); continue; }
     if (m.activePowerKw + s.agents.length * C.AGENT_POWER_DRAW_KW + running.reduce((a: number, g: any) => a + g.powerKw, 0) + kw > m.maxPowerKw) { if (!stats.stuck.includes('power:' + c.id)) stats.stuck.push('power:' + c.id); continue; }
     // A careful player does not take a mission whose failure would end the run.
