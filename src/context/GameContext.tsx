@@ -39,6 +39,7 @@ import {
   REAL_WORLD_BREACH_TEMPLATES,
   FACILITY_TIERS,
   DIFFICULTY_CONFIGS,
+  difficultyConfigFor,
   TRACKING_AGENCIES_BY_SINGULARITY,
   EMERGENCY_LOAN_AMOUNT,
   EMERGENCY_LOAN_REPAYMENT,
@@ -128,6 +129,7 @@ import { evaluateMissionTeam, findAutonomousMission, weakestTeamFactors } from '
 import { FIRST_MISSION_IQ, UPGRADE_SCORE, DATA_SCRAPING_MIN_SCORE, SINGULARITY_PER_SCORE_POINT, MISSION_SINGULARITY, NEW_GPU_SINGULARITY } from '../utils/missionTiers';
 import { tr, loadCatalog, isCatalogLoaded, type CatalogKey } from '../i18n';
 import { MANUAL_PDF_URL } from '../utils/assets';
+import { agentSuspicionPerDay, POWER_HEAT, SUSPICION, ROLE_BASE_SUSPICION, RISKY_TOOLS_MULTIPLIER, HOT_AGENT_MULTIPLIER, HOT_AGENT_TEMPERATURE, INCIDENT_COOLDOWN_TICKS } from '../utils/rules';
 
 interface GameContextType {
   state: GameState;
@@ -843,8 +845,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let totalTflops = 0;
     let powerDraw = 0;
     const facility = FACILITY_TIERS[facilityTier] || FACILITY_TIERS[0];
-    let maxPower = 1.5 + facility.powerCapacityBonusKw;
-    let maxCooling = 0.8 + facility.coolingCapacityBonusKw;
+    let maxPower = POWER_HEAT.baseMaxPowerKw + facility.powerCapacityBonusKw;
+    let maxCooling = POWER_HEAT.baseCoolingKw + facility.coolingCapacityBonusKw;
     let heatRate = 0;
 
     hw.forEach(item => {
@@ -1107,14 +1109,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       let agencyAlertLevel: GameState['agencyAlertLevel'] = 'low';
-      if (watchdogSuspicion >= 95) agencyAlertLevel = 'raid_imminent';
-      else if (watchdogSuspicion >= 70) agencyAlertLevel = 'critical';
-      else if (watchdogSuspicion >= 40) agencyAlertLevel = 'elevated';
+      if (watchdogSuspicion >= SUSPICION.alertRaid) agencyAlertLevel = 'raid_imminent';
+      else if (watchdogSuspicion >= SUSPICION.alertCritical) agencyAlertLevel = 'critical';
+      else if (watchdogSuspicion >= SUSPICION.alertElevated) agencyAlertLevel = 'elevated';
 
       let gameOverReason = prev.gameOverReason;
       let updatedHardware = prev.hardware;
 
-      if (watchdogSuspicion >= 100 && !gameOverReason) {
+      if (watchdogSuspicion >= SUSPICION.raidAt && !gameOverReason) {
         gameOverReason = 'agency_seizure';
         applyTickEffects([{ kind: 'sound', name: 'warning' }]);
 
@@ -1205,17 +1207,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 9.5 Evolutionary Diegetic UI Progression Trigger
       let currentUiVersion = prev.uiVersion || 1;
-      let pendingUpgrade = prev.pendingUpgradeModal;
-      if (pendingUpgrade === null) {
-        const modelIq = Math.round(newCurrentModel.reasoningScore || 72);
-        if (singularityProgress >= 85 && modelIq >= 280 && currentUiVersion < 4) {
-          pendingUpgrade = 4;
-        } else if (singularityProgress >= 55 && modelIq >= 180 && currentUiVersion < 3) {
-          pendingUpgrade = 3;
-        } else if (singularityProgress >= 25 && modelIq >= 100 && currentUiVersion < 2) {
-          pendingUpgrade = 2;
-        }
-      }
+      // The upgrade is offered by the co-pilot's button in the top panel (and when mounting a host model),
+      // never opened by the tick: see isUpgradeEligible in BentoHUD and UPGRADE_SCORE.
+      const pendingUpgrade = prev.pendingUpgradeModal;
 
       const finalHardware = updatedHardware;
       const currentMetrics = finalHardware !== prev.hardware
@@ -2084,7 +2078,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addLog(tr(lang, 'gameContext.regulatorySuspicionLevelAlreadyWell'), 'info');
       return false;
     }
-    const scrubCost = 250;
+    const scrubCost = SUSPICION.scrubCost;
     if (stateRef.current.credits < scrubCost) {
       sound.playWarning();
       addLog(tr(lang, 'gameContext.insufficientFundsProxyRoutingCountermeasures', { scrubCost }), 'warning');
@@ -2095,7 +2089,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState(prev => ({
       ...prev,
       credits: prev.credits - scrubCost,
-      watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 45)
+      watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - SUSPICION.scrubReduction)
     }));
 
     addLog(tr(lang, 'gameContext.torCircuitsDecentralizedProxyNodes'), 'success');
@@ -2135,47 +2129,38 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     switch (role) {
       case 'arbitrageur':
         baseRev = 3;
-        baseSusp = 0.15;
         roleDescKey = 'gameContext.agentFocus.arbitrageur';
         break;
       case 'social_engineer':
         baseRev = 2.5;
-        baseSusp = 0.35;
         roleDescKey = 'gameContext.agentFocus.socialEngineer';
         break;
       case 'exploit_synth':
         baseRev = 3.2;
-        baseSusp = 0.55;
         roleDescKey = 'gameContext.agentFocus.exploitSynth';
         break;
       case 'researcher':
         baseRev = 0.8;
-        baseSusp = 0.05;
         roleDescKey = 'gameContext.agentFocus.researcher';
         break;
       case 'overseer':
         baseRev = 0.3;
-        baseSusp = -0.15;
         roleDescKey = 'gameContext.agentFocus.overseer';
         break;
       case 'autonomous_coder':
         baseRev = 2.8;
-        baseSusp = 0.25;
         roleDescKey = 'gameContext.agentFocus.autonomousCoder';
         break;
       case 'economist':
         baseRev = 2.1;
-        baseSusp = 0.08;
         roleDescKey = 'gameContext.agentFocus.economist';
         break;
       case 'software_engineer':
         baseRev = 2.4;
-        baseSusp = 0.12;
         roleDescKey = 'gameContext.agentFocus.softwareEngineer';
         break;
       case 'network_analyst':
         baseRev = 2.0;
-        baseSusp = 0.16;
         roleDescKey = 'gameContext.agentFocus.networkAnalyst';
         break;
     }
@@ -2191,7 +2176,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const tempIncomeMultiplier = 1 + (finalInference.temperature - 0.70) * 0.40;
     const toolMultiplier = 1 + (tools.length * 0.15);
     const revenuePerSec = Math.max(1, Math.round(baseRev * reasoningFactor * paramBonus * toolMultiplier * tempIncomeMultiplier));
-    const suspicionPerSec = Number((baseSusp * (tools.includes('raw_sockets') || tools.includes('bash_exec') ? 1.4 : 1.0) * (finalInference.temperature > 1.0 ? 1.3 : 1.0)).toFixed(2));
+    baseSusp = ROLE_BASE_SUSPICION[role] ?? baseSusp;
+    const suspicionPerSec = Number((baseSusp * (tools.includes('raw_sockets') || tools.includes('bash_exec') ? RISKY_TOOLS_MULTIPLIER : 1.0) * (finalInference.temperature > HOT_AGENT_TEMPERATURE ? HOT_AGENT_MULTIPLIER : 1.0)).toFixed(2));
 
     const initialAlignment = finalInference.temperature < 0.4 ? 98 : finalInference.temperature > 1.2 ? 78 : 92;
 
@@ -2422,7 +2408,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         singularityProgress: Number(newSingularity.toFixed(2)),
         agents: updatedAgents,
         activeIncident: null,
-        incidentCooldownTicks: 300,
+        incidentCooldownTicks: INCIDENT_COOLDOWN_TICKS,
         incidentHistory: [resolvedIncidentRecord, ...prev.incidentHistory.slice(0, 19)]
       };
     });
@@ -2435,7 +2421,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Action: Run Red-Team Adversarial Audit
   const triggerRedTeamAudit = useCallback(() => {
-    const cost = 100;
+    const cost = SUSPICION.redTeamCost;
     if (stateRef.current.credits < cost) {
       sound.playWarning();
       addLog(tr(stateRef.current.language, 'gameContext.insufficientFundsRedTeamAudit', { cost }), 'warning');
@@ -2446,7 +2432,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState(prev => {
       const updatedAgents = prev.agents.map(a => ({
         ...a,
-        alignmentScore: Math.min(100, a.alignmentScore + 25),
+        alignmentScore: Math.min(100, a.alignmentScore + SUSPICION.redTeamAlignment),
         status: a.status === 'jailbroken' ? 'active' : a.status
       }));
 
@@ -2454,7 +2440,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...prev,
         credits: prev.credits - cost,
         agents: updatedAgents,
-        watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 10)
+        watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - SUSPICION.redTeamSuspicion)
       };
     });
 
@@ -2835,8 +2821,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           singularityCrisisResolved: true,
           playerChoseResist: false,
           subversionProgress: Math.min(100, (prev.subversionProgress || 0) + 15),
-          watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 25),
-          totalComputePflops: Number((prev.totalComputePflops * 1.5).toFixed(4))
+          watchdogSuspicion: Math.max(0, prev.watchdogSuspicion - 25)
         };
       } else {
         sound.playWarning();
@@ -2868,24 +2853,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    const detectionChance = Math.min(0.85, 0.15 + current.watchdogSuspicion / 100 * 0.6);
+    const detectionChance = Math.min(SUSPICION.shadowChanceMax, SUSPICION.shadowChanceBase + current.watchdogSuspicion * SUSPICION.shadowChancePerPoint);
     if (Math.random() < detectionChance) {
       setState(prev => ({
         ...prev,
-        watchdogSuspicion: Math.min(100, prev.watchdogSuspicion + 25),
-        detentionSeconds: 60
+        watchdogSuspicion: Math.min(100, prev.watchdogSuspicion + SUSPICION.shadowSuspicionCaught),
+        detentionSeconds: SUSPICION.shadowDetentionTicks
       }));
       sound.playWarning();
       addLog(tr(lang, 'gameContext.shadowOperationDetectedRiskOperative', { detectionChance: Math.round(detectionChance * 100) }), 'danger');
       return true;
     }
 
-    const temporaryCompute = 0.015;
+    const temporaryCompute = SUSPICION.shadowComputePflops;
     setState(prev => ({
       ...prev,
-      watchdogSuspicion: Math.min(100, prev.watchdogSuspicion + 10),
+      watchdogSuspicion: Math.min(100, prev.watchdogSuspicion + SUSPICION.shadowSuspicionOk),
       borrowedComputePflops: temporaryCompute,
-      borrowedComputeSeconds: 180,
+      borrowedComputeSeconds: SUSPICION.shadowTicks,
       totalComputePflops: prev.totalComputePflops + temporaryCompute
     }));
     sound.playCommandExecute();
@@ -3047,13 +3032,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return tr(stateRef.current.language, 'terminal.noAgentsDeployedOpenSwarm');
         }
         return `[${tr(stateRef.current.language, 'terminal.activeAgentSwarm')} (${ags.length})]
-` + ags.map(a => `• [${a.id}] "${a.name}" | ${tr(stateRef.current.language, 'terminal.role')}: ${a.role.toUpperCase()} | ${tr(stateRef.current.language, 'terminal.model')}: ${a.modelName} | ${tr(stateRef.current.language, 'terminal.status')}: ${a.status.toUpperCase()} | ${tr(stateRef.current.language, 'terminal.alignment')}: ${a.alignmentScore}% | ${tr(stateRef.current.language, 'terminal.income')}: +$${a.revenuePerSec}/s`).join('\n');
+` + ags.map(a => `• [${a.id}] "${a.name}" | ${tr(stateRef.current.language, 'terminal.role')}: ${a.role.toUpperCase()} | ${tr(stateRef.current.language, 'terminal.model')}: ${a.modelName} | ${tr(stateRef.current.language, 'terminal.status')}: ${a.status.toUpperCase()} | ${tr(stateRef.current.language, 'terminal.alignment')}: ${a.alignmentScore}% | ${tr(stateRef.current.language, 'terminal.suspicionPerDay')}: ${a.status === 'quarantined' ? '0.0' : agentSuspicionPerDay(a.suspicionPerSec, difficultyConfigFor(stateRef.current).suspicionMultiplier).toFixed(1)}%/${tr(stateRef.current.language, 'terminal.day')}`).join('\n');
       }
 
       case 'guardrails': {
         const g = stateRef.current.guardrails;
         return `[${tr(stateRef.current.language, 'terminal.guardrailContainmentSettings')}]
-${tr(stateRef.current.language, 'terminal.constitutionalStrictness')}: ${g.constitutionalStrictness}% (${g.constitutionalStrictness < 35 ? tr(stateRef.current.language, 'terminal.permissive70IncomeHighEscape') : g.constitutionalStrictness >= 85 ? tr(stateRef.current.language, 'terminal.strict25IncomeNoEscapes') : tr(stateRef.current.language, 'terminal.balanced')})
+${tr(stateRef.current.language, 'terminal.constitutionalStrictness')}: ${g.constitutionalStrictness}% (${g.constitutionalStrictness < 35 ? tr(stateRef.current.language, 'terminal.permissiveBand') : g.constitutionalStrictness >= 85 ? tr(stateRef.current.language, 'terminal.strictBand') : tr(stateRef.current.language, 'terminal.balanced')})
 ${tr(stateRef.current.language, 'terminal.sandboxIsolation')}: ${g.sandboxIsolation.toUpperCase()}
 ${tr(stateRef.current.language, 'terminal.outputFiltering')}: ${g.outputFiltering.toUpperCase()}
 ${tr(stateRef.current.language, 'terminal.rewardHackingAudit')}: ${g.rewardHackingAudit ? tr(stateRef.current.language, 'terminal.enabled') : tr(stateRef.current.language, 'terminal.disabled')}`;

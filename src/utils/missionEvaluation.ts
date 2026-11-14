@@ -11,6 +11,7 @@ import type {
   GuardrailConfig,
   ModelArchitecture, CapabilityFactor } from '../types/game';
 import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from './constants';
+import { MISSION } from './rules';
 
 export interface ModelCapabilityEvaluation {
   reasoning: number;
@@ -140,7 +141,7 @@ export function calculateMissionSuccessProbability(
     .map(id => dataSources.find(source => source.id === id && source.unlocked))
     .filter((source): source is DataSourceNode => source !== undefined);
   const dataQualityBonus = Math.min(
-    0.15,
+    MISSION.dataBonusMax,
     activeSources.length * 0.03 +
       activeSources.reduce((total, source) => total + source.qualityScore, 0) /
       Math.max(1, activeSources.length) / 100 * 0.05
@@ -153,13 +154,13 @@ export function calculateMissionSuccessProbability(
   }, 0) / Math.max(1, agents.length);
 
   const baseProbability =
-    0.45 +
-    roleCoverage * 0.07 +
+    MISSION.base +
+    roleCoverage * MISSION.perRole +
     dataQualityBonus +
-    Math.min(0.15, averageReasoning / 1200);
-  const capabilityAdjustment = (averageCapability - 70) * 0.004;
+    Math.min(MISSION.reasoningBonusMax, averageReasoning / 1200);
+  const capabilityAdjustment = (averageCapability - MISSION.capabilityPivot) * MISSION.perCapabilityPoint;
 
-  return Math.min(0.98, Math.max(0.15, baseProbability + capabilityAdjustment));
+  return Math.min(MISSION.max, Math.max(MISSION.min, baseProbability + capabilityAdjustment));
 }
 
 /**
@@ -310,11 +311,11 @@ export function evaluateMissionTeam(
   }, 0) / agents.length;
 
   const baseProb = calculateMissionSuccessProbability(agents, models, dataSources, guardrails);
-  const paramPenalty = (totalParameterScaleScore / agents.length < 0.8) ? -0.12 : 0;
-  const rolePenalty = (roleMatchScore < 1.0) ? -0.15 : 0;
+  const paramPenalty = (totalParameterScaleScore / agents.length < 0.8) ? -MISSION.undersizedModelPenalty : 0;
+  const rolePenalty = (roleMatchScore < 1.0) ? -MISSION.missingRolePenalty : 0;
 
-  const rawSuccessProb = baseProb + totalDataMatchBonus + paramPenalty + rolePenalty + (hasOverseer ? 0.05 : 0);
-  const successProbability = Math.min(0.98, Math.max(0.15, Number(rawSuccessProb.toFixed(2))));
+  const rawSuccessProb = baseProb + totalDataMatchBonus + paramPenalty + rolePenalty + (hasOverseer ? MISSION.overseerBonus : 0);
+  const successProbability = Math.min(MISSION.max, Math.max(MISSION.min, Number(rawSuccessProb.toFixed(2))));
 
   // Efficiency Multiplier calculation
   const efficiencyMultiplier = Math.max(

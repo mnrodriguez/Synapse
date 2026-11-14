@@ -13,6 +13,7 @@ import { MISSION_SINGULARITY } from '../utils/missionTiers';
 import { effectCollector, type Random } from './effects';
 import { tr } from '../i18n';
 import { difficultyConfigFor } from '../utils/constants';
+import { MISSION, SUSPICION } from '../utils/rules';
 
 // Running missions for one tick: countdown, success or failure, rewards and replacement contracts, and
 // autonomous bots taking new missions.
@@ -56,7 +57,7 @@ export function missionTick(input: MissionTickInput) {
     const remaining = activeGig.timeRemaining - (missionPausedForAssessment ? 0 : 1);
     if (remaining <= 0) {
       const isAutonomous = Boolean(activeGig.isAutonomous);
-      const effectiveSuccessProbability = Math.max(0.15, (activeGig.successProbability ?? 1) - (isAutonomous ? 0.08 : 0));
+      const effectiveSuccessProbability = Math.max(MISSION.min, (activeGig.successProbability ?? 1) - (isAutonomous ? MISSION.autonomousPenalty : 0));
       const success = (activeGig.outcomeRoll ?? 0) <= effectiveSuccessProbability;
       const gig = updatedContracts.find(c => c.id === activeGig.contractId);
       if (gig) {
@@ -64,9 +65,9 @@ export function missionTick(input: MissionTickInput) {
         if (success) {
           // Autonomous bot commission deduction: 40% compute delegation overhead, 60% net payout
           const difficulty = difficultyConfigFor(prev);
-          const earnedCredits = Math.round((isAutonomous ? gig.rewardCredits * 0.60 : gig.rewardCredits) * difficulty.rewardMultiplier);
+          const earnedCredits = Math.round((isAutonomous ? gig.rewardCredits * MISSION.autonomousPayout : gig.rewardCredits) * difficulty.rewardMultiplier);
           credits += earnedCredits;
-          const suspicionAdded = Number((gig.suspicionRisk * 0.25 * difficulty.suspicionMultiplier).toFixed(1));
+          const suspicionAdded = Number((gig.suspicionRisk * SUSPICION.missionSuccessShare * difficulty.suspicionMultiplier).toFixed(1));
           watchdogSuspicion = Math.min(100, watchdogSuspicion + suspicionAdded);
           completedContractsCount += 1;
           singularityProgress = Math.min(100, singularityProgress + (MISSION_SINGULARITY[gig.tier] ?? 1));

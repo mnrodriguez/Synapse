@@ -3,37 +3,51 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
-import { 
-  BookOpen, 
-  X, 
-  Cpu, 
-  Database, 
-  Network, 
-  Sparkles, 
-  Flame, 
-  Zap, 
-  Code,
-  Layers,
-  HelpCircle,
-  Download,
-  FileText,
-  ExternalLink
-} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { BookOpen, X, Download, FileText, ExternalLink, Lightbulb } from 'lucide-react';
 import { sound } from '../audio/soundManager';
 import { useGame } from '../context/GameContext';
 import { tr } from '../i18n';
-import { RichText } from '../i18n/RichText';
+import { renderRich } from '../i18n/RichText';
 import { MANUAL_PDF_URL } from '../utils/assets';
+import { buildManual, manualParams, type ManualBlock, type UiVersion } from './manual/manualContent';
 
 interface HelpManualProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const ManualBlockView: React.FC<{ block: ManualBlock }> = ({ block }) => {
+  switch (block.kind) {
+    case 'heading': return <h5 className="theme-warn-text font-bold pt-1">{block.text}</h5>;
+    case 'text': return <p><>{renderRich(block.text)}</></p>;
+    case 'tip': return (
+      <div className="p-2.5 theme-accent-soft border theme-accent-border rounded flex gap-2 items-start">
+        <Lightbulb className="w-4 h-4 mutating-accent-text shrink-0 mt-0.5" />
+        <span><>{renderRich(block.text)}</></span>
+      </div>
+    );
+    case 'list': return (
+      <ul className="list-disc list-inside space-y-1 mutating-text-muted text-[11px]">
+        {block.items.map((item, i) => <li key={i}><>{renderRich(item)}</></li>)}
+      </ul>
+    );
+    case 'table': return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-[11px] border theme-border">
+          <thead><tr>{block.headers.map((h, i) => <th key={i} className="text-left p-1.5 border theme-border mutating-accent-text">{h}</th>)}</tr></thead>
+          <tbody>{block.rows.map((r, i) => <tr key={i}>{r.map((cell, j) => <td key={j} className="p-1.5 border theme-border align-top"><>{renderRich(cell)}</></td>)}</tr>)}</tbody>
+        </table>
+      </div>
+    );
+  }
+};
+
 export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
   const { state } = useGame();
-  const [activeSection, setActiveSection] = useState<'pdf' | 'intro' | 'data' | 'arch' | 'infra' | 'singularity'>('pdf');
+  const version = (Math.min(4, Math.max(1, state.uiVersion || 1))) as UiVersion;
+  const chapters = useMemo(() => buildManual(state.language, version, state.difficulty), [state.language, version, state.difficulty]);
+  const [activeSection, setActiveSection] = useState<string>('start');
 
   useEffect(() => {
     if (!isOpen) return;
@@ -90,18 +104,10 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
         {/* Section Tabs */}
         <div className="flex items-center gap-1 p-2 theme-panel-bg border-b theme-border text-xs overflow-x-auto">
-          {[
-            { id: 'pdf', label: tr(state.language, 'helpManual.fullManualPdf') },
-            { id: 'intro', label: tr(state.language, 'helpManual.n1Introduction') },
-            { id: 'data', label: tr(state.language, 'helpManual.n2GraphsVectorsSql') },
-            { id: 'arch', label: tr(state.language, 'helpManual.n3TopologyQuantization') },
-            { id: 'infra', label: tr(state.language, 'helpManual.n4ClusterPhysics') },
-            { id: 'singularity', label: tr(state.language, 'helpManual.n5Singularity') }
-          // The Singularity chapter would spoil the story before v3.
-          ].filter(tab => tab.id !== 'singularity' || (state.uiVersion || 1) >= 3).map(tab => (
+          {[...chapters.map(c => ({ id: c.id as string, label: c.title })), { id: 'pdf', label: tr(state.language, 'helpManual.fullManualPdf') }].map(tab => (
             <button
               key={tab.id}
-              onClick={() => { sound.playKeyClick(); setActiveSection(tab.id as any); }}
+              onClick={() => { sound.playKeyClick(); setActiveSection(tab.id); }}
               className={`px-3 py-1 rounded transition-colors whitespace-nowrap ${
                 activeSection === tab.id
                   ? 'theme-accent-soft border theme-accent-border mutating-accent-text font-bold'
@@ -115,8 +121,16 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
         {/* Content Body */}
         <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-4 text-xs theme-text leading-relaxed scrollbar-thin scrollbar-thumb-cyan-950">
+          {chapters.filter(c => c.id === activeSection).map(c => (
+            <div key={c.id} className="space-y-3">
+              <h4 className="mutating-accent-text font-bold text-sm">{c.title}</h4>
+              {c.blocks.map((b, i) => <ManualBlockView key={i} block={b} />)}
+            </div>
+          ))}
+
           {activeSection === 'pdf' && (
             <div className="flex flex-col h-[65vh] w-full space-y-2">
+              <p className="text-[11px] mutating-text-muted">{tr(state.language, 'helpManual.pdfNote')}</p>
               <div className="flex flex-wrap items-center justify-between gap-2 p-2 theme-panel-bg border theme-accent-border rounded text-xs">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 mutating-accent-text" />
@@ -174,148 +188,6 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {activeSection === 'intro' && (
-            <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.synapsePath')}</h4>
-              <p>
-                <RichText lang={state.language} k="helpManual.introMission" />
-              </p>
-              <div className="p-3 theme-accent-soft border theme-accent-border rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5 mutating-accent-text font-bold">
-                    <FileText className="w-4 h-4 mutating-accent-text" />
-                    <span>{tr(state.language, 'helpManual.officialAiSystemsTechnicalManual')}</span>
-                  </div>
-                  <p className="text-[11px] mutating-text-muted">
-                    {tr(state.language, 'helpManual.official9PagePdfManual')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => { sound.playKeyClick(); setActiveSection('pdf'); }}
-                    className="px-3 py-1.5 rounded theme-raised-bg border theme-border theme-text font-bold text-xs flex items-center gap-1.5 whitespace-nowrap transition-all"
-                  >
-                    <BookOpen className="w-3.5 h-3.5 mutating-accent-text" />
-                    <span>{tr(state.language, 'helpManual.viewViewer')}</span>
-                  </button>
-                  <a
-                    href={pdfUrl}
-                    download="SYNAPSE_AI_Architecture_Manual.pdf"
-                    className="px-3 py-1.5 rounded mutating-btn-primary theme-on-accent font-bold text-xs flex items-center gap-1.5 whitespace-nowrap transition-all"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>{tr(state.language, 'helpManual.downloadPdf')}</span>
-                  </a>
-                </div>
-              </div>
-
-              <div className="p-3 theme-panel-bg border theme-accent-border rounded space-y-1.5">
-                <span className="theme-warn-text font-bold block">{tr(state.language, 'helpManual.coreProgressionLoop')}</span>
-                <ol className="list-decimal list-inside space-y-1 mutating-text-muted text-[11px]">
-                  {(['helpManual.loopTrain', 'helpManual.loopEarn', 'helpManual.loopHardware', 'helpManual.loopData', 'helpManual.loopResearch', 'helpManual.loopCampaign'] as const).map(k => (
-                    <li key={k}><RichText lang={state.language} k={k} /></li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-          )}
-
-          {activeSection === 'data' && (
-            <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.dataEnginesGraphsVectorsRelational')}</h4>
-              <p>
-                {tr(state.language, 'helpManual.trainingAdvancedAiRequiresMore')}
-              </p>
-
-              <div className="space-y-2">
-                <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold mutating-accent-text block">{tr(state.language, 'helpManual.n1RelationalDatabasesSqlTabular')}</span>
-                  <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {tr(state.language, 'helpManual.normalizedSchemasAcidReferentialIntegrity')}
-                  </p>
-                </div>
-
-                <div className="p-2.5 theme-panel-bg border theme-success-border rounded">
-                  <span className="font-bold theme-success-text block">{tr(state.language, 'helpManual.n2VectorDatabasesRagHnsw')}</span>
-                  <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {tr(state.language, 'helpManual.theyEmbedConceptsHighDimensional')}
-                  </p>
-                </div>
-
-                <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold mutating-accent-text block">{tr(state.language, 'helpManual.n3KnowledgeGraphsRdfCypher')}</span>
-                  <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {tr(state.language, 'helpManual.representEntitiesPropertiesCausalRelationships')}
-                  </p>
-                </div>
-
-                <div className="p-2.5 theme-panel-bg border theme-warn-border rounded">
-                  <span className="font-bold theme-warn-text block">{tr(state.language, 'helpManual.n4SyntheticDataSelfPlay')}</span>
-                  <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {tr(state.language, 'helpManual.whenHumanTextDataRuns')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeSection === 'arch' && (
-            <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.architecturesQuantizationAttention')}</h4>
-              
-              <div className="space-y-2">
-                <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold mutating-accent-text block">{tr(state.language, 'helpManual.neuralTopologies')}</span>
-                  <ul className="list-disc list-inside text-[11px] mutating-text-muted space-y-1 mt-1">
-                    <li><strong>Transformer:</strong> {tr(state.language, 'helpManual.standardDenseSelfAttentionStrong')}</li>
-                    <li><strong>Mixture-of-Experts (MoE):</strong> {tr(state.language, 'helpManual.sparseNetworksRouteEachToken')}</li>
-                    <li><strong>State Space Models (Mamba):</strong> {tr(state.language, 'helpManual.linearONComplexitySuitable')}</li>
-                    <li><strong>GNN Hybrids:</strong> {tr(state.language, 'helpManual.messagePassingNetworksOverGraphs')}</li>
-                  </ul>
-                </div>
-
-                <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold theme-warn-text block">{tr(state.language, 'helpManual.quantizationVramBudget')}</span>
-                  <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {tr(state.language, 'helpManual.n70bModelFp32NeedsAbout')}
-                  </p>
-                </div>
-
-                <div className="p-2.5 theme-panel-bg border theme-accent-border rounded">
-                  <span className="font-bold theme-success-text block">{tr(state.language, 'helpManual.alignmentDpoVsPpo')}</span>
-                  <p className="text-[11px] mutating-text-muted mt-0.5">
-                    {tr(state.language, 'helpManual.directPreferenceOptimizationDpoSimplifies')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeSection === 'infra' && (
-            <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.clusterPhysicsPowerHeatRegulators')}</h4>
-              <p>
-                {tr(state.language, 'helpManual.trainingLargeModelAlsoMeans')}
-              </p>
-              <ul className="list-disc list-inside space-y-1.5 mutating-text-muted text-[11px]">
-                <li><strong>{tr(state.language, 'helpManual.heatThermalLimits')}</strong> {tr(state.language, 'helpManual.above85CGpusThrottle')}</li>
-                <li><strong>{tr(state.language, 'helpManual.powerCapacity')}</strong> {tr(state.language, 'helpManual.facilityLimitsAvailablePowerExceeding')}</li>
-                <li><strong>{tr(state.language, 'helpManual.watchdogSuspicion')}</strong> {tr(state.language, 'helpManual.highPowerDrawRiskyMissions')}</li>
-              </ul>
-            </div>
-          )}
-
-          {activeSection === 'singularity' && (
-            <div className="space-y-3">
-              <h4 className="mutating-accent-text font-bold text-sm">{tr(state.language, 'helpManual.technologicalSingularityAsi')}</h4>
-              <p>
-                {tr(state.language, 'helpManual.singularityReachedWhenAiCan')}
-              </p>
-              <p className="mutating-text-muted text-[11px]">
-                {tr(state.language, 'helpManual.reach100SingularityUnlockSuperintelligence')}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Footer */}

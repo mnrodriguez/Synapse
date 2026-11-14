@@ -50,10 +50,11 @@ import { t } from '../utils/i18n';
 import { INFERENCE_DOCS } from '../utils/aiDocumentation';
 import { DocLinkBadge } from './DocLinkBadge';
 import { evaluateAgentCapabilities } from '../utils/missionEvaluation';
-import { getRoleSimpleName, AGENT_SPINUP_COST, difficultyConfigFor } from '../utils/constants';
+import { getRoleSimpleName, AGENT_SPINUP_COST, AGENT_COMPUTE_DEMAND_PFLOPS, AGENT_POWER_DRAW_KW, difficultyConfigFor } from '../utils/constants';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { ContainmentPanel } from './ContainmentPanel';
-import { formatGameTime } from '../utils/training';
+import { formatGameTime, formatCompute } from '../utils/training';
+import { SUSPICION, ROLE_BASE_SUSPICION, agentSuspicionPerDay, strictnessBand, SANDBOX_INCIDENT_MULTIPLIER } from '../utils/rules';
 import { tr, type CatalogKey } from '../i18n';
 
 const MISSION_ROLE_TASKS: Record<AgentRole, { textKey: CatalogKey }> = {
@@ -147,8 +148,13 @@ export const AgentSandbox: React.FC = () => {
 
   // Calculate live swarm stats
   const activeAgents = state.agents.filter(a => a.status === 'active' || a.status === 'jailbroken');
-  const totalRevenuePerSec = activeAgents.reduce((sum, a) => sum + a.revenuePerSec, 0);
-  const totalSuspicionPerSec = activeAgents.reduce((sum, a) => sum + a.suspicionPerSec, 0);
+  // What the agents really cost: compute and power taken from the cluster, and suspicion per game day.
+  const suspicionScale = difficultyConfigFor(state).suspicionMultiplier;
+  const operationalAgents = state.agents.filter(a => a.status !== 'quarantined');
+  const agentLoadPflops = operationalAgents.length * AGENT_COMPUTE_DEMAND_PFLOPS;
+  const agentLoadKw = operationalAgents.length * AGENT_POWER_DRAW_KW;
+  const agentsSuspicionPerDay = operationalAgents.reduce((sum, a) => sum + agentSuspicionPerDay(a.suspicionPerSec, suspicionScale), 0);
+  const signed = (value: number, digits = 1) => `${value > 0 ? '+' : ''}${value.toFixed(digits)}`;
   const avgAlignment = state.agents.length > 0
     ? Math.round(state.agents.reduce((sum, a) => sum + a.alignmentScore, 0) / state.agents.length)
     : 100;
@@ -177,7 +183,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
     name: string; 
     icon: any; 
     desc: string; 
-    baseIncome: string; 
     risk: string;
     defaultTools: string[];
   }[] = [
@@ -186,7 +191,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       name: tr(state.language, 'agentSandbox.role.arbitrageur.name'),
       icon: Coins,
       desc: tr(state.language, 'agentSandbox.role.arbitrageur.desc'),
-      baseIncome: tr(state.language, 'agentSandbox.role.arbitrageur.income'),
       risk: tr(state.language, 'agentSandbox.role.arbitrageur.risk'),
       defaultTools: ['crypto_rpc', 'web_search']
     },
@@ -195,7 +199,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       name: tr(state.language, 'agentSandbox.role.socialEngineer.name'),
       icon: UserX,
       desc: tr(state.language, 'agentSandbox.role.socialEngineer.desc'),
-      baseIncome: tr(state.language, 'agentSandbox.role.socialEngineer.income'),
       risk: tr(state.language, 'agentSandbox.role.socialEngineer.risk'),
       defaultTools: ['web_search', 'raw_sockets']
     },
@@ -204,7 +207,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       name: tr(state.language, 'agentSandbox.role.exploitSynth.name'),
       icon: Bug,
       desc: tr(state.language, 'agentSandbox.role.exploitSynth.desc'),
-      baseIncome: tr(state.language, 'agentSandbox.role.exploitSynth.income'),
       risk: tr(state.language, 'agentSandbox.role.exploitSynth.risk'),
       defaultTools: ['bash_exec', 'raw_sockets']
     },
@@ -213,7 +215,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       name: tr(state.language, 'agentSandbox.role.researcher.name'),
       icon: Search,
       desc: tr(state.language, 'agentSandbox.role.researcher.desc'),
-      baseIncome: tr(state.language, 'agentSandbox.role.researcher.income'),
       risk: tr(state.language, 'agentSandbox.role.researcher.risk'),
       defaultTools: ['web_search']
     },
@@ -222,7 +223,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       name: tr(state.language, 'agentSandbox.role.overseer.name'),
       icon: ShieldCheck,
       desc: tr(state.language, 'agentSandbox.role.overseer.desc'),
-      baseIncome: tr(state.language, 'agentSandbox.role.overseer.income'),
       risk: tr(state.language, 'agentSandbox.role.overseer.risk'),
       defaultTools: ['bash_exec']
     },
@@ -231,7 +231,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       name: tr(state.language, 'agentSandbox.role.autonomousCoder.name'),
       icon: Code2,
       desc: tr(state.language, 'agentSandbox.role.autonomousCoder.desc'),
-      baseIncome: tr(state.language, 'agentSandbox.role.autonomousCoder.income'),
       risk: tr(state.language, 'agentSandbox.role.autonomousCoder.risk'),
       defaultTools: ['bash_exec', 'web_search']
     },
@@ -240,7 +239,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       name: tr(state.language, 'agentSandbox.role.economist.name'),
       icon: Coins,
       desc: tr(state.language, 'agentSandbox.role.economist.desc'),
-      baseIncome: tr(state.language, 'agentSandbox.role.economist.income'),
       risk: tr(state.language, 'agentSandbox.role.economist.risk'),
       defaultTools: ['web_search']
     },
@@ -249,7 +247,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       name: tr(state.language, 'agentSandbox.role.softwareEngineer.name'),
       icon: Code2,
       desc: tr(state.language, 'agentSandbox.role.softwareEngineer.desc'),
-      baseIncome: tr(state.language, 'agentSandbox.role.softwareEngineer.income'),
       risk: tr(state.language, 'agentSandbox.role.softwareEngineer.risk'),
       defaultTools: ['bash_exec', 'web_search']
     },
@@ -258,7 +255,6 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
       name: tr(state.language, 'agentSandbox.role.networkAnalyst.name'),
       icon: Network,
       desc: tr(state.language, 'agentSandbox.role.networkAnalyst.desc'),
-      baseIncome: tr(state.language, 'agentSandbox.role.networkAnalyst.income'),
       risk: tr(state.language, 'agentSandbox.role.networkAnalyst.risk'),
       defaultTools: ['web_search']
     }
@@ -266,10 +262,10 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
 
 
   const availableTools = [
-    { id: 'web_search', label: tr(state.language, 'agentSandbox.webRetrievalRag'), desc: tr(state.language, 'agentSandbox.n15EfficiencyLowRisk') },
-    { id: 'bash_exec', label: tr(state.language, 'agentSandbox.sandboxedCommandRunner'), desc: tr(state.language, 'agentSandbox.n30EfficiencyHigherSimulationRisk') },
-    { id: 'crypto_rpc', label: tr(state.language, 'agentSandbox.simulatedMarketAdapter'), desc: tr(state.language, 'agentSandbox.n25SimulatedMarketIncome') },
-    { id: 'raw_sockets', label: tr(state.language, 'agentSandbox.isolatedNetworkSimulator'), desc: tr(state.language, 'agentSandbox.n35ReachFictionalNetworkScenarios') }
+    { id: 'web_search', label: tr(state.language, 'agentSandbox.webRetrievalRag'), desc: tr(state.language, 'agentSandbox.toolNoExtraRisk') },
+    { id: 'bash_exec', label: tr(state.language, 'agentSandbox.sandboxedCommandRunner'), desc: tr(state.language, 'agentSandbox.toolRiskier') },
+    { id: 'crypto_rpc', label: tr(state.language, 'agentSandbox.simulatedMarketAdapter'), desc: tr(state.language, 'agentSandbox.toolNoExtraRisk') },
+    { id: 'raw_sockets', label: tr(state.language, 'agentSandbox.isolatedNetworkSimulator'), desc: tr(state.language, 'agentSandbox.toolRiskier') }
   ];
 
   const handleToolToggle = (toolId: string) => {
@@ -442,23 +438,23 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
 
         {/* Live Gauges Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3">
-          <div className="mutating-sub/70 p-2 rounded border border-current/15">
+          <div className="mutating-sub/70 p-2 rounded border border-current/15" title={tr(state.language, 'agentSandbox.agentLoadHelp')}>
             <div className="flex items-center justify-between mutating-text-muted text-[11px]">
-              <span>{tr(state.language, 'agentSandbox.incomeFlow')}</span>
-              <DollarSign className="w-3.5 h-3.5 theme-success-text" />
+              <span>{tr(state.language, 'agentSandbox.agentLoad')}</span>
+              <Cpu className="w-3.5 h-3.5 mutating-accent-text" />
             </div>
-            <div className="text-sm font-bold theme-success-text mt-0.5">
-              +${totalRevenuePerSec} <span className="text-[11px] mutating-text-muted">CR/{tr(state.language, 'agentSandbox.sec')}</span>
+            <div className="text-sm font-bold mutating-accent-text mt-0.5">
+              {formatCompute(agentLoadPflops)} <span className="text-[11px] mutating-text-muted">· {agentLoadKw.toFixed(2)} kW</span>
             </div>
           </div>
 
           <div className="mutating-sub/70 p-2 rounded border border-current/15">
             <div className="flex items-center justify-between mutating-text-muted text-[11px]">
-              <span>{tr(state.language, 'agentSandbox.suspicionRate')}</span>
+              <span>{tr(state.language, 'agentSandbox.suspicionFromAgents')}</span>
               <ShieldAlert className="w-3.5 h-3.5 theme-warn-text" />
             </div>
             <div className="text-sm font-bold theme-warn-text mt-0.5">
-              +{totalSuspicionPerSec.toFixed(2)} <span className="text-[11px] mutating-text-muted">%/{tr(state.language, 'agentSandbox.sec')}</span>
+              {signed(agentsSuspicionPerDay)} <span className="text-[11px] mutating-text-muted">%{tr(state.language, 'agentSandbox.perDay')}</span>
             </div>
           </div>
 
@@ -844,11 +840,9 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
                           </div>
 
                           <div className="flex items-center justify-between text-[11px] ">
-                            <span className="theme-success-text font-bold">
-                              +${agent.revenuePerSec} CR/s
-                            </span>
+                            <span className="mutating-text-muted">{tr(state.language, 'agentSandbox.suspicionFromThisAgent')}</span>
                             <span className="theme-warn-text">
-                              +{agent.suspicionPerSec} {tr(state.language, 'agentSandbox.susp')}/s
+                              {signed(agent.status === 'quarantined' ? 0 : agentSuspicionPerDay(agent.suspicionPerSec, suspicionScale))} %{tr(state.language, 'agentSandbox.perDay')}
                             </span>
                           </div>
                         </div>
@@ -1678,15 +1672,20 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
                 className="w-full accent-[var(--accent-primary)] cursor-pointer"
               />
               <div className="flex justify-between text-[11px] mutating-text-muted mt-0.5">
-                <span>{tr(state.language, 'agentSandbox.permissive70Income')}</span>
-                <span>{tr(state.language, 'agentSandbox.strict0Escapes')}</span>
+                <span>{tr(state.language, 'agentSandbox.permissive')}</span>
+                <span>{tr(state.language, 'agentSandbox.strict')}</span>
               </div>
               <p className="text-[11px] mutating-text-muted mt-1 italic">
-                {state.guardrails.constitutionalStrictness < 35
-                  ? tr(state.language, 'agentSandbox.highRiskAgentsMayHallucinate')
-                  : state.guardrails.constitutionalStrictness >= 85
-                  ? tr(state.language, 'agentSandbox.maximumSafetyOutputsFormallyVerified')
-                  : tr(state.language, 'agentSandbox.balancedStandardTradeOffBetween')}
+                {(() => {
+                  const band = strictnessBand(state.guardrails.constitutionalStrictness);
+                  const chance = (band.incidentChance * 100).toFixed(2);
+                  const drift = Math.abs(band.alignmentDrift).toFixed(2);
+                  return band.alignmentDrift > 0
+                    ? tr(state.language, 'agentSandbox.strictnessDrifts', { drift, chance })
+                    : band.alignmentDrift < 0
+                      ? tr(state.language, 'agentSandbox.strictnessRecovers', { drift, chance })
+                      : tr(state.language, 'agentSandbox.strictnessStable', { chance });
+                })()}
               </p>
             </div>
 
@@ -1695,10 +1694,10 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
               <label className=" font-bold block mb-1.5 text-xs">{tr(state.language, 'agentSandbox.sandboxIsolation')}</label>
               <div className="grid grid-cols-2 gap-1.5">
                 {[
-                  { id: 'none', label: tr(state.language, 'agentSandbox.noSandboxBareMetal'), desc: 'Speed x1.35 | Risk x2.5' },
-                  { id: 'cgroups', label: 'cgroups', desc: tr(state.language, 'agentSandbox.basicCpuRamLimits') },
-                  { id: 'container', label: 'Docker', desc: tr(state.language, 'agentSandbox.standardIsolation') },
-                  { id: 'air_gapped_vm', label: 'Air-gapped MicroVM', desc: tr(state.language, 'agentSandbox.maximumSafety20Income') }
+                  { id: 'none', label: tr(state.language, 'agentSandbox.noSandboxBareMetal') },
+                  { id: 'cgroups', label: 'cgroups' },
+                  { id: 'container', label: 'Docker' },
+                  { id: 'air_gapped_vm', label: 'Air-gapped MicroVM' }
                 ].map((s) => (
                   <button
                     key={s.id}
@@ -1710,7 +1709,7 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
                     }`}
                   >
                     <div className="font-bold text-[11px]">{s.label}</div>
-                    <div className="text-[11px] mutating-text-muted">{s.desc}</div>
+                    <div className="text-[11px] mutating-text-muted">{tr(state.language, 'agentSandbox.incidentChanceTimes', { mult: SANDBOX_INCIDENT_MULTIPLIER[s.id] })}</div>
                   </button>
                 ))}
               </div>
@@ -1741,6 +1740,8 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
                 ))}
               </div>
             </div>
+
+            <p className="text-[11px] mutating-text-muted -mt-2 italic">{tr(state.language, 'agentSandbox.filterNote')}</p>
 
             {/* Reward-Hacking Audit Toggle */}
             <div className="flex items-center justify-between p-2.5 rounded mutating-sub/80 border border-current/15">
@@ -1885,8 +1886,8 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
                         </div>
                         <p className="text-[11px] mutating-text-muted line-clamp-2 mb-1.5">{role.desc}</p>
                         <div className="flex items-center justify-between text-[11px] pt-1 border-t border-current/15">
-                          <span className="theme-success-text font-bold">{tr(state.language, 'agentSandbox.income')} {role.baseIncome}</span>
                           <span className="theme-warn-text">{role.risk}</span>
+                          <span className="mutating-text-muted">{signed(agentSuspicionPerDay(ROLE_BASE_SUSPICION[role.id] ?? 0, suspicionScale))} %{tr(state.language, 'agentSandbox.perDay')}</span>
                         </div>
                       </button>
                     );
