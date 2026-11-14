@@ -50,10 +50,10 @@ Reported by the author after playing the published game on a phone (PR #46 merge
 - [x] D. Weekly report: every 7 game days the game pauses and shows jobs, credits, suspicion by source and the new papers with what each opens (`WeeklyReportModal.tsx`, `utils/weeklyReport.ts`).
 - [x] E. Research arrives slower: a paper can be funded only after a weekly report announced it, at most 2 per week (`RESEARCH_PER_WEEK`). A new game starts with one paper. Save schema 13; an older save keeps every paper it could already fund.
 - [x] F. Manual chapters 6 and 9 updated (EN/ES); tests `tests/weekly.test.ts`; browser check `docs/review2/weekly_check.cjs` at 390 px.
-- [ ] G. Pull request opened.
+- [x] G. Pull request opened: mnrodriguez/Synapse#47.
 
 Result: `bun test` 178 pass, 0 fail; lint clean. Browser at 390 px: the report opened by itself at the end of day 7 and closed; the 50 % dialog opened; the v1 game-over screen had the breakdown and no "Singularity".
 
 Not done: the report does not list tabs or hardware that opened during the week on their own; the "features I knew nothing about" may also come from one paper opening many unrelated things (finding C-3 of the review), which is unchanged — the report now at least lists them before the player pays.
 
-STOPPED AT: steps A-F committed. NEXT: push and open the pull request (step G).
+STOPPED AT: second round finished and pushed; pull request 47 is open. NEXT: nothing pending.
