@@ -63,7 +63,7 @@ export const GameOverModal: React.FC = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md font-mono animate-in fade-in duration-300">
       {/* Emergency Loan Offer Card */}
       {isLoanCandidate ? (
-        <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto theme-panel-bg border-2 theme-warn-border rounded-xl p-5 space-y-4">
+        <div className="w-full max-w-lg max-h-[92dvh] overflow-y-auto theme-panel-bg border-2 theme-warn-border rounded-xl p-5 space-y-4">
           <div className="flex items-center gap-3 border-b theme-warn-border pb-3">
             <div className="p-2.5 rounded-lg theme-warn-soft border theme-warn-border theme-warn-text">
               <Coins className="w-6 h-6 animate-bounce" />
@@ -106,7 +106,7 @@ export const GameOverModal: React.FC = () => {
         </div>
       ) : (
         /* Hard Game Over Screen (Bankruptcy or Agency Seizure) */
-        <div className="w-full max-w-xl max-h-[92vh] overflow-y-auto theme-panel-bg border-2 theme-danger-border rounded-xl p-6 space-y-5 theme-text">
+        <div className="w-full max-w-xl max-h-[92dvh] overflow-y-auto theme-panel-bg border-2 theme-danger-border rounded-xl p-6 space-y-5 theme-text">
           {/* Header Siren Alert */}
           <div className="flex items-center gap-3 border-b theme-danger-border pb-3">
             <div className="p-3 rounded-xl theme-danger-soft border theme-danger-border theme-danger-text animate-pulse">

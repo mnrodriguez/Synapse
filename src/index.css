@@ -363,7 +363,9 @@
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    z-index: 1000 !important;
+    /* Above the page and its overlays (z-40), below every dialog (z-50 and up): a dialog must cover the bar,
+       or its last buttons end up hidden behind it. */
+    z-index: 45 !important;
   }
   .dual-grid,
   .triple-grid {

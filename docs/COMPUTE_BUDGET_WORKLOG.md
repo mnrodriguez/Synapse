@@ -36,7 +36,6 @@ Implements section 8 of `docs/GAME_REVIEW_2.md` (items M-1 to M-7). Branch: `cla
 - Steps 4-6 done. Autonomy slider in the agents tab; HUD compute bar (agents, contracts, training); training tab shows compute free for training and what slows the run; contract cards and the running block show compute, not watts; a running card now shows the team that is on it. Manual chapter 5 updated in EN and ES (new key `manual.missions.cancel`). `docs/review2/simulate.ts` uses the new rule; `docs/review2/compute_check.cjs` is the browser check (two launches in a row and a cancel pass at 1280 and 390 px). `bun test` 166 pass, 0 fail; lint clean. Report section 8.6 written.
 - Step 7 done: report section 8.6 written and one pull request opened against main from this branch.
 
-STOPPED AT: all steps finished and pushed; the pull request is open. NEXT: nothing pending. Follow-ups if wanted: G-2 (v3 link), compute for scraping, manual fixes A-1 to A-7.
 
 ---
 
@@ -55,5 +54,6 @@ Reported by the author after playing the published game on a phone (PR #46 merge
 Result: `bun test` 178 pass, 0 fail; lint clean. Browser at 390 px: the report opened by itself at the end of day 7 and closed; the 50 % dialog opened; the v1 game-over screen had the breakdown and no "Singularity".
 
 Not done: the report does not list tabs or hardware that opened during the week on their own; the "features I knew nothing about" may also come from one paper opening many unrelated things (finding C-3 of the review), which is unchanged — the report now at least lists them before the player pays.
+- [x] H. Dialogs on phones: the bottom bar was drawn above every dialog (CSS `z-index: 1000`), hiding their last buttons. It is now below dialogs (`src/index.css`), and dialog heights use the visible screen (`dvh`). Check: `docs/review2/dialog_bottom_check.cjs`.
 
-STOPPED AT: second round finished and pushed; pull request 47 is open. NEXT: nothing pending.
+STOPPED AT: second round and step H pushed to pull request 47. NEXT: nothing pending.

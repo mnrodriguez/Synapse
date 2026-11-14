@@ -62,7 +62,7 @@ export const HelpManual: React.FC<HelpManualProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 font-mono select-none">
-      <div className="theme-panel-bg border theme-accent-border rounded-lg max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="theme-panel-bg border theme-accent-border rounded-lg max-w-5xl w-full max-h-[90dvh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-3.5 theme-panel-bg border-b theme-accent-border">
           <div className="flex items-center gap-2">

@@ -91,7 +91,7 @@ export const SingularityTakeoverModal: React.FC = () => {
       {/* Glitch CRT Overlay */}
       <div className="pointer-events-none fixed inset-0 opacity-15 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:16px_16px]" />
 
-      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-xl border theme-danger-border theme-panel-bg p-6 theme-text flex flex-col gap-5">
+      <div className="relative w-full max-w-4xl max-h-[92dvh] overflow-y-auto rounded-xl border theme-danger-border theme-panel-bg p-6 theme-text flex flex-col gap-5">
         
         {/* Header Alert */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b theme-danger-border pb-4">

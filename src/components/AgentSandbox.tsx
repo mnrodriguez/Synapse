@@ -1793,7 +1793,7 @@ const roleTypeCopy: Record<AgentRole, { typeKey: CatalogKey }> = {
           #app-shell is kept as the host so the theme CSS variables still apply. */}
       {isDeployModalOpen && createPortal(
         <div className="fixed inset-0 z-[1100] flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-xl mutating-panel border rounded-lg p-5 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-xl mutating-panel border rounded-lg p-5 max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-current/15 mb-4">
               <div className="flex items-center gap-2">
                 <Bot className="w-5 h-5 mutating-accent-text" />

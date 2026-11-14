@@ -41,7 +41,7 @@ export const WeeklyReportModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-[1090] flex items-center justify-center p-3 bg-black/70 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="weekly-report-title">
-      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto mutating-panel border rounded-lg p-5 shadow-xl space-y-4">
+      <div className="w-full max-w-md max-h-[90dvh] overflow-y-auto mutating-panel border rounded-lg p-5 shadow-xl space-y-4">
         <div className="flex items-start gap-3 border-b border-current/15 pb-3">
           <CalendarDays className="w-5 h-5 shrink-0 mt-0.5 mutating-accent-text" />
           <div className="min-w-0">
