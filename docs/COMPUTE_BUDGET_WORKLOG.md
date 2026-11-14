@@ -21,9 +21,9 @@ Implements section 8 of `docs/GAME_REVIEW_2.md` (items M-1 to M-7). Branch: `cla
 
 ## Steps
 
-- [ ] 1. M-1 compute ledger (`src/utils/computeLedger.ts`), constants in `rules.ts`, used by the tick, `startContract`, the contract board, the hardware tab and autonomy; tests
-- [ ] 2. M-2 smallest-team proposal; several contracts without touching the agent picker; tests
-- [ ] 3. M-3 cancel a contract (action, button with confirm, tests)
+- [x] 1. M-1 compute ledger (`src/utils/computeLedger.ts`), constants in `rules.ts`, used by the tick, `startContract`, the contract board, the hardware tab and autonomy; tests
+- [x] 2. M-2 smallest-team proposal; several contracts without touching the agent picker; tests
+- [x] 3. M-3 cancel a contract (action, button with confirm, tests)
 - [ ] 4. M-5 autonomy: compute budget slider, several contracts in parallel, save schema 12, tests
 - [ ] 5. M-4 display: HUD "in use", contract cards without watts, training panel "slowed by", agents tab
 - [ ] 6. M-7 manual texts (EN/ES), simulation script, full test and lint run, screenshots
@@ -32,5 +32,6 @@ Implements section 8 of `docs/GAME_REVIEW_2.md` (items M-1 to M-7). Branch: `cla
 ## Log
 
 - Branch created from the review branch, `main` merged. Baseline: `bun test` 150 pass, 0 fail; `bun run lint` clean.
+- Steps 1-3 and the logic of step 4 done. New: `src/utils/computeLedger.ts` (ledger, `missionComputePflops`, `trainingSlowdown`), `COMPUTE` in `rules.ts`, `proposeTeam` and the rewritten `findAutonomousMission` in `missionEvaluation.ts`, `cancelMissionState` in `missionTick.ts`, action `cancelMission`, field `autonomyComputeShare` with save schema 12. The half-cluster rule is gone from `startContract`, the board, the hardware tab and autonomy. Contract board: default team is the smallest free one, one reason shown when blocked, cancel button with a second click to confirm, compute needed and free instead of watts. Also fixed while there: the board and `startContract` counted the power of running contracts twice, and autonomy sent every bot to one contract. Tests: new `tests/compute.test.ts` (16 tests); `bun test` 166 pass, 0 fail; lint clean.
 
-STOPPED AT: setup done. NEXT: step 1.
+STOPPED AT: steps 1-3 committed; step 4 logic and tests done, its slider in the agents tab is missing. NEXT: step 4 slider (AgentSandbox.tsx near the risk-limit slider, line ~640), then step 5 display (BentoHUD compute card, TrainingMonitor 'slowed by' line, AgentSandbox agent-load gauge without kW).

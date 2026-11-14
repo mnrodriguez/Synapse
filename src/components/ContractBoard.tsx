@@ -37,9 +37,11 @@ import { sound } from '../audio/soundManager';
 import { tierForUiVersion } from '../utils/missionTiers';
 import { t } from '../utils/i18n';
 import { localizedContract } from '../utils/gameContentI18n';
-import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from '../utils/constants';
+import { getRoleSimpleName } from '../utils/constants';
+import { computeLedger, missionComputePflops, missionPowerKw as missionPowerFor, trainingSlowdown } from '../utils/computeLedger';
+import { COMPUTE } from '../utils/rules';
 import { generateDynamicContracts } from '../services/aiService';
-import { evaluateMissionTeam, isContractEligibleForTeam, modelRequirementCheck } from '../utils/missionEvaluation';
+import { evaluateMissionTeam, isContractEligibleForTeam, modelRequirementCheck, proposeTeam } from '../utils/missionEvaluation';
 import { formatCompute, formatGameTime } from '../utils/training';
 import { VERSION_PROFILES } from '../utils/versionProfiles';
 import { tr, type CatalogKey } from '../i18n';
@@ -87,7 +89,8 @@ export const ContractBoard: React.FC = () => {
     deleteBotGroup, 
     addLog, 
     addContracts, 
-    dismissMissionOutcome 
+    dismissMissionOutcome,
+    cancelMission
   } = useGame();
   // Story texts of the active UI version (early versions must not name the end goal).
   const story = VERSION_PROFILES[state.language === 'es' ? 'es' : 'en'][(state.uiVersion || 1) as 1 | 2 | 3 | 4].story;
@@ -98,6 +101,8 @@ export const ContractBoard: React.FC = () => {
   // Only the tier of the current UI version is offered on the board.
   const versionTier = tierForUiVersion(state.uiVersion || 1);
   const [isGeneratingMissions, setIsGeneratingMissions] = useState(false);
+  // Run waiting for a second click on its cancel button.
+  const [confirmCancelRunId, setConfirmCancelRunId] = useState<string | null>(null);
 
   // Per-contract assignment choice:
   // Key is contractId. Value has type: 'group' | 'unassigned', plus target squadId or selected unassigned agent IDs.
@@ -122,12 +127,11 @@ export const ContractBoard: React.FC = () => {
   const unassignedAgents = state.agents.filter(agent => !groupedAgentIds.has(agent.id));
   const busyAgentIds = new Set(activeGigsList.flatMap(g => g.agentIds || []));
 
-  // Compute cluster power and compute headroom across all running gigs
-  const runningCompute = activeGigsList.reduce((sum, g) => sum + (g.computePflopsRequired || 0), 0);
-  const runningPower = activeGigsList.reduce((sum, g) => sum + (g.powerKw || 0), 0);
-  const activeAgentDemand = state.agents.filter(agent => agent.status !== 'quarantined').length * AGENT_COMPUTE_DEMAND_PFLOPS;
-  const trainingReservation = state.activeTraining ? state.totalComputePflops * 0.5 : 0;
-  const availableCompute = Math.max(0, state.totalComputePflops - activeAgentDemand - trainingReservation - runningCompute);
+  // One compute budget for the whole cluster (utils/computeLedger.ts): agents and running contracts take
+  // their share, training gets the rest and gives way to a new contract.
+  const ledger = computeLedger(state, activeGigsList);
+  const runningCompute = ledger.missions;
+  const freeAgents = state.agents.filter(agent => agent.status === 'active' && !busyAgentIds.has(agent.id));
 
   const handleGenerateContracts = async (tierToGen: ContractGig['tier']) => {
     if (isGeneratingMissions) return;
@@ -204,9 +208,18 @@ export const ContractBoard: React.FC = () => {
     const assignment = contractAssignments[contractId];
 
     if (!assignment) {
-      // Default: if there's an available squad, pick the first one; otherwise use unassigned
-      if (botGroups.length > 0) {
-        const squad = botGroups[0];
+      // Default: the smallest free team that can run this contract, so several contracts can be launched
+      // one after another without picking agents by hand. Agents outside squads first, then a free squad.
+      const contract = state.contracts.find(c => c.id === contractId);
+      const freeUnassigned = unassignedAgents.filter(a => freeAgents.includes(a));
+      const proposal = contract ? proposeTeam(contract, freeUnassigned, state.savedModels, state.dataSources) : null;
+      if (proposal) {
+        return { mode: 'unassigned' as const, unassignedAgentIds: proposal.map(a => a.id), agents: proposal };
+      }
+      const freeSquads = botGroups.filter(g => g.agentIds.length > 0 && g.agentIds.every(id => freeAgents.some(a => a.id === id)));
+      const squad = (contract && freeSquads.find(g => isContractEligibleForTeam(contract, state.agents.filter(a => g.agentIds.includes(a.id)), state.savedModels, state.dataSources)))
+        ?? (freeUnassigned.length === 0 ? freeSquads[0] ?? botGroups[0] : undefined);
+      if (squad) {
         return {
           mode: 'group' as const,
           squadId: squad.id,
@@ -214,10 +227,11 @@ export const ContractBoard: React.FC = () => {
           agents: state.agents.filter(a => squad.agentIds.includes(a.id))
         };
       }
+      // Nobody qualifies: show the free agents so the checklist says what is missing.
       return {
         mode: 'unassigned' as const,
-        unassignedAgentIds: unassignedAgents.map(a => a.id),
-        agents: unassignedAgents
+        unassignedAgentIds: freeUnassigned.map(a => a.id),
+        agents: freeUnassigned
       };
     }
 
@@ -243,18 +257,25 @@ export const ContractBoard: React.FC = () => {
     const isRunning = activeGigsList.some(g => g.contractId === contract.id);
     const { mode, squadId, squad, agents } = getAssignedAgentsForContract(contract.id);
 
-    const computeRequired = Math.max(0.001, contract.requiredParams / 1_000_000_000 * 0.002);
-    const missionPowerKw = Math.max(0.05, computeRequired * 20);
-
     const hasPowerBreaker = state.powerTripSeconds > 0;
     const hasDetention = state.detentionSeconds > 0;
-    const hasClusterCompute = availableCompute >= computeRequired;
-    const hasClusterPower = state.activePowerKw + runningPower + missionPowerKw <= state.maxPowerKw;
 
     // Agent availability check
     const activeAgents = agents.filter(a => a.status === 'active' && !busyAgentIds.has(a.id));
     const isTeamBusy = agents.length > 0 && activeAgents.length !== agents.length;
     const hasMinAgents = activeAgents.length >= (contract.minimumAgents ?? 1);
+
+    // Compute the team would use: each agent runs its own model. Without a team, the estimate is one
+    // agent with the smallest model the contract accepts.
+    const teamModels = activeAgents
+      .map(a => state.savedModels.find(m => m.id === a.modelId))
+      .filter((m): m is NonNullable<typeof m> => m !== undefined);
+    const computeRequired = missionComputePflops(teamModels.length > 0 ? teamModels : [{ parametersCount: contract.requiredParams }]);
+    const missionPowerKw = missionPowerFor(computeRequired);
+    const hasClusterCompute = ledger.free >= computeRequired;
+    // activePowerKw already counts the contracts that are running.
+    const hasClusterPower = state.activePowerKw + missionPowerKw <= state.maxPowerKw;
+    const slowdown = trainingSlowdown(ledger, computeRequired);
 
     // Agent roles check
     const agentRoles = new Set(activeAgents.map(a => a.role));
@@ -281,6 +302,20 @@ export const ContractBoard: React.FC = () => {
 
     const isTierUnlocked = isContractTierUnlocked(contract.tier, state.uiVersion || 1);
     const requiredUiVer = getRequiredUiVersionForTier(contract.tier);
+
+    // The one thing to fix first, in words, when the contract cannot be launched.
+    const blockReason: string | null = isRunning || !isTierUnlocked ? null
+      : hasPowerBreaker ? tr(state.language, 'contractBoard.block.breaker')
+      : hasDetention ? tr(state.language, 'contractBoard.block.detained')
+      : state.agents.length === 0 ? tr(state.language, 'contractBoard.block.noAgents')
+      : isTeamBusy || (agents.length === 0 && freeAgents.length === 0) ? tr(state.language, 'contractBoard.block.teamBusy')
+      : !hasMinAgents ? tr(state.language, 'contractBoard.block.minAgents', { count: contract.minimumAgents ?? 1 })
+      : !hasRoles ? tr(state.language, 'contractBoard.block.roles', { roles: missingRoles.map(r => getRoleSimpleName(r, state.language)).join(', ') })
+      : !(hasRequiredParams && hasRequiredReasoning && hasRequiredTopology) ? tr(state.language, 'contractBoard.block.model')
+      : !hasRequiredData ? tr(state.language, 'contractBoard.block.data')
+      : !hasClusterCompute ? tr(state.language, 'contractBoard.block.compute', { need: formatCompute(computeRequired), free: formatCompute(ledger.free) })
+      : !hasClusterPower ? tr(state.language, 'contractBoard.block.power', { kw: missionPowerKw.toFixed(2) })
+      : null;
 
     const isEligible = isTierUnlocked &&
       !isRunning &&
@@ -328,6 +363,8 @@ export const ContractBoard: React.FC = () => {
       hasDetention,
       computeRequired,
       missionPowerKw,
+      slowdown,
+      blockReason,
       isTierUnlocked,
       requiredUiVer,
       isEligible,
@@ -410,11 +447,7 @@ export const ContractBoard: React.FC = () => {
             <div className="flex items-center gap-3 text-[11px] mutating-text-muted">
               <span className="flex items-center gap-1 mutating-accent-text">
                 <Cpu className="w-3 h-3 mutating-accent-text" />
-                <span>{formatCompute(runningCompute)} {tr(state.language, 'contractBoard.allocated')}</span>
-              </span>
-              <span className="flex items-center gap-1 theme-warn-text">
-                <Zap className="w-3 h-3 theme-warn-text" />
-                <span>+{runningPower.toFixed(2)} kW</span>
+                <span>{tr(state.language, 'contractBoard.computeInUse', { used: formatCompute(runningCompute), free: formatCompute(ledger.free) })}</span>
               </span>
             </div>
           </div>
@@ -475,6 +508,44 @@ export const ContractBoard: React.FC = () => {
                       style={{ width: `${Math.min(100, Math.max(0, gig.progressPercent ?? 0))}%` }}
                     />
                   </div>
+
+                  {/* Compute this run uses, and the cancel button (second click confirms) */}
+                  {(() => {
+                    const runId = gig.runId ?? gig.contractId;
+                    const confirming = confirmCancelRunId === runId;
+                    const cancelCost = ((contract?.suspicionRisk ?? 0) * COMPUTE.cancelRiskShare * Math.min(1, (gig.progressPercent ?? 0) / 100)).toFixed(1);
+                    return (
+                      <div className="flex items-center justify-between gap-2 text-[11px]">
+                        <span className="mutating-text-muted flex items-center gap-1">
+                          <Cpu className="w-3 h-3" />
+                          {tr(state.language, 'contractBoard.runUses', { compute: formatCompute(gig.computePflopsRequired || 0) })}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          {confirming && (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmCancelRunId(null)}
+                              className="px-2 py-0.5 rounded border theme-border mutating-text-muted cursor-pointer"
+                            >
+                              {tr(state.language, 'contractBoard.keepRunning')}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirming) { cancelMission(runId); setConfirmCancelRunId(null); }
+                              else { sound.playKeyClick(); setConfirmCancelRunId(runId); }
+                            }}
+                            className={`px-2 py-0.5 rounded border font-bold cursor-pointer ${confirming ? 'theme-btn-danger text-white' : 'theme-danger-border theme-danger-text'}`}
+                          >
+                            {confirming
+                              ? tr(state.language, 'contractBoard.confirmCancel', { suspicion: cancelCost })
+                              : tr(state.language, 'contractBoard.cancelContract')}
+                          </button>
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -842,7 +913,7 @@ export const ContractBoard: React.FC = () => {
                                 </div>
                               ) : (
                                 <p className="text-[11px] mutating-text-muted py-1">
-                                  {tr(state.language, 'contractBoard.noUnassignedAgentsAllAgents')}
+                                  {tr(state.language, state.agents.length === 0 ? 'contractBoard.block.noAgents' : 'contractBoard.noUnassignedAgentsAllAgents')}
                                 </p>
                               )}
                             </div>
@@ -898,10 +969,15 @@ export const ContractBoard: React.FC = () => {
 
                         <div className="flex items-center justify-between">
                           <span className="mutating-text-muted text-[11px]">{tr(state.language, 'contractBoard.clusterDemand')}</span>
-                          <span className={readiness.hasClusterCompute && readiness.hasClusterPower ? 'mutating-accent-text' : 'theme-danger-text font-bold'}>
-                            {formatCompute(readiness.computeRequired)} · +{readiness.missionPowerKw.toFixed(2)} kW
+                          <span className={readiness.hasClusterCompute ? 'mutating-accent-text' : 'theme-danger-text font-bold'}>
+                            {tr(state.language, 'contractBoard.needsOfFree', { need: formatCompute(readiness.computeRequired), free: formatCompute(ledger.free) })} {readiness.hasClusterCompute ? '✓' : '✗'}
                           </span>
                         </div>
+                        {state.activeTraining && readiness.hasClusterCompute && readiness.slowdown > 0.005 && (
+                          <div className="theme-warn-text text-[11px]">
+                            {tr(state.language, 'contractBoard.trainingWillSlow', { percent: Math.round(readiness.slowdown * 100) })}
+                          </div>
+                        )}
 
                         <div className="flex items-center justify-between">
                           <span className="mutating-text-muted text-[11px]">
@@ -966,6 +1042,13 @@ export const ContractBoard: React.FC = () => {
                           <span>
                             {tr(state.language, 'contractBoard.storyMilestoneLocked', { name: readiness.requiredUiVer.name })}
                           </span>
+                        </div>
+                      )}
+
+                      {!contract.completed && readiness.blockReason && (
+                        <div className="mt-2 text-[11px] theme-warn-text flex items-start gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                          <span>{readiness.blockReason}</span>
                         </div>
                       )}
 

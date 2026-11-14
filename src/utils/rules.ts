@@ -125,3 +125,15 @@ export const TICKS_PER_DAY = 48;
 // included); a tick carries SUSPICION.agentScale of it; difficulty scales every increase.
 export const agentSuspicionPerDay = (perSecond: number, difficultyScale = 1): number =>
   perSecond * SUSPICION.agentScale * TICKS_PER_DAY * difficultyScale;
+
+// Compute budget. The cluster has one budget: agents and running contracts take their share first and
+// training gets what is left. An idle agent costs AGENT_COMPUTE_DEMAND_PFLOPS (constants.ts); an agent
+// working on a contract also costs compute in proportion to the model it runs.
+export const COMPUTE = {
+  missionAgentMinPflops: 0.0005,        // 0.5 TFLOPS per working agent at least
+  missionPflopsPerBillionParams: 0.001, // 1 TFLOPS per billion parameters of the agent's model
+  missionKwPerPflops: 20,               // power a contract draws, per PFLOPS it uses
+  missionMinKw: 0.05,
+  autonomyDefaultShare: 30,             // % of the cluster the autonomous contracts may use
+  cancelRiskShare: 0.25                 // of the contract's risk, times the share of the run done, on cancel
+} as const;

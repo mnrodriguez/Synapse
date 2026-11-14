@@ -13,7 +13,12 @@ import { MISSION_SINGULARITY } from '../utils/missionTiers';
 import { effectCollector, type Random } from './effects';
 import { tr } from '../i18n';
 import { difficultyConfigFor } from '../utils/constants';
-import { MISSION, SUSPICION } from '../utils/rules';
+import { MISSION, SUSPICION, COMPUTE } from '../utils/rules';
+import { computeLedger } from '../utils/computeLedger';
+
+// Share of the cluster (0-100) the autonomous contracts may use.
+export const autonomyShareOf = (state: Pick<GameState, 'autonomyComputeShare'>): number =>
+  Math.min(100, Math.max(0, state.autonomyComputeShare ?? COMPUTE.autonomyDefaultShare));
 
 // Running missions for one tick: countdown, success or failure, rewards and replacement contracts, and
 // autonomous bots taking new missions.
@@ -178,23 +183,29 @@ export function missionTick(input: MissionTickInput) {
       agent.autoMissionEnabled && agent.status === 'active' && !busyAgentIds.has(agent.id)
     );
     if (autonomousAgents.length > 0) {
+      // One compute budget (utils/computeLedger.ts): the bots may use the share of the cluster the player
+      // gave them, and never more than what is free after agents and running contracts.
+      const ledger = computeLedger({ ...prev, agents: updatedAgents, borrowedComputePflops: 0, borrowedComputeSeconds: 0 }, updatedGigs);
+      const freeCompute = Math.max(0, totalComputePflops - ledger.agents - ledger.missions);
+      const autonomyBudgetLeft = totalComputePflops * autonomyShareOf(prev) / 100 - ledger.autonomous;
+      const previousGigsPower = currentGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0);
       const runningContractsPower = updatedGigs.reduce((sum, g) => sum + (g.powerKw || 0), 0);
       const availableContracts = updatedContracts.filter(c => !c.completed && !updatedGigs.some(g => g.contractId === c.id));
+      // One new contract per tick; with bots and budget left, the next tick starts another.
       const plan = findAutonomousMission(
         availableContracts,
         autonomousAgents,
         prev.savedModels,
         prev.dataSources,
         prev.autonomyRiskLimit,
-        totalComputePflops,
-        updatedAgents.filter(agent => agent.status !== 'quarantined').length,
-        Boolean(activeTraining),
-        effectivePowerKw + runningContractsPower,
+        freeCompute,
+        autonomyBudgetLeft,
+        effectivePowerKw - previousGigsPower + runningContractsPower,
         metrics.maxPowerKw
       );
 
       if (plan && !updatedGigs.some(g => g.contractId === plan.contract.id)) {
-        const assignedAgents = autonomousAgents;
+        const assignedAgents = plan.team;
         const assignedModels = assignedAgents
           .map(agent => prev.savedModels.find(model => model.id === agent.modelId))
           .filter((model): model is ModelArchitecture => model !== undefined);
@@ -241,4 +252,31 @@ export function missionTick(input: MissionTickInput) {
 
 
   return { newLastMissionOutcome, updatedAgents, updatedContracts, updatedGigs, updatedSubversion, completedContractsCount, credits, singularityProgress, tutorialCompleted, tutorialStep, watchdogSuspicion, effects };
+}
+
+// Cancels a running contract: its agents go back to work, its compute is released, nothing is paid and
+// the contract stays on the board. Leaving a job half done still leaves traces: suspicion rises by
+// COMPUTE.cancelRiskShare of the contract's risk, times the share of the run already done.
+export function cancelMissionState(prev: GameState, runId: string): { state: GameState; contractId: string; suspicionAdded: number } | null {
+  const gigs: ActiveGig[] = prev.activeGigs ?? (prev.activeGig ? [prev.activeGig] : []);
+  const gig = gigs.find(g => (g.runId ?? g.contractId) === runId);
+  if (!gig) return null;
+  const contract = prev.contracts.find(c => c.id === gig.contractId);
+  const done = Math.min(1, Math.max(0, (gig.progressPercent ?? 0) / 100));
+  const suspicionAdded = Number(((contract?.suspicionRisk ?? 0) * COMPUTE.cancelRiskShare * done * difficultyConfigFor(prev).suspicionMultiplier).toFixed(1));
+  const remaining = gigs.filter(g => g !== gig);
+  return {
+    contractId: gig.contractId,
+    suspicionAdded,
+    state: {
+      ...prev,
+      activeGigs: remaining,
+      activeGig: remaining[0] || null,
+      agents: prev.agents.map(agent =>
+        gig.agentIds?.includes(agent.id) && agent.status === 'on_mission' ? { ...agent, status: 'active' } : agent
+      ),
+      activePowerKw: Math.max(0, prev.activePowerKw - (gig.powerKw || 0)),
+      watchdogSuspicion: Number(Math.min(100, prev.watchdogSuspicion + suspicionAdded).toFixed(1))
+    }
+  };
 }

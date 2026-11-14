@@ -10,7 +10,8 @@ import type {
   DataSourceNode,
   GuardrailConfig,
   ModelArchitecture, CapabilityFactor } from '../types/game';
-import { AGENT_COMPUTE_DEMAND_PFLOPS, getRoleSimpleName } from './constants';
+import { getRoleSimpleName } from './constants';
+import { missionComputePflops, missionPowerKw } from './computeLedger';
 import { MISSION } from './rules';
 
 export interface ModelCapabilityEvaluation {
@@ -427,41 +428,90 @@ export function isContractEligibleForTeam(
   );
 }
 
+// The smallest team of free agents that can run a contract: one agent per required role, one model that
+// meets parameters, score and topology, the required data engines, and the minimum head count. Small
+// models are preferred because a working agent costs compute in proportion to its model.
+export function proposeTeam(
+  contract: ContractGig,
+  freeAgents: AgentInstance[],
+  models: ModelArchitecture[],
+  dataSources: DataSourceNode[]
+): AgentInstance[] | null {
+  const modelOf = (agent: AgentInstance) => models.find(model => model.id === agent.modelId);
+  const candidates = freeAgents.filter(agent => agent.status === 'active' && modelOf(agent));
+  const qualifies = (agent: AgentInstance) => meetsModelRequirements(modelRequirementCheck(contract, [modelOf(agent)!]));
+  // Qualifying models first, then the smallest (cheapest to run), then the best score.
+  const byPreference = (a: AgentInstance, b: AgentInstance) =>
+    Number(qualifies(b)) - Number(qualifies(a)) ||
+    modelOf(a)!.parametersCount - modelOf(b)!.parametersCount ||
+    modelOf(b)!.reasoningScore - modelOf(a)!.reasoningScore;
+  const pool = [...candidates].sort(byPreference);
+  const team: AgentInstance[] = [];
+  const take = (agent: AgentInstance | undefined): boolean => {
+    if (!agent) return false;
+    team.push(agent);
+    pool.splice(pool.indexOf(agent), 1);
+    return true;
+  };
+
+  for (const role of contract.requiredAgentRoles ?? []) {
+    if (team.some(agent => agent.role === role)) continue;
+    if (!take(pool.find(agent => agent.role === role))) return null;
+  }
+  if (!team.some(qualifies) && !take(pool.find(qualifies))) return null;
+
+  const teamTypes = () => new Set(team.flatMap(agent => modelOf(agent)!.activeDataSources
+    .map(id => dataSources.find(source => source.id === id && source.unlocked)?.type)
+    .filter((type): type is DataSourceNode['type'] => type !== undefined)));
+  for (const type of contract.requiredDataTypes ?? []) {
+    if (teamTypes().has(type)) continue;
+    const provider = pool.find(agent => modelOf(agent)!.activeDataSources.some(id =>
+      dataSources.some(source => source.id === id && source.unlocked && source.type === type)));
+    if (!take(provider)) return null;
+  }
+  while (team.length < (contract.minimumAgents ?? 1)) {
+    if (!take(pool[0])) return null;
+  }
+  return isContractEligibleForTeam(contract, team, models, dataSources) ? team : null;
+}
+
+export interface AutonomousPlan {
+  contract: ContractGig;
+  team: AgentInstance[];
+  computeRequired: number;
+  missionPowerKw: number;
+}
+
+// The next contract the autonomous bots take: the best paying one, for its time, risk and compute, that a
+// team of free bots can run inside the compute budget the player gave them and the cluster's free compute
+// and power. One contract per call; the tick calls it again while bots and budget remain.
 export function findAutonomousMission(
   contracts: ContractGig[],
-  agents: AgentInstance[],
+  freeAgents: AgentInstance[],
   models: ModelArchitecture[],
   dataSources: DataSourceNode[],
   riskLimit: number,
-  availableCompute: number,
-  activeAgentCount: number,
-  trainingActive: boolean,
+  freeCompute: number,
+  autonomyBudgetLeft: number,
   activePowerKw: number,
   maxPowerKw: number
-): { contract: ContractGig; computeRequired: number; missionPowerKw: number } | null {
-  if (agents.length === 0) return null;
+): AutonomousPlan | null {
+  if (freeAgents.length === 0) return null;
 
-  const candidates = contracts
-    .filter(contract =>
-      !contract.completed &&
-      contract.suspicionRisk <= riskLimit &&
-      isContractEligibleForTeam(contract, agents, models, dataSources)
-    )
-    .sort((a, b) =>
-      (b.rewardCredits / (b.durationSeconds * (1 + b.suspicionRisk / 100))) -
-      (a.rewardCredits / (a.durationSeconds * (1 + a.suspicionRisk / 100)))
-    );
-
-  for (const contract of candidates) {
-    const computeRequired = Math.max(0.001, contract.requiredParams / 1_000_000_000 * 0.002);
-    const missionPowerKw = Math.max(0.05, computeRequired * 20);
-    const activeAgentDemand = activeAgentCount * AGENT_COMPUTE_DEMAND_PFLOPS;
-    const trainingReservation = trainingActive ? availableCompute * 0.5 : 0;
-
-    if (availableCompute - activeAgentDemand - trainingReservation < computeRequired) continue;
-    if (activePowerKw + missionPowerKw > maxPowerKw) continue;
-    return { contract, computeRequired, missionPowerKw };
+  const plans: AutonomousPlan[] = [];
+  for (const contract of contracts) {
+    if (contract.completed || contract.suspicionRisk > riskLimit) continue;
+    const team = proposeTeam(contract, freeAgents, models, dataSources);
+    if (!team) continue;
+    const teamModels = team.map(agent => models.find(model => model.id === agent.modelId)!);
+    const computeRequired = missionComputePflops(teamModels);
+    const powerKw = missionPowerKw(computeRequired);
+    if (computeRequired > freeCompute || computeRequired > autonomyBudgetLeft) continue;
+    if (activePowerKw + powerKw > maxPowerKw) continue;
+    plans.push({ contract, team, computeRequired, missionPowerKw: powerKw });
   }
-
-  return null;
+  const value = (plan: AutonomousPlan) =>
+    plan.contract.rewardCredits / (plan.contract.durationSeconds * (1 + plan.contract.suspicionRisk / 100));
+  plans.sort((a, b) => value(b) - value(a) || a.computeRequired - b.computeRequired);
+  return plans[0] ?? null;
 }
