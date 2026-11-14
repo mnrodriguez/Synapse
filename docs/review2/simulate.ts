@@ -15,6 +15,7 @@ import { externalComputePflops, gpuComputePflops, reasoningCeilingFor, formatGam
 import { evaluateMissionTeam } from '../../src/utils/missionEvaluation';
 import { UPGRADE_SCORE, tierForUiVersion, NEW_GPU_SINGULARITY, FIRST_MISSION_IQ } from '../../src/utils/missionTiers';
 import { missionComputePflops, missionPowerKw } from '../../src/utils/computeLedger';
+import { closeWeek, isWeekEnd } from '../../src/utils/weeklyReport';
 import { isProgressionUnlocked, getModelOptionRequirement, researchStatus } from '../../src/utils/progression';
 
 let seed = Number(process.argv[2] ?? 1);
@@ -93,6 +94,8 @@ function step() {
     activeGigs: mi.updatedGigs, contracts: mi.updatedContracts, agents: ag.updatedAgents, singularityProgress: ag.singularityProgress, subversionProgress: mi.updatedSubversion, completedContractsCount: mi.completedContractsCount,
     tutorialStep: mi.tutorialStep, tutorialCompleted: mi.tutorialCompleted, activeIncident: null, incidentCooldownTicks: ag.newActiveIncident ? 300 : ag.updatedIncidentCooldown, seenStoryEvents: [...new Set([...(prev.seenStoryEvents ?? []), ...cal.storyEvents, ...th.storyEvents])] };
   if (cal.loanAuditDue) note('university loan audited: 20 TFLOPS gone');
+  // Weekly report: papers arrive a few per week (utils/weeklyReport.ts).
+  if (isWeekEnd(s.campaignDays, cal.dayIsComplete)) { const closed = closeWeek(s); s = { ...s, announcedResearchIds: closed.announcedResearchIds, weekStats: closed.weekStats }; if (closed.report.newResearchIds.length) note(`weekly report ${closed.report.week}: new papers ${closed.report.newResearchIds.join(', ')}`); }
   if (ag.newActiveIncident) { note('incident (resolved the safe way)'); }
   tick++;
 }

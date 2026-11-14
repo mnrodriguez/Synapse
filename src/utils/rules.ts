@@ -33,6 +33,9 @@ export const SUSPICION = {
   overloadPerTick: 0.25,
   fadePerTick: 0.25,
   fadePerTickWithOverseer: 0.45,
+  fadeWhileWorkingShare: 0.2, // while contracts run it still fades, at this share of the idle rate
+  warnAt: 50,                 // a dialog explains what is raising it the first time it gets here
+  criticalAt: 80,             // and a second one here
   agentScale: 0.05,         // an agent's listed risk is per second of its work; a tick carries this share
   scrapingPerTick: 0.03,
   missionSuccessShare: 0.25, // of the mission's risk, added when it succeeds (all of it when it fails)
@@ -137,3 +140,8 @@ export const COMPUTE = {
   autonomyDefaultShare: 30,             // % of the cluster the autonomous contracts may use
   cancelRiskShare: 0.25                 // of the contract's risk, times the share of the run done, on cancel
 } as const;
+
+// Research arrives with the weekly report: at most this many new papers can be funded each game week,
+// so new options come in at a pace the player can follow.
+export const WEEK_DAYS = 7;
+export const RESEARCH_PER_WEEK = 2;

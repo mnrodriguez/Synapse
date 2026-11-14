@@ -21,11 +21,18 @@ import { sound } from '../audio/soundManager';
 import { EMERGENCY_LOAN_AMOUNT, EMERGENCY_LOAN_REPAYMENT } from '../utils/constants';
 import { formatCompute } from '../utils/training';
 import { EpilogueReport } from './EpilogueReport';
+import { SuspicionBreakdown } from './SuspicionBreakdown';
+import { VERSION_PROFILES } from '../utils/versionProfiles';
+import { toDisplayProgress, type UiVersion } from '../utils/singularityGoals';
 import { tr } from '../i18n';
 
 export const GameOverModal: React.FC = () => {
   const { state, takeEmergencyLoan, clearGameOver, resetProgress } = useGame();
   const isEs = state.language === 'es';
+  // Before v3 the report keeps the words of the current version and does not name the end goal.
+  const version = (state.uiVersion || 1) as UiVersion;
+  const early = version < 3;
+  const profile = VERSION_PROFILES[isEs ? 'es' : 'en'][version];
 
   // Check if we should show the Emergency Micro-Loan Banner instead of a hard Game Over
   const isLoanCandidate = state.credits <= 0 &&
@@ -113,7 +120,7 @@ export const GameOverModal: React.FC = () => {
               <span className="text-[11px] font-bold theme-danger-text uppercase tracking-widest block flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5 theme-danger-text" />
                 {state.gameOverReason === 'agency_seizure'
-                  ? (tr((isEs ? 'es' : 'en'), 'gameOverModal.federalRaidInfrastructureSeizure'))
+                  ? (tr((isEs ? 'es' : 'en'), early ? 'gameOverModal.equipmentSeizedEarly' : 'gameOverModal.federalRaidInfrastructureSeizure'))
                   : (tr((isEs ? 'es' : 'en'), 'gameOverModal.financialBankruptcyAssetLiquidation'))}
               </span>
               <h2 className="text-lg font-black theme-danger-text tracking-wider">
@@ -128,7 +135,7 @@ export const GameOverModal: React.FC = () => {
           <div className="space-y-2 text-xs theme-text leading-relaxed theme-panel-bg p-3.5 rounded-lg border theme-danger-border">
             {state.gameOverReason === 'agency_seizure' ? (
               <p>
-                {tr((isEs ? 'es' : 'en'), 'gameOverModal.trackedElectromagneticSignatureClusterDirectly', { trackingAgency: state.trackingAgency })}
+                {tr((isEs ? 'es' : 'en'), early ? 'gameOverModal.trackedEarly' : 'gameOverModal.trackedElectromagneticSignatureClusterDirectly', { trackingAgency: state.trackingAgency, meter: profile.hud3Title })}
               </p>
             ) : (
               <p>
@@ -161,8 +168,8 @@ export const GameOverModal: React.FC = () => {
               <span className="font-bold mutating-accent-text text-sm">{state.campaignDays} {tr((isEs ? 'es' : 'en'), 'gameOverModal.days')}</span>
             </div>
             <div>
-              <span className="text-[11px] mutating-text-muted block uppercase">{tr((isEs ? 'es' : 'en'), 'gameOverModal.singularityProgress')}</span>
-              <span className="font-bold mutating-accent-text text-sm">{state.singularityProgress.toFixed(1)}%</span>
+              <span className="text-[11px] mutating-text-muted block uppercase">{early ? profile.story.progressLabel.replace(/:$/, '') : tr((isEs ? 'es' : 'en'), 'gameOverModal.singularityProgress')}</span>
+              <span className="font-bold mutating-accent-text text-sm">{(early ? toDisplayProgress(version, state.singularityProgress) : state.singularityProgress).toFixed(1)}%</span>
             </div>
             <div>
               <span className="text-[11px] mutating-text-muted block uppercase">{tr((isEs ? 'es' : 'en'), 'gameOverModal.peakCompute')}</span>
@@ -171,6 +178,16 @@ export const GameOverModal: React.FC = () => {
           </div>
 
           {/* What the player decided, and which controls would have changed the outcome */}
+          {/* Why it happened: where the suspicion came from over the whole campaign. */}
+          {state.gameOverReason === 'agency_seizure' && state.suspicionTotals && (
+            <section className="rounded-lg border theme-border theme-sub-bg p-3 space-y-2 text-left">
+              <h4 className="text-[11px] font-bold uppercase tracking-wide mutating-text-muted">
+                {tr((isEs ? 'es' : 'en'), 'gameOverModal.whatRaisedIt', { meter: profile.hud3Title })}
+              </h4>
+              <SuspicionBreakdown language={isEs ? 'es' : 'en'} sources={state.suspicionTotals} />
+            </section>
+          )}
+
           {state.gameOverReason && <EpilogueReport kind={state.gameOverReason} />}
 
           {/* Action Buttons */}

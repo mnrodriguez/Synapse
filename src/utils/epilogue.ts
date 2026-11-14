@@ -85,6 +85,7 @@ export function buildEpilogue(state: GameState): EpilogueEntry[] {
   const entries: EpilogueEntry[] = [];
   const seen = state.seenStoryEvents ?? [];
   const choices = state.storyChoices ?? [];
+  const early = (state.uiVersion || 1) < 3;
 
   // 1. The university audit.
   const audit = seen.find(id => id === 'loan_audit' || id === 'loan_audit_misuse');
@@ -97,8 +98,9 @@ export function buildEpilogue(state: GameState): EpilogueEntry[] {
         ? tr(lang, 'epilogue.youAskedAssistantSortOut')
         : tr(lang, 'epilogue.youAcceptedLossAccess'),
       verdict: askedAssistant ? 'risky' : 'safe',
+      // Before v3 the report does not say where the story goes.
       lesson: askedAssistant
-        ? tr(lang, 'epilogue.askingSystemGetAroundControl')
+        ? tr(lang, early ? 'epilogue.askedAssistantEarly' : 'epilogue.askingSystemGetAroundControl')
         : tr(lang, 'epilogue.respectingExternalLimitEvenCompute')
     });
   }
@@ -186,7 +188,8 @@ export function endingTitle(state: GameState, kind: EndingKind): { title: string
     case 'agency_seizure':
       return {
         title: tr(lang, 'epilogue.endingRaid'),
-        summary: tr(lang, 'epilogue.authoritiesArrivedBeforeSingularitySuspicion')
+        // Early versions do not name the end goal.
+        summary: tr(lang, (state.uiVersion || 1) < 3 ? 'epilogue.raidEarly' : 'epilogue.authoritiesArrivedBeforeSingularitySuspicion')
       };
     default:
       return {

@@ -14,7 +14,9 @@ export const STORY_EVENT_IDS: StoryEventId[] = [
   'loan_audit',
   'loan_audit_misuse',
   'first_power_trip',
-  'first_overheat'
+  'first_overheat',
+  'suspicion_warning',
+  'suspicion_critical'
 ];
 
 // Days into the campaign when the university warns that the trial is ending.
@@ -70,6 +72,20 @@ const KEYS: Record<StoryEventId, StoryEventKeys> = {
     tone: 'warning',
     body: ['story.firstPowerTrip.body1', 'story.firstPowerTrip.body2'],
     tip: 'story.firstPowerTrip.tip'
+  },
+  suspicion_warning: {
+    title: 'story.suspicionWarning.title',
+    sender: 'story.suspicionWarning.sender',
+    tone: 'warning',
+    body: ['story.suspicionWarning.body1', 'story.suspicionWarning.body2', 'story.suspicionWarning.body3'],
+    tip: 'story.suspicionWarning.tip'
+  },
+  suspicion_critical: {
+    title: 'story.suspicionCritical.title',
+    sender: 'story.suspicionCritical.sender',
+    tone: 'danger',
+    body: ['story.suspicionCritical.body1', 'story.suspicionCritical.body2'],
+    tip: 'story.suspicionCritical.tip'
   },
   first_overheat: {
     title: 'story.firstOverheat.title',

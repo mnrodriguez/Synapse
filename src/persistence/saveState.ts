@@ -17,6 +17,8 @@
 //     with an estimate at their current power draw
 //  12 compute budget: autonomous contracts get a share of the cluster (autonomyComputeShare); older saves
 //     start with the default share
+//  13 weekly report: papers are announced a few per week (announcedResearchIds); an older save keeps
+//     every paper it could already fund. Suspicion is counted by source (weekStats, suspicionTotals)
 // Add a step by bumping SAVE_SCHEMA_VERSION and handling `(data.saveSchemaVersion ?? 0) < N` below.
 
 import { GameState, ModelArchitecture, ContractGig, InferenceParams } from '../types/game';
@@ -26,8 +28,9 @@ import { sanitizeStoryEvents } from '../utils/storyEvents';
 import { reasoningCeilingFor, migrateLegacyScore, GAME_HOURS_PER_TICK } from '../utils/training';
 import { tr } from '../i18n';
 import { COMPUTE } from '../utils/rules';
+import { emptySources, emptyWeek, initialAnnouncedResearch, migratedAnnouncedResearch, sanitizeSources } from '../utils/weeklyReport';
 
-export const SAVE_SCHEMA_VERSION = 12;
+export const SAVE_SCHEMA_VERSION = 13;
 
 export const LOCAL_STORAGE_KEY = 'synapse_singularity_save_v1';
 export const GAME_SPEED_OPTIONS = [0, 1, 5, 20, 50] as const;
@@ -115,6 +118,12 @@ export const DEFAULT_STATE: GameState = {
   incidentCooldownTicks: 180,
   incidentHistory: [],
   autonomyEnabled: false,
+  // A new campaign starts with one paper on the table; the weekly report brings in the rest.
+  announcedResearchIds: initialAnnouncedResearch({ uiVersion: 1, savedModels: [], currentModel: INITIAL_MODEL, researchTree: INITIAL_RESEARCH_NODES }),
+  weekStats: emptyWeek(0),
+  suspicionTotals: emptySources(),
+  pendingWeeklyReport: null,
+  speedBeforeWeeklyReport: null,
   autonomyRiskLimit: 20,
   autonomyComputeShare: COMPUTE.autonomyDefaultShare,
 
@@ -196,7 +205,7 @@ export function mergeGameState(data: Partial<GameState>, fallback: GameState): G
       ((data.gameDay ?? 1) - 1)
   );
 
-  return {
+  const merged: GameState = {
     ...fallback,
     ...data,
     saveSchemaVersion: SAVE_SCHEMA_VERSION,
@@ -416,5 +425,24 @@ export function mergeGameState(data: Partial<GameState>, fallback: GameState): G
       : null,
     covertNodeActive: data.covertNodeActive !== undefined ? Boolean(data.covertNodeActive) : true,
     covertNodeSevered: Boolean(data.covertNodeSevered)
+  };
+
+  // Weekly report (schema 13). A save from before it keeps every paper it could already fund.
+  const knownResearch = new Set(merged.researchTree.map(node => node.id));
+  const announcedResearchIds = Array.isArray(data.announcedResearchIds)
+    ? data.announcedResearchIds.filter((id): id is string => typeof id === 'string' && knownResearch.has(id))
+    : migratedAnnouncedResearch(merged);
+  const week = data.weekStats && typeof data.weekStats === 'object' ? data.weekStats : null;
+  const num = (value: unknown, fallbackValue = 0) => (typeof value === 'number' && Number.isFinite(value) ? value : fallbackValue);
+  return {
+    ...merged,
+    announcedResearchIds,
+    weekStats: week
+      ? { startSuspicion: num(week.startSuspicion, merged.watchdogSuspicion), sources: sanitizeSources(week.sources), creditsEarned: num(week.creditsEarned), missionsOk: num(week.missionsOk), missionsFailed: num(week.missionsFailed) }
+      : emptyWeek(merged.watchdogSuspicion),
+    suspicionTotals: sanitizeSources(data.suspicionTotals),
+    pendingWeeklyReport: data.pendingWeeklyReport && typeof data.pendingWeeklyReport === 'object' && Array.isArray(data.pendingWeeklyReport.newResearchIds)
+      ? { ...data.pendingWeeklyReport, sources: sanitizeSources(data.pendingWeeklyReport.sources) }
+      : null
   };
 }

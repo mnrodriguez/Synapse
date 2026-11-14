@@ -207,7 +207,7 @@ export const ResearchTree: React.FC = () => {
                     {!status.available ? (
                       <>
                         <Lock className="w-3.5 h-3.5" />
-                        <span>{tr(state.language, !preMet ? 'researchTree.prerequisitesNotMet' : !status.versionMet ? 'researchTree.laterVersion' : 'researchTree.scoreTooLow')}</span>
+                        <span>{tr(state.language, !preMet ? 'researchTree.prerequisitesNotMet' : !status.versionMet ? 'researchTree.laterVersion' : !status.scoreMet ? 'researchTree.scoreTooLow' : 'researchTree.arrivesWeekly')}</span>
                       </>
                     ) : (
                       <>

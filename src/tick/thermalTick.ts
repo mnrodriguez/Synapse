@@ -70,7 +70,11 @@ export function thermalTick(input: ThermalInput) {
   const scraping = prev.activeScrapeJob ? SUSPICION.scrapingPerTick * scale : 0;
   const hasOverseer = prev.agents.some(a => a.role === 'overseer' && a.status === 'active');
   const quiet = overload === 0 && currentActiveGigs.length === 0 && !prev.activeIncident;
-  const dissipation = quiet ? -(hasOverseer ? SUSPICION.fadePerTickWithOverseer : SUSPICION.fadePerTick) : 0;
+  // It fades at the full rate while nothing runs, and more slowly while contracts are running. It does
+  // not fade during an overload or an open incident.
+  const fadeRate = hasOverseer ? SUSPICION.fadePerTickWithOverseer : SUSPICION.fadePerTick;
+  const working = overload === 0 && currentActiveGigs.length > 0 && !prev.activeIncident;
+  const dissipation = quiet ? -fadeRate : working ? -fadeRate * SUSPICION.fadeWhileWorkingShare : 0;
   watchdogSuspicion = Math.min(100, Math.max(0, watchdogSuspicion + overload + agents + scraping + dissipation));
   const suspicionRates: SuspicionRates = {
     overload,
