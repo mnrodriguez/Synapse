@@ -487,3 +487,19 @@ Resueltas por el autor el 2026-11-12. Ya están aplicadas en las secciones de ar
 | 7 | Ranking | Informal, sin validación en el servidor (2026-11-13) | L-8 |
 
 Queda por validar con tests, no por decidir: la calibración exacta de techos y umbrales de R-1.
+
+## 11. Manual del juego (2026-11-13)
+
+El manual integrado se reescribió para que refleje las reglas reales y explique el costo de cada decisión.
+
+- Los números del manual se leen de las mismas constantes que usa el juego (`src/utils/rules.ts` y los módulos existentes), así que no pueden desactualizarse. El manual se arma en `src/components/manual/manualContent.ts` y se muestra en `HelpManual.tsx`.
+- El capítulo 2 es una tabla de decisiones: qué se gana y qué cuesta cada control.
+- Los capítulos y filas que adelantarían la historia (bifurcación, subversión, finales, enlace oculto) aparecen desde la v3. Los tests lo comprueban.
+- El PDF pasa a ser un anexo de teoría con una nota que dice qué regla vale si difiere del juego. Se quitó la página 9 (guía de estrategia), que ya no coincidía con las reglas.
+- Se corrigieron textos del juego que prometían efectos inexistentes: ingresos de los agentes, bonus de los guardrails, filtro de salida, cómputo "+50%" al ceder, y las duraciones del cómputo en las sombras.
+
+Hallazgos de diseño para decidir más adelante (no se cambiaron):
+
+- El filtro de salida y la auditoría de reward hacking no tienen efecto mecánico; solo cuentan como controles en el informe final y en la condición del buen final.
+- Las descripciones de hardware (calor por minuto, "+% precisión" de los motores) son decorativas.
+- Las promesas de las mejoras de versión son narrativas: algunas cambian más de lo que dicen.

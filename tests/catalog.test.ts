@@ -73,7 +73,7 @@ describe('text catalog', () => {
     const englishWords = new Set(Object.values(en).flatMap(words));
     const spanishOnly = new Set(Object.values(es).flatMap(words).filter(w => !englishWords.has(w)));
     // English names that happen to be missing from the English catalog.
-    const english = new Set(['docker', 'thoughts', 'machines']);
+    const english = new Set(['docker', 'thoughts', 'machines', 'proto']);
     const shown = /\b(?:title|desc|description|badge|label|name|text|hint|placeholder|message|summary)\s*:\s*(['"`])((?:(?!\1)[^\\\n]|\\.)*)\1/g;
     const attrs = /\b(?:title|placeholder|aria-label|alt)="([^"]*)"/g;
     const found: string[] = [];
@@ -113,9 +113,9 @@ describe('text catalog', () => {
   });
 
   test('formatted texts render their tags and keep the plain text', () => {
-    const html = renderToStaticMarkup(createElement(RichText, { lang: 'es', k: 'helpManual.introMission' }));
-    expect(html).toContain('<em>Uplink</em>');
-    expect(html).toContain('<strong>entrenar una Inteligencia Artificial desde cero</strong>');
+    const html = renderToStaticMarkup(createElement(RichText, { lang: 'es', k: 'manual.start.time', params: { minPerTick: 30, ticksPerDay: 48, daysPerMonth: 30 } }));
+    expect(html).toContain('<strong>El tiempo.</strong>');
+    expect(html).toContain('<strong>barra espaciadora</strong>');
     const custom = renderToStaticMarkup(createElement(RichText, {
       lang: 'en',
       k: 'genesisOnboarding.allConnected',
